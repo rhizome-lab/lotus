@@ -1,10 +1,17 @@
 import { createStore } from "solid-js/store";
 
+export type GameMessage =
+  | { type: "message"; text: string }
+  | { type: "error"; text: string }
+  | RoomMessage
+  | InventoryMessage
+  | ItemMessage;
+
 export interface RichItem {
   id: number;
   name: string;
   kind: string;
-  location_detail?: string;
+  location_detail: string | null;
   contents: RichItem[];
 }
 
@@ -20,11 +27,6 @@ export interface InventoryMessage {
   items: RichItem[];
 }
 
-export interface TextMessage {
-  type: "message" | "error";
-  text: string;
-}
-
 export interface ItemMessage {
   type: "item";
   name: string;
@@ -32,69 +34,74 @@ export interface ItemMessage {
   contents: RichItem[];
 }
 
-export type GameMessage =
-  | RoomMessage
-  | InventoryMessage
-  | TextMessage
-  | ItemMessage;
-
 interface GameState {
-  messages: GameMessage[];
   isConnected: boolean;
-  history: string[];
-  historyIndex: number;
+  messages: GameMessage[];
+  room: RoomMessage | null;
+  inventory: InventoryMessage | null;
+  inspectedItem: ItemMessage | null;
 }
 
 const [state, setState] = createStore<GameState>({
-  messages: [],
   isConnected: false,
-  history: [],
-  historyIndex: -1,
+  messages: [],
+  room: null,
+  inventory: null,
+  inspectedItem: null,
 });
 
-let ws: WebSocket | null = null;
+let socket: WebSocket | null = null;
 
 export const gameStore = {
   state,
 
   connect: () => {
-    if (ws) return;
-    ws = new WebSocket("ws://localhost:8080");
+    if (state.isConnected) return;
 
-    ws.onopen = () => {
+    socket = new WebSocket("ws://localhost:8080");
+
+    socket.onopen = () => {
       setState("isConnected", true);
-      // We don't need a local message here, the server sends a welcome message
+      // Initial fetch
+      gameStore.send(["look"]);
+      gameStore.send(["inventory"]);
     };
 
-    ws.onclose = () => {
+    socket.onclose = () => {
       setState("isConnected", false);
       gameStore.addMessage({
         type: "error",
         text: "Disconnected from server.",
       });
-      ws = null;
+      socket = null;
     };
 
-    ws.onmessage = (event) => {
+    socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        // Update specific state based on type
+        if (data.type === "room") {
+          setState("room", data);
+        } else if (data.type === "inventory") {
+          setState("inventory", data);
+        } else if (data.type === "item") {
+          setState("inspectedItem", data);
+        }
+
         gameStore.addMessage(data);
       } catch (e) {
-        console.error("Failed to parse message", e, event.data);
-        gameStore.addMessage({
-          type: "error",
-          text: "Received invalid data from server.",
-        });
+        console.error("Failed to parse message", e);
       }
     };
   },
 
   send: (payload: unknown[]) => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) {
-      gameStore.addMessage({ type: "error", text: "Error: Not connected." });
-      return;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(payload));
+    } else {
+      console.error("Socket not connected");
     }
-    ws.send(JSON.stringify(payload));
   },
 
   addMessage: (msg: GameMessage) => {

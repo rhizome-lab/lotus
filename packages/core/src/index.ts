@@ -270,7 +270,10 @@ wss.on("connection", (ws: Client) => {
           text: `You dug ${direction} to '${roomName}'.`,
         }),
       );
-      sendRoom(currentRoomId);
+
+      // Auto-move to new room
+      moveEntity(player.id, newRoomId);
+      sendRoom(newRoomId);
     } else if (command === "set") {
       // ... (keep set logic) ...
       if (args.length < 3) {
