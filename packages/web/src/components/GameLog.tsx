@@ -39,36 +39,69 @@ const RoomView = (props: {
   name: string;
   description: string;
   contents: RichItem[];
-}) => (
-  <div
-    style={{
-      "margin-bottom": "15px",
-      "border-left": "2px solid var(--accent-color)",
-      "padding-left": "10px",
-    }}
-  >
+}) => {
+  const exits = props.contents.filter((i) => i.kind === "EXIT");
+  const items = props.contents.filter((i) => i.kind !== "EXIT");
+
+  return (
     <div
       style={{
-        "font-weight": "bold",
-        "font-size": "1.1em",
-        "margin-bottom": "5px",
+        "margin-bottom": "15px",
+        "border-left": "2px solid var(--accent-color)",
+        "padding-left": "10px",
       }}
     >
-      {props.name}
-    </div>
-    <div style={{ "margin-bottom": "10px", color: "#ccc" }}>
-      {props.description}
-    </div>
-    <Show when={props.contents.length > 0}>
       <div
-        style={{ "font-size": "0.9em", color: "#888", "margin-bottom": "5px" }}
+        style={{
+          "font-weight": "bold",
+          "font-size": "1.1em",
+          "margin-bottom": "5px",
+        }}
       >
-        You see:
+        {props.name}
       </div>
-      <For each={props.contents}>{(item) => <ItemView item={item} />}</For>
-    </Show>
-  </div>
-);
+      <div style={{ "margin-bottom": "10px", color: "#ccc" }}>
+        {props.description}
+      </div>
+
+      <Show when={exits.length > 0}>
+        <div style={{ "margin-bottom": "10px", "font-size": "0.9em" }}>
+          <span style={{ color: "#888" }}>Exits: </span>
+          <For each={exits}>
+            {(exit, i) => (
+              <span>
+                {i() > 0 ? ", " : ""}
+                <span
+                  onClick={() => gameStore.send(["move", exit.name])}
+                  style={{
+                    color: "#aaddff",
+                    cursor: "pointer",
+                    "text-decoration": "underline",
+                  }}
+                >
+                  {exit.name}
+                </span>
+              </span>
+            )}
+          </For>
+        </div>
+      </Show>
+
+      <Show when={items.length > 0}>
+        <div
+          style={{
+            "font-size": "0.9em",
+            color: "#888",
+            "margin-bottom": "5px",
+          }}
+        >
+          You see:
+        </div>
+        <For each={items}>{(item) => <ItemView item={item} />}</For>
+      </Show>
+    </div>
+  );
+};
 
 const InventoryView = (props: { items: RichItem[] }) => (
   <div

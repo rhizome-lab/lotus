@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS entities (
     location_detail TEXT,
     prototype_id INTEGER REFERENCES entities(id),
     owner_id INTEGER REFERENCES entities(id),
-    kind TEXT CHECK( kind IN ('ZONE', 'ROOM', 'ACTOR', 'ITEM', 'PART') ) DEFAULT 'ITEM',
+    kind TEXT CHECK( kind IN ('ZONE', 'ROOM', 'ACTOR', 'ITEM', 'PART', 'EXIT') ) DEFAULT 'ITEM',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

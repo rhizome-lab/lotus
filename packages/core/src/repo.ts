@@ -8,7 +8,7 @@ export interface Entity {
   location_detail: string | null;
   prototype_id: number | null;
   owner_id: number | null;
-  kind: "ZONE" | "ROOM" | "ACTOR" | "ITEM" | "PART";
+  kind: "ZONE" | "ROOM" | "ACTOR" | "ITEM" | "PART" | "EXIT";
   created_at: string;
   updated_at: string;
   // Resolved properties
@@ -71,7 +71,7 @@ export function moveEntity(
 export function createEntity(data: {
   name: string;
   slug?: string;
-  kind?: "ZONE" | "ROOM" | "ACTOR" | "ITEM" | "PART";
+  kind?: "ZONE" | "ROOM" | "ACTOR" | "ITEM" | "PART" | "EXIT";
   location_id?: number;
   location_detail?: string;
   prototype_id?: number;

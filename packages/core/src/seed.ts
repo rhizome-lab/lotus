@@ -140,5 +140,27 @@ export function seed() {
     },
   });
 
+  // Create another room
+  const gardenId = createEntity({
+    name: "Garden",
+    kind: "ROOM",
+    props: { description: "A lush garden with blooming flowers." },
+  });
+
+  // Link Lobby and Garden
+  createEntity({
+    name: "north",
+    kind: "EXIT",
+    location_id: lobbyId,
+    props: { direction: "north", destination_id: gardenId },
+  });
+
+  createEntity({
+    name: "south",
+    kind: "EXIT",
+    location_id: gardenId,
+    props: { direction: "south", destination_id: lobbyId },
+  });
+
   console.log("Seeding complete!");
 }

@@ -2,6 +2,7 @@ import { onMount } from "solid-js";
 import { gameStore } from "./store/game";
 import GameLog from "./components/GameLog";
 import Actions from "./components/Actions";
+import Builder from "./components/Builder";
 import "./index.css";
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
       <div style={{ flex: 1, display: "flex", "flex-direction": "column" }}>
         <Actions />
         <GameLog />
+        <Builder />
       </div>
     </div>
   );
