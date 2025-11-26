@@ -287,4 +287,37 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     layout: "primitive",
     slots: [{ name: "Name", type: "string" }],
   },
+
+  // New Opcodes
+  {
+    type: "statement",
+    label: "Destroy",
+    opcode: "destroy",
+    category: "action",
+    slots: [{ name: "Target", type: "block", default: "this" }],
+  },
+  {
+    type: "statement",
+    label: "Move",
+    opcode: "move",
+    category: "action",
+    slots: [
+      { name: "Target", type: "block", default: "this" },
+      { name: "Destination", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "Create",
+    opcode: "create",
+    category: "action",
+    slots: [{ name: "Data", type: "block" }],
+  },
+  {
+    type: "expression",
+    label: "Random",
+    opcode: "random",
+    category: "math",
+    slots: [],
+  },
 ];
