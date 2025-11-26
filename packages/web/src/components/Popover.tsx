@@ -19,14 +19,6 @@ export default function Popover(props: PopoverProps) {
     e.preventDefault();
     e.stopPropagation();
     if (!isOpen()) {
-      // Calculate position
-      if (triggerRef) {
-        const rect = (triggerRef as HTMLElement).getBoundingClientRect();
-        setPosition({
-          top: rect.bottom + window.scrollY + 5,
-          left: rect.left + window.scrollX,
-        });
-      }
       setIsOpen(true);
     } else {
       setIsOpen(false);
@@ -64,13 +56,46 @@ export default function Popover(props: PopoverProps) {
       <Show when={isOpen()}>
         <Portal>
           <div
-            ref={contentRef}
+            ref={(el) => {
+              contentRef = el;
+              if (triggerRef) {
+                // Use requestAnimationFrame to ensure layout is complete
+                requestAnimationFrame(() => {
+                  const triggerRect = (
+                    triggerRef as HTMLElement
+                  ).getBoundingClientRect();
+                  const contentRect = el.getBoundingClientRect();
+                  const viewportHeight = window.innerHeight;
+
+                  let top = triggerRect.bottom + window.scrollY + 5;
+                  let left = triggerRect.left + window.scrollX;
+
+                  // Check if it overflows the bottom
+                  if (
+                    triggerRect.bottom + contentRect.height + 5 >
+                    viewportHeight
+                  ) {
+                    // Check if it fits above
+                    if (triggerRect.top - contentRect.height - 5 > 0) {
+                      top =
+                        triggerRect.top +
+                        window.scrollY -
+                        contentRect.height -
+                        5;
+                    }
+                  }
+
+                  setPosition({ top, left });
+                });
+              }
+            }}
             class={props.contentClass}
             style={{
               position: "absolute",
               top: `${position().top}px`,
               left: `${position().left}px`,
               "z-index": 1000,
+              opacity: position().top === 0 ? 0 : 1, // Hide until positioned
             }}
           >
             {props.children({ close })}

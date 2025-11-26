@@ -54,6 +54,7 @@ export default function Compass() {
             <Builder
               initialDirection={props.dir}
               isLocked={true}
+              hideDirection={true}
               onClose={popoverProps.close}
             />
           </div>

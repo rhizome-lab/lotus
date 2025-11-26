@@ -4,17 +4,28 @@ import { gameStore } from "../store/game";
 interface BuilderProps {
   initialDirection?: string;
   isLocked?: boolean;
+  hideDirection?: boolean;
   onClose?: () => void;
 }
 
 export default function Builder(props: BuilderProps) {
-  const [direction, setDirection] = createSignal(
-    props.initialDirection || "north",
-  );
+  const [direction, setDirection] = createSignal(props.initialDirection || "");
   const [mode, setMode] = createSignal<"new" | "existing">("new");
   const [roomName, setRoomName] = createSignal("");
   const [targetRoom, setTargetRoom] = createSignal("");
   const [description, setDescription] = createSignal("");
+
+  // Reset state on mount (or when props change if we wanted, but mount is enough for popover)
+  // Actually, since the component is remounted each time the popover opens (due to Show when={isOpen}),
+  // the signals are re-initialized. So roomName("") above is correct.
+  // BUT, if the component is kept alive, we might need to reset.
+  // Given the Popover implementation uses Show when={isOpen}, it unmounts when closed.
+  // So the state *should* reset automatically.
+  // If the user says it's prefilled, maybe they mean the browser autocomplete?
+  // Or maybe the Popover doesn't unmount?
+  // Looking at Popover.tsx: <Show when={isOpen()}> ... </Show>
+  // It definitely unmounts.
+  // I'll add autocomplete="off" to inputs just in case.
 
   const handleDig = (e: Event) => {
     e.preventDefault();
@@ -23,14 +34,6 @@ export default function Builder(props: BuilderProps) {
       gameStore.send(["dig", direction(), roomName()]);
     } else {
       if (!targetRoom()) return;
-      // Assuming 'dig' command handles linking if 3rd arg is existing room,
-      // or we might need a specific 'link' command.
-      // Based on typical MUDs, 'dig' often implies new.
-      // Let's try 'dig' first as per plan, but if it fails we might need 'link'.
-      // Actually, standard MOO/MUD often uses @dig <direction> to <room>.
-      // The current backend likely expects ["dig", direction, roomName].
-      // If roomName exists, it might link? Or fail?
-      // Let's assume for now we send the same command.
       gameStore.send(["dig", direction(), targetRoom()]);
     }
 
@@ -52,16 +55,19 @@ export default function Builder(props: BuilderProps) {
       <div class="builder__panel">
         <div class="builder__title">DIG ROOM</div>
         <form onSubmit={handleDig} class="builder__form">
-          <div class="builder__row">
-            <input
-              type="text"
-              placeholder="Direction (e.g. north, up, portal)"
-              value={direction()}
-              onInput={(e) => setDirection(e.currentTarget.value)}
-              class="builder__input"
-              disabled={props.isLocked}
-            />
-          </div>
+          <Show when={!props.hideDirection}>
+            <div class="builder__row">
+              <input
+                type="text"
+                placeholder="Direction (e.g. north, up, portal)"
+                value={direction()}
+                onInput={(e) => setDirection(e.currentTarget.value)}
+                class="builder__input"
+                disabled={props.isLocked}
+                autocomplete="off"
+              />
+            </div>
+          </Show>
 
           <div
             class="builder__tabs"
@@ -106,6 +112,7 @@ export default function Builder(props: BuilderProps) {
               value={roomName()}
               onInput={(e) => setRoomName(e.currentTarget.value)}
               class="builder__input"
+              autocomplete="off"
             />
           </Show>
 
@@ -116,6 +123,7 @@ export default function Builder(props: BuilderProps) {
               value={targetRoom()}
               onInput={(e) => setTargetRoom(e.currentTarget.value)}
               class="builder__input"
+              autocomplete="off"
             />
           </Show>
 
