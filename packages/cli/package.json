@@ -1,0 +1,20 @@
+{
+  "name": "@viwo/cli",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "minimist": "^1.2.8",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.5",
+    "@types/ws": "^8.5.13",
+    "bun-types": "latest"
+  }
+}
