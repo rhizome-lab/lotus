@@ -10,11 +10,37 @@ export default function ItemEditor() {
   );
   const [adjInput, setAdjInput] = createSignal("");
 
+  const flattenItems = (items: any[], prefix = ""): any[] => {
+    let result: any[] = [];
+    for (const item of items) {
+      result.push({ ...item, displayName: `${prefix}${item.name}` });
+      if (item.contents && item.contents.length > 0) {
+        result = result.concat(
+          flattenItems(item.contents, `${prefix}${item.name} > `),
+        );
+      }
+    }
+    return result;
+  };
+
   const items = () => {
     const roomItems =
       gameStore.state.room?.contents.filter((c) => c.kind === "ITEM") || [];
     const inventoryItems = gameStore.state.inventory?.items || [];
-    return [...roomItems, ...inventoryItems];
+
+    // We want to distinguish between room and inventory, but also flatten.
+    // Let's flatten separately and tag them.
+
+    const flatRoom = flattenItems(roomItems).map((i) => ({
+      ...i,
+      source: "(Room)",
+    }));
+    const flatInventory = flattenItems(inventoryItems).map((i) => ({
+      ...i,
+      source: "(Inventory)",
+    }));
+
+    return [...flatRoom, ...flatInventory];
   };
 
   const selectedItem = () => items().find((i) => i.id === selectedItemId());
@@ -81,10 +107,7 @@ export default function ItemEditor() {
           <For each={items()}>
             {(item) => (
               <option value={item.id}>
-                {item.name}{" "}
-                {gameStore.state.inventory?.items.find((i) => i.id === item.id)
-                  ? "(Inventory)"
-                  : "(Room)"}
+                {item.displayName} {item.source}
               </option>
             )}
           </For>
