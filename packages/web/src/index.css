@@ -739,6 +739,40 @@ body {
   color: var(--text-secondary);
 }
 
+/* Inventory Panel Expansion */
+.inventory-panel__item-container {
+  margin-bottom: 4px;
+}
+
+.inventory-panel__item {
+  display: flex;
+  align-items: center;
+}
+
+.inventory-panel__expand-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.8em;
+  width: 20px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventory-panel__expand-btn:hover {
+  color: var(--text-primary);
+}
+
+.inventory-panel__nested {
+  margin-left: 20px;
+  border-left: 1px solid var(--border-color);
+  padding-left: 5px;
+  margin-top: 4px;
+}
+
 /* InspectorPanel */
 .inspector-panel {
   padding: 10px;
