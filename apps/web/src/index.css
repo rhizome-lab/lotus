@@ -1372,6 +1372,65 @@ body {
   padding: 2px;
 }
 
+.block-node--infix {
+  flex-direction: row;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.block-node--infix .block-node__content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.block-node__infix-op {
+  font-weight: bold;
+  color: var(--text-secondary);
+  margin: 0 4px;
+}
+
+.block-node__delete--infix {
+  margin-left: 8px;
+  font-size: 16px;
+  color: var(--text-muted);
+}
+
+.block-node--primitive {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.block-node__primitive {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.block-node__input--primitive {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  width: 80px;
+  font-family: inherit;
+}
+
+.block-node__select {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .block-node--container {
   display: flex;
   width: 100%;
@@ -1439,6 +1498,10 @@ body {
   gap: 5px;
 }
 
+.block-node__slot--infix {
+  gap: 0;
+}
+
 .block-node__slot-label {
   font-size: 10px;
   color: var(--text-muted);
@@ -1455,6 +1518,8 @@ body {
   font-size: 10px;
   color: var(--text-muted);
   background: rgba(0, 0, 0, 0.2);
+  min-width: 20px;
+  text-align: center;
 }
 
 .block-node__input {

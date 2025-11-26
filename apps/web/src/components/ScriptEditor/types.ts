@@ -3,9 +3,9 @@ export type BlockType = "container" | "statement" | "expression";
 export interface BlockDefinition {
   type: BlockType;
   label: string;
-  opcode: string; // The actual JSON op, e.g. "if", "set", "+"
+  opcode: string;
   category: "logic" | "action" | "math" | "data";
-  // For containers/statements, what slots do they have?
+  layout?: "infix" | "standard" | "primitive"; // New layout property
   slots?: {
     name: string;
     type: "block" | "string" | "number" | "boolean";
@@ -31,13 +31,69 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     label: "Sequence",
     opcode: "seq",
     category: "logic",
-    slots: [], // Special handling: infinite children
+    slots: [],
   },
   {
     type: "expression",
-    label: "Equals",
+    label: "==",
     opcode: "==",
     category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "!=",
+    opcode: "!=",
+    category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: ">",
+    opcode: ">",
+    category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "<",
+    opcode: "<",
+    category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: ">=",
+    opcode: ">=",
+    category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "<=",
+    opcode: "<=",
+    category: "logic",
+    layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
@@ -49,6 +105,28 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     opcode: "not",
     category: "logic",
     slots: [{ name: "Val", type: "block" }],
+  },
+  {
+    type: "expression",
+    label: "And",
+    opcode: "and",
+    category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "Or",
+    opcode: "or",
+    category: "logic",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
   },
 
   // Actions
@@ -77,9 +155,10 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // Math
   {
     type: "expression",
-    label: "Add",
+    label: "+",
     opcode: "+",
     category: "math",
+    layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
@@ -87,9 +166,54 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   },
   {
     type: "expression",
-    label: "Sub",
+    label: "-",
     opcode: "-",
     category: "math",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "*",
+    opcode: "*",
+    category: "math",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "/",
+    opcode: "/",
+    category: "math",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "%",
+    opcode: "%",
+    category: "math",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+  },
+  {
+    type: "expression",
+    label: "^",
+    opcode: "^",
+    category: "math",
+    layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
@@ -99,9 +223,10 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
   // Data
   {
     type: "expression",
-    label: "Prop",
+    label: ".",
     opcode: "prop",
     category: "data",
+    layout: "infix",
     slots: [
       { name: "Target", type: "block" },
       { name: "Key", type: "string" },
@@ -112,6 +237,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     label: "String",
     opcode: "string",
     category: "data",
+    layout: "primitive",
     slots: [{ name: "Val", type: "string" }],
   },
   {
@@ -119,6 +245,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     label: "Number",
     opcode: "number",
     category: "data",
+    layout: "primitive",
     slots: [{ name: "Val", type: "number" }],
   },
   {
@@ -126,6 +253,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     label: "Boolean",
     opcode: "boolean",
     category: "data",
+    layout: "primitive",
     slots: [{ name: "Val", type: "boolean" }],
   },
 ];
