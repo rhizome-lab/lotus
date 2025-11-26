@@ -4,7 +4,7 @@ import { gameStore } from "../store/game";
 interface DigPanelProps {
   initialDirection?: string;
   isLocked?: boolean;
-  hideDirection?: boolean;
+  variant?: "default" | "compass" | "custom";
   onClose?: () => void;
 }
 
@@ -29,15 +29,23 @@ export default function DigPanel(props: DigPanelProps) {
     props.onClose?.();
   };
 
+  const showInput = () => props.variant !== "compass";
+  const showCompassGrid = () =>
+    props.variant === "default" || props.variant === undefined;
+
   return (
     <div class="builder__panel dig-panel">
       <div class="builder__title">DIG ROOM</div>
       <form onSubmit={handleDig} class="builder__form">
-        <Show when={!props.hideDirection}>
+        <Show when={showInput()}>
           <div class="builder__row">
             <input
               type="text"
-              placeholder="Direction (e.g. north, up, portal)"
+              placeholder={
+                props.variant === "custom"
+                  ? "Exit Name (e.g. portal, crack)"
+                  : "Direction (e.g. north, up)"
+              }
               value={direction()}
               onInput={(e) => setDirection(e.currentTarget.value)}
               class="builder__input"
@@ -94,7 +102,7 @@ export default function DigPanel(props: DigPanelProps) {
           </div>
         </Show>
 
-        <Show when={!props.hideDirection}>
+        <Show when={showCompassGrid()}>
           <div class="dig-panel__row">
             <div class="dig-panel__compass">
               <For

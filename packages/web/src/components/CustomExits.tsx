@@ -38,7 +38,7 @@ export default function CustomExits() {
         >
           {(popoverProps) => (
             <div class="compass__builder-wrapper">
-              <DigPanel onClose={popoverProps.close} />
+              <DigPanel variant="custom" onClose={popoverProps.close} />
             </div>
           )}
         </Popover>

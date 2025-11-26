@@ -54,7 +54,7 @@ export default function Compass() {
             <DigPanel
               initialDirection={props.dir}
               isLocked={true}
-              hideDirection={true}
+              variant="compass"
               onClose={popoverProps.close}
             />
           </div>
