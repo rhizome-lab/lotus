@@ -162,5 +162,140 @@ export function seed() {
     props: { direction: "south", destination_id: lobbyId },
   });
 
+  // 9. Create a Gemstore
+  const gemstoreId = createEntity({
+    name: "Gemstore",
+    kind: "ROOM",
+    props: {
+      description: "A glittering shop filled with rare stones and oddities.",
+    },
+  });
+
+  // Link Lobby and Gemstore
+  createEntity({
+    name: "east",
+    kind: "EXIT",
+    location_id: lobbyId,
+    props: { direction: "east", destination_id: gemstoreId },
+  });
+
+  createEntity({
+    name: "west",
+    kind: "EXIT",
+    location_id: gemstoreId,
+    props: { direction: "west", destination_id: lobbyId },
+  });
+
+  // Items in Gemstore
+  createEntity({
+    name: "Black Obsidian",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "A pitch black stone.",
+      adjectives: ["black", "shiny"],
+    },
+  });
+
+  createEntity({
+    name: "Silver Dagger",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "A gleaming silver blade.",
+      adjectives: ["silver", "metallic"],
+    },
+  });
+
+  createEntity({
+    name: "Gold Coin",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: { description: "A heavy gold coin.", adjectives: ["gold", "heavy"] },
+  });
+
+  createEntity({
+    name: "Platinum Ring",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "A precious platinum ring.",
+      adjectives: ["platinum", "precious"],
+    },
+  });
+
+  createEntity({
+    name: "Radioactive Isotope",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "It glows with a sickly light.",
+      adjectives: ["radioactive", "glowing"],
+    },
+  });
+
+  createEntity({
+    name: "Electric Blue Potion",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "A crackling blue liquid.",
+      adjectives: ["electric blue", "glowing"],
+    },
+  });
+
+  createEntity({
+    name: "Ethereal Mist",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "A swirling white mist.",
+      adjectives: ["white", "ethereal"],
+    },
+  });
+
+  createEntity({
+    name: "Transparent Cube",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: {
+      description: "You can barely see it.",
+      adjectives: ["transparent", "glass"],
+    },
+  });
+
+  const wigStandId = createEntity({
+    name: "Wig Stand",
+    kind: "ITEM",
+    location_id: gemstoreId,
+    props: { description: "A stand holding various wigs.", slots: ["surface"] },
+  });
+
+  if (wigStandId) {
+    createEntity({
+      name: "Auburn Wig",
+      kind: "ITEM",
+      location_id: wigStandId,
+      location_detail: "surface",
+      props: { description: "A reddish-brown wig.", adjectives: ["auburn"] },
+    });
+
+    createEntity({
+      name: "Blonde Wig",
+      kind: "ITEM",
+      location_id: wigStandId,
+      location_detail: "surface",
+      props: { description: "A bright yellow wig.", adjectives: ["blonde"] },
+    });
+
+    createEntity({
+      name: "Brunette Wig",
+      kind: "ITEM",
+      location_id: wigStandId,
+      location_detail: "surface",
+      props: { description: "A dark brown wig.", adjectives: ["brunette"] },
+    });
+  }
+
   console.log("Seeding complete!");
 }

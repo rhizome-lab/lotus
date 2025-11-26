@@ -1121,6 +1121,23 @@ body {
   }
 }
 
+.attribute-radioactive {
+  color: oklch(0.85 0.25 140);
+  text-shadow: 0 0 8px currentColor;
+  animation: radioactive-pulse 1.5s infinite alternate;
+}
+
+@keyframes radioactive-pulse {
+  from {
+    opacity: 1;
+    text-shadow: 0 0 8px currentColor;
+  }
+  to {
+    opacity: 0.7;
+    text-shadow: 0 0 2px currentColor;
+  }
+}
+
 /* Dynamic Colors */
 [class*="attribute-color-"] {
   color: oklch(var(--item-l, 0.65) var(--item-c, 0.18) var(--item-hue, 0));
@@ -1166,6 +1183,64 @@ body {
 .attribute-color-white {
   --item-l: 0.95;
   --item-c: 0;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+
+.attribute-color-black {
+  --item-l: 0.15;
+  --item-c: 0;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+}
+
+.attribute-color-silver {
+  --item-l: 0.8;
+  --item-c: 0.02;
+  --item-hue: 260;
+}
+
+.attribute-color-gold {
+  --item-l: 0.8;
+  --item-c: 0.15;
+  --item-hue: 85;
+}
+
+.attribute-color-copper {
+  --item-l: 0.65;
+  --item-c: 0.12;
+  --item-hue: 45;
+}
+
+.attribute-color-platinum {
+  --item-l: 0.92;
+  --item-c: 0.02;
+  --item-hue: 260;
+  text-shadow: 0 0 2px currentColor;
+}
+
+.attribute-color-blonde {
+  --item-l: 0.9;
+  --item-c: 0.1;
+  --item-hue: 95;
+}
+
+.attribute-color-brunette {
+  --item-l: 0.35;
+  --item-c: 0.08;
+  --item-hue: 50;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.attribute-color-auburn {
+  --item-l: 0.45;
+  --item-c: 0.12;
+  --item-hue: 35;
+}
+
+.attribute-color-electric-blue {
+  --item-l: 0.85;
+  --item-c: 0.2;
+  --item-hue: 200;
+  text-shadow: 0 0 5px currentColor;
 }
 
 /* Modifiers */
