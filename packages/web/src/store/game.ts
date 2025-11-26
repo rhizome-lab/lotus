@@ -90,7 +90,7 @@ export const gameStore = {
           setState("inspectedItem", data);
         }
 
-        gameStore.addMessage(data);
+        gameStore.addMessage(structuredClone(data));
       } catch (e) {
         console.error("Failed to parse message", e);
       }
