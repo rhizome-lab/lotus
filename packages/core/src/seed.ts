@@ -193,7 +193,12 @@ export function seed() {
     location_id: gemstoreId,
     props: {
       description: "A pitch black stone.",
-      adjectives: ["color:black", "effect:shiny"],
+      adjectives: [
+        "color:black",
+        "effect:shiny",
+        "material:stone",
+        "material:obsidian",
+      ],
     },
   });
 
@@ -203,7 +208,7 @@ export function seed() {
     location_id: gemstoreId,
     props: {
       description: "A gleaming silver blade.",
-      adjectives: ["color:silver", "material:metal"],
+      adjectives: ["color:silver", "material:metal", "material:silver"],
     },
   });
 
@@ -213,7 +218,12 @@ export function seed() {
     location_id: gemstoreId,
     props: {
       description: "A heavy gold coin.",
-      adjectives: ["color:gold", "weight:heavy"],
+      adjectives: [
+        "color:gold",
+        "weight:heavy",
+        "material:metal",
+        "material:gold",
+      ],
     },
   });
 
@@ -223,7 +233,12 @@ export function seed() {
     location_id: gemstoreId,
     props: {
       description: "A precious platinum ring.",
-      adjectives: ["color:platinum", "value:precious"],
+      adjectives: [
+        "color:platinum",
+        "value:precious",
+        "material:metal",
+        "material:platinum",
+      ],
     },
   });
 
