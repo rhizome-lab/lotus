@@ -1,0 +1,14 @@
+{
+  "name": "@viwo/shared",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./constants/adjectives": "./src/constants/adjectives.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

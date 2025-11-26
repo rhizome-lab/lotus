@@ -50,6 +50,13 @@
         "bun-types": "latest",
       },
     },
+    "packages/shared": {
+      "name": "@viwo/shared",
+      "version": "0.0.0",
+      "devDependencies": {
+        "typescript": "^5.0.0",
+      },
+    },
     "packages/tui": {
       "name": "@viwo/tui",
       "version": "0.0.0",
@@ -69,6 +76,7 @@
       "name": "@viwo/web",
       "version": "0.0.0",
       "dependencies": {
+        "@viwo/shared": "workspace:*",
         "solid-js": "^1.8.15",
       },
       "devDependencies": {
@@ -264,6 +272,8 @@
     "@viwo/core": ["@viwo/core@workspace:packages/core"],
 
     "@viwo/discord-bot": ["@viwo/discord-bot@workspace:packages/discord-bot"],
+
+    "@viwo/shared": ["@viwo/shared@workspace:packages/shared"],
 
     "@viwo/tui": ["@viwo/tui@workspace:packages/tui"],
 

@@ -2,6 +2,9 @@
   "name": "@viwo/core",
   "version": "0.0.0",
   "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "type": "module",
   "scripts": {
     "dev": "bun run --watch src/index.ts",

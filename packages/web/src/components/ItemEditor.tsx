@@ -1,6 +1,6 @@
 import { createSignal, For, createEffect } from "solid-js";
 import { gameStore } from "../store/game";
-import { ALL_ADJECTIVES } from "../constants/adjectives";
+import { ALL_ADJECTIVES } from "@viwo/shared/constants/adjectives";
 
 export default function ItemEditor() {
   const [selectedItemId, setSelectedItemId] = createSignal<number | null>(null);
