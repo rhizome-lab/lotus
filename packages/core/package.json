@@ -7,7 +7,7 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run --watch src/dev.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

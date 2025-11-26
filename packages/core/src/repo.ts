@@ -119,3 +119,62 @@ export function getContents(containerId: number): Entity[] {
     .all(containerId) as { id: number }[];
   return rows.map((r) => getEntity(r.id)!);
 }
+
+export function updateEntity(
+  id: number,
+  data: {
+    name?: string;
+    location_id?: number;
+    location_detail?: string;
+    props?: Record<string, any>;
+    state?: Record<string, any>;
+    ai_context?: Record<string, any>;
+  },
+) {
+  const updates: string[] = [];
+  const params: any[] = [];
+
+  if (data.name !== undefined) {
+    updates.push("name = ?");
+    params.push(data.name);
+  }
+  if (data.location_id !== undefined) {
+    updates.push("location_id = ?");
+    params.push(data.location_id);
+  }
+  if (data.location_detail !== undefined) {
+    updates.push("location_detail = ?");
+    params.push(data.location_detail);
+  }
+
+  if (updates.length > 0) {
+    params.push(id);
+    db.query(`UPDATE entities SET ${updates.join(", ")} WHERE id = ?`).run(
+      ...params,
+    );
+  }
+
+  // Update entity_data
+  const dataUpdates: string[] = [];
+  const dataParams: any[] = [];
+
+  if (data.props) {
+    dataUpdates.push("props = ?");
+    dataParams.push(JSON.stringify(data.props));
+  }
+  if (data.state) {
+    dataUpdates.push("state = ?");
+    dataParams.push(JSON.stringify(data.state));
+  }
+  if (data.ai_context) {
+    dataUpdates.push("ai_context = ?");
+    dataParams.push(JSON.stringify(data.ai_context));
+  }
+
+  if (dataUpdates.length > 0) {
+    dataParams.push(id);
+    db.query(
+      `UPDATE entity_data SET ${dataUpdates.join(", ")} WHERE entity_id = ?`,
+    ).run(...dataParams);
+  }
+}
