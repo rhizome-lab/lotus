@@ -255,6 +255,8 @@ body {
   padding: 2px;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 
 .compass__cell:hover {
@@ -296,27 +298,98 @@ body {
 }
 
 .compass__modal {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay-bg);
+  display: none; /* Deprecated */
+}
+
+.compass__popover {
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  width: 300px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.compass__add-btn {
+  background: var(--bg-element);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
 }
 
-.compass__modal-content {
-  background: var(--bg-app);
-  padding: 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  width: 300px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.compass__add-btn:hover {
+  background: var(--bg-element-hover);
+  border-color: var(--accent-color);
 }
 
-.compass__modal-title {
+.custom-exits {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 10px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.custom-exits__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 10px;
+  font-size: 0.9em;
+  color: var(--text-muted);
+  text-transform: uppercase;
   font-weight: bold;
+}
+
+.custom-exits__list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.custom-exits__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--bg-element);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.custom-exits__item:hover {
+  background: var(--bg-element-hover);
+}
+
+.custom-exits__name {
+  font-weight: bold;
+  color: var(--link-color);
+}
+
+.custom-exits__dest {
+  font-size: 0.8em;
+  color: var(--text-muted);
+}
+
+.custom-exits__empty {
+  font-style: italic;
+  color: var(--text-muted);
+  font-size: 0.9em;
+  text-align: center;
+  padding: 10px;
 }
 
 /* Builder */

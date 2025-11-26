@@ -3,6 +3,7 @@ import { gameStore } from "./store/game";
 import GameLog from "./components/GameLog";
 import Builder from "./components/Builder";
 import Compass from "./components/Compass";
+import CustomExits from "./components/CustomExits";
 import RoomPanel from "./components/RoomPanel";
 import InventoryPanel from "./components/InventoryPanel";
 import InspectorPanel from "./components/InspectorPanel";
@@ -45,6 +46,7 @@ function App() {
       <div class="app__sidebar-left">
         <div class="app__sidebar-header">LOG</div>
         <GameLog />
+        <CustomExits />
       </div>
 
       {/* Center (Room View) */}
