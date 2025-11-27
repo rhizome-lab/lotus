@@ -239,6 +239,10 @@ export function startServer(port: number = 8080) {
                 const { deleteEntity } = require("./repo");
                 deleteEntity(id);
               },
+              getAllEntities: () => {
+                const { getAllEntities } = require("./repo");
+                return getAllEntities();
+              },
               call: async (targetId, verbName, callArgs) => {
                 const { getVerb, getEntity } = require("./repo");
                 const targetVerb = getVerb(targetId, verbName);
@@ -265,6 +269,10 @@ export function startServer(port: number = 8080) {
                       destroy: (id) => {
                         const { deleteEntity } = require("./repo");
                         deleteEntity(id);
+                      },
+                      getAllEntities: () => {
+                        const { getAllEntities } = require("./repo");
+                        return getAllEntities();
                       },
                       // Recursive calls allowed?
                     },

@@ -45,13 +45,13 @@ describe("Interpreter", () => {
     send: mock(() => {}),
   };
 
-  const ctx: ScriptContext = {
+  const ctx = {
     caller,
     this: target,
     args: [],
     gas: 1000,
     sys,
-  };
+  } satisfies ScriptContext;
 
   test("literals", async () => {
     expect(await evaluate(1, ctx)).toBe(1);
@@ -241,17 +241,17 @@ describe("Interpreter", () => {
 
   test("destroy fallback", async () => {
     // Mock sys without destroy but with move
-    const sysWithoutDestroy = { ...ctx.sys, destroy: undefined };
-    const ctxFallback = { ...ctx, sys: sysWithoutDestroy } as any;
+    const { destroy: _, ...sysWithoutDestroy } = ctx.sys;
+    const ctxFallback = { ...ctx, sys: sysWithoutDestroy };
 
     // Should return true (and do nothing/log? implementation has empty block)
     expect(await evaluate(["destroy", "this"], ctxFallback)).toBe(true);
   });
 
   test("create missing sys", async () => {
-    const sysWithoutCreate = { ...ctx.sys, create: undefined };
-    const ctxMissing = { ...ctx, sys: sysWithoutCreate } as any;
+    const { create: _, ...sysWithoutCreate } = ctx.sys;
+    const ctxMissing = { ...ctx, sys: sysWithoutCreate };
 
-    expect(await evaluate(["create", {}], ctxMissing)).toBe(null);
+    expect(await evaluate(["create", {}], ctxMissing as never)).toBe(null);
   });
 });

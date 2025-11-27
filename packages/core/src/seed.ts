@@ -1,4 +1,4 @@
-import { createEntity } from "./repo";
+import { createEntity, addVerb } from "./repo";
 import { db } from "./db";
 
 export function seed() {
@@ -323,6 +323,60 @@ export function seed() {
       },
     });
   }
+
+  // 10. Create Scripting Test Items (Lobby)
+
+  // Watch Item
+  const watchId = createEntity({
+    name: "Golden Watch",
+    kind: "ITEM",
+    location_id: lobbyId,
+    props: {
+      description: "A beautiful golden pocket watch.",
+      adjectives: ["color:gold", "material:gold"],
+    },
+  });
+
+  addVerb(watchId, "tell", [
+    "tell",
+    "caller",
+    ["time.format", ["time.now"], "time"],
+  ]);
+
+  // Teleporter Item
+  const teleporterId = createEntity({
+    name: "Teleporter Stone",
+    kind: "ITEM",
+    location_id: lobbyId,
+    props: {
+      description: "A humming stone that vibrates with energy.",
+      destination: gardenId,
+      adjectives: ["effect:glowing", "material:stone"],
+    },
+  });
+
+  addVerb(teleporterId, "teleport", [
+    "move",
+    "caller",
+    ["prop", "this", "destination"],
+  ]);
+
+  // Status Item
+  const statusId = createEntity({
+    name: "Status Orb",
+    kind: "ITEM",
+    location_id: lobbyId,
+    props: {
+      description: "A crystal orb that shows world statistics.",
+      adjectives: ["effect:transparent", "material:crystal"],
+    },
+  });
+
+  addVerb(statusId, "check", [
+    "tell",
+    "caller",
+    ["str.concat", "Total entities: ", ["list.len", ["world.entities"]]],
+  ]);
 
   console.log("Seeding complete!");
 }

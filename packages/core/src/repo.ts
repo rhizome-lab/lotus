@@ -168,6 +168,16 @@ export function getContents(containerId: number): Entity[] {
 }
 
 /**
+ * Gets all entity IDs in the world.
+ *
+ * @returns An array of all entity IDs.
+ */
+export function getAllEntities(): number[] {
+  const rows = db.query("SELECT id FROM entities").all() as { id: number }[];
+  return rows.map((r) => r.id);
+}
+
+/**
  * Updates an existing entity.
  * Only provided fields will be updated.
  *

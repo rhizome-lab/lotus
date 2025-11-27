@@ -1,5 +1,7 @@
 import { Entity, updateEntity } from "../repo";
 import { checkPermission } from "../permissions";
+import { TimeLibrary } from "./lib/time";
+import { WorldLibrary } from "./lib/world";
 
 export type ScriptContext = {
   caller: Entity;
@@ -13,6 +15,7 @@ export type ScriptContext = {
     send: (msg: any) => void;
     destroy?: (id: number) => void;
     call?: (targetId: number, verb: string, args: any[]) => Promise<any>;
+    getAllEntities?: () => number[];
   };
   warnings?: string[];
 };
@@ -250,6 +253,8 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
     }
     return null;
   },
+  ...TimeLibrary,
+  ...WorldLibrary,
 };
 
 export function registerOpcode(
@@ -285,12 +290,20 @@ export async function evaluate(ast: any, ctx: ScriptContext): Promise<any> {
   throw new ScriptError(`Unknown opcode: ${op}`);
 }
 
-async function evaluateTarget(
+export async function evaluateTarget(
   expr: any,
   ctx: ScriptContext,
 ): Promise<Entity | null> {
   if (expr === "this") return ctx.this;
   if (expr === "caller") return ctx.caller;
-  // TODO: Support resolving entity IDs or other references
+  if (typeof expr === "number") {
+    // Resolve entity by ID
+    // We need a way to get entity by ID here.
+    // Since we can't import getEntity directly due to circular deps if we are not careful,
+    // but interpreter.ts is in scripting, and repo is in parent.
+    // We imported updateEntity from ../repo, so we can import getEntity too.
+    const { getEntity } = await import("../repo");
+    return getEntity(expr);
+  }
   return null;
 }
