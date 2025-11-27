@@ -16,7 +16,6 @@ import { checkPermission } from "./permissions";
 import { PluginManager, CommandContext } from "./plugin";
 import { scheduler } from "./scheduler";
 import { evaluate, ScriptSystemContext } from "./scripting/interpreter";
-import { CommandName, CommandSchemas } from "@viwo/shared/commands";
 
 export { PluginManager };
 export type { CommandContext };
@@ -162,12 +161,11 @@ export function startServer(port: number = 8080) {
         return;
       }
 
-      const [commandName, ...rawArgs] = data as [string, ...any[]];
-      const command = commandName as CommandName;
+      const [command, ...args] = data as [string, ...unknown[]];
 
       console.log(
         `[Player ${ws.playerId}] Command: ${command}, Args: ${JSON.stringify(
-          rawArgs,
+          args,
         )}`,
       );
 
@@ -363,7 +361,7 @@ export function startServer(port: number = 8080) {
       const ctx: CommandContext = {
         player: { id: player.id, ws },
         command,
-        args: rawArgs,
+        args: args,
         send: (msg) => ws.send(JSON.stringify(msg)),
         core: {
           getEntity,
@@ -386,22 +384,6 @@ export function startServer(port: number = 8080) {
 
       if (await pluginManager.handleCommand(ctx)) {
         return;
-      }
-
-      // Validate command args
-      const schema = CommandSchemas[command];
-
-      let args: any[] = rawArgs;
-
-      if (schema) {
-        const result = schema.safeParse(rawArgs);
-        if (!result.success) {
-          const errorMessage =
-            result.error.issues[0]?.message || "Invalid arguments.";
-          ws.send(JSON.stringify({ type: "error", text: errorMessage }));
-          return;
-        }
-        args = result.data;
       }
 
       // --- SCRIPTING ENGINE INTEGRATION ---
@@ -467,7 +449,13 @@ export function startServer(port: number = 8080) {
       // For now, they are hardcoded.
       // The `login` command is an exception as it changes the player's session.
       if (command === "login") {
-        const id = args[0]; // Zod coerced to number
+        const id = args[0];
+        if (typeof id !== "number") {
+          ws.send(
+            JSON.stringify({ type: "error", text: "Invalid player ID." }),
+          );
+          return;
+        }
         const player = getEntity(id);
         if (player) {
           ws.playerId = id;
@@ -482,6 +470,12 @@ export function startServer(port: number = 8080) {
         }
       } else if (command === "create_player") {
         const name = args[0];
+        if (typeof name !== "string") {
+          ws.send(
+            JSON.stringify({ type: "error", text: "Invalid player name." }),
+          );
+          return;
+        }
         // Default start location (Void or Room 1)
         // For now, let's try to find a "Start" room or just use 1
         const startRoom = db
