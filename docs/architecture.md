@@ -2,6 +2,17 @@
 
 Viwo is a modern, web-based Multi-User Dungeon (MUD) engine built with TypeScript. It uses a monorepo structure to separate the core game logic, shared definitions, and frontend applications.
 
+## Design Philosophy
+
+Viwo is inspired by ChatMUD and LambdaMOO, focusing on a semantic world state, rich object interactions, and deep AI integration.
+
+## Tech Stack
+
+- **Runtime**: Bun
+- **Database**: Bun:SQLite
+- **Frontend**: SolidJS (Web), React + Ink (TUI)
+- **AI**: Vercel AI SDK
+
 ## High-Level Overview
 
 The system consists of several main parts:
@@ -22,6 +33,7 @@ Everything in the game world is an **Entity**. Entities are stored in a SQLite d
 - **Kind**: Entities have a `kind` (e.g., `ROOM`, `ACTOR`, `ITEM`, `EXIT`, `ZONE`).
 - **Props**: Entities have a JSON `props` field for flexible data storage (e.g., description, custom CSS, adjectives).
 - **Location**: Entities form a hierarchy via `location_id`.
+- **Inheritance**: Objects can inherit properties and methods from parent objects (Prototypes).
 
 ### Scripting
 
@@ -29,6 +41,12 @@ Viwo features a custom scripting language (Lisp-like S-expressions) for dynamic 
 
 - **Verbs**: Scripts attached to entities that define actions (e.g., `push`, `open`).
 - **Interpreter**: A secure sandbox that executes scripts with access to game primitives.
+
+## AI Integration
+
+- **Text Generation**: For NPC dialogue, room descriptions, and dynamic responses.
+- **Image Generation**: For character avatars and item icons.
+- **Vercel AI SDK**: Used for abstracting LLM providers.
 
 ## Data Flow
 

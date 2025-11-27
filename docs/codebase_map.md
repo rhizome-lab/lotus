@@ -1,6 +1,7 @@
 # Codebase Map
 
 This document lists key files and directories to help navigation.
+**Note**: All paths are relative to the project root.
 
 ## Core Server (`packages/core`)
 
@@ -30,6 +31,7 @@ This document lists key files and directories to help navigation.
 
 - **`apps/discord-bot/`**: Discord bot implementation.
 - **`apps/cli/`**: Command-line interface.
+- **`apps/server/`**: Standalone server entry point.
 
 ## Plugins
 
