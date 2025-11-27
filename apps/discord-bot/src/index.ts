@@ -1,6 +1,10 @@
 import { bot } from "./bot";
+import { socketManager } from "./socket";
 
 console.log("Starting Discord Bot...");
+
+// Start Socket Manager
+socketManager.connect();
 
 // Start Discord Bot
 bot.start();

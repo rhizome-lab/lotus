@@ -1,4 +1,4 @@
-import { describe, test, expect, mock, beforeEach } from "bun:test";
+import { describe, test, expect, mock, beforeEach, spyOn } from "bun:test";
 
 // Mock dependencies
 const mockDb = {
@@ -6,19 +6,8 @@ const mockDb = {
   getDefaultEntity: mock((): unknown => null),
   setDefaultEntity: mock(() => {}),
   setActiveEntity: mock(() => {}),
-};
-
-const mockSocketManager = {
-  getSystemSocket: mock(() => ({
-    on: mock((event, handler) => {
-      // Simulate immediate response for create_player
-      if (event === "message") {
-        handler({ type: "player_created", name: "NewPlayer", id: 999 });
-      }
-    }),
-    off: mock(() => {}),
-    send: mock(() => {}),
-  })),
+  get: mock(() => {}),
+  run: mock(() => {}),
 };
 
 // Mock config to prevent invalid URL error if socket.ts loads
@@ -36,8 +25,33 @@ mock.module("ws", () => ({
 }));
 
 mock.module("./db", () => ({ db: mockDb }));
-// We still try to mock socket, but if it fails, the above mocks save us
-mock.module("./socket", () => ({ socketManager: mockSocketManager }));
+
+// Import real socketManager (now safe as it doesn't auto-connect)
+import { socketManager } from "./socket";
+
+// Mock system socket
+const mockSystemSocket = {
+  send: mock(() => {}),
+  on: mock((event: string, handler: Function) => {
+    // Default behavior: Simulate immediate response for create_player
+    if (event === "message") {
+      handler({ type: "player_created", name: "NewPlayer", id: 999 });
+    }
+  }),
+  off: mock(() => {}),
+  connect: mock(() => {}),
+} as any;
+
+// Spy on getSystemSocket
+spyOn(socketManager, "getSystemSocket").mockReturnValue(mockSystemSocket);
+
+// Also mock getSocket
+const mockPlayerSocket = {
+  send: mock(() => {}),
+  on: mock(() => {}),
+  connect: mock(() => {}),
+} as any;
+spyOn(socketManager, "getSocket").mockReturnValue(mockPlayerSocket);
 
 // import { sessionManager } from "./session";
 let sessionManager: any;
@@ -48,6 +62,20 @@ describe("Session Manager", () => {
     mockDb.getDefaultEntity.mockClear();
     mockDb.setDefaultEntity.mockClear();
     mockDb.setActiveEntity.mockClear();
+    mockDb.get.mockClear();
+    mockDb.run.mockClear();
+    mockSystemSocket.send.mockClear();
+    mockPlayerSocket.send.mockClear();
+
+    // Reset default mock implementation for system socket
+    mockSystemSocket.on.mockImplementation(
+      (event: string, handler: Function) => {
+        if (event === "message") {
+          console.log("Mock socket emitting message for NewPlayer");
+          handler({ type: "player_created", name: "NewPlayer", id: 999 });
+        }
+      },
+    );
 
     const module = await import("./session");
     sessionManager = module.sessionManager;
@@ -84,21 +112,9 @@ describe("Session Manager", () => {
     mockDb.getDefaultEntity.mockReturnValue(null);
 
     // Override socket mock to NOT respond
-    mockSocketManager.getSystemSocket.mockReturnValue({
-      on: mock(() => {}), // No response
-      off: mock(() => {}),
-      send: mock(() => {}),
-    } as any);
+    mockSystemSocket.on.mockImplementation(() => {});
 
-    // Reduce timeout for test? We can't easily without modifying source or mocking setTimeout.
-    // Since we use bun:test, we can use fake timers if available, or just mock setTimeout?
-    // Bun test doesn't have full fake timers yet like Jest.
-    // We'll just rely on the fact that it throws.
-    // Wait, 5000ms is too long for a unit test.
-    // We should probably make the timeout configurable or mock setTimeout.
-    // For now, let's skip this or mock the whole createPlayer method if we could, but we want to test the method itself.
-    // Let's mock global setTimeout.
-
+    // Mock setTimeout
     const originalSetTimeout = global.setTimeout;
     const mockSetTimeout = mock((cb, _ms) => {
       cb(); // Trigger immediately
@@ -122,18 +138,16 @@ describe("Session Manager", () => {
     mockDb.getDefaultEntity.mockReturnValue(null);
 
     // Override socket to send an ignored message first
-    mockSocketManager.getSystemSocket.mockReturnValue({
-      on: mock((event, handler) => {
+    mockSystemSocket.on.mockImplementation(
+      (event: string, handler: Function) => {
         if (event === "message") {
           // Send unrelated message
           handler({ type: "other_message" });
           // Then send correct message
           handler({ type: "player_created", name: "IgnoredPlayer", id: 777 });
         }
-      }),
-      off: mock(() => {}),
-      send: mock(() => {}),
-    } as any);
+      },
+    );
 
     const id = await sessionManager.ensureSession("u1", "c1", "IgnoredPlayer");
     expect(id).toBe(777);

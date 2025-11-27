@@ -201,12 +201,6 @@ export const themeStore = {
     const theme = state.themes.find((t) => t.id === activeId);
     if (theme?.isBuiltin) {
       // If trying to edit builtin, create a copy first?
-      // For now, let's just allow editing builtin in memory but maybe not save?
-      // Actually, better UX: Prompt to create new theme or auto-fork.
-      // For simplicity, let's just allow editing but it won't persist as "default" if we re-download code,
-      // but here it's local storage so it's fine.
-      // Wait, "isBuiltin" usually implies read-only.
-      // Let's auto-fork if builtin.
       if (confirm("Cannot edit default theme. Create a copy?")) {
         themeStore.createTheme("Copy of " + theme.manifest.name);
         // Then update the new one
@@ -266,6 +260,11 @@ export const themeStore = {
 
   toggleCustomCss: () => {
     setState("allowCustomCss", (prev) => !prev);
+  },
+
+  // For testing
+  reset: () => {
+    setState(loadInitialState());
   },
 };
 

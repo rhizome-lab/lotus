@@ -77,6 +77,9 @@ export class SocketManager extends EventEmitter {
     super();
     // System socket for creating players, etc. (acting as Guest or Admin)
     this.systemSocket = new GameSocket();
+  }
+
+  connect() {
     this.systemSocket.connect();
   }
 

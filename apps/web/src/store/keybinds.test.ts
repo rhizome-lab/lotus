@@ -1,5 +1,5 @@
 /// <reference types="bun" />
-import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { describe, test, expect, beforeEach, mock, spyOn } from "bun:test";
 
 // Mock localStorage BEFORE import
 const localStorageMock = (() => {
@@ -18,9 +18,13 @@ const localStorageMock = (() => {
   };
 })();
 
-Object.defineProperty(global, "localStorage", {
-  value: localStorageMock,
-});
+if (!global.localStorage) {
+  Object.defineProperty(global, "localStorage", {
+    value: localStorageMock,
+    writable: true,
+    configurable: true,
+  });
+}
 
 // Import after mock
 // import { keybindsStore } from "./keybinds";
@@ -54,12 +58,23 @@ describe("Keybinds Store", () => {
 
   test("loadBindings with existing data", () => {
     const { loadBindings } = require("./keybinds");
-    const mockGetItem = mock(() => JSON.stringify({ north: "up" }));
-    global.localStorage.getItem = mockGetItem;
+
+    // Assuming `spyOn` is available globally or imported, e.g., from Jest or a similar test utility.
+    // If using Bun's `mock`, it would be `const getItemSpy = mock(global.localStorage, "getItem").mockReturnValue(...)`
+    const getItemSpy = spyOn(global.localStorage, "getItem").mockImplementation(
+      (key: string) => {
+        if (key === "viwo_keybinds") {
+          return JSON.stringify({ north: "up" });
+        }
+        return null;
+      },
+    );
 
     const bindings = loadBindings();
     expect(bindings.north).toBe("up");
     expect(bindings.south).toBe("s"); // Default preserved
+
+    getItemSpy.mockRestore();
   });
 
   test("Reset defaults", () => {
