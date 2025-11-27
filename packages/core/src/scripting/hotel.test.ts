@@ -47,15 +47,6 @@ describe("Hotel Scripting", () => {
       const targetEntity = target?.id ? target : entities[target];
       const destEntity = dest?.id ? dest : entities[dest];
 
-      console.log("MOVE DEBUG:", {
-        targetExpr,
-        destExpr,
-        target: target?.id || target,
-        dest: dest?.id || dest,
-        targetEntityId: targetEntity?.id,
-        destEntityId: destEntity?.id,
-      });
-
       if (targetEntity && destEntity) {
         targetEntity.location_id = destEntity.id;
       }
@@ -74,11 +65,6 @@ describe("Hotel Scripting", () => {
         props: data.props || {},
         location_id: data.location_id,
       } as any;
-      console.log("CREATE DEBUG:", {
-        id,
-        name: data.name,
-        entitiesKeys: Object.keys(entities),
-      });
       return id;
     });
 

@@ -261,9 +261,9 @@ export interface Verb {
   /** The name of the verb (command) */
   name: string;
   /** The compiled S-expression code for the verb */
-  code: any; // JSON
+  code: unknown; // JSON
   /** Permission settings for the verb */
-  permissions: Record<string, any>;
+  permissions: Record<string, unknown>;
 }
 
 export function getVerbs(entityId: number): Verb[] {
@@ -274,7 +274,10 @@ export function getVerbs(entityId: number): Verb[] {
 
     const rows = db
       .query("SELECT * FROM verbs WHERE entity_id = ?")
-      .all(id) as any[];
+      .all(id) as readonly (Omit<Verb, "code" | "permissions"> & {
+      code: string;
+      permissions: string;
+    })[];
 
     const verbs = rows.map((r) => ({
       ...r,
