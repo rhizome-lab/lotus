@@ -207,6 +207,63 @@ describe("Interpreter Libraries", () => {
     });
   });
 
+  describe("Object Library", () => {
+    test("obj.keys", async () => {
+      expect(await evaluate(["obj.keys", { a: 1, b: 2 }], ctx)).toEqual([
+        "a",
+        "b",
+      ]);
+      expect(await evaluate(["obj.keys", {}], ctx)).toEqual([]);
+    });
+
+    test("obj.values", async () => {
+      expect(await evaluate(["obj.values", { a: 1, b: 2 }], ctx)).toEqual([
+        1, 2,
+      ]);
+    });
+
+    test("obj.entries", async () => {
+      expect(await evaluate(["obj.entries", { a: 1 }], ctx)).toEqual([
+        ["a", 1],
+      ]);
+    });
+
+    test("obj.get", async () => {
+      expect(await evaluate(["obj.get", { a: 1 }, "a"], ctx)).toBe(1);
+      expect(await evaluate(["obj.get", { a: 1 }, "b"], ctx)).toBe(undefined);
+    });
+
+    test("obj.set", async () => {
+      const localCtx = { ...ctx, locals: {} };
+      await evaluate(["let", "o", { a: 1 }], localCtx);
+      await evaluate(["obj.set", ["var", "o"], "b", 2], localCtx);
+      expect(await evaluate(["var", "o"], localCtx)).toEqual({ a: 1, b: 2 });
+    });
+
+    test("obj.has", async () => {
+      expect(await evaluate(["obj.has", { a: 1 }, "a"], ctx)).toBe(true);
+      expect(await evaluate(["obj.has", { a: 1 }, "b"], ctx)).toBe(false);
+    });
+
+    test("obj.del", async () => {
+      const localCtx = { ...ctx, locals: {} };
+      await evaluate(["let", "o", { a: 1, b: 2 }], localCtx);
+      expect(await evaluate(["obj.del", ["var", "o"], "a"], localCtx)).toBe(
+        true,
+      );
+      expect(await evaluate(["var", "o"], localCtx)).toEqual({ b: 2 });
+      expect(await evaluate(["obj.del", ["var", "o"], "c"], localCtx)).toBe(
+        false,
+      );
+    });
+
+    test("obj.merge", async () => {
+      expect(
+        await evaluate(["obj.merge", { a: 1 }, { b: 2, a: 3 }], ctx),
+      ).toEqual({ a: 3, b: 2 });
+    });
+  });
+
   describe("Call Opcode", () => {
     test("call", async () => {
       // call(target, verb, args...)
