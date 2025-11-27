@@ -10,11 +10,13 @@ import {
   deleteEntity,
   getVerbs,
   getAllEntities,
+  getVerb,
 } from "./repo";
 import { checkPermission } from "./permissions";
 import { PluginManager, CommandContext } from "./plugin";
 import { scheduler } from "./scheduler";
-import { ScriptSystemContext } from "./scripting/interpreter";
+import { evaluate, ScriptSystemContext } from "./scripting/interpreter";
+import { CommandSchemas } from "@viwo/shared/commands";
 
 export { PluginManager };
 export type { CommandContext };
@@ -42,23 +44,43 @@ export function startServer(port: number = 8080) {
     console.log("New client connected");
 
     const sys: ScriptSystemContext = {
-      move: (id, dest) => {
-        updateEntity(id, { location_id: dest });
+      move: (id, dest) => updateEntity(id, { location_id: dest }),
+      create: createEntity,
+      send: (msg) => ws.send(JSON.stringify(msg)),
+      destroy: deleteEntity,
+      getAllEntities,
+      schedule: scheduler.schedule.bind(scheduler),
+      broadcast: (msg, locationId) => {
+        wss.clients.forEach((client) => {
+          const c = client as Client;
+          if (c.readyState === WebSocket.OPEN && c.playerId) {
+            if (!locationId) {
+              // Global
+              c.send(JSON.stringify({ type: "message", text: msg }));
+            } else {
+              // Local
+              const p = getEntity(c.playerId);
+              if (p && p.location_id === locationId) {
+                c.send(JSON.stringify({ type: "message", text: msg }));
+              }
+            }
+          }
+        });
       },
-      create: (data) => {
-        return createEntity(data);
-      },
-      send: (msg) => {
-        ws.send(JSON.stringify(msg));
-      },
-      destroy: (id) => {
-        deleteEntity(id);
-      },
-      getAllEntities: () => {
-        return getAllEntities();
-      },
-      schedule: (entityId, verb, args, delay) => {
-        scheduler.schedule(entityId, verb, args, delay);
+      call: async (caller, targetId, verbName, callArgs, warnings) => {
+        const targetVerb = getVerb(targetId, verbName);
+        const targetEnt = getEntity(targetId);
+        if (targetVerb && targetEnt) {
+          return await evaluate(targetVerb.code, {
+            caller, // Caller remains original player? Or the entity? Usually original caller for permissions.
+            this: targetEnt,
+            args: callArgs,
+            gas: 500, // Sub-call gas limit?
+            warnings, // Share warnings array
+            sys,
+          });
+        }
+        return null;
       },
       // Recursive calls allowed?
     };
@@ -144,13 +166,13 @@ export function startServer(port: number = 8080) {
             const getAdjVerb = getVerb(item.id, "get_adjectives");
             if (getAdjVerb) {
               try {
-                const { evaluate } = await import("./scripting/interpreter");
                 const result = await evaluate(getAdjVerb.code, {
                   caller: item, // Caller is self
                   this: item,
                   args: [],
                   gas: 500,
                   sys,
+                  warnings: [],
                 });
                 if (Array.isArray(result)) {
                   adjectives = result;
@@ -223,7 +245,6 @@ export function startServer(port: number = 8080) {
       }
 
       // Validate command args
-      const { CommandSchemas } = await import("@viwo/shared/commands");
       const schema = CommandSchemas[command];
 
       let args: any[] = rawArgs;
@@ -240,8 +261,6 @@ export function startServer(port: number = 8080) {
       }
 
       // --- SCRIPTING ENGINE INTEGRATION ---
-      const { getVerb } = await import("./repo");
-      const { evaluate } = await import("./scripting/interpreter");
 
       // 1. Check verbs on 'me' (the player)
       let verb = getVerb(player.id, command);
@@ -277,58 +296,7 @@ export function startServer(port: number = 8080) {
             args: args || [],
             gas: 1000, // TODO: Configurable gas
             warnings,
-            sys: {
-              move: (id, dest) => {
-                updateEntity(id, { location_id: dest });
-              },
-              create: (data) => {
-                return createEntity(data);
-              },
-              send: (msg) => {
-                ws.send(JSON.stringify(msg));
-              },
-              destroy: (id) => {
-                deleteEntity(id);
-              },
-              getAllEntities: () => {
-                return getAllEntities();
-              },
-              call: async (targetId, verbName, callArgs) => {
-                const targetVerb = getVerb(targetId, verbName);
-                const targetEnt = getEntity(targetId);
-                if (targetVerb && targetEnt) {
-                  return await evaluate(targetVerb.code, {
-                    caller: player, // Caller remains original player? Or the entity? Usually original caller for permissions.
-                    this: targetEnt,
-                    args: callArgs,
-                    gas: 500, // Sub-call gas limit?
-                    warnings, // Share warnings array
-                    sys,
-                  });
-                }
-                return null;
-              },
-              schedule: (entityId, verb, args, delay) => {
-                scheduler.schedule(entityId, verb, args, delay);
-              },
-              broadcast: (msg, locationId) => {
-                wss.clients.forEach((client) => {
-                  const c = client as Client;
-                  if (c.readyState === WebSocket.OPEN && c.playerId) {
-                    if (!locationId) {
-                      // Global
-                      c.send(JSON.stringify({ type: "message", text: msg }));
-                    } else {
-                      // Local
-                      const p = getEntity(c.playerId);
-                      if (p && p.location_id === locationId) {
-                        c.send(JSON.stringify({ type: "message", text: msg }));
-                      }
-                    }
-                  }
-                });
-              },
-            },
+            sys,
           });
 
           if (warnings.length > 0) {

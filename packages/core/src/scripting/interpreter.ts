@@ -6,27 +6,33 @@ import { WorldLibrary } from "./lib/world";
 export type ScriptSystemContext = {
   move: (id: number, dest: number) => void;
   create: (data: any) => number;
-  send: (msg: any) => void;
+  send: (msg: unknown) => void;
   destroy?: (id: number) => void;
-  call?: (targetId: number, verb: string, args: any[]) => Promise<any>;
+  call?: (
+    caller: Entity,
+    targetId: number,
+    verb: string,
+    args: unknown[],
+    warnings: string[],
+  ) => Promise<unknown>;
   getAllEntities?: () => number[];
   schedule?: (
     entityId: number,
     verb: string,
-    args: any[],
+    args: unknown[],
     delay: number,
   ) => void;
-  broadcast?: (msg: any, locationId?: number) => void;
+  broadcast?: (msg: unknown, locationId?: number) => void;
 };
 
 export type ScriptContext = {
   caller: Entity;
   this: Entity;
-  args: any[];
-  locals?: Record<string, any>;
+  args: unknown[];
+  locals?: Record<string, unknown>;
   gas?: number; // Gas limit
   sys?: ScriptSystemContext;
-  warnings?: string[];
+  warnings: string[];
 };
 
 export class ScriptError extends Error {
@@ -259,7 +265,13 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
     if (!target || typeof verb !== "string") return null;
 
     if (ctx.sys?.call) {
-      return await ctx.sys.call(target.id, verb, evaluatedArgs);
+      return await ctx.sys.call(
+        ctx.caller,
+        target.id,
+        verb,
+        evaluatedArgs,
+        ctx.warnings,
+      );
     }
     return null;
   },
