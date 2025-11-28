@@ -1,9 +1,10 @@
-import { registerStringLibrary } from "./string";
-import { registerListLibrary } from "./list";
-import { registerObjectLibrary } from "./object";
+import { registerLibrary } from "../interpreter";
+import { StringLibrary } from "./string";
+import { ListLibrary } from "./list";
+import { ObjectLibrary } from "./object";
 
 export function registerStandardLibraries() {
-  registerStringLibrary();
-  registerListLibrary();
-  registerObjectLibrary();
+  registerLibrary(StringLibrary);
+  registerLibrary(ListLibrary);
+  registerLibrary(ObjectLibrary);
 }

@@ -1,12 +1,14 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { evaluate, ScriptContext } from "../interpreter";
-import { registerStringLibrary } from "./string";
+import { evaluate, ScriptContext, registerLibrary } from "../interpreter";
+import { StringLibrary } from "./string";
+import { ListLibrary } from "./list";
 
 describe("String Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
-    registerStringLibrary();
+    registerLibrary(StringLibrary);
+    registerLibrary(ListLibrary); // Needed for str.join test
     ctx = {
       caller: { id: 1 } as any,
       this: { id: 2 } as any,

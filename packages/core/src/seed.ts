@@ -271,7 +271,7 @@ export function seed() {
             [
               "do",
               [
-                "set",
+                "prop.set",
                 ["var", "targetId"],
                 ["var", "propName"],
                 ["var", "value"],

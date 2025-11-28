@@ -15,7 +15,16 @@ import {
 import { checkPermission } from "./permissions";
 import { PluginManager, CommandContext } from "./plugin";
 import { scheduler } from "./scheduler";
-import { evaluate, ScriptSystemContext } from "./scripting/interpreter";
+import {
+  evaluate,
+  ScriptSystemContext,
+  registerLibrary,
+} from "./scripting/interpreter";
+import { StringLibrary } from "./scripting/lib/string";
+import { ObjectLibrary } from "./scripting/lib/object";
+import { TimeLibrary } from "./scripting/lib/time";
+import { WorldLibrary } from "./scripting/lib/world";
+import { ListLibrary } from "./scripting/lib/list";
 
 export { PluginManager };
 export type { CommandContext };
@@ -26,6 +35,13 @@ export const pluginManager = new PluginManager();
 const GAS_LIMIT = 1000;
 
 export function startServer(port: number = 8080) {
+  // Register libraries
+  registerLibrary(StringLibrary);
+  registerLibrary(ObjectLibrary);
+  registerLibrary(TimeLibrary);
+  registerLibrary(WorldLibrary);
+  registerLibrary(ListLibrary);
+
   seed();
 
   const wss = new WebSocketServer({ port });

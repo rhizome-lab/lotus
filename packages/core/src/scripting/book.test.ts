@@ -6,10 +6,10 @@ import {
   beforeAll,
   afterAll,
 } from "bun:test";
-import { evaluate, getOpcode } from "./interpreter";
-import { registerListLibrary } from "./lib/list";
-import { registerStringLibrary } from "./lib/string";
-import { registerObjectLibrary } from "./lib/object";
+import { evaluate, getOpcode, registerLibrary } from "./interpreter";
+import { ListLibrary } from "./lib/list";
+import { StringLibrary } from "./lib/string";
+import { ObjectLibrary } from "./lib/object";
 import { registerOpcode } from "./interpreter";
 import { Entity } from "../repo";
 
@@ -41,9 +41,9 @@ describe("Book Item Scripting", () => {
     messages = [];
 
     // Register libraries
-    registerListLibrary();
-    registerStringLibrary();
-    registerObjectLibrary();
+    registerLibrary(ListLibrary);
+    registerLibrary(StringLibrary);
+    registerLibrary(ObjectLibrary);
 
     // Mock tell opcode since we don't have full repo/sys setup in this isolated test
     registerOpcode("tell", async (args, ctx) => {

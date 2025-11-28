@@ -14,10 +14,10 @@ mock.module("../permissions", () => ({
   checkPermission: () => true,
 }));
 
-import { evaluate, ScriptSystemContext } from "./interpreter";
-import { registerListLibrary } from "./lib/list";
-import { registerStringLibrary } from "./lib/string";
-import { registerObjectLibrary } from "./lib/object";
+import { evaluate, ScriptSystemContext, registerLibrary } from "./interpreter";
+import { ListLibrary } from "./lib/list";
+import { StringLibrary } from "./lib/string";
+import { ObjectLibrary } from "./lib/object";
 import { seedHotel } from "../seeds/hotel";
 import {
   createEntity,
@@ -45,9 +45,9 @@ describe("NPC Interactions", () => {
     messages = [];
 
     // Register libraries
-    registerListLibrary();
-    registerStringLibrary();
-    registerObjectLibrary();
+    registerLibrary(ListLibrary);
+    registerLibrary(StringLibrary);
+    registerLibrary(ObjectLibrary);
 
     // Setup Sys Context
     sys = {

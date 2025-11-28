@@ -9,9 +9,18 @@ initSchema(db);
 mock.module("../db", () => ({ db }));
 
 // Import repo and seed after mocking
-import { createEntity, getVerb, getEntity } from "../repo";
+import { getEntity, createEntity, getVerb } from "../repo";
+import {
+  evaluate,
+  registerLibrary,
+  ScriptSystemContext,
+} from "../scripting/interpreter";
+import { StringLibrary } from "../scripting/lib/string";
+import { ObjectLibrary } from "../scripting/lib/object";
+import { TimeLibrary } from "../scripting/lib/time";
+import { WorldLibrary } from "../scripting/lib/world";
+import { ListLibrary } from "../scripting/lib/list";
 import { seedHotel } from "./hotel";
-import { evaluate, ScriptSystemContext } from "../scripting/interpreter";
 
 describe("Hotel Seed", () => {
   let lobbyId: number;
@@ -19,7 +28,16 @@ describe("Hotel Seed", () => {
   let sys: ScriptSystemContext;
   let player: any;
 
-  beforeAll(() => {
+  beforeAll(async () => {
+    // Register libraries
+    registerLibrary(StringLibrary);
+    registerLibrary(ObjectLibrary);
+    registerLibrary(TimeLibrary);
+    registerLibrary(WorldLibrary);
+    registerLibrary(ListLibrary);
+
+    // Initialize DB
+    db.run("DELETE FROM entities");
     // Create basic world
     voidId = createEntity({ name: "Void", kind: "ROOM" });
     lobbyId = createEntity({ name: "Lobby", kind: "ROOM" });

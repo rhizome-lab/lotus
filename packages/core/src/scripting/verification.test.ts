@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll, mock } from "bun:test";
-import { evaluate, ScriptContext } from "./interpreter";
-import { registerStringLibrary } from "./lib/string";
-import { registerListLibrary } from "./lib/list";
+import { evaluate, ScriptContext, registerLibrary } from "./interpreter";
+import { StringLibrary } from "./lib/string";
+import { ListLibrary } from "./lib/list";
+import { TimeLibrary } from "./lib/time";
+import { WorldLibrary } from "./lib/world";
 import { Entity } from "../repo";
 
 // Mock Entity
@@ -23,8 +25,10 @@ const mockEntity = (id: number, props: any = {}): Entity => ({
 
 describe("Scripting Verification", () => {
   beforeAll(() => {
-    registerStringLibrary();
-    registerListLibrary();
+    registerLibrary(StringLibrary);
+    registerLibrary(ListLibrary);
+    registerLibrary(TimeLibrary);
+    registerLibrary(WorldLibrary);
   });
 
   const caller = mockEntity(1);

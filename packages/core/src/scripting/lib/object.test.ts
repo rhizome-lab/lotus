@@ -1,14 +1,14 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { evaluate, ScriptContext } from "../interpreter";
-import { registerObjectLibrary } from "./object";
-import { registerStringLibrary } from "./string"; // Needed for str.concat in flatMap test
+import { evaluate, ScriptContext, registerLibrary } from "../interpreter";
+import { ObjectLibrary } from "./object";
+import { StringLibrary } from "./string"; // Needed for str.concat in flatMap test
 
 describe("Object Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
-    registerObjectLibrary();
-    registerStringLibrary(); // Register string lib for dependencies
+    registerLibrary(ObjectLibrary);
+    registerLibrary(StringLibrary); // Register string lib for dependencies
     ctx = {
       caller: { id: 1 } as any,
       this: { id: 2 } as any,

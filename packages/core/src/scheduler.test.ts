@@ -15,11 +15,15 @@ mock.module("./db", () => ({ db }));
 // Import modules AFTER mocking
 import { scheduler } from "./scheduler";
 import { createEntity, addVerb } from "./repo";
+import { registerLibrary } from "./scripting/interpreter";
+import { ObjectLibrary } from "./scripting/lib/object";
 
 describe("Scheduler Verification", () => {
   let entityId: number;
 
   beforeAll(() => {
+    registerLibrary(ObjectLibrary);
+
     // Create a test entity
     entityId = createEntity({
       name: "SchedulerTestEntity",
@@ -29,7 +33,7 @@ describe("Scheduler Verification", () => {
 
     // Add a verb that increments the count
     addVerb(entityId, "increment", [
-      "set",
+      "prop.set",
       "this",
       "count",
       ["+", ["prop", "this", "count"], 1],

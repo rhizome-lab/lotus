@@ -9,8 +9,10 @@ initSchema(db);
 // Mock the db module
 mock.module("../db", () => ({ db }));
 
-import { evaluate, ScriptContext } from "./interpreter";
+import { evaluate, ScriptContext, registerLibrary } from "./interpreter";
 import { Entity } from "../repo";
+import { ListLibrary } from "./lib/list";
+import { beforeAll } from "bun:test";
 
 // Mock Entity
 const mockEntity = (id: number, props: any = {}): Entity => ({
@@ -35,6 +37,12 @@ mock.module("../permissions", () => ({
 }));
 
 describe("Interpreter", () => {
+  beforeAll(() => {
+    registerLibrary(ListLibrary);
+    const { getOpcode } = require("./interpreter");
+    console.log("Registered list.len:", !!getOpcode("list.len"));
+  });
+
   const caller = mockEntity(1);
   const target = mockEntity(2);
   target.owner_id = 1;
@@ -112,7 +120,7 @@ describe("Interpreter", () => {
       error = e;
     }
     expect(error).toBeDefined();
-    expect((error as Error).message).toContain("Gas limit");
+    expect((error as Error).message).toContain("Script ran out of gas!");
   });
 
   test("capabilities", async () => {
@@ -135,8 +143,8 @@ describe("Interpreter", () => {
     // prop
     expect(await evaluate(["prop", "this", "foo"], ctx)).toBe("bar");
 
-    // set
-    await evaluate(["set", "this", "foo", "baz"], ctx);
+    // prop.set
+    await evaluate(["prop.set", "this", "foo", "baz"], ctx);
 
     // Verify DB update
     const row = db
@@ -213,7 +221,7 @@ describe("Interpreter", () => {
   });
 
   test("var retrieval", async () => {
-    const localCtx = { ...ctx, locals: { x: 10 } };
+    const localCtx = { ...ctx, vars: { x: 10 } };
     expect(await evaluate(["var", "x"], localCtx)).toBe(10);
     expect(await evaluate(["var", "missing"], localCtx)).toBe(null); // Variable not found
   });
@@ -221,9 +229,9 @@ describe("Interpreter", () => {
   test("permission errors", async () => {
     checkPermissionMock.mockReturnValue(false);
 
-    // set
+    // prop.set
     try {
-      await evaluate(["set", "this", "foo", "bar"], ctx);
+      await evaluate(["prop.set", "this", "foo", "bar"], ctx);
       expect(true).toBe(false);
     } catch (e: any) {
       expect(e.message).toContain("Permission denied");
@@ -259,6 +267,8 @@ describe("Interpreter", () => {
     const ctxFallback = { ...ctx, sys: sysWithoutDestroy };
 
     // Should return true (and do nothing/log? implementation has empty block)
+    // We need to ensure permission check passes
+    checkPermissionMock.mockReturnValue(true);
     expect(await evaluate(["destroy", "this"], ctxFallback)).toBe(true);
   });
 

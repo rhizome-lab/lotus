@@ -9,7 +9,8 @@ initSchema(db);
 // Mock the db module
 mock.module("./db", () => ({ db }));
 
-import { evaluate } from "./scripting/interpreter";
+import { evaluate, registerLibrary } from "./scripting/interpreter";
+import { WorldLibrary } from "./scripting/lib/world";
 import { createEntity, getEntity } from "./repo";
 import { checkPermission } from "./permissions";
 
@@ -20,6 +21,8 @@ describe("Mailbox Verification", () => {
   let itemId: number;
 
   beforeAll(() => {
+    registerLibrary(WorldLibrary);
+
     // 1. Create Sender and Receiver
     senderId = createEntity({ name: "Sender", kind: "ACTOR" });
     receiverId = createEntity({ name: "Receiver", kind: "ACTOR" });

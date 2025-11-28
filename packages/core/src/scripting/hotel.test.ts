@@ -14,10 +14,10 @@ mock.module("../permissions", () => ({
   checkPermission: () => true,
 }));
 
-import { evaluate, ScriptSystemContext } from "./interpreter";
-import { registerListLibrary } from "./lib/list";
-import { registerStringLibrary } from "./lib/string";
-import { registerObjectLibrary } from "./lib/object";
+import { evaluate, ScriptSystemContext, registerLibrary } from "./interpreter";
+import { ListLibrary } from "./lib/list";
+import { StringLibrary } from "./lib/string";
+import { ObjectLibrary } from "./lib/object";
 import { seedHotel } from "../seeds/hotel";
 import {
   createEntity,
@@ -44,9 +44,9 @@ describe("Hotel Scripting", () => {
     messages = [];
 
     // Register libraries
-    registerListLibrary();
-    registerStringLibrary();
-    registerObjectLibrary();
+    registerLibrary(ListLibrary);
+    registerLibrary(StringLibrary);
+    registerLibrary(ObjectLibrary);
 
     // Setup Sys Context
     sys = {
@@ -190,17 +190,17 @@ describe("Hotel Scripting", () => {
     const wing = getEntity(wingId)!;
     expect(wing.name).toBe("Floor 5 West Wing");
 
-    // 5. Enter 501 (to Room)
+    // 5. Enter 5 (to Room)
     const enterVerb = getVerb(wing.prototype_id!, "enter");
     expect(enterVerb).toBeDefined();
     if (enterVerb) {
-      await evaluate(enterVerb.code, { ...ctx, this: wing, args: ["501"] });
+      await evaluate(enterVerb.code, { ...ctx, this: wing, args: ["5"] });
     }
 
     caller = getEntity(caller.id)!;
     const roomId = caller.location_id!;
     const room = getEntity(roomId)!;
-    expect(room.name).toBe("Room 501");
+    expect(room.name).toBe("Room 5");
 
     // Verify furnishings
     const { getContents } = await import("../repo");

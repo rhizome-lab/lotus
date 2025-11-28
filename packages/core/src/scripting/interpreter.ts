@@ -1,9 +1,5 @@
 import { Entity, getContents, getEntity, updateEntity } from "../repo";
 import { checkPermission } from "../permissions";
-import { TimeLibrary } from "./lib/time";
-import { WorldLibrary } from "./lib/world";
-import { StringLibrary } from "./lib/string";
-import { ObjectLibrary } from "./lib/object";
 
 export type ScriptSystemContext = {
   move: (id: number, dest: number) => void;
@@ -66,6 +62,13 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
     }
     return lastResult;
   },
+  do: async (args, ctx) => {
+    let lastResult = null;
+    for (const step of args) {
+      lastResult = await evaluate(step, ctx);
+    }
+    return lastResult;
+  },
   if: async (args, ctx) => {
     const [cond, thenBranch, elseBranch] = args;
     if (await evaluate(cond, ctx)) {
@@ -82,6 +85,20 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
       result = await evaluate(body, ctx);
     }
     return result;
+  },
+  for: async (args, ctx) => {
+    const [varName, listExpr, body] = args;
+    const list = await evaluate(listExpr, ctx);
+    if (!Array.isArray(list)) return null;
+
+    let lastResult = null;
+    for (const item of list) {
+      // Set loop variable
+      ctx.vars = ctx.vars || {};
+      ctx.vars[varName] = item;
+      lastResult = await evaluate(body, ctx);
+    }
+    return lastResult;
   },
   return: async (args, ctx) => {
     return await evaluate(args[0], ctx);
@@ -162,6 +179,10 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
     const [a, b] = args;
     return (await evaluate(a, ctx)) % (await evaluate(b, ctx));
   },
+  "^": async (args, ctx) => {
+    const [a, b] = args;
+    return Math.pow(await evaluate(a, ctx), await evaluate(b, ctx));
+  },
 
   // Logic
   and: async (args, ctx) => {
@@ -189,6 +210,9 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
   arg: async (args, ctx) => {
     const [index] = args;
     return ctx.args?.[index] ?? null;
+  },
+  args: async (_args, ctx) => {
+    return ctx.args ?? [];
   },
   random: async (args, ctx) => {
     // random(min, max) or random() -> 0..1
@@ -327,6 +351,31 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
 
     if (ctx.sys?.destroy) {
       ctx.sys.destroy(target.id);
+    }
+    return true;
+  },
+
+  give: async (args, ctx) => {
+    const [targetExpr, destExpr] = args;
+    const target = await evaluateTarget(targetExpr, ctx);
+    const dest = await evaluateTarget(destExpr, ctx);
+
+    if (!target || !dest) return null;
+
+    // Check permission: caller must own target
+    if (target.owner_id !== ctx.caller.id) {
+      throw new ScriptError(`Permission denied: you do not own ${target.id}`);
+    }
+
+    if (ctx.sys?.give) {
+      // Transfer ownership to destination's owner
+      // If destination has no owner, it defaults to destination itself?
+      // Or maybe we should pass destination ID and let system handle it.
+      // But sys.give signature in interpreter.ts is:
+      // give?: (entityId: number, destId: number, newOwnerId: number) => void;
+
+      const newOwnerId = dest.owner_id || dest.id;
+      ctx.sys.give(target.id, dest.id, newOwnerId);
     }
     return true;
   },
@@ -541,17 +590,24 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
     }
     return true;
   },
-  ...TimeLibrary,
-  ...WorldLibrary,
-  ...StringLibrary,
-  ...ObjectLibrary,
 };
 
 export function registerOpcode(
   name: string,
-  handler: (args: any[], ctx: ScriptContext) => Promise<any>,
+  handler: (args: unknown[], ctx: ScriptContext) => Promise<any>,
 ) {
   OPS[name] = handler;
+}
+
+export function registerLibrary(
+  library: Record<
+    string,
+    (args: unknown[], ctx: ScriptContext) => Promise<any>
+  >,
+) {
+  for (const [name, handler] of Object.entries(library)) {
+    OPS[name] = handler;
+  }
 }
 
 export function getOpcode(name: string) {
@@ -560,7 +616,7 @@ export function getOpcode(name: string) {
 
 export async function executeLambda(
   lambda: any,
-  args: any[],
+  args: unknown[],
   ctx: ScriptContext,
 ): Promise<any> {
   if (!lambda || lambda.type !== "lambda") return null;
@@ -610,7 +666,7 @@ export async function evaluateTarget(
 
   if (typeof targetVal === "number") {
     return getEntity(targetVal);
-  } else if (targetVal === "caller") {
+  } else if (targetVal === "caller" || targetVal === "me") {
     return ctx.caller;
   } else if (targetVal === "this") {
     return ctx.this;

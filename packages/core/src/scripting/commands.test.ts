@@ -14,11 +14,11 @@ mock.module("../permissions", () => ({
   checkPermission: () => true,
 }));
 
-import { evaluate, ScriptSystemContext } from "./interpreter";
-import { registerListLibrary } from "./lib/list";
-import { registerStringLibrary } from "./lib/string";
-import { registerObjectLibrary } from "./lib/object";
-import { registerWorldLibrary } from "./lib/world"; // Need world lib for world.find
+import { evaluate, ScriptSystemContext, registerLibrary } from "./interpreter";
+import { ListLibrary } from "./lib/list";
+import { StringLibrary } from "./lib/string";
+import { ObjectLibrary } from "./lib/object";
+import { WorldLibrary } from "./lib/world"; // Need world lib for world.find
 import { seed } from "../seed";
 import {
   createEntity,
@@ -51,10 +51,10 @@ describe("Player Commands", () => {
     sentItemUpdates = [];
 
     // Register libraries
-    registerListLibrary();
-    registerStringLibrary();
-    registerObjectLibrary();
-    registerWorldLibrary();
+    registerLibrary(ListLibrary);
+    registerLibrary(StringLibrary);
+    registerLibrary(ObjectLibrary);
+    registerLibrary(WorldLibrary);
 
     // Setup Sys Context
     sys = {
