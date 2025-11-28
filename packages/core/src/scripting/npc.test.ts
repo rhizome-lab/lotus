@@ -51,7 +51,7 @@ describe("NPC Interactions", () => {
 
     // Setup Sys Context
     sys = {
-      move: (id, dest) => {
+      move: (id: number, dest: number) => {
         updateEntity(id, { location_id: dest });
         if (caller && caller.id === id) {
           caller.location_id = dest;
@@ -65,7 +65,12 @@ describe("NPC Interactions", () => {
       broadcast: (msg: any) => {
         messages.push(msg);
       },
-      triggerEvent: async (eventName, locationId, args, excludeEntityId) => {
+      triggerEvent: async (
+        eventName: string,
+        locationId: number,
+        args: unknown[],
+        excludeEntityId?: number,
+      ) => {
         const contents = getContents(locationId);
         const room = getEntity(locationId);
         const entities = room ? [room, ...contents] : contents;
@@ -86,7 +91,7 @@ describe("NPC Interactions", () => {
           }
         }
       },
-    };
+    } as any;
 
     // Setup Environment
     const lobbyId = createEntity({ name: "Main Lobby", kind: "ROOM" });

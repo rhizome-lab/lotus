@@ -5,7 +5,7 @@ import { EventEmitter } from "events";
 export class GameSocket extends EventEmitter {
   private ws: WebSocket | null = null;
   private entityId: number | null = null;
-  private queue: string[] = [];
+  private queue: (readonly string[])[] = [];
   private connected = false;
 
   constructor(entityId?: number) {
@@ -23,7 +23,7 @@ export class GameSocket extends EventEmitter {
       console.log(`Socket connected (Entity: ${this.entityId})`);
 
       if (this.entityId) {
-        this.send("login " + this.entityId);
+        this.send(["login", this.entityId.toString()]);
       }
 
       // Flush queue
@@ -56,17 +56,13 @@ export class GameSocket extends EventEmitter {
     });
   }
 
-  send(command: string) {
+  send(command: readonly string[]) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      const parts = command.split(" ");
-      const method = parts[0];
-      const params = parts.slice(1);
-
       this.ws.send(
         JSON.stringify({
           jsonrpc: "2.0",
           method: "execute",
-          params: [method, ...params],
+          params: command,
           id: Date.now(),
         }),
       );

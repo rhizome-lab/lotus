@@ -63,29 +63,56 @@ const [state, setState] = createStore<GameState>({
 export const gameStore = {
   state,
 
-  // connect method is now handled by the global connect function
-  // and the socket is managed in state.
-  // The original connect method is effectively replaced by the new global connect logic.
+  connect: () => {
+    if (state.isConnected) return;
 
-  send: (command: string) => {
+    state.socket = new WebSocket("ws://localhost:8080");
+
+    state.socket.onopen = () => {
+      setState("isConnected", true);
+      // Initial fetch
+      gameStore.send(["look"]);
+      gameStore.send(["inventory"]);
+    };
+
+    state.socket.onclose = () => {
+      setState("isConnected", false);
+      gameStore.addMessage({
+        type: "error",
+        text: "Disconnected from server.",
+      });
+      state.socket = null;
+    };
+
+    state.socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        // Update specific state based on type
+        if (data.type === "room") {
+          setState("room", data);
+        } else if (data.type === "inventory") {
+          setState("inventory", data);
+        } else if (data.type === "item") {
+          setState("inspectedItem", data);
+        }
+
+        gameStore.addMessage(structuredClone(data));
+      } catch (e) {
+        console.error("Failed to parse message", e);
+      }
+    };
+  },
+
+  send: (command: readonly string[]) => {
     if (state.socket && state.socket.readyState === WebSocket.OPEN) {
       const id = Date.now(); // Simple ID generation
-      // We assume command is a verb string like "look" or "go north"
-      // We send it as method="command" for now, or we can parse it?
-      // The server expects `method` to be the verb.
-      // But if we have arguments? "go north".
-      // Let's send method="command" and params=[command] to match the legacy fallback in server?
-      // NO, I updated server to use `method` as the verb.
-      // So we need to split the command string.
-      const parts = command.split(" ");
-      const method = parts[0];
-      const params = parts.slice(1);
 
       state.socket.send(
         JSON.stringify({
           jsonrpc: "2.0",
           method: "execute",
-          params: [method, ...params],
+          params: command,
           id,
         }),
       );

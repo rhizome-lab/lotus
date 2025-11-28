@@ -50,7 +50,7 @@ describe("Hotel Scripting", () => {
 
     // Setup Sys Context
     sys = {
-      move: (id, dest) => {
+      move: (id: number, dest: number) => {
         updateEntity(id, { location_id: dest });
         if (caller && caller.id === id) {
           caller.location_id = dest;
@@ -63,7 +63,7 @@ describe("Hotel Scripting", () => {
           messages.push(msg.text);
         }
       },
-    };
+    } as any;
 
     // Setup Environment
     const lobbyId = createEntity({ name: "Main Lobby", kind: "ROOM" });

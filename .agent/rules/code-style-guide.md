@@ -4,6 +4,7 @@ glob:
 description: General Guidelines
 ---
 # Core Tenets
+- One thing at a time: Finish **one feature** at a time. Because you are in 'Agent Decides' mode, please **stop** once a feature is finished so the user can make a git commit.
 - Optimize for modularity. Anything that makes sense as a plugin should be a plugin; dependencies per module should be minimal - dependencies for optional functionality should be in plugins.
 - You are in 'Agent Decides' mode for proceeding with your implementation plan. Err on the side of caution, and do not proceed if the plan needs user review.
 - For `apps/web`, use BEM in `apps/web/src/index.css` instead of inline CSS.

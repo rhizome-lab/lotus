@@ -1,7 +1,9 @@
 import { describe, test, expect, mock, beforeAll } from "bun:test";
-import { evaluate, ScriptContext } from "./interpreter";
+import { evaluate, registerLibrary, ScriptContext } from "./interpreter";
 import { Entity } from "../repo";
-import { registerStandardLibraries } from "./lib";
+import { StringLibrary } from "./lib/string";
+import { ListLibrary } from "./lib/list";
+import { ObjectLibrary } from "./lib/object";
 
 // Mock Entity
 const mockEntity = (id: number, props: any = {}): Entity => ({
@@ -36,13 +38,15 @@ const ctx: ScriptContext = {
       }
       return null;
     }),
-  },
+  } as any,
   warnings: [],
 };
 
 describe("Interpreter Libraries", () => {
   beforeAll(() => {
-    registerStandardLibraries();
+    registerLibrary(StringLibrary);
+    registerLibrary(ListLibrary);
+    registerLibrary(ObjectLibrary);
   });
 
   describe("Lambda & HOF", () => {

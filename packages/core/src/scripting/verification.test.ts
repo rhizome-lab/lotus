@@ -39,7 +39,7 @@ describe("Scripting Verification", () => {
     create: mock(() => 3),
     destroy: mock(() => {}),
     send: mock(() => {}),
-  };
+  } as any;
 
   const ctx = {
     caller,
