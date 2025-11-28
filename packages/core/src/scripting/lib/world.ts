@@ -1,19 +1,10 @@
 import { ScriptContext, evaluateTarget } from "../interpreter";
-import { getEntity, getContents, getVerbs } from "../../repo";
+import { getEntity, getContents, getVerbs, getAllEntities } from "../../repo";
 import { checkPermission } from "../../permissions";
 
 export const WorldLibrary = {
-  "world.entities": async (_args: any[], ctx: ScriptContext) => {
-    // TODO: Implement `getAllEntities` in repo.ts for better performance and cleaner access.
-    if (ctx.sys?.getAllEntities) {
-      return ctx.sys.getAllEntities();
-    }
-    return [];
-  },
-  "world.contents": async (args: any[], ctx: ScriptContext) => {
-    return WorldLibrary["entity.contents"](args, ctx);
-  },
-  "entity.contents": async (args: any[], ctx: ScriptContext) => {
+  "world.entities": async () => getAllEntities(),
+  "entity.contents": async (args: unknown[], ctx: ScriptContext) => {
     const [targetExpr] = args;
     const target = await evaluateTarget(targetExpr, ctx);
     if (!target) return [];
@@ -27,7 +18,7 @@ export const WorldLibrary = {
     const contents = getContents(target.id);
     return contents.map((e) => e.id);
   },
-  "entity.descendants": async (args: any[], ctx: ScriptContext) => {
+  "entity.descendants": async (args: unknown[], ctx: ScriptContext) => {
     const [targetExpr] = args;
     const target = await evaluateTarget(targetExpr, ctx);
     if (!target) return [];
@@ -67,7 +58,7 @@ export const WorldLibrary = {
     }
     return descendants;
   },
-  "entity.ancestors": async (args: any[], ctx: ScriptContext) => {
+  "entity.ancestors": async (args: unknown[], ctx: ScriptContext) => {
     const [targetExpr] = args;
     let target = await evaluateTarget(targetExpr, ctx);
     if (!target) return [];
@@ -79,7 +70,7 @@ export const WorldLibrary = {
     }
     return ancestors;
   },
-  "entity.verbs": async (args: any[], ctx: ScriptContext) => {
+  "entity.verbs": async (args: unknown[], ctx: ScriptContext) => {
     const [targetExpr] = args;
     const target = await evaluateTarget(targetExpr, ctx);
     if (!target) return [];
@@ -91,7 +82,7 @@ export const WorldLibrary = {
     const verbs = getVerbs(target.id);
     return verbs.map((v) => v.name);
   },
-  "player.verbs": async (_args: any[], ctx: ScriptContext) => {
+  "player.verbs": async (_args: unknown[], ctx: ScriptContext) => {
     const player = ctx.caller;
     const verbs: { name: string; source: number }[] = [];
     const seen = new Set<string>();

@@ -9,6 +9,8 @@ description: General Guidelines
 - Always write tests whenever possible. Run with `bun test --coverage` and try to maximize coverage.
 - You are in 'Agent Decides' mode for proceeding with your implementation plan. Err on the side of caution, and do not proceed if the plan needs user review.
 - For background colors, prefer transparency - this means light colors with low transparency on dark mode, and dark colors with low transparency on light mode.
+- Always address TODOs.
+- Always clean up long comments. Use `rg` with `//.+\n *//.+\n *//`.
 
 ## Overarching Goal
 - A persistent multiplayer world with scriptable objects, rooms, NPCs etc.

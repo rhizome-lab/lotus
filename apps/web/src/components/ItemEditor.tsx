@@ -48,8 +48,7 @@ export default function ItemEditor() {
   createEffect(() => {
     const item = selectedItem();
     if (item) {
-      setDescription(""); // RichItem doesn't expose description directly in the list yet.
-      // TODO: Fetch full item details including description.
+      setDescription(item.description || "");
       setSelectedAdjectives(item.adjectives || []);
     }
   });

@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { getEntity, getVerb } from "./repo";
-import { evaluate } from "./scripting/interpreter";
+import { evaluate, ScriptSystemContext } from "./scripting/interpreter";
 
 export class TaskScheduler {
   constructor() {}
@@ -12,6 +12,12 @@ export class TaskScheduler {
     ).run(entityId, verb, JSON.stringify(args), executeAt);
   }
 
+  private contextFactory: (() => ScriptSystemContext) | null = null;
+
+  setContextFactory(factory: () => ScriptSystemContext) {
+    this.contextFactory = factory;
+  }
+
   async process() {
     const now = Date.now();
     const tasks = db
@@ -20,12 +26,20 @@ export class TaskScheduler {
 
     if (tasks.length === 0) return;
 
-    // Delete tasks immediately to prevent double execution if processing takes time
-    // In a more robust system we might use a status flag or transaction
+    // Delete tasks immediately
     const ids = tasks.map((t) => t.id);
     db.query(
       `DELETE FROM scheduled_tasks WHERE id IN (${ids.join(",")})`,
     ).run();
+
+    if (!this.contextFactory) {
+      console.warn(
+        "[Scheduler] No context factory set, skipping task execution.",
+      );
+      return;
+    }
+
+    const sys = this.contextFactory();
 
     for (const task of tasks) {
       try {
@@ -34,31 +48,12 @@ export class TaskScheduler {
         const args = JSON.parse(task.args);
 
         if (entity && verb) {
-          // TODO: Inject system context or dependencies to avoid circular imports and duplication.
-          // For now, we dynamically import repo functions and create a minimal system context.
-
-          // We can reuse the same sys object structure as in index.ts, but without the ws.send part (or log to console).
-
-          const { updateEntity, createEntity, deleteEntity } = await import(
-            "./repo"
-          );
-
           await evaluate(verb.code, {
-            caller: entity, // The entity calls itself? Or system? Let's say entity calls itself.
+            caller: entity,
             this: entity,
             args: args,
             gas: 1000,
-            sys: {
-              move: (id, dest) => updateEntity(id, { location_id: dest }),
-              create: (data) => createEntity(data),
-              destroy: (id) => deleteEntity(id),
-              send: (msg) =>
-                console.log(`[Scheduler] Message to ${entity.name}:`, msg),
-              // We need to support scheduling from within scheduled tasks too!
-              // But we don't have access to the scheduler instance here easily unless we make it a singleton or pass it.
-              // Let's make the scheduler a singleton export in index.ts or here.
-              // If we export an instance here, index.ts can use it.
-            },
+            sys,
             warnings: [],
           });
         }

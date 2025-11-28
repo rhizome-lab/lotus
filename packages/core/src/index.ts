@@ -49,6 +49,34 @@ export function startServer(port: number = 8080) {
   console.log(`Viwo Core Server running on port ${port}`);
 
   // Start Scheduler
+  scheduler.setContextFactory(() => ({
+    move: (id, dest) => updateEntity(id, { location_id: dest }),
+    create: createEntity,
+    send: (msg) => console.log("[Scheduler System Message]:", msg),
+    destroy: deleteEntity,
+    getAllEntities,
+    schedule: scheduler.schedule.bind(scheduler),
+    broadcast: (msg, locationId) => {
+      wss.clients.forEach((client) => {
+        const c = client as Client;
+        if (c.readyState === WebSocket.OPEN && c.playerId) {
+          if (!locationId) {
+            c.send(JSON.stringify({ type: "message", text: msg }));
+          } else {
+            const p = getEntity(c.playerId);
+            if (p && p.location_id === locationId) {
+              c.send(JSON.stringify({ type: "message", text: msg }));
+            }
+          }
+        }
+      });
+    },
+    give: (entityId, destId, newOwnerId) => {
+      updateEntity(entityId, { location_id: destId, owner_id: newOwnerId });
+    },
+    // We can add `call` and `triggerEvent` here too if needed for background tasks
+  }));
+
   setInterval(() => {
     scheduler.process();
   }, 1000);
@@ -250,6 +278,7 @@ export function startServer(port: number = 8080) {
               name: item.name,
               kind: item.kind,
               location_detail: item.location_detail,
+              description: props["description"],
               adjectives: props["adjectives"],
               custom_css: props["custom_css"],
               contents: getContents(item.id).map((sub) => ({
@@ -337,6 +366,7 @@ export function startServer(port: number = 8080) {
               kind: sub.kind,
               contents: [],
               location_detail: sub.location_detail,
+              description: props["description"],
               adjectives: props["adjectives"],
               custom_css: props["custom_css"],
               verbs: getVerbs(sub.id).map((v) => v.name),
@@ -408,7 +438,50 @@ export function startServer(port: number = 8080) {
       }
 
       // 3. Check verbs on items in room (if command is "verb item")
-      // TODO: Implement parsing for "verb target" (e.g. "look apple")
+      if (!verb) {
+        const parts = command.split(" ");
+        if (parts.length > 1) {
+          const verbName = parts[0];
+          const targetName = parts.slice(1).join(" ");
+
+          // Find target in room or inventory
+          const roomContents = player.location_id
+            ? getContents(player.location_id)
+            : [];
+          const inventory = getContents(player.id);
+          const allVisible = [...roomContents, ...inventory];
+
+          const target = allVisible.find(
+            (e) => e.name.toLowerCase() === targetName.toLowerCase(),
+          );
+
+          if (target && verbName) {
+            const targetVerb = getVerb(target.id, verbName);
+            if (targetVerb) {
+              verb = targetVerb;
+              targetEntity = target;
+              // Adjust args to exclude the target name if needed?
+              // Actually, the command was split. The original args are still passed.
+              // If the user typed "look apple", command is "look apple" (if sent as string)
+              // But here `command` is the first element of the S-expression list.
+              // If the client sends ["look apple"], then command is "look apple".
+              // If the client sends ["look", "apple"], then command is "look" and args is ["apple"].
+              // The current client implementation sends ["look apple"] for typed commands?
+              // Let's check the client code or assume standard behavior.
+              // The `ws.on("message")` parses JSON.
+              // If the client sends `["look apple"]`, then `command` is "look apple".
+              // If the client sends `["look", "apple"]`, then `command` is "look".
+
+              // If we are here, `command` was NOT a verb on player/room.
+              // So it might be "verb target".
+              // If we matched "verb target", we should probably pass the rest of the args?
+              // But `args` variable currently holds the rest of the S-expression.
+              // If `command` was "look apple", `args` is empty.
+              // So we don't need to adjust args.
+            }
+          }
+        }
+      }
 
       if (verb) {
         try {

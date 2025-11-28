@@ -23,6 +23,7 @@
             nodePackages.typescript
             nodePackages.typescript-language-server
             psmisc # for fuser
+            ripgrep
           ];
         }
       );

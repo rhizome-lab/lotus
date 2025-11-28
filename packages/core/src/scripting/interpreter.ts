@@ -369,10 +369,16 @@ const OPS: Record<string, (args: any[], ctx: ScriptContext) => Promise<any>> = {
 
     if (ctx.sys?.give) {
       // Transfer ownership to destination's owner
-      // If destination has no owner, it defaults to destination itself?
-      // TODO: Clarify `give` behavior when destination has no owner.
-
-      const newOwnerId = dest.owner_id || dest.id;
+      // If destination has no owner, check if destination is an ACTOR.
+      // If ACTOR, they become owner. If not, clear owner (public).
+      let newOwnerId = dest.owner_id;
+      if (!newOwnerId) {
+        if (dest.kind === "ACTOR") {
+          newOwnerId = dest.id;
+        } else {
+          newOwnerId = 0; // No owner
+        }
+      }
       ctx.sys.give(target.id, dest.id, newOwnerId);
     }
     return true;
