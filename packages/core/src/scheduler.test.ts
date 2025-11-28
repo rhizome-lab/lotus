@@ -14,16 +14,51 @@ mock.module("./db", () => ({ db }));
 
 // Import modules AFTER mocking
 import { scheduler } from "./scheduler";
-import { createEntity, addVerb } from "./repo";
+import {
+  createEntity,
+  addVerb,
+  getEntity,
+  updateEntity,
+  deleteEntity,
+  getAllEntities,
+  getContents,
+  getVerbs,
+} from "./repo";
 import { registerLibrary } from "./scripting/interpreter";
 import { ObjectLibrary } from "./scripting/lib/object";
+import { CoreLibrary } from "./scripting/lib/core";
 
 describe("Scheduler Verification", () => {
+  // Register libraries
+  registerLibrary(CoreLibrary);
+  registerLibrary(ObjectLibrary);
+
+  // Start Scheduler
+  scheduler.setContextFactory(() => ({
+    move: (id, dest) => updateEntity(id, { location_id: dest }),
+    create: createEntity,
+    send: (msg) => console.log("[Scheduler System Message]:", msg),
+    destroy: deleteEntity,
+    getAllEntities,
+    schedule: scheduler.schedule.bind(scheduler),
+    broadcast: () => {},
+    give: (entityId, destId, newOwnerId) => {
+      updateEntity(entityId, { location_id: destId, owner_id: newOwnerId });
+    },
+    call: async () => null, // Scheduler doesn't support call yet? Or we can implement it.
+    triggerEvent: async () => {}, // Scheduler doesn't support triggerEvent yet?
+    getContents: async (id) => getContents(id),
+    getVerbs: async (id) => getVerbs(id),
+    getEntity: async (id) => getEntity(id),
+  }));
+
+  setInterval(() => {
+    scheduler.process();
+  }, 1000);
+
   let entityId: number;
 
   beforeAll(() => {
-    registerLibrary(ObjectLibrary);
-
     // Create a test entity
     entityId = createEntity({
       name: "SchedulerTestEntity",
@@ -39,8 +74,6 @@ describe("Scheduler Verification", () => {
       ["+", ["prop", "this", "count"], 1],
     ]);
   });
-
-  // afterAll is no longer needed as the in-memory DB is ephemeral per test run.
 
   it("should schedule a task", () => {
     scheduler.schedule(entityId, "increment", [], 100);
@@ -65,7 +98,6 @@ describe("Scheduler Verification", () => {
     expect(task).toBeNull();
 
     // Let's check the entity state.
-    const { getEntity } = await import("./repo");
     const entity = getEntity(entityId);
     expect(entity?.props["count"]).toBe(1);
   });

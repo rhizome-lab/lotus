@@ -1,28 +1,6 @@
 import { describe, test, expect } from "bun:test";
 import { checkPermission } from "./permissions";
-import { Entity } from "./repo";
-
-// Mock Entity Helper
-const mockEntity = (
-  id: number,
-  props: any = {},
-  owner_id: number | null = null,
-  location_id: number | null = null,
-): Entity => ({
-  id,
-  name: "Mock",
-  kind: "ITEM",
-  location_id,
-  location_detail: null,
-  prototype_id: null,
-  owner_id,
-  created_at: "",
-  updated_at: "",
-  props,
-  state: {},
-  ai_context: {},
-  slug: null,
-});
+import { mockEntity } from "./mock";
 
 describe("Permissions", () => {
   const owner = mockEntity(1);

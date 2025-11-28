@@ -21,6 +21,7 @@ import { TimeLibrary } from "../scripting/lib/time";
 import { WorldLibrary } from "../scripting/lib/world";
 import { ListLibrary } from "../scripting/lib/list";
 import { seedHotel } from "./hotel";
+import { CoreLibrary } from "../scripting/lib/core";
 
 describe("Hotel Seed", () => {
   let lobbyId: number;
@@ -30,6 +31,7 @@ describe("Hotel Seed", () => {
 
   beforeAll(async () => {
     // Register libraries
+    registerLibrary(CoreLibrary);
     registerLibrary(StringLibrary);
     registerLibrary(ObjectLibrary);
     registerLibrary(TimeLibrary);

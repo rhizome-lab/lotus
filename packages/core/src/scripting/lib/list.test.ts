@@ -1,11 +1,13 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { evaluate, ScriptContext, registerLibrary } from "../interpreter";
+import { CoreLibrary } from "./core";
 import { ListLibrary } from "./list";
 
 describe("List Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
+    registerLibrary(CoreLibrary);
     registerLibrary(ListLibrary);
     ctx = {
       caller: { id: 1 } as any,

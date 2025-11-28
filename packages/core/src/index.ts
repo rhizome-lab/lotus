@@ -74,8 +74,8 @@ export function startServer(port: number = 8080) {
     give: (entityId, destId, newOwnerId) => {
       updateEntity(entityId, { location_id: destId, owner_id: newOwnerId });
     },
-    call: async () => null, // Scheduler doesn't support call yet? Or we can implement it.
-    triggerEvent: async () => {}, // Scheduler doesn't support triggerEvent yet?
+    call: async () => null, // TODO: Scheduler doesn't support call yet? Or we can implement it.
+    triggerEvent: async () => {}, // TODO: Scheduler doesn't support triggerEvent yet?
     getContents: async (id) => getContents(id),
     getVerbs: async (id) => getVerbs(id),
     getEntity: async (id) => getEntity(id),
@@ -91,37 +91,6 @@ export function startServer(port: number = 8080) {
 
   wss.on("connection", (ws: Client) => {
     console.log("New client connected");
-
-    // Helper to resolve dynamic properties (get_*)
-    const resolveEntityProps = async (entity: any) => {
-      const props = { ...entity.props };
-      const verbs = getVerbs(entity.id);
-
-      for (const verb of verbs) {
-        if (verb.name.startsWith("get_")) {
-          const propName = verb.name.substring(4); // remove "get_"
-          try {
-            const result = await evaluate(verb.code, {
-              caller: entity,
-              this: entity,
-              args: [],
-              gas: 500,
-              sys, // Use the sys object we created
-              warnings: [],
-            });
-            if (result !== undefined && result !== null) {
-              props[propName] = result;
-            }
-          } catch (e) {
-            console.error(
-              `Error resolving property ${propName} for ${entity.id}`,
-              e,
-            );
-          }
-        }
-      }
-      return props;
-    };
 
     const sys: ScriptSystemContext = {
       move: (id, dest) => updateEntity(id, { location_id: dest }),
@@ -306,9 +275,18 @@ export function startServer(port: number = 8080) {
         const player = getEntity(playerId);
         if (player) {
           ws.playerId = playerId;
+          const resolvedPlayer = await evaluate(["resolve_props", player.id], {
+            caller: player,
+            this: player,
+            args: [],
+            gas: GAS_LIMIT,
+            sys,
+            warnings: [],
+          });
           sendResponse({
             message: `Logged in as ${player.name} (ID: ${player.id}).`,
             playerId: player.id,
+            player: resolvedPlayer,
           });
         } else {
           sendError(-32001, "Player not found");
@@ -340,9 +318,18 @@ export function startServer(port: number = 8080) {
           props: { description: "A new player." },
         });
 
+        const newPlayer = getEntity(newId)!;
+        const resolvedPlayer = await evaluate(["resolve_props", newPlayer.id], {
+          caller: newPlayer,
+          this: newPlayer,
+          args: [],
+          gas: GAS_LIMIT,
+          sys,
+          warnings: [],
+        });
         sendResponse({
           message: "Player created",
-          player: { id: newId, name },
+          player: resolvedPlayer,
         });
         return;
       }

@@ -26,8 +26,6 @@ export function initSchema(db: Database) {
     CREATE TABLE IF NOT EXISTS entity_data (
       entity_id INTEGER PRIMARY KEY,
       props TEXT DEFAULT '{}',
-      state TEXT DEFAULT '{}',
-      ai_context TEXT DEFAULT '{}',
       FOREIGN KEY(entity_id) REFERENCES entities(id) ON DELETE CASCADE
     )
   `,

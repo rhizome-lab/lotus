@@ -1,5 +1,11 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { evaluate, ScriptContext, registerLibrary } from "../interpreter";
+import {
+  evaluate,
+  ScriptContext,
+  registerLibrary,
+  ScriptError,
+} from "../interpreter";
+import { CoreLibrary } from "./core";
 import { StringLibrary } from "./string";
 import { ListLibrary } from "./list";
 
@@ -7,6 +13,7 @@ describe("String Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
+    registerLibrary(CoreLibrary);
     registerLibrary(StringLibrary);
     registerLibrary(ListLibrary); // Needed for str.join test
     ctx = {
@@ -21,7 +28,9 @@ describe("String Library", () => {
   test("str.len", async () => {
     expect(await evaluate(["str.len", "hello"], ctx)).toBe(5);
     expect(await evaluate(["str.len", ""], ctx)).toBe(0);
-    expect(await evaluate(["str.len", 123], ctx)).toBe(0); // Not a string
+    expect(
+      await evaluate(["str.len", 123], ctx).catch((e) => e),
+    ).toBeInstanceOf(ScriptError);
   });
 
   test("str.split", async () => {

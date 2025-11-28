@@ -5,24 +5,19 @@ import {
 } from "../interpreter";
 import { getEntity, getContents, getVerbs } from "../../repo";
 import { checkPermission } from "../../permissions";
-import { config } from "../config";
 
 export const WorldLibrary: ScriptLibraryDefinition = {
   "world.time": async (args) => {
-    if (config.validateCommands) {
-      if (args.length !== 0) {
-        throw new ScriptError("world.time requires 0 arguments");
-      }
+    if (args.length !== 0) {
+      throw new ScriptError("world.time requires 0 arguments");
     }
     // Return a simulated world time (e.g. ticks or game time)
     // For now, just return Date.now()
     return Date.now();
   },
   "world.players": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 0) {
-        throw new ScriptError("world.players requires 0 arguments");
-      }
+    if (args.length !== 0) {
+      throw new ScriptError("world.players requires 0 arguments");
     }
     // Return list of player IDs
     if (ctx.sys?.getAllEntities) {
@@ -39,10 +34,8 @@ export const WorldLibrary: ScriptLibraryDefinition = {
     return [];
   },
   "world.entities": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 0) {
-        throw new ScriptError("world.entities requires 0 arguments");
-      }
+    if (args.length !== 0) {
+      throw new ScriptError("world.entities requires 0 arguments");
     }
     if (ctx.sys?.getAllEntities) {
       return ctx.sys.getAllEntities();
@@ -50,10 +43,8 @@ export const WorldLibrary: ScriptLibraryDefinition = {
     return [];
   },
   "world.where": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 1) {
-        throw new ScriptError("world.where requires 1 argument");
-      }
+    if (args.length !== 1) {
+      throw new ScriptError("world.where requires 1 argument");
     }
     const [targetExpr] = args;
     const target = await evaluateTarget(targetExpr, ctx);

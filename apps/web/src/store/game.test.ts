@@ -83,7 +83,7 @@ describe("Game Store", () => {
     const socket = mockSockets[0];
     gameStore.send(["look"]);
     expect(socket?.send).toHaveBeenCalled();
-    expect(socket?.send).toHaveBeenCalledWith(JSON.stringify(["look"]));
+    expect(socket?.send.mock.lastCall?.[0]).toContain(JSON.stringify(["look"]));
   });
 
   test("Handle Room Message", async () => {

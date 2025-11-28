@@ -1,4 +1,3 @@
-import { config } from "../config";
 import {
   evaluate,
   executeLambda,
@@ -6,127 +5,141 @@ import {
   ScriptLibraryDefinition,
 } from "../interpreter";
 
+const DISALLOWED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
+
 export const ObjectLibrary: ScriptLibraryDefinition = {
-  "object.keys": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 1) {
-        throw new ScriptError("object.keys requires 1 argument");
-      }
+  "obj.keys": async (args, ctx) => {
+    if (args.length !== 1) {
+      throw new ScriptError("obj.keys: expected 1 argument");
     }
     const [objExpr] = args;
     const obj = await evaluate(objExpr, ctx);
-    if (!obj || typeof obj !== "object") return [];
-    return Object.keys(obj);
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.keys: expected object");
+    }
+    return Object.getOwnPropertyNames(obj);
   },
-  "object.values": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 1) {
-        throw new ScriptError("object.values requires 1 argument");
-      }
+  "obj.values": async (args, ctx) => {
+    if (args.length !== 1) {
+      throw new ScriptError("obj.values: expected 1 argument");
     }
     const [objExpr] = args;
     const obj = await evaluate(objExpr, ctx);
-    if (!obj || typeof obj !== "object") return [];
-    return Object.values(obj);
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.values: expected object");
+    }
+    return Object.getOwnPropertyNames(obj).map((key) => obj[key]);
   },
-  "object.entries": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 1) {
-        throw new ScriptError("object.entries requires 1 argument");
-      }
+  "obj.entries": async (args, ctx) => {
+    if (args.length !== 1) {
+      throw new ScriptError("obj.entries: expected 1 argument");
     }
     const [objExpr] = args;
     const obj = await evaluate(objExpr, ctx);
-    if (!obj || typeof obj !== "object") return [];
-    return Object.entries(obj);
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.entries: expected object");
+    }
+    return Object.getOwnPropertyNames(obj).map((key) => [key, obj[key]]);
   },
-  "object.get": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.get requires 2 arguments");
-      }
+  "obj.get": async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("obj.get: expected 2 arguments");
     }
     const [objExpr, keyExpr] = args;
     const obj = await evaluate(objExpr, ctx);
     const key = await evaluate(keyExpr, ctx);
-    if (!obj || typeof obj !== "object" || typeof key !== "string") return null;
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.get: expected object");
+    }
+    if (typeof key !== "string") {
+      throw new ScriptError("obj.get: expected string");
+    }
+    if (!Object.hasOwnProperty.call(obj, key)) {
+      throw new ScriptError(`obj.get: key '${key}' not found`);
+    }
     return obj[key];
   },
-  "object.set": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 3) {
-        throw new ScriptError("object.set requires 3 arguments");
-      }
+  "obj.set": async (args, ctx) => {
+    if (args.length !== 3) {
+      throw new ScriptError("obj.set: expected 3 arguments");
     }
     const [objExpr, keyExpr, valExpr] = args;
     const obj = await evaluate(objExpr, ctx);
     const key = await evaluate(keyExpr, ctx);
     const val = await evaluate(valExpr, ctx);
-    if (!obj || typeof obj !== "object" || typeof key !== "string") return null;
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.set: expected object");
+    }
+    if (typeof key !== "string") {
+      throw new ScriptError("obj.set: expected string");
+    }
+    if (DISALLOWED_KEYS.has(key)) {
+      throw new ScriptError(`obj.set: disallowed key '${key}'`);
+    }
     obj[key] = val;
     return val;
   },
-  "object.has": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.has requires 2 arguments");
-      }
+  "obj.has": async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("obj.has: expected 2 arguments");
     }
     const [objExpr, keyExpr] = args;
     const obj = await evaluate(objExpr, ctx);
     const key = await evaluate(keyExpr, ctx);
-    if (!obj || typeof obj !== "object" || typeof key !== "string")
-      return false;
-    return key in obj;
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.has: expected object");
+    }
+    if (typeof key !== "string") {
+      throw new ScriptError("obj.has: expected string");
+    }
+    return Object.hasOwnProperty.call(obj, key);
   },
-  "object.del": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.del requires 2 arguments");
-      }
+  "obj.del": async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("obj.del: expected 2 arguments");
     }
     const [objExpr, keyExpr] = args;
     const obj = await evaluate(objExpr, ctx);
     const key = await evaluate(keyExpr, ctx);
-    if (!obj || typeof obj !== "object" || typeof key !== "string")
-      return false;
-    if (key in obj) {
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.del: expected object");
+    }
+    if (typeof key !== "string") {
+      throw new ScriptError("obj.del: expected string");
+    }
+    if (Object.hasOwnProperty.call(obj, key)) {
       delete obj[key];
       return true;
     }
     return false;
   },
-  "object.merge": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.merge requires 2 arguments");
+  "obj.merge": async (args, ctx) => {
+    if (args.length < 2) {
+      throw new ScriptError("obj.merge: expected at least 2 arguments");
+    }
+    const objs = [];
+    for (let i = 0; i < args.length; i++) {
+      const obj = await evaluate(args[i], ctx);
+      if (!obj || typeof obj !== "object") {
+        throw new ScriptError(`obj.merge: expected object at ${i}`);
       }
+      objs.push(obj);
     }
-    const [obj1Expr, obj2Expr] = args;
-    const obj1 = await evaluate(obj1Expr, ctx);
-    const obj2 = await evaluate(obj2Expr, ctx);
-    if (
-      !obj1 ||
-      typeof obj1 !== "object" ||
-      !obj2 ||
-      typeof obj2 !== "object"
-    ) {
-      return {};
-    }
-    return { ...obj1, ...obj2 };
+    return Object.assign({}, ...objs);
   },
-  "object.map": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.map requires 2 arguments");
-      }
+  "obj.map": async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("obj.map: expected 2 arguments");
     }
     const [objExpr, funcExpr] = args;
     const obj = await evaluate(objExpr, ctx);
     const func = await evaluate(funcExpr, ctx);
 
-    if (!obj || typeof obj !== "object" || !func || func.type !== "lambda") {
-      return {};
+    if (!obj || typeof obj !== "object") {
+      throw new ScriptError("obj.map: expected object");
+    }
+    if (!func || func.type !== "lambda") {
+      throw new ScriptError("obj.map: expected lambda");
     }
 
     const result: Record<string, any> = {};
@@ -135,11 +148,9 @@ export const ObjectLibrary: ScriptLibraryDefinition = {
     }
     return result;
   },
-  "object.filter": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.filter requires 2 arguments");
-      }
+  "obj.filter": async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("obj.filter: expected 2 arguments");
     }
     const [objExpr, funcExpr] = args;
     const obj = await evaluate(objExpr, ctx);
@@ -157,11 +168,9 @@ export const ObjectLibrary: ScriptLibraryDefinition = {
     }
     return result;
   },
-  "object.reduce": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 3) {
-        throw new ScriptError("object.reduce requires 3 arguments");
-      }
+  "obj.reduce": async (args, ctx) => {
+    if (args.length !== 3) {
+      throw new ScriptError("obj.reduce: expected 3 arguments");
     }
     const [objExpr, funcExpr, initExpr] = args;
     const obj = await evaluate(objExpr, ctx);
@@ -177,11 +186,9 @@ export const ObjectLibrary: ScriptLibraryDefinition = {
     }
     return acc;
   },
-  "object.flatMap": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("object.flatMap requires 2 arguments");
-      }
+  "obj.flatMap": async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("obj.flatMap: expected 2 arguments");
     }
     const [objExpr, funcExpr] = args;
     const obj = await evaluate(objExpr, ctx);

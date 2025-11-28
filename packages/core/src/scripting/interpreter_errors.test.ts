@@ -1,23 +1,7 @@
 import { describe, test, expect } from "bun:test";
-import { evaluate, ScriptContext } from "./interpreter";
-import { Entity } from "../repo";
-
-// Mock Entity
-const mockEntity = (id: number, props: any = {}): Entity => ({
-  id,
-  name: "Mock",
-  kind: "ITEM",
-  location_id: null,
-  location_detail: null,
-  prototype_id: null,
-  owner_id: null,
-  created_at: "",
-  updated_at: "",
-  props,
-  state: {},
-  ai_context: {},
-  slug: null,
-});
+import { evaluate, registerLibrary, ScriptContext } from "./interpreter";
+import { mockEntity } from "../mock";
+import { CoreLibrary } from "./lib/core";
 
 const ctx: ScriptContext = {
   caller: mockEntity(1),
@@ -28,6 +12,9 @@ const ctx: ScriptContext = {
 };
 
 describe("Interpreter Errors and Warnings", () => {
+  // Register libraries
+  registerLibrary(CoreLibrary);
+
   test("throw", async () => {
     try {
       await evaluate(["throw", "Something went wrong"], ctx);

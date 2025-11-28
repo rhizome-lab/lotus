@@ -86,7 +86,7 @@ export function seed() {
 
   addVerb(playerBaseId, "on_hear", [
     "tell",
-    "caller",
+    "me",
     [
       "str.concat",
       ["prop", ["arg", 1], "name"],
@@ -98,78 +98,59 @@ export function seed() {
   ]);
 
   addVerb(playerBaseId, "look", [
-    "let",
-    "room",
-    ["entity", ["prop", "me", "location_id"]],
-    "let",
-    "items",
-    ["contents", "room"],
-    "let",
-    "richItems",
+    "if",
+    ["list.empty", ["args"]],
     [
-      "map",
-      "items",
+      "seq",
       [
-        "lambda",
-        ["item"],
+        "let",
+        "room",
+        ["resolve_props", ["entity", ["prop", "me", "location_id"]]],
+      ],
+      [
+        "let",
+        "richItems",
         [
-          "object",
-          "id",
-          ["prop", "item", "id"],
-          "name",
-          ["prop", "item", "name"],
-          "kind",
-          ["prop", "item", "kind"],
-          "description",
-          ["prop", "item", "description"],
-          "verbs",
-          ["verbs", "item"],
+          "map",
+          ["contents", ["var", "room"]],
+          ["lambda", ["item"], ["resolve_props", ["var", "item"]]],
+        ],
+      ],
+      [
+        "sys.send",
+        [
+          "obj.merge",
+          ["var", "room"],
+          ["object", "contents", ["var", "richItems"]],
         ],
       ],
     ],
-    "object",
-    "type",
-    "room",
-    "name",
-    ["prop", "room", "name"],
-    "description",
-    ["prop", "room", "description"],
-    "contents",
-    "richItems",
+    [
+      "do",
+      ["let", "targetId", ["world.find", ["arg", 0]]],
+      [
+        "if",
+        ["var", "targetId"],
+        ["sys.send", ["resolve_props", ["entity", ["var", "targetId"]]]],
+        [
+          "tell",
+          "me",
+          ["str.join", ["list", "You don't see", ["arg", 0], "here."], " "],
+        ],
+      ],
+    ],
   ]);
 
   addVerb(playerBaseId, "inventory", [
-    "let",
-    "items",
-    ["contents", "me"],
-    "let",
-    "richItems",
+    "seq",
     [
-      "map",
-      "items",
+      "sys.send",
       [
-        "lambda",
-        ["item"],
-        [
-          "object",
-          "id",
-          ["prop", "item", "id"],
-          "name",
-          ["prop", "item", "name"],
-          "kind",
-          ["prop", "item", "kind"],
-          "description",
-          ["prop", "item", "description"],
-          "verbs",
-          ["verbs", "item"],
-        ],
+        "map",
+        ["contents", "me"],
+        ["lambda", ["item"], ["resolve_props", ["var", "item"]]],
       ],
     ],
-    "object",
-    "type",
-    "inventory",
-    "items",
-    "richItems",
   ]);
 
   addVerb(playerBaseId, "move", [
@@ -193,21 +174,13 @@ export function seed() {
               ["prop", ["var", "exitId"], "destination_id"],
             ],
             ["sys.send_room", ["prop", "me", "location_id"]],
-            [
-              "print",
-              ["str.join", ["list", "You move", ["var", "direction"]], " "],
-            ],
+            ["print", ["str.concat", "You move ", ["var", "direction"], "."]],
           ],
           ["print", "You can't go that way."],
         ],
       ],
     ],
   ]);
-  addVerb(playerBaseId, "go", ["call", "me", "move", ["args"]]);
-  addVerb(playerBaseId, "n", ["call", "me", "move", ["list", "north"]]);
-  addVerb(playerBaseId, "s", ["call", "me", "move", ["list", "south"]]);
-  addVerb(playerBaseId, "e", ["call", "me", "move", ["list", "east"]]);
-  addVerb(playerBaseId, "w", ["call", "me", "move", ["list", "west"]]);
 
   addVerb(playerBaseId, "dig", [
     "seq",
@@ -252,15 +225,12 @@ export function seed() {
             [
               "print",
               [
-                "str.join",
-                [
-                  "list",
-                  "You dug",
-                  ["var", "direction"],
-                  "to",
-                  ["var", "roomName"],
-                ],
-                " ",
+                "str.concat",
+                "You dug",
+                ["var", "direction"],
+                "to",
+                ["var", "roomName"],
+                ".",
               ],
             ],
           ],
@@ -292,7 +262,7 @@ export function seed() {
               ["prop", "me", "location_id"],
             ],
             ["sys.send_room", ["prop", "me", "location_id"]],
-            ["print", ["str.join", ["list", "Created", ["var", "name"]], " "]],
+            ["print", ["str.concat", "Created ", ["var", "name"], "."]],
           ],
           ["print", "You can't create items here."],
         ],
@@ -304,7 +274,7 @@ export function seed() {
     "seq",
     ["let", "targetName", ["arg", 0]],
     ["let", "propName", ["arg", 1]],
-    ["let", "value", ["str.join", ["list.slice", ["args"], 2], " "]],
+    ["let", "value", ["arg", 2]],
     [
       "if",
       ["or", ["not", ["var", "targetName"]], ["not", ["var", "propName"]]],
@@ -329,17 +299,14 @@ export function seed() {
               [
                 "print",
                 [
-                  "str.join",
-                  [
-                    "list",
-                    "Set",
-                    ["var", "propName"],
-                    "of",
-                    ["var", "targetName"],
-                    "to",
-                    ["var", "value"],
-                  ],
-                  " ",
+                  "str.concat",
+                  "Set ",
+                  ["var", "propName"],
+                  " of ",
+                  ["var", "targetName"],
+                  " to ",
+                  ["var", "value"],
+                  ".",
                 ],
               ],
               ["sys.send_room", ["prop", "me", "location_id"]],
@@ -618,7 +585,7 @@ export function seed() {
 
   addVerb(watchId, "tell", [
     "tell",
-    "caller",
+    "me",
     ["time.format", ["time.now"], "time"],
   ]);
 
@@ -636,7 +603,7 @@ export function seed() {
 
   addVerb(teleporterId, "teleport", [
     "move",
-    "caller",
+    "me",
     ["prop", "this", "destination"],
   ]);
 
@@ -653,7 +620,7 @@ export function seed() {
 
   addVerb(statusId, "check", [
     "tell",
-    "caller",
+    "me",
     ["str.concat", "Total entities: ", ["list.len", ["world.entities"]]],
   ]);
 
@@ -740,7 +707,7 @@ export function seed() {
     [
       "str.concat",
       "color:hsl(",
-      ["str.concat", ["*", ["time.timestamp"], 0.1], ", 100%, 50%)"],
+      ["str.concat", ["*", ["time.now"], 0.1], ", 100%, 50%)"],
     ], // Rotating hue
     "material:gold",
   ]);

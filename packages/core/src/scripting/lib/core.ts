@@ -6,8 +6,7 @@ import {
   ScriptError,
 } from "../interpreter";
 import { checkPermission } from "../../permissions";
-import { updateEntity } from "../../repo";
-import { config } from "../config";
+import { Entity, SPECIAL_PROPERTIES, updateEntity } from "../../repo";
 
 export const CoreLibrary: Record<
   string,
@@ -29,10 +28,8 @@ export const CoreLibrary: Record<
     return lastResult;
   },
   if: async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length < 2 || args.length > 3) {
-        throw new ScriptError("if requires 2 or 3 arguments");
-      }
+    if (args.length < 2 || args.length > 3) {
+      throw new ScriptError("if requires 2 or 3 arguments");
     }
     const [cond, thenBranch, elseBranch] = args;
     if (await evaluate(cond, ctx)) {
@@ -43,10 +40,8 @@ export const CoreLibrary: Record<
     return null;
   },
   while: async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("while requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("while requires 2 arguments");
     }
     const [cond, body] = args;
     let result = null;
@@ -56,10 +51,8 @@ export const CoreLibrary: Record<
     return result;
   },
   for: async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 3) {
-        throw new ScriptError("for requires 3 arguments");
-      }
+    if (args.length !== 3) {
+      throw new ScriptError("for requires 3 arguments");
     }
     const [varName, listExpr, body] = args;
     const list = await evaluate(listExpr, ctx);
@@ -87,10 +80,8 @@ export const CoreLibrary: Record<
 
   // Variables
   let: async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("let requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("let requires 2 arguments");
     }
     const [name, val] = args;
     const value = await evaluate(val, ctx);
@@ -99,19 +90,15 @@ export const CoreLibrary: Record<
     return value;
   },
   var: async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 1) {
-        throw new ScriptError("var requires 1 argument");
-      }
+    if (args.length !== 1) {
+      throw new ScriptError("var: expected 1 argument");
     }
     const [name] = args;
     return ctx.vars?.[name] ?? null;
   },
   set: async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("set requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("set: expected 2 arguments");
     }
     const [name, val] = args;
     const value = await evaluate(val, ctx);
@@ -123,82 +110,228 @@ export const CoreLibrary: Record<
 
   // Comparison
   "==": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) === (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("==: expected at least 2 arguments");
+    }
+    let prev = await evaluate(args[0], ctx);
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (prev !== next) {
+        return false;
+      }
+      prev = next;
+    }
+    return true;
   },
   "!=": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) !== (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("!=: expected at least 2 arguments");
+    }
+    let prev = await evaluate(args[0], ctx);
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (prev === next) {
+        return false;
+      }
+      prev = next;
+    }
+    return true;
   },
   "<": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) < (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("<: expected at least 2 arguments");
+    }
+    let prev = await evaluate(args[0], ctx);
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (prev >= next) {
+        return false;
+      }
+      prev = next;
+    }
+    return true;
   },
   ">": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) > (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError(">: expected at least 2 arguments");
+    }
+    let prev = await evaluate(args[0], ctx);
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (prev <= next) {
+        return false;
+      }
+      prev = next;
+    }
+    return true;
   },
   "<=": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) <= (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("<=: expected at least 2 arguments");
+    }
+    let prev = await evaluate(args[0], ctx);
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (prev > next) {
+        return false;
+      }
+      prev = next;
+    }
+    return true;
   },
   ">=": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) >= (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError(">=: expected at least 2 arguments");
+    }
+    let prev = await evaluate(args[0], ctx);
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (prev < next) {
+        return false;
+      }
+      prev = next;
+    }
+    return true;
   },
 
   // Arithmetic
   "+": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("+ requires 2 arguments");
-      }
+    if (args.length < 2) {
+      throw new ScriptError("+: expected at least 2 arguments");
     }
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) + (await evaluate(b, ctx));
+    let sum = await evaluate(args[0], ctx);
+    if (typeof sum !== "number") {
+      throw new ScriptError("+: expected a number");
+    }
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (typeof next !== "number") {
+        throw new ScriptError("+: expected a number");
+      }
+      sum += next;
+    }
+    return sum;
   },
   "-": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) - (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("-: expected at least 2 arguments");
+    }
+    let diff = await evaluate(args[0], ctx);
+    if (typeof diff !== "number") {
+      throw new ScriptError("-: expected a number");
+    }
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (typeof next !== "number") {
+        throw new ScriptError("-: expected a number");
+      }
+      diff -= next;
+    }
+    return diff;
   },
   "*": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) * (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("*: expected at least 2 arguments");
+    }
+    let prod = await evaluate(args[0], ctx);
+    if (typeof prod !== "number") {
+      throw new ScriptError("*: expected a number");
+    }
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (typeof next !== "number") {
+        throw new ScriptError("*: expected a number");
+      }
+      prod *= next;
+    }
+    return prod;
   },
   "/": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) / (await evaluate(b, ctx));
+    if (args.length < 2) {
+      throw new ScriptError("/: expected at least 2 arguments");
+    }
+    let quot = await evaluate(args[0], ctx);
+    if (typeof quot !== "number") {
+      throw new ScriptError("/: expected a number");
+    }
+    for (let i = 1; i < args.length; i++) {
+      const next = await evaluate(args[i], ctx);
+      if (typeof next !== "number") {
+        throw new ScriptError("/: expected a number");
+      }
+      quot /= next;
+    }
+    return quot;
   },
   "%": async (args, ctx) => {
-    const [a, b] = args;
-    return (await evaluate(a, ctx)) % (await evaluate(b, ctx));
+    if (args.length !== 2) {
+      throw new ScriptError("%: expected 2 arguments");
+    }
+    const aEval = await evaluate(args[0], ctx);
+    if (typeof aEval !== "number") {
+      throw new ScriptError("%: expected a number");
+    }
+    const bEval = await evaluate(args[1], ctx);
+    if (typeof bEval !== "number") {
+      throw new ScriptError("%: expected a number");
+    }
+    return aEval % bEval;
   },
   "^": async (args, ctx) => {
-    const [a, b] = args;
-    return Math.pow(await evaluate(a, ctx), await evaluate(b, ctx));
+    // Power tower
+    if (args.length < 2) {
+      throw new ScriptError("^: expected at least 2 arguments");
+    }
+    let pow = await evaluate(args[args.length - 1], ctx);
+    if (typeof pow !== "number") {
+      throw new ScriptError(`^: expected a number at index ${args.length - 1}`);
+    }
+    for (let i = args.length - 2; i >= 0; i--) {
+      const next = await evaluate(args[i], ctx);
+      if (typeof next !== "number") {
+        throw new ScriptError(`^: expected a number at index ${i}`);
+      }
+      pow = next ** pow;
+    }
+    return pow;
   },
 
   // Logic
   and: async (args, ctx) => {
+    if (args.length < 2) {
+      throw new ScriptError("and: expected at least 2 arguments");
+    }
     for (const arg of args) {
       if (!(await evaluate(arg, ctx))) return false;
     }
     return true;
   },
   or: async (args, ctx) => {
+    if (args.length < 2) {
+      throw new ScriptError("or: expected at least 2 arguments");
+    }
     for (const arg of args) {
       if (await evaluate(arg, ctx)) return true;
     }
     return false;
   },
   not: async (args, ctx) => {
+    if (args.length !== 1) {
+      throw new ScriptError("not: expected 1 argument");
+    }
     return !(await evaluate(args[0], ctx));
   },
 
   // System
   log: async (args, ctx) => {
-    const msg = await evaluate(args[0], ctx);
-    console.log(msg);
+    if (args.length < 1) {
+      throw new ScriptError("log: expected at least 1 argument");
+    }
+    const messages = [];
+    for (const arg of args) {
+      messages.push(await evaluate(arg, ctx));
+    }
+    console.log(...messages);
     return null;
   },
   arg: async (args, ctx) => {
@@ -209,22 +342,30 @@ export const CoreLibrary: Record<
     return ctx.args ?? [];
   },
   random: async (args, ctx) => {
-    // random(min, max) or random() -> 0..1
-    if (args.length === 0) return Math.random();
-    const min = await evaluate(args[0], ctx);
-    const max = await evaluate(args[1], ctx);
-    if (typeof min === "number" && typeof max === "number") {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
+    // random(max), random(min, max) or random() -> 0..1
+    if (args.length > 2) {
+      throw new ScriptError("random: expected 0, 1, or 2 arguments");
     }
-    return Math.random();
+    if (args.length === 0) return Math.random();
+    const min = args.length === 2 ? await evaluate(args[0], ctx) : 0;
+    const max = await evaluate(args[args.length === 2 ? 1 : 0], ctx);
+    const shouldFloor = min % 1 === 0 && max % 1 === 0;
+    if (typeof min !== "number") {
+      throw new ScriptError("random: min must be a number");
+    }
+    if (typeof max !== "number") {
+      throw new ScriptError("random: max must be a number");
+    }
+    if (min > max) {
+      throw new ScriptError("random: min must be less than or equal to max");
+    }
+    const roll = Math.random() * (max - min + 1) + min;
+    return shouldFloor ? Math.floor(roll) : roll;
   },
   warn: async (args, ctx) => {
     const [msg] = args;
     const text = await evaluate(msg, ctx);
-    if (ctx.warnings) {
-      ctx.warnings.push(String(text));
-    }
-    return null;
+    ctx.warnings.push(String(text));
   },
   throw: async (args, ctx) => {
     const [msg] = args;
@@ -242,7 +383,6 @@ export const CoreLibrary: Record<
         }
         return await evaluate(catchBlock, ctx);
       }
-      return null;
     }
   },
 
@@ -252,7 +392,9 @@ export const CoreLibrary: Record<
     const msg = await evaluate(msgExpr, ctx);
     const target = await evaluateTarget(targetExpr, ctx);
 
-    if (!target) return null;
+    if (!target) {
+      throw new ScriptError("tell: target not found");
+    }
 
     // If target is caller (resolved), send to socket
     if (target.id === ctx.caller.id) {
@@ -296,16 +438,25 @@ export const CoreLibrary: Record<
     const target = await evaluateTarget(targetExpr, ctx);
     const dest = await evaluateTarget(destExpr, ctx);
 
-    if (!target || !dest) return null;
+    if (!target) {
+      throw new ScriptError("move: target not found");
+    }
+    if (!dest) {
+      throw new ScriptError("move: destination not found");
+    }
 
     if (!checkPermission(ctx.caller, target, "edit")) {
-      throw new ScriptError(`Permission denied: cannot move ${target.id}`);
+      throw new ScriptError(
+        `move: permission denied: cannot move ${target.id}`,
+      );
     }
 
     if (ctx.sys?.move) {
       // Check enter permission on destination
       if (!checkPermission(ctx.caller, dest, "enter")) {
-        throw new ScriptError(`Permission denied: cannot enter ${dest.id}`);
+        throw new ScriptError(
+          `move: permission denied: cannot enter ${dest.id}`,
+        );
       }
       ctx.sys.move(target.id, dest.id);
     }
@@ -313,40 +464,41 @@ export const CoreLibrary: Record<
   },
 
   create: async (args, ctx) => {
+    if (!ctx.sys) {
+      throw new ScriptError("create: no system available");
+    }
+    if (!ctx.sys.create) {
+      throw new ScriptError("create: no create function available");
+    }
     if (args.length === 1) {
       const [dataExpr] = args;
       const data = await evaluate(dataExpr, ctx);
-      if (ctx.sys?.create) {
-        return ctx.sys.create(data);
-      }
+      return ctx.sys.create(data);
     } else {
+      if (args.length < 2 || args.length > 4) {
+        throw new ScriptError("create: expected 2, 3, or 4 arguments");
+      }
       const [kindExpr, nameExpr, propsExpr, locExpr] = args;
       const kind = await evaluate(kindExpr, ctx);
       const name = await evaluate(nameExpr, ctx);
       const props = propsExpr ? await evaluate(propsExpr, ctx) : {};
       const location_id = locExpr ? await evaluate(locExpr, ctx) : undefined;
-
-      if (ctx.sys?.create) {
-        return ctx.sys.create({ kind, name, props, location_id });
-      }
+      return ctx.sys.create({ kind, name, props, location_id });
     }
-    return null;
   },
 
   destroy: async (args, ctx) => {
     const [targetExpr] = args;
     const target = await evaluateTarget(targetExpr, ctx);
-
-    if (!target) return null;
-
+    if (!target) {
+      throw new ScriptError("destroy: target not found");
+    }
     if (!checkPermission(ctx.caller, target, "edit")) {
-      throw new ScriptError(`Permission denied: cannot destroy ${target.id}`);
+      throw new ScriptError(
+        `destroy: permission denied: cannot destroy ${target.id}`,
+      );
     }
-
-    if (ctx.sys?.destroy) {
-      ctx.sys.destroy(target.id);
-    }
-    return true;
+    ctx.sys?.destroy?.(target.id);
   },
 
   give: async (args, ctx) => {
@@ -354,11 +506,18 @@ export const CoreLibrary: Record<
     const target = await evaluateTarget(targetExpr, ctx);
     const dest = await evaluateTarget(destExpr, ctx);
 
-    if (!target || !dest) return null;
+    if (!target) {
+      throw new ScriptError("give: target not found");
+    }
+    if (!dest) {
+      throw new ScriptError("give: destination not found");
+    }
 
     // Check permission: caller must own target
     if (target.owner_id !== ctx.caller.id) {
-      throw new ScriptError(`Permission denied: you do not own ${target.id}`);
+      throw new ScriptError(
+        `give: permission denied: you do not own ${target.id}`,
+      );
     }
 
     if (ctx.sys?.give) {
@@ -375,7 +534,6 @@ export const CoreLibrary: Record<
       }
       ctx.sys.give(target.id, dest.id, newOwnerId);
     }
-    return true;
   },
 
   // Properties
@@ -384,17 +542,23 @@ export const CoreLibrary: Record<
     const target = await evaluateTarget(targetExpr, ctx);
     const key = await evaluate(keyExpr, ctx);
 
-    if (!target || typeof key !== "string") return null;
+    if (!target) {
+      throw new ScriptError("prop: target not found");
+    }
+    if (typeof key !== "string") {
+      throw new ScriptError("prop: key must be a string");
+    }
 
     // Check permission
     if (!checkPermission(ctx.caller, target, "view")) {
-      throw new ScriptError(`Permission denied: cannot view ${target.id}`);
+      throw new ScriptError(
+        `prop: permission denied: cannot view ${target.id}`,
+      );
     }
 
-    if (key in target) {
-      return (target as any)[key];
-    }
-    return target.props[key];
+    return SPECIAL_PROPERTIES.has(key)
+      ? target[key as keyof Entity]
+      : target.props[key];
   },
 
   "prop.set": async (args, ctx) => {
@@ -403,11 +567,18 @@ export const CoreLibrary: Record<
     const key = await evaluate(keyExpr, ctx);
     const val = await evaluate(valExpr, ctx);
 
-    if (!target || typeof key !== "string") return null;
+    if (!target) {
+      throw new ScriptError("prop.set: target not found");
+    }
+    if (typeof key !== "string") {
+      throw new ScriptError("prop.set: key must be a string");
+    }
 
     // Check permission
     if (!checkPermission(ctx.caller, target, "edit")) {
-      throw new ScriptError(`Permission denied: cannot edit ${target.id}`);
+      throw new ScriptError(
+        `prop.set: permission denied: cannot edit ${target.id}`,
+      );
     }
 
     const newProps = { ...target.props, [key]: val };
@@ -428,7 +599,12 @@ export const CoreLibrary: Record<
     const [funcExpr, ...argExprs] = args;
     const func = await evaluate(funcExpr, ctx);
 
-    if (!func || func.type !== "lambda") return null;
+    if (!func) {
+      throw new ScriptError("apply: func not found");
+    }
+    if (func.type !== "lambda") {
+      throw new ScriptError("apply: func must be a lambda");
+    }
 
     const evaluatedArgs = [];
     for (const arg of argExprs) {
@@ -458,7 +634,12 @@ export const CoreLibrary: Record<
       evaluatedArgs.push(await evaluate(arg, ctx));
     }
 
-    if (!target || typeof verb !== "string") return null;
+    if (!target) {
+      throw new ScriptError("call: target not found");
+    }
+    if (typeof verb !== "string") {
+      throw new ScriptError("call: verb must be a string");
+    }
 
     if (ctx.sys?.call) {
       return await ctx.sys.call(
@@ -481,66 +662,53 @@ export const CoreLibrary: Record<
       typeof verb !== "string" ||
       !Array.isArray(callArgs) ||
       typeof delay !== "number"
-    )
-      return null;
-
-    if (ctx.sys?.schedule) {
-      ctx.sys.schedule(ctx.this.id, verb, callArgs, delay);
+    ) {
+      throw new ScriptError(
+        "schedule: verb must be a string, args must be an array, delay must be a number",
+      );
     }
-    return true;
+
+    ctx.sys?.schedule?.(ctx.this.id, verb, callArgs, delay);
   },
   broadcast: async (args, ctx) => {
     const [msgExpr, locExpr] = args;
     const msg = await evaluate(msgExpr, ctx);
     const loc = locExpr ? await evaluate(locExpr, ctx) : undefined;
-
-    if (ctx.sys?.broadcast) {
-      ctx.sys.broadcast(msg, loc);
+    if (typeof msg !== "string") {
+      throw new ScriptError(
+        `broadcast: message must be a string, got ${JSON.stringify(msg)}`,
+      );
     }
-    return true;
+    ctx.sys?.broadcast?.(msg, loc);
   },
+  // TODO: Remove `sys.send_room` and `sys.sendRoom`
   "sys.send_room": async (args, ctx) => {
     const [roomIdExpr] = args;
     const roomId = roomIdExpr
       ? await evaluate(roomIdExpr, ctx)
       : ctx.caller.location_id;
-
-    if (typeof roomId !== "number") return null;
-
-    if (ctx.sys?.sendRoom) {
-      ctx.sys.sendRoom(roomId);
+    if (typeof roomId !== "number") {
+      throw new ScriptError(
+        `sys.send_room: room ID must be a number, got ${JSON.stringify(
+          roomId,
+        )}`,
+      );
     }
-    return true;
+    ctx.sys?.sendRoom?.(roomId);
   },
-  "sys.send_inventory": async (args, ctx) => {
-    const [playerIdExpr] = args;
-    const playerId = playerIdExpr
-      ? await evaluate(playerIdExpr, ctx)
-      : ctx.caller.id;
-
-    if (typeof playerId !== "number") return null;
-
-    if (ctx.sys?.sendInventory) {
-      ctx.sys.sendInventory(playerId);
-    }
-    return true;
-  },
-  "sys.send_item": async (args, ctx) => {
-    const [itemIdExpr] = args;
-    const itemId = itemIdExpr ? await evaluate(itemIdExpr, ctx) : undefined;
-
-    if (typeof itemId !== "number") return null;
-
-    if (ctx.sys?.sendItem) {
-      ctx.sys.sendItem(itemId);
-    }
-    return true;
+  "sys.send": async (args, ctx) => {
+    const [msgExpr] = args;
+    const msg = await evaluate(msgExpr, ctx);
+    ctx.sys?.send?.(msg);
   },
   "world.find": async (args, ctx) => {
     const [nameExpr] = args;
     const name = await evaluate(nameExpr, ctx);
-    if (typeof name !== "string") return null;
-
+    if (typeof name !== "string") {
+      throw new ScriptError(
+        `world.find: name must be a string, got ${JSON.stringify(name)}`,
+      );
+    }
     // evaluateTarget handles "me", "here", and name lookup in room/inventory
     const target = await evaluateTarget(name, ctx);
     return target ? target.id : null;
@@ -548,45 +716,45 @@ export const CoreLibrary: Record<
   "sys.can_edit": async (args, ctx) => {
     const [entityIdExpr] = args;
     const entityId = await evaluate(entityIdExpr, ctx);
-    if (typeof entityId !== "number") return false;
-
-    if (ctx.sys?.canEdit) {
-      return ctx.sys.canEdit(ctx.caller.id, entityId);
+    if (typeof entityId !== "number") {
+      throw new ScriptError(
+        `sys.can_edit: entity ID must be a number, got ${JSON.stringify(
+          entityId,
+        )}`,
+      );
     }
-    return false;
+    return ctx.sys?.canEdit?.(ctx.caller.id, entityId) ?? false;
   },
   print: async (args, ctx) => {
     const [msgExpr] = args;
     const msg = await evaluate(msgExpr, ctx);
-    if (typeof msg !== "string") return null;
-    if (ctx.sys?.send) {
-      ctx.sys.send({ type: "message", text: msg });
+    if (typeof msg !== "string") {
+      throw new ScriptError("print: message must be a string");
     }
-    return true;
+    ctx.sys?.send?.({ type: "message", text: msg });
   },
   say: async (args, ctx) => {
     const [msgExpr] = args;
     const msg = await evaluate(msgExpr, ctx);
 
-    if (typeof msg !== "string") return null;
-
-    if (ctx.sys?.broadcast) {
-      // Broadcast to room
-      ctx.sys.broadcast(
-        `${ctx.caller.name} says: "${msg}"`,
-        ctx.caller.location_id || undefined,
-      );
+    if (typeof msg !== "string") {
+      throw new ScriptError("say: message must be a string");
     }
 
-    if (ctx.sys?.triggerEvent && ctx.caller.location_id) {
-      await ctx.sys.triggerEvent(
+    ctx.sys?.broadcast?.(
+      `${ctx.caller.name} says: "${msg}"`,
+      ctx.caller.location_id || undefined,
+    );
+
+    if (ctx.caller.location_id) {
+      await ctx.sys?.triggerEvent?.(
         "on_hear",
         ctx.caller.location_id,
         [msg, ctx.caller.id, "say"],
         ctx.caller.id, // Exclude speaker
       );
     }
-    return true;
+    return;
   },
   // Data Structures
   object: async (args, ctx) => {
@@ -619,32 +787,108 @@ export const CoreLibrary: Record<
 
   // Entity Introspection
   contents: async (args, ctx) => {
+    if (!ctx.sys) {
+      throw new ScriptError("contents: no system available");
+    }
+    if (!ctx.sys.getContents) {
+      throw new ScriptError("contents: no getContents function available");
+    }
     const [containerExpr] = args;
     const container = await evaluateTarget(containerExpr, ctx);
     if (!container) return [];
-
-    if (ctx.sys?.getContents) {
-      return ctx.sys.getContents(container.id);
-    }
-    return [];
+    return ctx.sys.getContents(container.id);
   },
   verbs: async (args, ctx) => {
+    if (!ctx.sys) {
+      throw new ScriptError("verbs: no system available");
+    }
+    if (!ctx.sys.getVerbs) {
+      throw new ScriptError("verbs: no getVerbs function available");
+    }
     const [entityExpr] = args;
     const entity = await evaluateTarget(entityExpr, ctx);
     if (!entity) return [];
+    return ctx.sys.getVerbs(entity.id);
+  },
+  entity: async (args, ctx) => {
+    if (!ctx.sys) {
+      throw new ScriptError("entity: no system available");
+    }
+    if (!ctx.sys.getEntity) {
+      throw new ScriptError("entity: no getEntity function available");
+    }
+    const [idExpr] = args;
+    const id = await evaluate(idExpr, ctx);
+    if (typeof id !== "number") {
+      throw new ScriptError(
+        `entity: expected number, got ${JSON.stringify(id)}`,
+      );
+    }
+    const entity = await ctx.sys.getEntity(id);
+    if (!entity) {
+      throw new ScriptError(`entity: entity ${id} not found`);
+    }
+    return entity;
+  },
+  resolve_props: async (args, ctx) => {
+    const [entityExpr] = args;
+    const entity = await evaluateTarget(entityExpr, ctx);
+    if (!entity) {
+      throw new ScriptError("resolve_props: entity not found");
+    }
+
+    // We need to clone the props so we don't mutate the actual entity in the repo
+    const props = { ...entity.props };
 
     if (ctx.sys?.getVerbs) {
       const verbs = await ctx.sys.getVerbs(entity.id);
-      return verbs.map((v: any) => v.name);
+      for (const verb of verbs) {
+        if (verb.name.startsWith("get_")) {
+          const propName = verb.name.substring(4); // remove "get_"
+          try {
+            const result = await evaluate(verb.code, {
+              caller: entity, // The entity itself is the caller for its own getter?
+              this: entity,
+              args: [],
+              gas: 500, // Reduced gas for properties
+              sys: ctx.sys,
+              warnings: ctx.warnings,
+            });
+
+            if (result !== undefined && result !== null) {
+              props[propName] = result;
+            }
+          } catch (e) {
+            // Ignore errors in getters for now, or warn
+            if (ctx.warnings) {
+              ctx.warnings.push(
+                `Error resolving property ${propName} for ${entity.id}: ${e}`,
+              );
+            }
+          }
+        }
+      }
     }
-    return [];
+
+    return { ...entity, props };
   },
-  entity: async (args, ctx) => {
-    const [idExpr] = args;
-    const id = await evaluate(idExpr, ctx);
-    if (typeof id === "number" && ctx.sys?.getEntity) {
-      return ctx.sys.getEntity(id);
+  "json.stringify": async (args, ctx) => {
+    const [valExpr] = args;
+    const val = await evaluate(valExpr, ctx);
+    try {
+      return JSON.stringify(val);
+    } catch {
+      return null;
     }
-    return null;
+  },
+  "json.parse": async (args, ctx) => {
+    const [strExpr] = args;
+    const str = await evaluate(strExpr, ctx);
+    if (typeof str !== "string") return null;
+    try {
+      return JSON.parse(str);
+    } catch {
+      return null;
+    }
   },
 };

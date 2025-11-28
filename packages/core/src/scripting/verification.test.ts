@@ -4,27 +4,12 @@ import { StringLibrary } from "./lib/string";
 import { ListLibrary } from "./lib/list";
 import { TimeLibrary } from "./lib/time";
 import { WorldLibrary } from "./lib/world";
-import { Entity } from "../repo";
-
-// Mock Entity
-const mockEntity = (id: number, props: any = {}): Entity => ({
-  id,
-  name: "Mock",
-  kind: "ITEM",
-  location_id: null,
-  location_detail: null,
-  prototype_id: null,
-  owner_id: null,
-  created_at: "",
-  updated_at: "",
-  props,
-  state: {},
-  ai_context: {},
-  slug: null,
-});
+import { mockEntity } from "../mock";
+import { CoreLibrary } from "./lib/core";
 
 describe("Scripting Verification", () => {
   beforeAll(() => {
+    registerLibrary(CoreLibrary);
     registerLibrary(StringLibrary);
     registerLibrary(ListLibrary);
     registerLibrary(TimeLibrary);
@@ -79,13 +64,23 @@ describe("Scripting Verification", () => {
       sys: { ...ctx.sys, getAllEntities: () => [1, 2, 3] },
     });
     expect(result).toEqual([1, 2, 3]);
+    const result2 = await evaluate(["world.entities"], {
+      ...ctx,
+      sys: { ...ctx.sys, getAllEntities: () => ["a", 2, true] },
+    });
+    expect(result2).toEqual(["a", 2, true]);
   });
 
   it("should count entities using list.len", async () => {
     const result = await evaluate(["list.len", ["world.entities"]], {
       ...ctx,
+      sys: { ...ctx.sys, getAllEntities: () => [3, 2, 1] },
+    });
+    expect(result).toBe(3);
+    const result2 = await evaluate(["list.len", ["world.entities"]], {
+      ...ctx,
       sys: { ...ctx.sys, getAllEntities: () => [1, 2, 3, 4, 5] },
     });
-    expect(result).toBe(5);
+    expect(result2).toBe(5);
   });
 });

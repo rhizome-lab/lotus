@@ -1,11 +1,19 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { evaluate, ScriptContext, registerOpcode } from "../interpreter";
+import {
+  evaluate,
+  ScriptContext,
+  registerLibrary,
+  ScriptError,
+} from "../interpreter";
+import { CoreLibrary } from "./core";
 import { TimeLibrary } from "./time";
 
 describe("Time Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
+    registerLibrary(CoreLibrary);
+    registerLibrary(TimeLibrary);
     ctx = {
       caller: { id: 1 } as any,
       this: { id: 2 } as any,
@@ -13,23 +21,20 @@ describe("Time Library", () => {
       gas: 1000,
       warnings: [],
     };
-
-    // Register library manually
-    for (const [opcode, fn] of Object.entries(TimeLibrary)) {
-      registerOpcode(opcode, fn as any);
-    }
   });
 
-  test("time.timestamp", async () => {
-    const ts = await evaluate(["time.timestamp"], ctx);
-    expect(typeof ts).toBe("number");
-    expect(ts).toBeLessThanOrEqual(Date.now());
+  test("time.now", async () => {
+    const ts = await evaluate(["time.now"], ctx);
+    expect(typeof ts).toBe("string");
+    expect(new Date(ts).getTime()).toBeLessThanOrEqual(Date.now());
   });
 
   test("time.format edge cases", async () => {
-    expect(await evaluate(["time.format", "invalid-date", "time"], ctx)).toBe(
-      "Invalid Date",
-    );
+    expect(
+      await evaluate(["time.format", "invalid-date", "time"], ctx).catch(
+        (e) => e,
+      ),
+    ).toBeInstanceOf(RangeError);
 
     const dateStr = "2023-01-01T12:00:00Z";
     expect(typeof (await evaluate(["time.format", dateStr, "time"], ctx))).toBe(
@@ -75,7 +80,9 @@ describe("Time Library", () => {
     expect(typeof res).toBe("string");
 
     // Invalid amount
-    res = await evaluate(["time.offset", "invalid", "days"], ctx);
-    expect(typeof res).toBe("string");
+    res = await evaluate(["time.offset", "invalid", "days"], ctx).catch(
+      (e) => e,
+    );
+    expect(res).toBeInstanceOf(ScriptError);
   });
 });

@@ -9,7 +9,8 @@ initSchema(db);
 // Mock the db module
 mock.module("../../db", () => ({ db }));
 
-import { evaluate, ScriptContext, registerOpcode } from "../interpreter";
+import { evaluate, ScriptContext, registerLibrary } from "../interpreter";
+import { CoreLibrary } from "./core";
 import { WorldLibrary } from "./world";
 import * as permissions from "../../permissions";
 import { createEntity, addVerb } from "../../repo";
@@ -22,6 +23,8 @@ describe("World Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
+    registerLibrary(CoreLibrary);
+    registerLibrary(WorldLibrary);
     // Reset DB
     db.query("DELETE FROM entities").run();
     db.query("DELETE FROM entity_data").run();
@@ -39,11 +42,6 @@ describe("World Library", () => {
         getAllEntities: mock(() => [1, 2, 3]),
       } as any,
     };
-
-    // Register library manually
-    for (const [opcode, fn] of Object.entries(WorldLibrary)) {
-      registerOpcode(opcode, fn as any);
-    }
   });
 
   test("world.entities", async () => {
@@ -152,8 +150,8 @@ describe("World Library", () => {
 
   test("entity.verbs", async () => {
     const entityId = createEntity({ name: "Object", kind: "ITEM" });
-    addVerb(entityId, "push", ["tell", "caller", "pushed"]);
-    addVerb(entityId, "pull", ["tell", "caller", "pulled"]);
+    addVerb(entityId, "push", ["tell", "me", "pushed"]);
+    addVerb(entityId, "pull", ["tell", "me", "pulled"]);
 
     (permissions.checkPermission as any).mockReturnValue(true);
 

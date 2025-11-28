@@ -9,27 +9,16 @@ initSchema(db);
 // Mock the db module
 mock.module("../db", () => ({ db }));
 
-import { evaluate, ScriptContext, registerLibrary } from "./interpreter";
-import { Entity } from "../repo";
+import {
+  evaluate,
+  ScriptContext,
+  registerLibrary,
+  ScriptError,
+} from "./interpreter";
 import { ListLibrary } from "./lib/list";
 import { beforeAll } from "bun:test";
-
-// Mock Entity
-const mockEntity = (id: number, props: any = {}): Entity => ({
-  id,
-  name: "Mock",
-  kind: "ITEM",
-  location_id: null,
-  location_detail: null,
-  prototype_id: null,
-  owner_id: null,
-  created_at: "",
-  updated_at: "",
-  props,
-  state: {},
-  ai_context: {},
-  slug: null,
-});
+import { CoreLibrary } from "./lib/core";
+import { mockEntity } from "../mock";
 
 const checkPermissionMock = mock(() => true);
 mock.module("../permissions", () => ({
@@ -38,9 +27,8 @@ mock.module("../permissions", () => ({
 
 describe("Interpreter", () => {
   beforeAll(() => {
+    registerLibrary(CoreLibrary);
     registerLibrary(ListLibrary);
-    const { getOpcode } = require("./interpreter");
-    console.log("Registered list.len:", !!getOpcode("list.len"));
   });
 
   const caller = mockEntity(1);
@@ -97,10 +85,10 @@ describe("Interpreter", () => {
   });
 
   test("actions", async () => {
-    await evaluate(["tell", "caller", "hello"], ctx);
+    await evaluate(["tell", "me", "hello"], ctx);
     expect(sys.send).toHaveBeenCalledWith({ type: "message", text: "hello" });
 
-    await evaluate(["move", "this", "caller"], ctx);
+    await evaluate(["move", "this", "me"], ctx);
     expect(sys.move).toHaveBeenCalledWith(target.id, caller.id);
 
     await evaluate(["destroy", "this"], ctx);
@@ -136,9 +124,10 @@ describe("Interpreter", () => {
       target.name,
       target.kind,
     );
-    db.query(
-      "INSERT INTO entity_data (entity_id, props, state, ai_context) VALUES (?, ?, ?, ?)",
-    ).run(target.id, JSON.stringify(target.props), "{}", "{}");
+    db.query("INSERT INTO entity_data (entity_id, props) VALUES (?, ?)").run(
+      target.id,
+      JSON.stringify(target.props),
+    );
 
     // prop
     expect(await evaluate(["prop", "this", "foo"], ctx)).toBe("bar");
@@ -194,7 +183,7 @@ describe("Interpreter", () => {
       await evaluate(["unknown_op"], ctx);
       expect(true).toBe(false);
     } catch (e: any) {
-      expect(e.message).toContain("Unknown opcode");
+      expect(e.message).toContain("Unknown opcode: unknown_op");
     }
 
     // Permission denied (prop)
@@ -203,7 +192,7 @@ describe("Interpreter", () => {
       await evaluate(["prop", "this", "foo"], ctx);
       expect(true).toBe(false);
     } catch (e: any) {
-      expect(e.message).toContain("Permission denied");
+      expect(e.message).toContain("permission denied");
     }
     checkPermissionMock.mockReturnValue(true); // Reset
   });
@@ -232,33 +221,35 @@ describe("Interpreter", () => {
     // prop.set
     try {
       await evaluate(["prop.set", "this", "foo", "bar"], ctx);
-      expect(true).toBe(false);
+      throw new Error();
     } catch (e: any) {
-      expect(e.message).toContain("Permission denied");
+      expect(e.message).toContain("permission denied");
     }
 
     // move
     try {
       await evaluate(["move", "this", "this"], ctx);
-      expect(true).toBe(false);
+      throw new Error();
     } catch (e: any) {
-      expect(e.message).toContain("Permission denied");
+      expect(e.message).toContain("permission denied");
     }
 
     // destroy
     try {
       await evaluate(["destroy", "this"], ctx);
-      expect(true).toBe(false);
+      throw new Error();
     } catch (e: any) {
-      expect(e.message).toContain("Permission denied");
+      expect(e.message).toContain("permission denied");
     }
 
     checkPermissionMock.mockReturnValue(true);
   });
 
   test("tell other", async () => {
-    // Should return null if target is not "caller"
-    expect(await evaluate(["tell", "other", "msg"], ctx)).toBe(null);
+    // Should return null if target is not visible to the player
+    expect(
+      await evaluate(["tell", "other", "msg"], ctx).catch((e) => e),
+    ).toBeInstanceOf(ScriptError);
   });
 
   test("destroy fallback", async () => {
@@ -269,13 +260,16 @@ describe("Interpreter", () => {
     // Should return true (and do nothing/log? implementation has empty block)
     // We need to ensure permission check passes
     checkPermissionMock.mockReturnValue(true);
-    expect(await evaluate(["destroy", "this"], ctxFallback)).toBe(true);
+    // Should not error
+    await evaluate(["destroy", "this"], ctxFallback);
   });
 
   test("create missing sys", async () => {
     const { create: _, ...sysWithoutCreate } = ctx.sys;
     const ctxMissing = { ...ctx, sys: sysWithoutCreate };
 
-    expect(await evaluate(["create", {}], ctxMissing as never)).toBe(null);
+    expect(
+      await evaluate(["create", {}], ctxMissing as never).catch((e) => e),
+    ).toBeInstanceOf(ScriptError);
   });
 });

@@ -1,46 +1,22 @@
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  beforeAll,
-  afterAll,
-} from "bun:test";
-import { evaluate, getOpcode, registerLibrary } from "./interpreter";
+import { describe, it, expect, beforeEach } from "bun:test";
+import { evaluate, registerLibrary, registerOpcode } from "./interpreter";
 import { ListLibrary } from "./lib/list";
 import { StringLibrary } from "./lib/string";
 import { ObjectLibrary } from "./lib/object";
-import { registerOpcode } from "./interpreter";
 import { Entity } from "../repo";
+import { CoreLibrary } from "./lib/core";
 
 describe("Book Item Scripting", () => {
   let book: Entity;
   let caller: Entity;
   let messages: string[] = [];
 
-  // Save original opcodes
-  let originalTell: any;
-  let originalProp: any;
-  let originalSet: any;
-
-  beforeAll(() => {
-    originalTell = getOpcode("tell");
-    originalProp = getOpcode("prop");
-    originalSet = getOpcode("set");
-  });
-
-  afterAll(() => {
-    // Restore original opcodes
-    if (originalTell) registerOpcode("tell", originalTell);
-    if (originalProp) registerOpcode("prop", originalProp);
-    if (originalSet) registerOpcode("set", originalSet);
-  });
-
   beforeEach(() => {
     // Mock system context
     messages = [];
 
     // Register libraries
+    registerLibrary(CoreLibrary);
     registerLibrary(ListLibrary);
     registerLibrary(StringLibrary);
     registerLibrary(ObjectLibrary);
@@ -48,31 +24,11 @@ describe("Book Item Scripting", () => {
     // Mock tell opcode since we don't have full repo/sys setup in this isolated test
     registerOpcode("tell", async (args, ctx) => {
       const [targetExpr, msgExpr] = args;
-      if (targetExpr === "caller") {
+      if (targetExpr === "me") {
         const msg = await evaluate(msgExpr, ctx);
         messages.push(msg);
       }
       return null;
-    });
-
-    // Mock prop/set opcodes for local entity manipulation
-    registerOpcode("prop", async (args, ctx) => {
-      const [targetExpr, keyExpr] = args;
-      const key = await evaluate(keyExpr, ctx);
-      if (targetExpr === "this") {
-        return ctx.this.props[key];
-      }
-      return null;
-    });
-
-    registerOpcode("set", async (args, ctx) => {
-      const [targetExpr, keyExpr, valExpr] = args;
-      const key = await evaluate(keyExpr, ctx);
-      const val = await evaluate(valExpr, ctx);
-      if (targetExpr === "this") {
-        ctx.this.props[key] = val;
-      }
-      return val;
     });
 
     // Setup entities
@@ -92,7 +48,8 @@ describe("Book Item Scripting", () => {
       id: 2,
       name: "Reader",
       kind: "ACTOR",
-      props: {},
+      // Disable permissions checks
+      props: { is_wizard: true },
     } as any;
   });
 
@@ -102,7 +59,7 @@ describe("Book Item Scripting", () => {
       ["let", "chapters", ["prop", "this", "chapters"]],
       [
         "tell",
-        "caller",
+        "me",
         [
           "str.join",
           [
@@ -130,7 +87,7 @@ describe("Book Item Scripting", () => {
         ["var", "chapter"],
         [
           "tell",
-          "caller",
+          "me",
           [
             "str.concat",
             "Chapter: ",
@@ -139,7 +96,7 @@ describe("Book Item Scripting", () => {
             ["obj.get", ["var", "chapter"], "content"],
           ],
         ],
-        ["tell", "caller", "Chapter not found."],
+        ["tell", "me", "Chapter not found."],
       ],
     ];
 
@@ -164,8 +121,8 @@ describe("Book Item Scripting", () => {
       ["obj.set", ["var", "newChapter"], "title", ["var", "title"]],
       ["obj.set", ["var", "newChapter"], "content", ["var", "content"]],
       ["list.push", ["var", "chapters"], ["var", "newChapter"]],
-      ["set", "this", "chapters", ["var", "chapters"]],
-      ["tell", "caller", "Chapter added."],
+      ["prop.set", "this", "chapters", ["var", "chapters"]],
+      ["tell", "me", "Chapter added."],
     ];
 
     await evaluate(script, {
@@ -211,7 +168,7 @@ describe("Book Item Scripting", () => {
       ],
       [
         "tell",
-        "caller",
+        "me",
         [
           "str.concat",
           "Found ",

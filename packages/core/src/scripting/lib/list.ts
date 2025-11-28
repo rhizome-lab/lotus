@@ -1,4 +1,3 @@
-import { config } from "../config";
 import {
   evaluate,
   executeLambda,
@@ -44,10 +43,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.pop": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 1) {
-        throw new ScriptError("list.pop requires 1 argument");
-      }
+    if (args.length !== 1) {
+      throw new ScriptError("list.pop: expected 1 argument");
     }
     const [listExpr] = args;
     const list = await evaluate(listExpr, ctx);
@@ -70,10 +67,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.slice": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length < 2 || args.length > 3) {
-        throw new ScriptError("list.slice requires 2 or 3 arguments");
-      }
+    if (args.length < 2 || args.length > 3) {
+      throw new ScriptError("list.slice: expected 2 or 3 arguments");
     }
     const [listExpr, startExpr, endExpr] = args;
     const list = await evaluate(listExpr, ctx);
@@ -97,10 +92,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.concat": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("list.concat requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("list.concat: expected 2 arguments");
     }
     const [list1Expr, list2Expr] = args;
     const list1 = await evaluate(list1Expr, ctx);
@@ -129,10 +122,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.join": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("list.join requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("list.join: expected 2 arguments");
     }
     const [listExpr, sepExpr] = args;
     const list = await evaluate(listExpr, ctx);
@@ -142,10 +133,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.find": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("list.find requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("list.find: expected 2 arguments");
     }
     const [listExpr, funcExpr] = args;
     const list = await evaluate(listExpr, ctx);
@@ -162,10 +151,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.map": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("list.map requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("list.map: expected 2 arguments");
     }
     const [listExpr, funcExpr] = args;
     const list = await evaluate(listExpr, ctx);
@@ -181,10 +168,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.filter": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 2) {
-        throw new ScriptError("list.filter requires 2 arguments");
-      }
+    if (args.length !== 2) {
+      throw new ScriptError("list.filter: expected 2 arguments");
     }
     const [listExpr, funcExpr] = args;
     const list = await evaluate(listExpr, ctx);
@@ -202,10 +187,8 @@ export const ListLibrary: ScriptLibraryDefinition = {
   },
 
   "list.reduce": async (args, ctx) => {
-    if (config.validateCommands) {
-      if (args.length !== 3) {
-        throw new ScriptError("list.reduce requires 3 arguments");
-      }
+    if (args.length !== 3) {
+      throw new ScriptError("list.reduce: expected 3 arguments");
     }
     const [listExpr, funcExpr, initExpr] = args;
     const list = await evaluate(listExpr, ctx);

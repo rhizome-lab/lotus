@@ -27,8 +27,6 @@ export interface CommandContext {
     updateEntity: (id: number, data: any) => void;
     deleteEntity: (id: number) => void;
     sendRoom: (roomId: number) => void;
-    sendInventory: (playerId: number) => void;
-    sendItem: (itemId: number) => void;
     canEdit: (playerId: number, entityId: number) => boolean;
   };
 }

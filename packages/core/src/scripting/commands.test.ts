@@ -27,16 +27,22 @@ import {
   deleteEntity,
   Entity,
   getVerb,
+  getContents,
 } from "../repo";
+import { CoreLibrary } from "./lib/core";
 
 describe("Player Commands", () => {
+  // Register libraries
+  registerLibrary(CoreLibrary);
+  registerLibrary(ListLibrary);
+  registerLibrary(StringLibrary);
+  registerLibrary(ObjectLibrary);
+  registerLibrary(WorldLibrary);
+
   let player: Entity;
   let room: Entity;
   let sys: ScriptSystemContext;
   let sentMessages: any[] = [];
-  let sentRoomUpdates: number[] = [];
-  let sentInventoryUpdates: number[] = [];
-  let sentItemUpdates: number[] = [];
 
   beforeEach(() => {
     // Reset DB state
@@ -46,15 +52,6 @@ describe("Player Commands", () => {
     db.query("DELETE FROM sqlite_sequence").run();
 
     sentMessages = [];
-    sentRoomUpdates = [];
-    sentInventoryUpdates = [];
-    sentItemUpdates = [];
-
-    // Register libraries
-    registerLibrary(ListLibrary);
-    registerLibrary(StringLibrary);
-    registerLibrary(ObjectLibrary);
-    registerLibrary(WorldLibrary);
 
     // Setup Sys Context
     sys = {
@@ -68,20 +65,12 @@ describe("Player Commands", () => {
       },
       create: createEntity,
       destroy: deleteEntity,
-      send: (msg: any) => {
-        sentMessages.push(msg); // msg is JSON string usually? No, sys.send takes object in index.ts but here we can just push object
-      },
-      broadcast: (msg: any) => {
+      getEntity: async (id) => getEntity(id),
+      send: (msg) => {
         sentMessages.push(msg);
       },
-      sendRoom: (roomId) => {
-        sentRoomUpdates.push(roomId);
-      },
-      sendInventory: (playerId) => {
-        sentInventoryUpdates.push(playerId);
-      },
-      sendItem: (itemId) => {
-        sentItemUpdates.push(itemId);
+      broadcast: (msg) => {
+        sentMessages.push(msg);
       },
       canEdit: () => true,
       triggerEvent: async () => {},
@@ -97,6 +86,7 @@ describe("Player Commands", () => {
           });
         }
       },
+      getContents: async (id) => getContents(id),
     };
 
     // Seed DB (creates sys:player_base, Lobby, Guest, etc.)
@@ -113,7 +103,7 @@ describe("Player Commands", () => {
   const runCommand = async (command: string, args: any[]) => {
     const verb = getVerb(player.id, command);
     if (!verb) throw new Error(`Verb ${command} not found on player`);
-    await evaluate(verb.code, {
+    return await evaluate(verb.code, {
       caller: player,
       this: player,
       args,
@@ -124,24 +114,24 @@ describe("Player Commands", () => {
 
   it("should look at room", async () => {
     await runCommand("look", []);
-    expect(sentRoomUpdates).toContain(room.id);
+    expect(sentMessages[0]?.name).toEqual(room.name);
   });
 
-  it("should look at item", async () => {
+  it("should inspect item", async () => {
     // Create item in room
-    const itemId = createEntity({
+    createEntity({
       name: "Box",
       kind: "ITEM",
       location_id: room.id,
     });
 
     await runCommand("look", ["Box"]);
-    expect(sentItemUpdates).toContain(itemId);
+    expect(sentMessages[0]?.name).toEqual("Box");
   });
 
   it("should check inventory", async () => {
     await runCommand("inventory", []);
-    expect(sentInventoryUpdates).toContain(player.id);
+    expect(sentMessages[0]?.[0]?.name).toEqual("Leather Backpack");
   });
 
   it("should move", async () => {
@@ -166,7 +156,7 @@ describe("Player Commands", () => {
 
     const updatedPlayer = getEntity(player.id)!;
     expect(updatedPlayer.location_id).toBe(otherRoomId);
-    expect(sentRoomUpdates).toContain(otherRoomId);
+    expect(sentMessages).toContain("Other Room");
   });
 
   it("should dig", async () => {
@@ -185,22 +175,13 @@ describe("Player Commands", () => {
   });
 
   it("should create item", async () => {
-    await runCommand("create", ["Rock"]);
-
-    // The `getContents` function was removed as per instruction,
-    // but it was used here. To maintain functionality and syntactic correctness,
-    // this line is commented out as it would cause a ReferenceError.
-    // const contents = getContents(room.id);
-    // const rock = contents.find((e) => e.name === "Rock");
-    // expect(rock).toBeDefined();
-    // expect(sentRoomUpdates).toContain(room.id);
-
-    // Alternative check for created item without getContents
-    const createdRock = db
-      .query("SELECT * FROM entities WHERE name = 'Rock' AND location_id = ?")
-      .get(room.id) as any;
-    expect(createdRock).toBeDefined();
-    expect(sentRoomUpdates).toContain(room.id);
+    const id = await runCommand("create", ["Rock"]);
+    expect(id, "create should return item id").toBeDefined();
+    const createdRock = getEntity(id);
+    expect(createdRock, "created item should exist").toBeDefined();
+    expect(sentMessages, "created item should send room update").toContain(
+      "Lobby",
+    );
   });
 
   it("should set property", async () => {
@@ -211,9 +192,9 @@ describe("Player Commands", () => {
       props: { weight: 10 },
     });
 
-    await runCommand("set", ["Stone", "weight", "20"]);
+    await runCommand("set", ["Stone", "weight", 20]);
 
     const updatedItem = getEntity(itemId)!;
-    expect(updatedItem.props["weight"]).toBe("20");
+    expect(updatedItem.props["weight"]).toBe(20);
   });
 });

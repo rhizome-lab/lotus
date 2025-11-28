@@ -5,7 +5,12 @@ import { evaluate, ScriptSystemContext } from "./scripting/interpreter";
 export class TaskScheduler {
   constructor() {}
 
-  schedule(entityId: number, verb: string, args: any[], delayMs: number) {
+  schedule(
+    entityId: number,
+    verb: string,
+    args: readonly unknown[],
+    delayMs: number,
+  ) {
     const executeAt = Date.now() + delayMs;
     db.query(
       "INSERT INTO scheduled_tasks (entity_id, verb, args, execute_at) VALUES (?, ?, ?, ?)",
@@ -33,10 +38,7 @@ export class TaskScheduler {
     ).run();
 
     if (!this.contextFactory) {
-      console.warn(
-        "[Scheduler] No context factory set, skipping task execution.",
-      );
-      return;
+      throw new Error("[Scheduler] No context factory set.");
     }
 
     const sys = this.contextFactory();

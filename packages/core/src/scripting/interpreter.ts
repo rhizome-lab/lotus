@@ -1,4 +1,4 @@
-import { Entity, getContents, getEntity } from "../repo";
+import { Entity, getContents, getEntity, Verb } from "../repo";
 
 export type ScriptSystemContext = {
   move: (id: number, dest: number) => void;
@@ -6,17 +6,17 @@ export type ScriptSystemContext = {
   send: (msg: unknown) => void;
   destroy?: (id: number) => void;
   call: (
-    caller: any,
+    caller: Entity,
     targetId: number,
     verb: string,
-    args: any[],
+    args: readonly unknown[],
     warnings: string[],
   ) => Promise<any>;
-  getAllEntities?: () => number[];
+  getAllEntities?: () => readonly number[];
   schedule?: (
     entityId: number,
     verb: string,
-    args: unknown[],
+    args: readonly unknown[],
     delay: number,
   ) => void;
   broadcast?: (msg: unknown, locationId?: number) => void;
@@ -24,15 +24,13 @@ export type ScriptSystemContext = {
   triggerEvent: (
     eventName: string,
     locationId: number,
-    args: unknown[],
+    args: readonly unknown[],
     excludeEntityId?: number,
   ) => void | Promise<void>;
-  getContents?: (containerId: number) => Promise<any[]>;
-  getVerbs?: (entityId: number) => Promise<any[]>;
-  getEntity?: (id: number) => Promise<any>;
+  getContents?: (containerId: number) => Promise<readonly Entity[]>;
+  getVerbs?: (entityId: number) => Promise<readonly Verb[]>;
+  getEntity?: (id: number) => Promise<Entity | null>;
   sendRoom?: (roomId: number) => void;
-  sendInventory?: (playerId: number) => void;
-  sendItem?: (itemId: number) => void;
   canEdit?: (playerId: number, entityId: number) => boolean;
   sendTo?: (entityId: number, msg: unknown) => void;
 };
@@ -40,7 +38,7 @@ export type ScriptSystemContext = {
 export type ScriptContext = {
   caller: Entity;
   this: Entity;
-  args: unknown[];
+  args: readonly unknown[];
   locals?: Record<string, unknown>;
   gas?: number; // Gas limit
   sys?: ScriptSystemContext;
@@ -109,7 +107,7 @@ export async function executeLambda(
 
 export async function evaluate(ast: unknown, ctx: ScriptContext): Promise<any> {
   if (ctx.gas !== undefined) {
-    ctx.gas--;
+    ctx.gas -= 1;
     if (ctx.gas < 0) {
       throw new ScriptError("Script ran out of gas!");
     }
@@ -137,6 +135,7 @@ export async function evaluateTarget(
 ): Promise<Entity | null> {
   const val = await evaluate(targetExpr, ctx);
   if (val === "me") return ctx.caller;
+  if (val === "this") return ctx.this;
   if (val === "here") {
     if (ctx.caller.location_id) {
       return getEntity(ctx.caller.location_id);
@@ -164,5 +163,12 @@ export async function evaluateTarget(
       if (roomItem) return roomItem;
     }
   }
-  return null;
+  if (typeof val === "object" && val !== null && "id" in val && "kind" in val) {
+    return val as Entity;
+  }
+  throw new ScriptError(
+    `evaluateTarget: failed to match ${JSON.stringify(
+      targetExpr,
+    )} (evaluated to ${JSON.stringify(val)})`,
+  );
 }

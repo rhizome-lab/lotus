@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, mock } from "bun:test";
+import { describe, it, expect, mock } from "bun:test";
 import { Database } from "bun:sqlite";
 
 import { initSchema } from "./schema";
@@ -12,13 +12,13 @@ initSchema(db);
 // Mock the db module
 mock.module("./db", () => ({ db }));
 
-import { evaluate } from "./scripting/interpreter";
+import { evaluate, registerLibrary } from "./scripting/interpreter";
 import { createEntity, addVerb, getVerb } from "./repo";
+import { CoreLibrary } from "./scripting/lib/core";
 
 describe("Advanced Items Verification", () => {
-  beforeAll(() => {
-    // Mock sys.broadcast
-  });
+  // Register libraries
+  registerLibrary(CoreLibrary);
 
   it("should broadcast message", async () => {
     const broadcastMock = mock(() => {});

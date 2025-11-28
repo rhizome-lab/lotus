@@ -28,7 +28,7 @@ export function seedItems(locationId: number) {
     ["if", ["not", ["var", "chapter"]], ["throw", "Chapter not found."]],
     [
       "tell",
-      "caller",
+      "me",
       [
         "str.concat",
         "Reading: ",
@@ -44,7 +44,7 @@ export function seedItems(locationId: number) {
     ["let", "chapters", ["prop", "this", "chapters"]],
     [
       "tell",
-      "caller",
+      "me",
       [
         "str.concat",
         "Chapters:\n",
@@ -79,7 +79,7 @@ export function seedItems(locationId: number) {
 
     ["list.push", ["var", "chapters"], ["var", "newChapter"]],
     ["set", "this", "chapters", ["var", "chapters"]], // Save back to entity
-    ["tell", "caller", "Chapter added."],
+    ["tell", "me", "Chapter added."],
   ]);
 
   addVerb(bookId, "search_chapters", [
@@ -113,7 +113,7 @@ export function seedItems(locationId: number) {
     ],
     [
       "tell",
-      "caller",
+      "me",
       [
         "str.concat",
         "Found ",

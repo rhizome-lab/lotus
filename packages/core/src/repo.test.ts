@@ -82,16 +82,12 @@ describe("Repo", () => {
       location_id: 100,
       location_detail: "worn",
       props: { foo: "bar" },
-      state: { open: true },
-      ai_context: { personality: "grumpy" },
     });
     const updated = getEntity(id);
     expect(updated?.name).toBe("New Name");
     expect(updated?.location_id).toBe(100);
     expect(updated?.location_detail).toBe("worn");
     expect(updated?.props["foo"]).toBe("bar");
-    expect(updated?.state).toEqual({ open: true });
-    expect(updated?.ai_context).toEqual({ personality: "grumpy" });
   });
 
   test("deleteEntity", () => {

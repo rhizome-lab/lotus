@@ -157,7 +157,7 @@ export const BLOCK_DEFINITIONS: BlockDefinition[] = [
     opcode: "tell",
     category: "action",
     slots: [
-      { name: "Target", type: "block", default: "caller" },
+      { name: "Target", type: "block", default: "me" },
       { name: "Message", type: "string" },
     ],
   },

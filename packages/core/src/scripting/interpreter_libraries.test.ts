@@ -1,26 +1,9 @@
 import { describe, test, expect, mock, beforeAll } from "bun:test";
 import { evaluate, registerLibrary, ScriptContext } from "./interpreter";
-import { Entity } from "../repo";
 import { StringLibrary } from "./lib/string";
 import { ListLibrary } from "./lib/list";
 import { ObjectLibrary } from "./lib/object";
-
-// Mock Entity
-const mockEntity = (id: number, props: any = {}): Entity => ({
-  id,
-  name: "Mock",
-  kind: "ITEM",
-  location_id: null,
-  location_detail: null,
-  prototype_id: null,
-  owner_id: null,
-  created_at: "",
-  updated_at: "",
-  props,
-  state: {},
-  ai_context: {},
-  slug: null,
-});
+import { mockEntity } from "../mock";
 
 const ctx: ScriptContext = {
   caller: mockEntity(1),

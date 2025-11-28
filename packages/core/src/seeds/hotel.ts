@@ -43,8 +43,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
   // Moves player back to lobby and destroys the room
   addVerb(hotelRoomProtoId, "leave", [
     "seq",
-    ["move", "caller", hotelLobbyId], // Move player out first
-    ["tell", "caller", "You leave the room and it fades away behind you."],
+    ["move", "me", hotelLobbyId], // Move player out first
+    ["tell", "me", "You leave the room and it fades away behind you."],
     ["destroy", "this"], // Destroy the room
   ]);
 
@@ -52,8 +52,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
   updateVerb(getVerb(hotelRoomProtoId, "leave")!.id, [
     "seq",
     ["let", "lobbyId", ["prop", "this", "lobby_id"]],
-    ["move", "caller", ["var", "lobbyId"]],
-    ["tell", "caller", "You leave the room and it fades away behind you."],
+    ["move", "me", ["var", "lobbyId"]],
+    ["tell", "me", "You leave the room and it fades away behind you."],
 
     // Destroy contents (furnishings)
     ["let", "contents", ["entity.contents", "this"]],
@@ -118,7 +118,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
     ["prop.set", "this", "current_floor", ["var", "floor"]],
     [
       "tell",
-      "caller",
+      "me",
       [
         "str.concat",
         "The elevator hums and moves to floor ",
@@ -139,8 +139,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
       ["==", ["var", "floor"], 1],
       [
         "seq",
-        ["move", "caller", hotelLobbyId],
-        ["tell", "caller", "The doors open to the Grand Lobby."],
+        ["move", "me", hotelLobbyId],
+        ["tell", "me", "The doors open to the Grand Lobby."],
       ],
       [
         "seq",
@@ -173,10 +173,10 @@ export function seedHotel(lobbyId: number, voidId: number) {
         ["obj.set", ["var", "lobbyData"], "props", ["var", "props"]],
 
         ["let", "lobbyId", ["create", ["var", "lobbyData"]]],
-        ["move", "caller", ["var", "lobbyId"]],
+        ["move", "me", ["var", "lobbyId"]],
         [
           "tell",
-          "caller",
+          "me",
           ["str.concat", "The doors open to Floor ", ["var", "floor"], "."],
         ],
       ],
@@ -189,8 +189,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
   addVerb(floorLobbyProtoId, "elevator", [
     "seq",
     ["let", "elevId", ["prop", "this", "elevator_id"]],
-    ["move", "caller", ["var", "elevId"]],
-    ["tell", "caller", "You step back into the elevator."],
+    ["move", "me", ["var", "elevId"]],
+    ["tell", "me", "You step back into the elevator."],
     ["destroy", "this"],
   ]);
 
@@ -223,8 +223,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
     ["obj.set", ["var", "wingData"], "props", ["var", "props"]],
 
     ["let", "wingId", ["create", ["var", "wingData"]]],
-    ["move", "caller", ["var", "wingId"]],
-    ["tell", "caller", "You walk down the West Wing."],
+    ["move", "me", ["var", "wingId"]],
+    ["tell", "me", "You walk down the West Wing."],
   ]);
 
   // east (Create Right Wing)
@@ -256,8 +256,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
     ["obj.set", ["var", "wingData"], "props", ["var", "props"]],
 
     ["let", "wingId", ["create", ["var", "wingData"]]],
-    ["move", "caller", ["var", "wingId"]],
-    ["tell", "caller", "You walk down the East Wing."],
+    ["move", "me", ["var", "wingId"]],
+    ["tell", "me", "You walk down the East Wing."],
   ]);
 
   // Furnishings Prototypes
@@ -288,8 +288,8 @@ export function seedHotel(lobbyId: number, voidId: number) {
   addVerb(wingProtoId, "back", [
     "seq",
     ["let", "returnId", ["prop", "this", "return_id"]],
-    ["move", "caller", ["var", "returnId"]],
-    ["tell", "caller", "You head back to the lobby."],
+    ["move", "me", ["var", "returnId"]],
+    ["tell", "me", "You head back to the lobby."],
     ["destroy", "this"],
   ]);
 
@@ -309,7 +309,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
         ["or", ["<", ["var", "roomNum"], 1], [">", ["var", "roomNum"], 50]],
         [
           "seq",
-          ["tell", "caller", "Room numbers in the West Wing are 1-50."],
+          ["tell", "me", "Room numbers in the West Wing are 1-50."],
           ["set", "valid", false],
         ],
       ],
@@ -322,7 +322,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
         ["or", ["<", ["var", "roomNum"], 51], [">", ["var", "roomNum"], 99]],
         [
           "seq",
-          ["tell", "caller", "Room numbers in the East Wing are 51-99."],
+          ["tell", "me", "Room numbers in the East Wing are 51-99."],
           ["set", "valid", false],
         ],
       ],
@@ -374,10 +374,10 @@ export function seedHotel(lobbyId: number, voidId: number) {
         ["obj.set", ["var", "chairData"], "location_id", ["var", "roomId"]],
         ["create", ["var", "chairData"]],
 
-        ["move", "caller", ["var", "roomId"]],
+        ["move", "me", ["var", "roomId"]],
         [
           "tell",
-          "caller",
+          "me",
           ["str.concat", "You enter Room ", ["var", "roomNum"], "."],
         ],
       ],

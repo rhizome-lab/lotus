@@ -29,16 +29,23 @@ export interface Entity {
    * Contains arbitrary game data like description, adjectives, custom_css.
    */
   props: Record<string, any>;
-  /**
-   * Mutable state for the entity.
-   * Used for things that change often (e.g. health, open/closed status).
-   */
-  state: Record<string, any>;
-  /** Context for AI generation/interaction */
-  ai_context: Record<string, any>;
   // Raw prototype info
   proto_slug?: string;
 }
+
+export const SPECIAL_PROPERTIES = new Set<string>([
+  "id",
+  "slug",
+  "name",
+  "location_id",
+  "location_detail",
+  "prototype_id",
+  "owner_id",
+  "kind",
+  "created_at",
+  "updated_at",
+  "proto_slug",
+] satisfies readonly (keyof Entity)[]);
 
 /**
  * Fetches an entity by ID, resolving its properties against its prototype.
@@ -53,11 +60,9 @@ export function getEntity(id: number): Entity | null {
     .query(
       `
     SELECT 
-      e.*, 
+      e.*,
       p.slug as proto_slug,
-      d.state, 
-      d.props, 
-      d.ai_context,
+      d.props,
       proto_data.props as proto_props
     FROM entities e
     LEFT JOIN entity_data d ON e.id = d.entity_id
@@ -78,8 +83,6 @@ export function getEntity(id: number): Entity | null {
     ...raw,
     // The "Resolved" properties
     props: { ...baseProps, ...instanceProps },
-    state: raw.state ? JSON.parse(raw.state) : {},
-    ai_context: raw.ai_context ? JSON.parse(raw.ai_context) : {},
   };
 }
 
@@ -127,8 +130,6 @@ export function createEntity(data: {
   prototype_id?: number;
   owner_id?: number;
   props?: Record<string, any>;
-  state?: Record<string, any>;
-  ai_context?: Record<string, any>;
 }) {
   const insertEntity = db.query(`
     INSERT INTO entities (name, slug, kind, location_id, location_detail, prototype_id, owner_id)
@@ -137,8 +138,8 @@ export function createEntity(data: {
   `);
 
   const insertData = db.query(`
-    INSERT INTO entity_data (entity_id, props, state, ai_context)
-    VALUES ($entity_id, $props, $state, $ai_context)
+    INSERT INTO entity_data (entity_id, props)
+    VALUES ($entity_id, $props)
   `);
 
   const transaction = db.transaction(() => {
@@ -155,8 +156,6 @@ export function createEntity(data: {
     insertData.run({
       $entity_id: result.id,
       $props: JSON.stringify(data.props || {}),
-      $state: JSON.stringify(data.state || {}),
-      $ai_context: JSON.stringify(data.ai_context || {}),
     });
 
     return result.id;
@@ -203,8 +202,6 @@ export function updateEntity(
     location_detail?: string;
     owner_id?: number;
     props?: Record<string, any>;
-    state?: Record<string, any>;
-    ai_context?: Record<string, any>;
   },
 ) {
   const updates: string[] = [];
@@ -245,14 +242,6 @@ export function updateEntity(
   if (data.props) {
     dataUpdates.push("props = ?");
     dataParams.push(JSON.stringify(data.props));
-  }
-  if (data.state) {
-    dataUpdates.push("state = ?");
-    dataParams.push(JSON.stringify(data.state));
-  }
-  if (data.ai_context) {
-    dataUpdates.push("ai_context = ?");
-    dataParams.push(JSON.stringify(data.ai_context));
   }
 
   if (dataUpdates.length > 0) {

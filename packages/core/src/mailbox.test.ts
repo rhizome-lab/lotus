@@ -13,6 +13,7 @@ import { evaluate, registerLibrary } from "./scripting/interpreter";
 import { WorldLibrary } from "./scripting/lib/world";
 import { createEntity, getEntity } from "./repo";
 import { checkPermission } from "./permissions";
+import { CoreLibrary } from "./scripting/lib/core";
 
 describe("Mailbox Verification", () => {
   let senderId: number;
@@ -20,9 +21,11 @@ describe("Mailbox Verification", () => {
   let mailboxId: number;
   let itemId: number;
 
-  beforeAll(() => {
-    registerLibrary(WorldLibrary);
+  // Register libraries
+  registerLibrary(CoreLibrary);
+  registerLibrary(WorldLibrary);
 
+  beforeAll(() => {
     // 1. Create Sender and Receiver
     senderId = createEntity({ name: "Sender", kind: "ACTOR" });
     receiverId = createEntity({ name: "Receiver", kind: "ACTOR" });
@@ -100,7 +103,7 @@ describe("Mailbox Verification", () => {
       await evaluate(["move", itemId, mailboxId], ctx);
       expect(true).toBe(false); // Should not reach here
     } catch (e: any) {
-      expect(e.message).toContain("Permission denied");
+      expect(e.message).toContain("permission denied");
     }
   });
 

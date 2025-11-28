@@ -1,5 +1,11 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { evaluate, ScriptContext, registerLibrary } from "../interpreter";
+import {
+  evaluate,
+  ScriptContext,
+  registerLibrary,
+  ScriptError,
+} from "../interpreter";
+import { CoreLibrary } from "./core";
 import { ObjectLibrary } from "./object";
 import { StringLibrary } from "./string"; // Needed for str.concat in flatMap test
 
@@ -7,6 +13,7 @@ describe("Object Library", () => {
   let ctx: ScriptContext;
 
   beforeEach(() => {
+    registerLibrary(CoreLibrary);
     registerLibrary(ObjectLibrary);
     registerLibrary(StringLibrary); // Register string lib for dependencies
     ctx = {
@@ -36,7 +43,9 @@ describe("Object Library", () => {
 
   test("obj.get", async () => {
     expect(await evaluate(["obj.get", { a: 1 }, "a"], ctx)).toBe(1);
-    expect(await evaluate(["obj.get", { a: 1 }, "b"], ctx)).toBe(undefined);
+    expect(
+      await evaluate(["obj.get", { a: 1 }, "b"], ctx).catch((e) => e),
+    ).toBeInstanceOf(ScriptError);
   });
 
   test("obj.set", async () => {
