@@ -715,12 +715,7 @@ export function seed() {
   addVerb(specialWatchId, "start", ["schedule", "tick", [], 0]);
 
   // 3. Clock (Room Broadcast)
-  // Actually, "Local Broadcast" usually means Room.
-  // If the watch is held by a player, "location_id" is the player.
-  // If we broadcast to player, only player sees it.
-  // If we broadcast to room, everyone in room sees it.
-  // Let's make the Watch broadcast to the holder (Player).
-  // And the Clock broadcast to the Room.
+  // Watch broadcasts to holder (Player), Clock broadcasts to Room.
 
   const clockId = createEntity({
     name: "Grandfather Clock",

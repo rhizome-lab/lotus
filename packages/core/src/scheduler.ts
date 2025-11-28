@@ -34,13 +34,8 @@ export class TaskScheduler {
         const args = JSON.parse(task.args);
 
         if (entity && verb) {
-          // We need a way to access the system context here.
-          // Since this is running outside of a websocket request, we need a "system" context.
-          // We might need to pass the system context or create a fresh one.
-          // For now, let's create a minimal context.
-          // We'll need to import the system functions or pass them in.
-          // To avoid circular dependencies, we might need to inject dependencies into TaskScheduler.
-          // But for now, let's try to dynamic import or use what we have.
+          // TODO: Inject system context or dependencies to avoid circular imports and duplication.
+          // For now, we dynamically import repo functions and create a minimal system context.
 
           // We can reuse the same sys object structure as in index.ts, but without the ws.send part (or log to console).
 

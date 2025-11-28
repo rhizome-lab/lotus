@@ -40,8 +40,7 @@ export const ScriptEditor: Component = () => {
 
     // If it's a sequence, we splice (remove).
     // If it's a fixed slot (e.g. "if" args), we replace with null.
-    // Exception: If we are inside a "seq" block, the children start at index 1.
-    // So if current[0] === "seq", any index > 0 is a child in the sequence.
+    // Note: In "seq" blocks, children start at index 1.
 
     if (isSeq && index > 0) {
       current.splice(index, 1);

@@ -48,12 +48,8 @@ export default function ItemEditor() {
   createEffect(() => {
     const item = selectedItem();
     if (item) {
-      setDescription(""); // RichItem doesn't have description, would need to fetch or store it elsewhere.
-      // Wait, RichItem has adjectives but not generic props bag.
-      // Actually, looking at game.ts, RichItem has adjectives.
-      // Description is usually sent in 'look' or 'room' but not always fully exposed in list.
-      // However, we can set it blindly or fetch it.
-      // For now, let's assume we can set it.
+      setDescription(""); // RichItem doesn't expose description directly in the list yet.
+      // TODO: Fetch full item details including description.
       setSelectedAdjectives(item.adjectives || []);
     }
   });

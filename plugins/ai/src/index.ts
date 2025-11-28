@@ -67,23 +67,16 @@ async function getModel(modelSpec?: string) {
 
   try {
     const mod = await import(pkgName);
-    // Try to find the provider function.
-    // Usually it matches the provider name (e.g. import { openai } from ...)
-    // Or it might be default?
-    // Or we can try to find a function export that looks like the provider name.
+    // Try to find the provider function (default, named export, or camelCase fallback).
 
     // Special cases mapping
     let exportName = providerName;
     if (providerName === "amazon-bedrock") exportName = "bedrock";
     if (providerName === "google-vertex") exportName = "vertex";
     if (providerName === "openai-compatible") exportName = "openaiCompatible";
-    if (providerName === "black-forest-labs") exportName = "bfl"; // Guessing?
+    if (providerName === "black-forest-labs") exportName = "bfl";
 
-    // Fallback: Check if there is a named export matching the key
     let providerFn = mod[exportName] || mod[providerName] || mod.default;
-
-    // If still not found, try to find the first function export? No that's risky.
-    // Let's assume standard naming for now.
 
     if (!providerFn) {
       // Try camelCase for hyphenated names

@@ -48,12 +48,7 @@ export function checkPermission(
   if (target.location_id) {
     const parent = resolver(target.location_id);
     if (parent) {
-      // We check if the actor has the SAME permission on the parent
-      // This implies that if you own the Room, you own the Items in it (unless they have explicit denies? - keeping it simple for now)
-      // Actually, standard MOO logic:
-      // If I own the room, I can edit things in it? Usually yes for 'edit'.
-      // But if I drop my item in your room, do you own it?
-      // Let's stick to the plan: "Cascading permissions through all children"
+      // Check if the actor has the SAME permission on the parent (cascading permissions).
       return checkPermission(actor, parent, permission, resolver);
     }
   }
