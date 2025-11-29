@@ -7,14 +7,8 @@ import { db } from "./db";
 export interface Entity {
   /** Unique ID of the entity */
   id: number;
-  /** Optional unique slug for easier lookup */
-  slug: string | null;
-  /** Display name of the entity */
-  name: string;
   /** ID of the container/room this entity is in */
   location_id: number | null;
-  /** Optional detail about location (e.g. "worn", "held") */
-  location_detail: string | null;
   /** ID of the prototype this entity inherits from */
   prototype_id: number | null;
   /** ID of the player who owns this entity */
@@ -28,22 +22,16 @@ export interface Entity {
    * Contains arbitrary game data like description, adjectives, custom_css.
    */
   props: Record<string, any>;
-  /** Raw prototype info */
-  proto_slug?: string;
 }
 
 export const SPECIAL_PROPERTIES = new Set<string>([
   "id",
-  "slug",
-  "name",
   "location_id",
-  "location_detail",
   "prototype_id",
   "owner_id",
   "kind",
   "created_at",
   "updated_at",
-  "proto_slug",
 ] satisfies readonly (keyof Entity)[]);
 
 /**
@@ -60,7 +48,6 @@ export function getEntity(id: number): Entity | null {
       `
     SELECT 
       e.*,
-      p.slug as proto_slug,
       d.props,
       proto_data.props as proto_props
     FROM entities e
@@ -93,11 +80,7 @@ export function getEntity(id: number): Entity | null {
  * @param containerId - The ID of the destination container/room.
  * @param detail - Optional location detail (e.g. "worn").
  */
-export function moveEntity(
-  thingId: number,
-  containerId: number,
-  detail: string | null = null,
-) {
+export function moveEntity(thingId: number, containerId: number) {
   // Prevent circular containment
   let currentId: number | null = containerId;
   while (currentId) {
@@ -110,9 +93,10 @@ export function moveEntity(
     currentId = parent ? parent.location_id : null;
   }
 
-  db.query(
-    "UPDATE entities SET location_id = ?, location_detail = ? WHERE id = ?",
-  ).run(containerId, detail, thingId);
+  db.query("UPDATE entities SET location_id = ? WHERE id = ?").run(
+    containerId,
+    thingId,
+  );
 }
 
 /**
@@ -126,14 +110,13 @@ export function createEntity(data: {
   slug?: string;
   kind?: "ZONE" | "ROOM" | "ACTOR" | "ITEM" | "PART" | "EXIT";
   location_id?: number;
-  location_detail?: string;
   prototype_id?: number;
   owner_id?: number;
   props?: Record<string, any>;
 }) {
   const insertEntity = db.query(`
-    INSERT INTO entities (name, slug, kind, location_id, location_detail, prototype_id, owner_id)
-    VALUES ($name, $slug, $kind, $location_id, $location_detail, $prototype_id, $owner_id)
+    INSERT INTO entities (name, slug, kind, location_id, prototype_id, owner_id)
+    VALUES ($name, $slug, $kind, $location_id, $prototype_id, $owner_id)
     RETURNING id
   `);
 
@@ -148,7 +131,6 @@ export function createEntity(data: {
       $slug: data.slug || null,
       $kind: data.kind || "ITEM",
       $location_id: data.location_id || null,
-      $location_detail: data.location_detail || null,
       $prototype_id: data.prototype_id || null,
       $owner_id: data.owner_id || null,
     }) as { id: number };
@@ -172,8 +154,10 @@ export function createEntity(data: {
  */
 export function getContents(containerId: number): Entity[] {
   const rows = db
-    .query(`SELECT id FROM entities WHERE location_id = ?`)
-    .all(containerId) as { id: number }[];
+    .query<{ id: number }, [containerId: number]>(
+      `SELECT id FROM entities WHERE location_id = ?`,
+    )
+    .all(containerId);
   return rows.map((r) => getEntity(r.id)!);
 }
 
@@ -183,7 +167,7 @@ export function getContents(containerId: number): Entity[] {
  * @returns An array of all entity IDs.
  */
 export function getAllEntities(): number[] {
-  const rows = db.query("SELECT id FROM entities").all() as { id: number }[];
+  const rows = db.query<{ id: number }, []>("SELECT id FROM entities").all();
   return rows.map((r) => r.id);
 }
 
@@ -199,7 +183,6 @@ export function updateEntity(
   data: {
     name?: string;
     location_id?: number;
-    location_detail?: string;
     owner_id?: number;
     props?: Record<string, any>;
   },
@@ -214,10 +197,6 @@ export function updateEntity(
   if (data.location_id !== undefined) {
     updates.push("location_id = ?");
     params.push(data.location_id);
-  }
-  if (data.location_detail !== undefined) {
-    updates.push("location_detail = ?");
-    params.push(data.location_detail);
   }
   if (data.owner_id !== undefined) {
     updates.push("owner_id = ?");

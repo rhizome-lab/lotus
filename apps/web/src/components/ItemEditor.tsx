@@ -79,10 +79,10 @@ export default function ItemEditor() {
     if (!item) return;
 
     if (description()) {
-      gameStore.send(["set", item.name, "description", description()]);
+      gameStore.execute(["set", item.name, "description", description()]);
     }
 
-    gameStore.send([
+    gameStore.execute([
       "set",
       item.name,
       "adjectives",

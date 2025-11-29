@@ -6,6 +6,22 @@ import {
 } from "../interpreter";
 
 export const ListLibrary: Record<string, OpcodeDefinition> = {
+  "list.new": {
+    metadata: {
+      label: "List",
+      category: "list",
+      description: "Create a list",
+      // TODO: List of slots
+      slots: [],
+    },
+    handler: async (args, ctx) => {
+      const result = [];
+      for (const arg of args) {
+        result.push(await evaluate(arg, ctx));
+      }
+      return result;
+    },
+  },
   "list.len": {
     metadata: {
       label: "List Length",

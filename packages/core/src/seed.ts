@@ -119,7 +119,7 @@ export function seed() {
       [
         "obj.merge",
         ["var", "room"],
-        ["object", "contents", ["var", "richItems"]],
+        ["obj.new", "contents", ["var", "richItems"]],
       ],
     ],
     [
@@ -147,13 +147,13 @@ export function seed() {
           [
             "obj.merge",
             ["var", "item"],
-            ["object", "contents", ["var", "richItems"]],
+            ["obj.new", "contents", ["var", "richItems"]],
           ],
         ],
         [
           "tell",
           "me",
-          ["str.join", ["list", "You don't see", ["arg", 0], "here."], " "],
+          ["str.join", ["list.new", "You don't see", ["arg", 0], "here."], " "],
         ],
       ],
     ],
@@ -222,7 +222,7 @@ export function seed() {
                 "create",
                 "ROOM",
                 ["var", "roomName"],
-                ["object", "description", "A newly dug room."],
+                ["obj.new", "description", "A newly dug room."],
               ],
             ],
             [
@@ -230,7 +230,7 @@ export function seed() {
               "EXIT",
               ["var", "direction"],
               [
-                "object",
+                "obj.new",
                 "direction",
                 ["var", "direction"],
                 "destination_id",
@@ -279,7 +279,7 @@ export function seed() {
                 "create",
                 "ITEM",
                 ["var", "name"],
-                ["object"],
+                ["obj.new"],
                 ["prop", "me", "location_id"],
               ],
             ],
@@ -386,9 +386,9 @@ export function seed() {
     name: "Ceramic Cup",
     kind: "ITEM",
     location_id: tableId,
-    location_detail: "surface", // It's ON the table
     props: {
       description: "A chipped ceramic cup.",
+      location_detail: "surface", // It's ON the table
     },
   });
 
@@ -397,10 +397,10 @@ export function seed() {
     name: "Leather Backpack",
     kind: "ITEM",
     location_id: playerId,
-    location_detail: "back", // Worn on back
     props: {
       description: "A worn leather backpack.",
       slots: ["main", "front_pocket"],
+      location_detail: "back", // Worn on back
     },
   });
 
@@ -409,9 +409,9 @@ export function seed() {
     name: "Scout Badge",
     kind: "ITEM",
     location_id: backpackId,
-    location_detail: "surface", // Attached to the outside? Or maybe we define a slot for it.
     props: {
       description: "A merit badge.",
+      location_detail: "surface", // Attached to the outside? Or maybe we define a slot for it.
     },
   });
 
@@ -569,10 +569,10 @@ export function seed() {
       name: "Auburn Wig",
       kind: "ITEM",
       location_id: wigStandId,
-      location_detail: "surface",
       props: {
         description: "A reddish-brown wig.",
         adjectives: ["color:auburn"],
+        location_detail: "surface",
       },
     });
 
@@ -580,10 +580,10 @@ export function seed() {
       name: "Blonde Wig",
       kind: "ITEM",
       location_id: wigStandId,
-      location_detail: "surface",
       props: {
         description: "A bright yellow wig.",
         adjectives: ["color:blonde"],
+        location_detail: "surface",
       },
     });
 
@@ -591,10 +591,10 @@ export function seed() {
       name: "Brunette Wig",
       kind: "ITEM",
       location_id: wigStandId,
-      location_detail: "surface",
       props: {
         description: "A dark brown wig.",
         adjectives: ["color:brunette"],
+        location_detail: "surface",
       },
     });
   }
@@ -703,7 +703,7 @@ export function seed() {
       "this",
       "adjectives",
       [
-        "list",
+        "list.new",
         ["str.concat", "color:", ["var", "newColor"]],
         "material:silver",
       ],
@@ -732,7 +732,7 @@ export function seed() {
   // Returns a list of adjectives.
   // We'll use the current second to determine color.
   addVerb(dynamicRingId, "get_adjectives", [
-    "list",
+    "list.new",
     [
       "str.concat",
       "color:hsl(",

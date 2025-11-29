@@ -5,10 +5,8 @@ export function initSchema(db: Database) {
     `
     CREATE TABLE IF NOT EXISTS entities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      slug TEXT UNIQUE,
       name TEXT NOT NULL,
       location_id INTEGER,
-      location_detail TEXT,
       prototype_id INTEGER,
       owner_id INTEGER,
       kind TEXT DEFAULT 'ITEM',

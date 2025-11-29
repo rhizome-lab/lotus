@@ -12,7 +12,11 @@ initSchema(db);
 // Mock the db module
 mock.module("./db", () => ({ db }));
 
-import { evaluate, registerLibrary } from "./scripting/interpreter";
+import {
+  createScriptContext,
+  evaluate,
+  registerLibrary,
+} from "./scripting/interpreter";
 import { createEntity, addVerb, getVerb } from "./repo";
 import { CoreLibrary } from "./scripting/lib/core";
 
@@ -47,18 +51,23 @@ describe("Advanced Items Verification", () => {
       props: {},
     });
 
-    addVerb(itemId, "get_adjectives", ["list", "color:red", "material:wood"]);
+    addVerb(itemId, "get_adjectives", [
+      "list.new",
+      "color:red",
+      "material:wood",
+    ]);
 
     const verb = getVerb(itemId, "get_adjectives");
     expect(verb).toBeDefined();
 
-    const result = await evaluate(verb!.code, {
-      caller: { id: itemId } as any,
-      this: { id: itemId } as any,
-      args: [],
-      sys: {} as any,
-      warnings: [],
-    });
+    const result = await evaluate(
+      verb!.code,
+      createScriptContext({
+        caller: { id: itemId } as any,
+        this: { id: itemId } as any,
+        sys: {} as any,
+      }),
+    );
 
     expect(result).toEqual(["color:red", "material:wood"]);
   });

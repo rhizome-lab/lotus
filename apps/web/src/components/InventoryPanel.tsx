@@ -18,7 +18,7 @@ const ItemView = (props: { item: RichItem }) => {
           </button>
         </Show>
         <span
-          onClick={() => gameStore.send(["look", props.item.name])}
+          onClick={() => gameStore.lookAt(props.item.id)}
           class={`inventory-panel__item-link ${
             props.item.props.adjectives
               ?.map(
@@ -28,11 +28,11 @@ const ItemView = (props: { item: RichItem }) => {
           }`}
           style={{ "margin-left": hasContents() ? "0" : "20px" }}
         >
-          {props.item.name}
+          {props.item.props.name}
         </span>
-        <Show when={props.item.location_detail}>
+        <Show when={props.item.props.location_detail}>
           <span class="inventory-panel__item-detail">
-            ({props.item.location_detail})
+            ({props.item.props.location_detail})
           </span>
         </Show>
         <Show when={props.item.verbs && props.item.verbs.length > 0}>
@@ -41,7 +41,7 @@ const ItemView = (props: { item: RichItem }) => {
               {(verb) => (
                 <button
                   class="inventory-panel__verb-btn"
-                  onClick={() => gameStore.send([verb, props.item.name])}
+                  onClick={() => gameStore.execute([verb, props.item.name])}
                 >
                   {verb}
                 </button>

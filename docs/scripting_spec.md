@@ -118,7 +118,7 @@ All arithmetic operators support multiple arguments, processing them from left t
 
 Operations for working with arrays.
 
-- `["list", ...items]`: Creates a list.
+- `["list.new", ...items]`: Creates a list.
 - `["list.len", list]`: Returns the length of a list.
 - `["list.empty", list]`: Checks if a list is empty.
 - `["list.get", list, index]`: Gets an item at an index.
@@ -145,7 +145,7 @@ Operations for working with arrays.
 
 Operations for working with objects (dictionaries).
 
-- `["object", key1, val1, ...]`: Creates an object.
+- `["obj.new", key1, val1, ...]`: Creates an object.
 - `["obj.keys", obj]`: Returns keys.
 - `["obj.values", obj]`: Returns values.
 - `["obj.entries", obj]`: Returns entries.

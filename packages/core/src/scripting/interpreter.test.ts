@@ -154,7 +154,7 @@ describe("Interpreter", () => {
       [
         "for",
         "x",
-        ["list", 1, 2, 3],
+        ["list.new", 1, 2, 3],
         ["let", "sum", ["+", ["var", "sum"], ["var", "x"]]],
       ],
       ["var", "sum"],

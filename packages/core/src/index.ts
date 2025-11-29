@@ -382,6 +382,7 @@ export function startServer(port: number = 8080) {
           // If we have "look apple", verbName is "look", verbArgs is ["apple"]
           // We check if "look" is a verb on "apple".
 
+          // TODO: Use `evaluateTarget`
           if (verbArgs.length > 0) {
             const targetName = String(verbArgs[0]);
 

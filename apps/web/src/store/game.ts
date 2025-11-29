@@ -6,11 +6,10 @@ export type GameMessage =
 
 export interface RichItem {
   id: number;
-  name: string;
   kind: string;
-  location_detail: string | null;
   contents: RichItem[];
   props: Record<string, unknown> & {
+    name?: string;
     description?: string;
     adjectives?: string[];
     custom_css?: string;
@@ -78,10 +77,10 @@ export const gameStore = {
     socket.onopen = () => {
       setState("isConnected", true);
       // Initial fetch
-      gameStore.send(["look"]).then((result) => {
+      gameStore.execute(["look"]).then((result) => {
         setState("room", result as any);
       });
-      gameStore.send(["inventory"]).then((result) => {
+      gameStore.execute(["inventory"]).then((result) => {
         setState("inventory", result as any);
       });
 
@@ -142,7 +141,9 @@ export const gameStore = {
     };
   },
 
-  send: (command: readonly string[]) => {
+  execute: (
+    command: readonly [command: string, ...args: (string | number)[]],
+  ) => {
     if (state.socket && state.socket.readyState === WebSocket.OPEN) {
       const id = idCounter;
       idCounter += 1;
@@ -162,6 +163,12 @@ export const gameStore = {
       throw new Error("Socket not connected");
     }
   },
+
+  lookAt: (item: number | string) =>
+    gameStore.execute(["look", item]).then((result) => {
+      setState("room", result as any);
+      return result;
+    }),
 
   addMessage: (msg: GameMessage) => {
     setState("messages", (msgs) => [...msgs, msg]);

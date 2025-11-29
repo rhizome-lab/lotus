@@ -105,22 +105,6 @@ export const CoreLibrary: Record<string, OpcodeDefinition> = {
       return lastResult;
     },
   },
-  list: {
-    metadata: {
-      label: "List",
-      category: "list",
-      description: "Create a list",
-      slots: [],
-    },
-    handler: async (args, ctx) => {
-      const result = [];
-      for (const arg of args) {
-        result.push(await evaluate(arg, ctx));
-      }
-      return result;
-    },
-  },
-
   // Data Structures
   "json.stringify": {
     metadata: {
@@ -1341,53 +1325,6 @@ export const CoreLibrary: Record<string, OpcodeDefinition> = {
         );
       }
       return;
-    },
-  },
-  // Data Structures
-  object: {
-    metadata: {
-      label: "Object",
-      category: "data",
-      description: "Create an object",
-      slots: [{ name: "Key/Val...", type: "block" }],
-    },
-    handler: async (args, ctx) => {
-      // args: [key1, val1, key2, val2, ...]
-      const obj: Record<string, any> = {};
-      for (let i = 0; i < args.length; i += 2) {
-        const key = await evaluate(args[i], ctx);
-        const val = await evaluate(args[i + 1], ctx);
-        if (typeof key === "string") {
-          obj[key] = val;
-        }
-      }
-      return obj;
-    },
-  },
-  map: {
-    metadata: {
-      label: "Map",
-      category: "list",
-      description: "Map a list",
-      slots: [
-        { name: "List", type: "block" },
-        { name: "Func", type: "block" },
-      ],
-    },
-    handler: async (args, ctx) => {
-      const [listExpr, funcExpr] = args;
-      const list = await evaluate(listExpr, ctx);
-      const func = await evaluate(funcExpr, ctx);
-
-      if (!Array.isArray(list) || !func || func.type !== "lambda") return [];
-
-      const result = [];
-      for (const item of list) {
-        // Execute lambda for each item
-        const res = await executeLambda(func, [item], ctx);
-        result.push(res);
-      }
-      return result;
     },
   },
 

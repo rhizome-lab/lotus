@@ -8,6 +8,40 @@ import {
 const DISALLOWED_KEYS = new Set(["__proto__", "constructor", "prototype"]);
 
 export const ObjectLibrary: Record<string, OpcodeDefinition> = {
+  "obj.new": {
+    metadata: {
+      label: "New Object",
+      category: "data",
+      description: "Create a new object",
+      // TODO: List of pairs of slots
+      slots: [],
+    },
+    handler: async (args, ctx) => {
+      // args: [key1, val1, key2, val2, ...]
+      const obj: Record<string, any> = {};
+      for (let i = 0; i < args.length; i += 1) {
+        const kv = args[i];
+        if (!Array.isArray(kv) || kv.length !== 2) {
+          throw new ScriptError(
+            `obj.new: expected key-value pair at index ${i}, got ${JSON.stringify(
+              kv,
+            )}`,
+          );
+        }
+        const key = await evaluate(kv[0], ctx);
+        if (typeof key !== "string") {
+          throw new ScriptError(
+            `obj.new: expected string key at index ${i}, got ${JSON.stringify(
+              key,
+            )}`,
+          );
+        }
+        const val = await evaluate(kv[1], ctx);
+        obj[key] = val;
+      }
+      return obj;
+    },
+  },
   "obj.keys": {
     metadata: {
       label: "Keys",
@@ -22,7 +56,9 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const [objExpr] = args;
       const obj = await evaluate(objExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.keys: expected object");
+        throw new ScriptError(
+          `obj.keys: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       return Object.getOwnPropertyNames(obj);
     },
@@ -41,7 +77,9 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const [objExpr] = args;
       const obj = await evaluate(objExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.values: expected object");
+        throw new ScriptError(
+          `obj.values: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       return Object.getOwnPropertyNames(obj).map((key) => obj[key]);
     },
@@ -60,7 +98,9 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const [objExpr] = args;
       const obj = await evaluate(objExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.entries: expected object");
+        throw new ScriptError(
+          `obj.entries: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       return Object.getOwnPropertyNames(obj).map((key) => [key, obj[key]]);
     },
@@ -83,10 +123,14 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const obj = await evaluate(objExpr, ctx);
       const key = await evaluate(keyExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.get: expected object");
+        throw new ScriptError(
+          `obj.get: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       if (typeof key !== "string") {
-        throw new ScriptError("obj.get: expected string");
+        throw new ScriptError(
+          `obj.get: expected string, got ${JSON.stringify(key)}`,
+        );
       }
       if (!Object.hasOwnProperty.call(obj, key)) {
         throw new ScriptError(`obj.get: key '${key}' not found`);
@@ -114,10 +158,14 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const key = await evaluate(keyExpr, ctx);
       const val = await evaluate(valExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.set: expected object");
+        throw new ScriptError(
+          `obj.set: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       if (typeof key !== "string") {
-        throw new ScriptError("obj.set: expected string");
+        throw new ScriptError(
+          `obj.set: expected string, got ${JSON.stringify(key)}`,
+        );
       }
       if (DISALLOWED_KEYS.has(key)) {
         throw new ScriptError(`obj.set: disallowed key '${key}'`);
@@ -144,10 +192,14 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const obj = await evaluate(objExpr, ctx);
       const key = await evaluate(keyExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.has: expected object");
+        throw new ScriptError(
+          `obj.has: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       if (typeof key !== "string") {
-        throw new ScriptError("obj.has: expected string");
+        throw new ScriptError(
+          `obj.has: expected string, got ${JSON.stringify(key)}`,
+        );
       }
       return Object.hasOwnProperty.call(obj, key);
     },
@@ -170,10 +222,14 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const obj = await evaluate(objExpr, ctx);
       const key = await evaluate(keyExpr, ctx);
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.del: expected object");
+        throw new ScriptError(
+          `obj.del: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       if (typeof key !== "string") {
-        throw new ScriptError("obj.del: expected string");
+        throw new ScriptError(
+          `obj.del: expected string, got ${JSON.stringify(key)}`,
+        );
       }
       if (Object.hasOwnProperty.call(obj, key)) {
         delete obj[key];
@@ -197,7 +253,9 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       for (let i = 0; i < args.length; i++) {
         const obj = await evaluate(args[i], ctx);
         if (!obj || typeof obj !== "object") {
-          throw new ScriptError(`obj.merge: expected object at ${i}`);
+          throw new ScriptError(
+            `obj.merge: expected object at ${i}, got ${JSON.stringify(obj)}`,
+          );
         }
         objs.push(obj);
       }
@@ -223,10 +281,14 @@ export const ObjectLibrary: Record<string, OpcodeDefinition> = {
       const func = await evaluate(funcExpr, ctx);
 
       if (!obj || typeof obj !== "object") {
-        throw new ScriptError("obj.map: expected object");
+        throw new ScriptError(
+          `obj.map: expected object, got ${JSON.stringify(obj)}`,
+        );
       }
       if (!func || func.type !== "lambda") {
-        throw new ScriptError("obj.map: expected lambda");
+        throw new ScriptError(
+          `obj.map: expected lambda, got ${JSON.stringify(func)}`,
+        );
       }
 
       const result: Record<string, any> = {};

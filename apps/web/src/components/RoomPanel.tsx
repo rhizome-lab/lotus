@@ -4,7 +4,7 @@ import { gameStore, RichItem } from "../store/game";
 const ItemView = (props: { item: RichItem }) => (
   <div class="room-panel__item">
     <span
-      onClick={() => gameStore.send(["look", props.item.name])}
+      onClick={() => gameStore.execute(["look", props.item.name])}
       class={`room-panel__item-link ${
         props.item.props.adjectives
           ?.map((a) => `attribute-${a.replace(/:/g, "-").replace(/ /g, "-")}`)
@@ -24,7 +24,7 @@ const ItemView = (props: { item: RichItem }) => (
           {(verb) => (
             <button
               class="room-panel__verb-btn"
-              onClick={() => gameStore.send([verb, props.item.name])}
+              onClick={() => gameStore.execute([verb, props.item.name])}
             >
               {verb}
             </button>
@@ -66,7 +66,7 @@ export default function RoomPanel() {
             >
               {(exit) => (
                 <span
-                  onClick={() => gameStore.send(["move", exit.name])}
+                  onClick={() => gameStore.execute(["move", exit.name])}
                   class="room-panel__exit-tag"
                 >
                   {exit.name}

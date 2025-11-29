@@ -36,7 +36,7 @@ export default function ItemCreator(props: { onClose?: () => void }) {
       adjectives: selectedAdjectives(),
     };
 
-    gameStore.send(["create", name(), JSON.stringify(itemProps)]);
+    gameStore.execute(["create", name(), JSON.stringify(itemProps)]);
 
     setName("");
     setDescription("");

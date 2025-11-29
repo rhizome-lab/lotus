@@ -13,7 +13,7 @@ export default function Builder() {
   const handleUpdateDesc = (e: Event) => {
     e.preventDefault();
     if (!description()) return;
-    gameStore.send(["set", "here", "description", description()]);
+    gameStore.execute(["set", "here", "description", description()]);
     setDescription("");
   };
 
