@@ -17,18 +17,8 @@ export type ScriptSystemContext = {
     args: readonly unknown[],
     delay: number,
   ) => void;
-  broadcast?: (msg: unknown, locationId?: number) => void;
-  give?: (entityId: number, destId: number, newOwnerId: number) => void;
-  triggerEvent: (
-    eventName: string,
-    locationId: number,
-    args: readonly unknown[],
-    excludeEntityId?: number,
-  ) => void | Promise<void>;
   getVerbs?: (entityId: number) => Promise<readonly Verb[]>;
   getEntity?: (id: number) => Promise<Entity | null>;
-  canEdit?: (playerId: number, entityId: number) => boolean;
-  sendTo?: (entityId: number, msg: unknown) => void;
 };
 
 export type ScriptContext = {

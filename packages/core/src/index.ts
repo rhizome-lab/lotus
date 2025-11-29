@@ -14,7 +14,6 @@ import { ObjectLibrary } from "./scripting/lib/object";
 import { StringLibrary } from "./scripting/lib/string";
 import { TimeLibrary } from "./scripting/lib/time";
 import { seed } from "./seed";
-import { checkPermission } from "./permissions";
 import { PluginManager, CommandContext } from "./plugin";
 
 export { PluginManager };
@@ -138,7 +137,7 @@ async function look(ws: any, player: Entity) {
     createScriptContext({
       caller: player,
       this: room,
-      sys: createSystemContext(player, ws),
+      sys: createSystemContext(ws),
     }),
   );
 
@@ -147,14 +146,14 @@ async function look(ws: any, player: Entity) {
   const contentIds: number[] = resolvedRoom["contents"] || [];
   const contents: Entity[] = [];
   for (const id of contentIds) {
-    const e = await getEntity(id);
-    if (e) {
+    const entity = getEntity(id);
+    if (entity) {
       const resolvedItem = await resolveProps(
-        e,
+        entity,
         createScriptContext({
           caller: player,
-          this: e,
-          sys: createSystemContext(player, ws),
+          this: entity,
+          sys: createSystemContext(ws),
         }),
       );
       contents.push(resolvedItem);
@@ -220,15 +219,15 @@ async function executeVerb(
 ) {
   const ctx = createScriptContext({
     caller: player,
-    this: (await getEntity(verb.source))!,
+    this: getEntity(verb.source)!,
     args,
-    sys: createSystemContext(player, ws),
+    sys: createSystemContext(ws),
   });
 
   await evaluate(verb.code, ctx);
 }
 
-function createSystemContext(player: Entity, ws: any): ScriptSystemContext {
+function createSystemContext(ws: any): ScriptSystemContext {
   return {
     create: (data: any) => {
       return createEntity(data);
@@ -242,64 +241,27 @@ function createSystemContext(player: Entity, ws: any): ScriptSystemContext {
       }
     },
     call: async (caller, targetId, verbName, args, warnings) => {
-      const target = await getEntity(targetId);
-      if (!target) throw new ScriptError(`Target ${targetId} not found`);
+      const target = getEntity(targetId);
+      if (!target) {
+        throw new ScriptError(`Target ${targetId} not found`);
+      }
       const verbs = getVerbs(targetId);
       const verb = verbs.find((v) => v.name === verbName);
-      if (!verb)
+      if (!verb) {
         throw new ScriptError(`Verb ${verbName} not found on ${targetId}`);
-
+      }
       return await evaluate(
         verb.code,
         createScriptContext({
           caller,
           this: target,
           args,
-          sys: createSystemContext(player, ws),
+          sys: createSystemContext(ws),
           warnings,
         }),
       );
     },
-    triggerEvent: async (eventName, locationId, args, excludeEntityId) => {
-      // Find all entities in location and trigger 'on_event'
-      // Manually resolve contents
-      const room = await getEntity(locationId);
-      if (!room) return;
-      const contentIds: number[] = room["contents"] || [];
-
-      for (const id of contentIds) {
-        if (id === excludeEntityId) continue;
-        const verbs = getVerbs(id);
-        const handler = verbs.find((v) => v.name === `on_${eventName}`);
-        if (handler) {
-          try {
-            await evaluate(
-              handler.code,
-              createScriptContext({
-                caller: player, // Who triggered it?
-                this: getEntity(id)!,
-                args,
-                sys: createSystemContext(player, ws),
-              }),
-            );
-          } catch (e) {
-            console.error(`Error in event handler ${eventName} for ${id}:`, e);
-          }
-        }
-      }
-    },
     getVerbs: async (entityId) => getVerbs(entityId),
     getEntity: async (id) => getEntity(id),
-    canEdit: (playerId, entityId) =>
-      checkPermission(getEntity(playerId)!, getEntity(entityId)!, "edit"),
-    sendTo: (entityId, msg) => {
-      if (entityId === player.id) {
-        if (typeof msg === "string") {
-          sendToClient(ws, { type: "info", payload: { message: msg } });
-        } else {
-          sendToClient(ws, msg);
-        }
-      }
-    },
   };
 }

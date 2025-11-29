@@ -17,9 +17,7 @@
         in
         pkgs.mkShell {
           packages = with pkgs; [
-            nodejs_20
             bun
-            nodePackages.pnpm
             nodePackages.typescript
             nodePackages.typescript-language-server
             psmisc # for fuser
