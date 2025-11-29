@@ -264,11 +264,7 @@ export function startServer(port: number = 8080) {
       const sendError = (code: number, message: string) => {
         if (id !== undefined && id !== null) {
           ws.send(
-            JSON.stringify({
-              jsonrpc: "2.0",
-              error: { code, message },
-              id,
-            }),
+            JSON.stringify({ jsonrpc: "2.0", error: { code, message }, id }),
           );
         }
       };
@@ -423,7 +419,7 @@ export function startServer(port: number = 8080) {
               );
             }
 
-            sendResponse({ status: "executed", result });
+            sendResponse(result);
           } catch (e: any) {
             sendError(-32603, `Script error: ${e.message}`);
           }

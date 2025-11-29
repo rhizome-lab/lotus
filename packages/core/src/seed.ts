@@ -117,18 +117,9 @@ export function seed() {
         ],
       ],
       [
-        "sys.send",
-        [
-          "object",
-          "type",
-          "room",
-          "payload",
-          [
-            "obj.merge",
-            ["var", "room"],
-            ["object", "contents", ["var", "richItems"]],
-          ],
-        ],
+        "obj.merge",
+        ["var", "room"],
+        ["object", "contents", ["var", "richItems"]],
       ],
     ],
     [
@@ -138,13 +129,25 @@ export function seed() {
         "if",
         ["var", "targetId"],
         [
-          "sys.send",
+          "seq",
+          ["let", "item", ["resolve_props", ["entity", ["var", "targetId"]]]],
           [
-            "object",
-            "type",
-            "item",
-            "payload",
-            ["resolve_props", ["entity", ["var", "targetId"]]],
+            "let",
+            "richItems",
+            [
+              "map",
+              ["contents", ["var", "item"]],
+              [
+                "lambda",
+                ["innerItem"],
+                ["resolve_props", ["var", "innerItem"]],
+              ],
+            ],
+          ],
+          [
+            "obj.merge",
+            ["var", "item"],
+            ["object", "contents", ["var", "richItems"]],
           ],
         ],
         [
@@ -159,18 +162,9 @@ export function seed() {
   addVerb(playerBaseId, "inventory", [
     "seq",
     [
-      "sys.send",
-      [
-        "object",
-        "type",
-        "inventory",
-        "payload",
-        [
-          "map",
-          ["contents", "me"],
-          ["lambda", ["item"], ["resolve_props", ["var", "item"]]],
-        ],
-      ],
+      "map",
+      ["contents", "me"],
+      ["lambda", ["item"], ["resolve_props", ["var", "item"]]],
     ],
   ]);
 

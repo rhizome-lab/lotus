@@ -32,11 +32,6 @@ const ItemView = (props: { item: RichItem }) => (
         </For>
       </span>
     </Show>
-    <Show when={props.item.contents.length > 0}>
-      <div class="room-panel__item-contents">
-        <For each={props.item.contents}>{(sub) => <ItemView item={sub} />}</For>
-      </div>
-    </Show>
   </div>
 );
 

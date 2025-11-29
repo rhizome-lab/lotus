@@ -43,6 +43,7 @@ export interface ItemMessage {
 }
 
 interface GameState {
+  responseResolveFunctions: Map<number, (value: any) => void>;
   isConnected: boolean;
   messages: GameMessage[];
   room: RoomMessage | null;
@@ -53,6 +54,7 @@ interface GameState {
 }
 
 const [state, setState] = createStore<GameState>({
+  responseResolveFunctions: new Map(),
   isConnected: false,
   messages: [],
   room: null,
@@ -61,6 +63,8 @@ const [state, setState] = createStore<GameState>({
   opcodes: null,
   socket: null,
 });
+
+let idCounter = 1;
 
 export const gameStore = {
   state,
@@ -74,15 +78,19 @@ export const gameStore = {
     socket.onopen = () => {
       setState("isConnected", true);
       // Initial fetch
-      gameStore.send(["look"]);
-      gameStore.send(["inventory"]);
+      gameStore.send(["look"]).then((result) => {
+        setState("room", result as any);
+      });
+      gameStore.send(["inventory"]).then((result) => {
+        setState("inventory", result as any);
+      });
 
       // Fetch opcodes
       socket?.send(
         JSON.stringify({
           jsonrpc: "2.0",
           method: "get_opcodes",
-          id: 1, // Static ID for now
+          id: 0, // Static ID for now
           params: [],
         }),
       );
@@ -104,6 +112,13 @@ export const gameStore = {
         // Handle JSON-RPC Responses
         if (data.jsonrpc === "2.0") {
           if (data.result) {
+            if (data.id) {
+              const resolve = state.responseResolveFunctions.get(data.id);
+              if (resolve) {
+                resolve(data.result);
+                state.responseResolveFunctions.delete(data.id);
+              }
+            }
             // Check if this is the opcode response
             // Ideally we should track IDs, but for now we can infer or just check structure
             if (
@@ -120,22 +135,6 @@ export const gameStore = {
           return;
         }
 
-        // Update specific state based on type
-        switch (data.type) {
-          case "room": {
-            setState("room", data.payload);
-            break;
-          }
-          case "inventory": {
-            setState("inventory", data.payload);
-            break;
-          }
-          case "item": {
-            setState("inspectedItem", data.payload);
-            break;
-          }
-        }
-
         gameStore.addMessage(structuredClone(data));
       } catch (e) {
         console.error("Failed to parse message", e);
@@ -145,7 +144,8 @@ export const gameStore = {
 
   send: (command: readonly string[]) => {
     if (state.socket && state.socket.readyState === WebSocket.OPEN) {
-      const id = Date.now(); // Simple ID generation
+      const id = idCounter;
+      idCounter += 1;
 
       state.socket.send(
         JSON.stringify({
@@ -155,8 +155,11 @@ export const gameStore = {
           id,
         }),
       );
+      return new Promise((resolve) => {
+        state.responseResolveFunctions.set(id, resolve);
+      });
     } else {
-      console.error("Socket not connected");
+      throw new Error("Socket not connected");
     }
   },
 
