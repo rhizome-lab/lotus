@@ -20,7 +20,7 @@ const ItemView = (props: { item: RichItem }) => {
         <span
           onClick={() => gameStore.send(["look", props.item.name])}
           class={`inventory-panel__item-link ${
-            props.item.adjectives
+            props.item.props.adjectives
               ?.map(
                 (a) => `attribute-${a.replace(/:/g, "-").replace(/ /g, "-")}`,
               )

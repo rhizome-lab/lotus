@@ -1,5 +1,5 @@
 import { createSignal, For, createEffect } from "solid-js";
-import { gameStore } from "../store/game";
+import { gameStore, RichItem } from "../store/game";
 import { ALL_ADJECTIVES } from "@viwo/shared/constants/adjectives";
 
 export default function ItemEditor() {
@@ -10,8 +10,11 @@ export default function ItemEditor() {
   );
   const [adjInput, setAdjInput] = createSignal("");
 
-  const flattenItems = (items: any[], prefix = ""): any[] => {
-    let result: any[] = [];
+  const flattenItems = (
+    items: readonly RichItem[],
+    prefix = "",
+  ): readonly (RichItem & { displayName: string })[] => {
+    let result: (RichItem & { displayName: string })[] = [];
     for (const item of items) {
       result.push({ ...item, displayName: `${prefix}${item.name}` });
       if (item.contents && item.contents.length > 0) {
@@ -48,8 +51,8 @@ export default function ItemEditor() {
   createEffect(() => {
     const item = selectedItem();
     if (item) {
-      setDescription(item.description || "");
-      setSelectedAdjectives(item.adjectives || []);
+      setDescription(item.props.description ?? "");
+      setSelectedAdjectives(item.props.adjectives ?? []);
     }
   });
 

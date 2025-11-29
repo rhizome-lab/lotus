@@ -11,9 +11,12 @@ export interface RichItem {
   location_detail: string | null;
   contents: RichItem[];
   destination_name?: string;
-  adjectives?: string[];
-  custom_css?: string;
-  image?: string;
+  props: Record<string, unknown> & {
+    description?: string;
+    adjectives?: string[];
+    custom_css?: string;
+    image?: string;
+  };
   verbs?: string[];
 }
 
