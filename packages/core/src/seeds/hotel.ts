@@ -115,7 +115,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
   addVerb(elevatorId, "push", [
     "seq",
     ["let", "floor", ["arg", 0]],
-    ["prop.set", "this", "current_floor", ["var", "floor"]],
+    ["set_prop", "this", "current_floor", ["var", "floor"]],
     [
       "tell",
       "me",

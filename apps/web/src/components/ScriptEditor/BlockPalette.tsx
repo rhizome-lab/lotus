@@ -1,12 +1,14 @@
 import { Component, For, createSignal } from "solid-js";
-import { BLOCK_DEFINITIONS } from "./types";
+import { gameStore } from "../../store/game";
+import { BlockDefinition } from "./types";
 
 export const BlockPalette: Component = () => {
   const [search, setSearch] = createSignal("");
 
   const filteredBlocks = () => {
     const s = search().toLowerCase();
-    return BLOCK_DEFINITIONS.filter(
+    const opcodes = (gameStore.state.opcodes || []) as BlockDefinition[];
+    return opcodes.filter(
       (def) =>
         def.label.toLowerCase().includes(s) ||
         def.opcode.toLowerCase().includes(s) ||

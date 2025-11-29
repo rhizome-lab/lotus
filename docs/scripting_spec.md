@@ -97,7 +97,7 @@ All arithmetic operators support multiple arguments, processing them from left t
 - `["destroy", target]`: Destroys an entity.
 - `["give", target, dest]`: Transfers ownership of an item.
 - `["prop", target, key]`: Gets a property value.
-- `["prop.set", target, key, value]`: Sets a property value.
+- `["set_prop", target, key, value]`: Sets a property value.
 - `["contents", container]`: Gets contents of a container.
 - `["verbs", entity]`: Gets verbs of an entity.
 - `["entity", id]`: Gets an entity by ID.

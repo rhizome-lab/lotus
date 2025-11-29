@@ -1,7 +1,8 @@
 import { Component, createSignal } from "solid-js";
 import { BlockPalette } from "./BlockPalette";
 import { BlockNode } from "./BlockNode";
-import { BLOCK_DEFINITIONS } from "./types";
+import { gameStore } from "../../store/game";
+import { BlockDefinition } from "./types";
 
 export const ScriptEditor: Component = () => {
   // Initial script: ["seq"]
@@ -58,7 +59,8 @@ export const ScriptEditor: Component = () => {
     if (!data) return;
 
     const { opcode } = JSON.parse(data);
-    const def = BLOCK_DEFINITIONS.find((d) => d.opcode === opcode);
+    const opcodes = (gameStore.state.opcodes || []) as BlockDefinition[];
+    const def = opcodes.find((d) => d.opcode === opcode);
     if (!def) return;
 
     // Create new node structure based on definition

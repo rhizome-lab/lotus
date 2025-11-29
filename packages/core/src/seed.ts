@@ -302,7 +302,7 @@ export function seed() {
             [
               "seq",
               [
-                "prop.set",
+                "set_prop",
                 ["var", "targetId"],
                 ["var", "propName"],
                 ["var", "value"],

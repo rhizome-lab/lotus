@@ -1,5 +1,6 @@
 import { Component, For, Show, createMemo } from "solid-js";
-import { BLOCK_DEFINITIONS } from "./types";
+import { gameStore } from "../../store/game";
+import { BlockDefinition } from "./types";
 
 interface BlockNodeProps {
   node: any;
@@ -22,7 +23,8 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
 
     try {
       const { opcode } = JSON.parse(data);
-      const def = BLOCK_DEFINITIONS.find((d) => d.opcode === opcode);
+      const opcodes = (gameStore.state.opcodes || []) as BlockDefinition[];
+      const def = opcodes.find((d) => d.opcode === opcode);
       if (!def) return;
 
       let newNode: any = [opcode];
@@ -64,9 +66,11 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
       >
         {(() => {
           const opcode = createMemo(() => props.node[0]);
-          const def = createMemo(() =>
-            BLOCK_DEFINITIONS.find((d) => d.opcode === opcode()),
-          );
+          const def = createMemo(() => {
+            const opcodes = (gameStore.state.opcodes ||
+              []) as BlockDefinition[];
+            return opcodes.find((d) => d.opcode === opcode());
+          });
           const args = createMemo(() => props.node.slice(1));
 
           return (

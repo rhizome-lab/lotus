@@ -121,7 +121,7 @@ describe("Book Item Scripting", () => {
       ["obj.set", ["var", "newChapter"], "title", ["var", "title"]],
       ["obj.set", ["var", "newChapter"], "content", ["var", "content"]],
       ["list.push", ["var", "chapters"], ["var", "newChapter"]],
-      ["prop.set", "this", "chapters", ["var", "chapters"]],
+      ["set_prop", "this", "chapters", ["var", "chapters"]],
       ["tell", "me", "Chapter added."],
     ];
 

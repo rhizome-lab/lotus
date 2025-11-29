@@ -68,7 +68,7 @@ describe("Scheduler Verification", () => {
 
     // Add a verb that increments the count
     addVerb(entityId, "increment", [
-      "prop.set",
+      "set_prop",
       "this",
       "count",
       ["+", ["prop", "this", "count"], 1],

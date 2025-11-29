@@ -56,31 +56,54 @@ export class ScriptError extends Error {
   }
 }
 
-export const OPS: Record<
-  string,
-  (args: any[], ctx: ScriptContext) => Promise<any>
-> = {};
+export interface OpcodeMetadata {
+  label: string;
+  category: string;
+  description?: string;
+  // For Node Editor
+  layout?: "infix" | "standard" | "primitive" | "control-flow";
+  slots?: {
+    name: string;
+    type: "block" | "string" | "number" | "boolean";
+    default?: any;
+  }[];
+  // For Monaco/TS
+  parameters?: { name: string; type: string }[];
+  returnType?: string;
+}
+
+export type OpcodeHandler = (args: any[], ctx: ScriptContext) => Promise<any>;
+
+export interface OpcodeDefinition {
+  handler: OpcodeHandler;
+  metadata: OpcodeMetadata;
+}
+
+export const OPS: Record<string, OpcodeDefinition> = {};
 
 export function registerOpcode(
   name: string,
-  handler: (args: unknown[], ctx: ScriptContext) => Promise<any>,
+  handler: OpcodeHandler,
+  metadata: OpcodeMetadata,
 ) {
-  OPS[name] = handler;
+  OPS[name] = { handler, metadata };
 }
 
-export function registerLibrary(
-  library: Record<
-    string,
-    (args: unknown[], ctx: ScriptContext) => Promise<any>
-  >,
-) {
-  for (const [name, handler] of Object.entries(library)) {
-    OPS[name] = handler;
+export function registerLibrary(library: Record<string, OpcodeDefinition>) {
+  for (const [name, def] of Object.entries(library)) {
+    OPS[name] = def;
   }
 }
 
 export function getOpcode(name: string) {
-  return OPS[name];
+  return OPS[name]?.handler;
+}
+
+export function getOpcodeMetadata() {
+  return Object.entries(OPS).map(([opcode, def]) => ({
+    opcode,
+    ...def.metadata,
+  }));
 }
 
 export async function executeLambda(
@@ -118,7 +141,7 @@ export async function evaluate(ast: unknown, ctx: ScriptContext): Promise<any> {
   if (Array.isArray(ast)) {
     const [op, ...args] = ast;
     if (typeof op === "string" && OPS[op]) {
-      return OPS[op]!(args, ctx);
+      return OPS[op].handler(args, ctx);
     } else {
       throw new ScriptError(`Unknown opcode: ${op}`);
     }

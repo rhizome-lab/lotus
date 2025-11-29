@@ -14,7 +14,12 @@ mock.module("../permissions", () => ({
   checkPermission: () => true,
 }));
 
-import { evaluate, ScriptSystemContext, registerLibrary } from "./interpreter";
+import {
+  evaluate,
+  ScriptSystemContext,
+  registerLibrary,
+  createScriptContext,
+} from "./interpreter";
 import { ListLibrary } from "./lib/list";
 import { StringLibrary } from "./lib/string";
 import { ObjectLibrary } from "./lib/object";
@@ -28,8 +33,15 @@ import {
   getVerb,
   getContents,
 } from "../repo";
+import { CoreLibrary } from "./lib/core";
 
 describe("NPC Interactions", () => {
+  // Register libraries
+  registerLibrary(CoreLibrary);
+  registerLibrary(ListLibrary);
+  registerLibrary(StringLibrary);
+  registerLibrary(ObjectLibrary);
+
   let hotelLobby: Entity;
   let caller: Entity;
   let messages: string[] = [];
@@ -43,11 +55,6 @@ describe("NPC Interactions", () => {
     db.query("DELETE FROM sqlite_sequence").run();
 
     messages = [];
-
-    // Register libraries
-    registerLibrary(ListLibrary);
-    registerLibrary(StringLibrary);
-    registerLibrary(ObjectLibrary);
 
     // Setup Sys Context
     sys = {
@@ -80,14 +87,15 @@ describe("NPC Interactions", () => {
 
           const verb = getVerb(entity.id, eventName);
           if (verb) {
-            await evaluate(verb.code, {
-              caller: entity, // The entity running the script is the caller/agent
-              this: entity,
-              args: args,
-              gas: 500,
-              sys,
-              warnings: [],
-            });
+            await evaluate(
+              verb.code,
+              createScriptContext({
+                caller: entity, // The entity running the script is the caller/agent
+                this: entity,
+                args: args,
+                sys,
+              }),
+            );
           }
         }
       },

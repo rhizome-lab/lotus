@@ -431,6 +431,12 @@ export function startServer(port: number = 8080) {
         return;
       }
 
+      if (method === "get_opcodes") {
+        const { getOpcodeMetadata } = require("./scripting/interpreter");
+        sendResponse(getOpcodeMetadata());
+        return;
+      }
+
       sendError(-32601, `Method not found: ${method}`);
     });
 

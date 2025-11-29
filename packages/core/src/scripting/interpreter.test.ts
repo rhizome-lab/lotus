@@ -133,8 +133,8 @@ describe("Interpreter", () => {
     // prop
     expect(await evaluate(["prop", "this", "foo"], ctx)).toBe("bar");
 
-    // prop.set
-    await evaluate(["prop.set", "this", "foo", "baz"], ctx);
+    // set_prop
+    await evaluate(["set_prop", "this", "foo", "baz"], ctx);
 
     // Verify DB update
     const row = db
@@ -219,9 +219,9 @@ describe("Interpreter", () => {
   test("permission errors", async () => {
     checkPermissionMock.mockReturnValue(false);
 
-    // prop.set
+    // set_prop
     try {
-      await evaluate(["prop.set", "this", "foo", "bar"], ctx);
+      await evaluate(["set_prop", "this", "foo", "bar"], ctx);
       throw new Error();
     } catch (e: any) {
       expect(e.message).toContain("permission denied");

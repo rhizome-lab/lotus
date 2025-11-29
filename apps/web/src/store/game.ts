@@ -48,6 +48,7 @@ interface GameState {
   room: RoomMessage | null;
   inventory: InventoryMessage | null;
   inspectedItem: ItemMessage | null;
+  opcodes: any[] | null;
   socket: WebSocket | null;
 }
 
@@ -57,6 +58,7 @@ const [state, setState] = createStore<GameState>({
   room: null,
   inventory: null,
   inspectedItem: null,
+  opcodes: null,
   socket: null,
 });
 
@@ -73,6 +75,16 @@ export const gameStore = {
       // Initial fetch
       gameStore.send(["look"]);
       gameStore.send(["inventory"]);
+
+      // Fetch opcodes
+      state.socket?.send(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          method: "get_opcodes",
+          id: 1, // Static ID for now
+          params: [],
+        }),
+      );
     };
 
     state.socket.onclose = () => {
@@ -87,6 +99,25 @@ export const gameStore = {
     state.socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+
+        // Handle JSON-RPC Responses
+        if (data.jsonrpc === "2.0") {
+          if (data.result) {
+            // Check if this is the opcode response
+            // Ideally we should track IDs, but for now we can infer or just check structure
+            if (
+              Array.isArray(data.result) &&
+              data.result.length > 0 &&
+              data.result[0].opcode
+            ) {
+              setState("opcodes", data.result);
+              return;
+            }
+            // Handle other RPC results if needed
+          }
+          // Handle RPC errors?
+          return;
+        }
 
         // Update specific state based on type
         if (data.type === "room") {
