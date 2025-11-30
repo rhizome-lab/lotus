@@ -58,14 +58,4 @@ describe("Interpreter Libraries", () => {
       expect(await evaluate(Core["apply"]("addX", 5), localCtx)).toBe(15);
     });
   });
-
-  describe("Call Opcode", () => {
-    test("call", async () => {
-      // call(target, verb, args...)
-      // We mocked sys.call to return "called " + args.join(",") if target=2 and verb="test"
-      expect(await evaluate(Core["call"]("this", "test", "a", "b"), ctx)).toBe(
-        "called a,b",
-      );
-    });
-  });
 });

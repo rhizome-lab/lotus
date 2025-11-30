@@ -39,14 +39,14 @@ describe("List Library", () => {
 
   test("list.set", async () => {
     const localCtx = { ...ctx, locals: {} };
-    await evaluate(Core["let"]("l", [List["list.new"](1, 2, 3)]), localCtx);
+    await evaluate(Core["let"]("l", List["list.new"](1, 2, 3)), localCtx);
     await evaluate(List["list.set"](Core["var"]("l"), 1, 99), localCtx);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 99, 3]);
   });
 
   test("list.push/pop", async () => {
     const localCtx = { ...ctx, locals: {} };
-    await evaluate(Core["let"]("l", [List["list.new"](1, 2)]), localCtx);
+    await evaluate(Core["let"]("l", List["list.new"](1, 2)), localCtx);
 
     expect(
       await evaluate(List["list.push"](Core["var"]("l"), 3), localCtx),
@@ -61,7 +61,7 @@ describe("List Library", () => {
 
   test("list.unshift/shift", async () => {
     const localCtx = { ...ctx, locals: {} };
-    await evaluate(Core["let"]("l", [List["list.new"](2, 3)]), localCtx);
+    await evaluate(Core["let"]("l", List["list.new"](2, 3)), localCtx);
 
     expect(
       await evaluate(List["list.unshift"](Core["var"]("l"), 1), localCtx),
@@ -84,7 +84,7 @@ describe("List Library", () => {
 
   test("list.splice", async () => {
     const localCtx = { ...ctx, locals: {} };
-    await evaluate(Core["let"]("l", [List["list.new"](1, 2, 3, 4)]), localCtx);
+    await evaluate(Core["let"]("l", List["list.new"](1, 2, 3, 4)), localCtx);
 
     // Remove 2 elements starting at index 1, insert 99
     const removed = await evaluate(
@@ -115,24 +115,21 @@ describe("List Library", () => {
 
   test("list.reverse", async () => {
     const localCtx = { ...ctx, locals: {} };
-    await evaluate(Core["let"]("l", [List["list.new"](1, 2, 3)]), localCtx);
+    await evaluate(Core["let"]("l", List["list.new"](1, 2, 3)), localCtx);
     await evaluate(List["list.reverse"](Core["var"]("l")), localCtx);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([3, 2, 1]);
   });
 
   test("list.sort", async () => {
     const localCtx = { ...ctx, locals: {} };
-    await evaluate(
-      Core["let"]("l", [List["list.new"]("b", "a", "c")]),
-      localCtx,
-    );
+    await evaluate(Core["let"]("l", List["list.new"]("b", "a", "c")), localCtx);
     await evaluate(List["list.sort"](Core["var"]("l")), localCtx);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual(["a", "b", "c"]);
   });
 
   // HOF tests
   test("list.map", async () => {
-    const inc = ["lambda", ["x"], ["+", ["var", "x"], 1]];
+    const inc = Core["lambda"](["x"], Core["+"](Core["var"]("x"), 1));
     expect(
       await evaluate(List["list.map"](List["list.new"](1, 2, 3), inc), ctx),
     ).toEqual([2, 3, 4]);
@@ -140,7 +137,7 @@ describe("List Library", () => {
 
   test("list.filter", async () => {
     // (lambda (x) (> x 1))
-    const gt1 = Core["lambda"](["x"], [">", Core["var"]("x"), 1]);
+    const gt1 = Core["lambda"](["x"], Core[">"](Core["var"]("x"), 1));
     expect(
       await evaluate(List["list.filter"](List["list.new"](1, 2, 3), gt1), ctx),
     ).toEqual([2, 3]);
@@ -164,7 +161,7 @@ describe("List Library", () => {
     // (lambda (x) (list x (+ x 1)))
     const dup = Core["lambda"](
       ["x"],
-      List["list.new"]([Core["var"]("x")], Core["+"](Core["var"]("x"), 1)),
+      List["list.new"](Core["var"]("x"), Core["+"](Core["var"]("x"), 1)),
     );
     expect(
       await evaluate(List["list.flatMap"](List["list.new"](1, 3), dup), ctx),

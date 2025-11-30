@@ -49,11 +49,13 @@ describe("String Library", () => {
   test("str.join", async () => {
     expect(
       await evaluate(
-        String["str.join"]([List["list.new"]("a", "b", "c")], ","),
+        String["str.join"](List["list.new"]("a", "b", "c"), ","),
         ctx,
       ),
     ).toBe("a,b,c");
-    expect(await evaluate(String["str.join"](["list.new"], ","), ctx)).toBe("");
+    expect(
+      await evaluate(String["str.join"](List["list.new"](), ","), ctx),
+    ).toBe("");
   });
 
   test("str.concat", async () => {

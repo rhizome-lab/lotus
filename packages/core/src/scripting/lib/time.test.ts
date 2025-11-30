@@ -30,21 +30,21 @@ describe("Time Library", () => {
 
   test("time.format edge cases", async () => {
     expect(
-      await evaluate(["time.format", "invalid-date", "time"], ctx).catch(
+      await evaluate(Time["time.format"]("invalid-date", "time"), ctx).catch(
         (e) => e,
       ),
     ).toBeInstanceOf(RangeError);
 
     const dateStr = "2023-01-01T12:00:00Z";
-    expect(typeof (await evaluate(["time.format", dateStr, "time"], ctx))).toBe(
-      "string",
-    );
-    expect(typeof (await evaluate(["time.format", dateStr, "date"], ctx))).toBe(
-      "string",
-    );
-    expect(typeof (await evaluate(["time.format", dateStr, "full"], ctx))).toBe(
-      "string",
-    );
+    expect(
+      typeof (await evaluate(Time["time.format"](dateStr, "time"), ctx)),
+    ).toBe("string");
+    expect(
+      typeof (await evaluate(Time["time.format"](dateStr, "date"), ctx)),
+    ).toBe("string");
+    expect(
+      typeof (await evaluate(Time["time.format"](dateStr, "full"), ctx)),
+    ).toBe("string");
   });
 
   test("time.offset units", async () => {

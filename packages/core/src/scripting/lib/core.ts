@@ -894,7 +894,7 @@ export const log = defineOpcode<
   },
 });
 
-export const arg = defineOpcode<[ScriptValue<number>], unknown>("arg", {
+export const arg = defineOpcode<[ScriptValue<number>], any>("arg", {
   metadata: {
     label: "Get Arg",
     category: "data",
