@@ -1,6 +1,5 @@
 import {
   evaluate,
-  evaluateTarget,
   resolveProps,
   ScriptError,
 } from "../interpreter";
@@ -19,6 +18,9 @@ const seq = defineOpcode<ScriptValue<unknown>[], any>(
       slots: [],
     },
     handler: async (args, ctx) => {
+      if (args.length === 0) {
+        throw new ScriptError("seq: expected at least one argument");
+      }
       let lastResult = null;
       for (const step of args) {
         lastResult = await evaluate(step, ctx);
@@ -45,7 +47,7 @@ const ifOp = defineOpcode<[ScriptValue<boolean>, ScriptValue<unknown>, ScriptVal
     },
     handler: async (args, ctx) => {
       if (args.length < 2 || args.length > 3) {
-        throw new ScriptError("if requires 2 or 3 arguments");
+        throw new ScriptError("if: expected `condition` `then` [`else`]");
       }
       const [cond, thenBranch, elseBranch] = args;
       if (await evaluate(cond, ctx)) {
@@ -74,7 +76,7 @@ const whileOp = defineOpcode<[ScriptValue<boolean>, ScriptValue<unknown>], any>(
     },
     handler: async (args, ctx) => {
       if (args.length !== 2) {
-        throw new ScriptError("while requires 2 arguments");
+        throw new ScriptError("while: expected `condition` `do`");
       }
       const [cond, body] = args;
       let result = null;
@@ -103,7 +105,7 @@ const forOp = defineOpcode<[string, ScriptValue<readonly unknown[]>, ScriptValue
     },
     handler: async (args, ctx) => {
       if (args.length !== 3) {
-        throw new ScriptError("for requires 3 arguments");
+        throw new ScriptError("for: expected `var` `list` `do`");
       }
       const [varName, listExpr, body] = args;
       const list = await evaluate(listExpr, ctx);
@@ -133,6 +135,9 @@ const jsonStringify = defineOpcode<[ScriptValue<unknown>], string>(
       slots: [{ name: "Value", type: "block" }],
     },
     handler: async (args, ctx) => {
+      if (args.length !== 1) {
+        throw new ScriptError("json.stringify: expected `value`");
+      }
       const [valExpr] = args;
       const val = await evaluate(valExpr, ctx);
       return JSON.stringify(val);
@@ -179,16 +184,16 @@ const prop = defineOpcode<[ScriptValue<unknown>, ScriptValue<string>], any>(
     },
     handler: async (args, ctx) => {
       if (args.length !== 2) {
-        throw new ScriptError("get_prop: expected 2 arguments");
+        throw new ScriptError("prop: expected `entity` `prop`");
       }
       const [targetExpr, keyExpr] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
+      const target = await evaluate(targetExpr, ctx);
       const key = await evaluate(keyExpr, ctx);
-      if (!target) {
-        throw new ScriptError("prop: target not found");
+      if (typeof target !== "object") {
+        throw new ScriptError(`prop: target must be an object, got ${JSON.stringify(target)}`);
       }
       if (typeof key !== "string") {
-        throw new ScriptError("prop: key must be a string");
+        throw new ScriptError(`prop: key must be a string, got ${JSON.stringify(key)}`);
       }
       return target[key];
     },
@@ -211,16 +216,16 @@ const setProp = defineOpcode<[ScriptValue<unknown>, ScriptValue<string>, ScriptV
     },
     handler: async (args, ctx) => {
       if (args.length !== 3) {
-        throw new ScriptError("set_prop: expected 3 arguments");
+        throw new ScriptError("set_prop: expected `entity` `prop` `value`");
       }
       const [targetExpr, propExpr, valExpr] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
-      if (!target) {
-        throw new ScriptError("set_prop: target not found");
+      const target = await evaluate(targetExpr, ctx);
+      if (typeof target !== "object") {
+        throw new ScriptError(`set_prop: target must be an object, got ${JSON.stringify(target)}`);
       }
       const prop = await evaluate(propExpr, ctx);
       if (typeof prop !== "string") {
-        throw new ScriptError("set_prop: property name must be a string");
+        throw new ScriptError(`set_prop: property name must be a string, got ${JSON.stringify(prop)}`);
       }
       const val = await evaluate(valExpr, ctx);
       const { id: _, ...props } = target;
@@ -244,16 +249,16 @@ const hasProp = defineOpcode<[ScriptValue<unknown>, ScriptValue<string>], boolea
     },
     handler: async (args, ctx) => {
       if (args.length !== 2) {
-        throw new ScriptError("has_prop: expected 2 arguments");
+        throw new ScriptError("has_prop: expected `entity` `prop`");
       }
       const [targetExpr, propExpr] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
-      if (!target) {
-        throw new ScriptError("has_prop: target not found");
+      const target = await evaluate(targetExpr, ctx);
+      if (typeof target !== "object") {
+        throw new ScriptError(`has_prop: target must be an object, got ${JSON.stringify(target)}`);
       }
       const prop = await evaluate(propExpr, ctx);
       if (typeof prop !== "string") {
-        throw new ScriptError("has_prop: property name must be a string");
+        throw new ScriptError(`has_prop: property name must be a string, got ${JSON.stringify(prop)}`);
       }
       return Object.hasOwnProperty.call(target, prop);
     },
@@ -275,16 +280,16 @@ const deleteProp = defineOpcode<[ScriptValue<any>, ScriptValue<string>], void>(
     },
     handler: async (args, ctx) => {
       if (args.length !== 2) {
-        throw new ScriptError("delete_prop: expected 2 arguments");
+        throw new ScriptError("delete_prop: expected `entity` `prop`");
       }
       const [targetExpr, propExpr] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
-      if (!target) {
-        throw new ScriptError("delete_prop: target not found");
+      const target = await evaluate(targetExpr, ctx);
+      if (typeof target !== "object") {
+        throw new ScriptError(`delete_prop: target must be an object, got ${JSON.stringify(target)}`);
       }
       const prop = await evaluate(propExpr, ctx);
       if (typeof prop !== "string") {
-        throw new ScriptError("delete_prop: property name must be a string");
+        throw new ScriptError(`delete_prop: property name must be a string, got ${JSON.stringify(prop)}`);
       }
       const { [prop]: _, ...newProps } = target;
       updateEntity(target.id, newProps);
@@ -1068,9 +1073,9 @@ const destroy = defineOpcode<[ScriptValue<any>], void>(
     },
     handler: async (args, ctx) => {
       const [targetExpr] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
-      if (!target) {
-        throw new ScriptError("destroy: target not found");
+      const target = await evaluate(targetExpr, ctx);
+      if (typeof target !== "object") {
+        throw new ScriptError(`destroy: target must be an object, got ${JSON.stringify(target)}`);
       }
       ctx.sys?.destroy?.(target.id);
     },
@@ -1123,7 +1128,7 @@ const apply = defineOpcode<[ScriptValue<unknown>, ...ScriptValue<unknown>[]], an
         throw new ScriptError("apply: func not found");
       }
       if (func.type !== "lambda") {
-        throw new ScriptError("apply: func must be a lambda");
+        throw new ScriptError(`apply: func must be a lambda, got ${JSON.stringify(func)}`);
       }
 
       const evaluatedArgs = [];
@@ -1162,7 +1167,7 @@ const call = defineOpcode<[ScriptValue<any>, ScriptValue<string>, ...ScriptValue
     },
     handler: async (args, ctx) => {
       const [targetExpr, verbExpr, ...callArgs] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
+      const target = await evaluate(targetExpr, ctx);
       const verb = await evaluate(verbExpr, ctx);
 
       // Evaluate arguments
@@ -1171,11 +1176,11 @@ const call = defineOpcode<[ScriptValue<any>, ScriptValue<string>, ...ScriptValue
         evaluatedArgs.push(await evaluate(arg, ctx));
       }
 
-      if (!target) {
-        throw new ScriptError("call: target not found");
+      if (typeof target !== "object") {
+        throw new ScriptError(`call: target must be an object, got ${JSON.stringify(target)}`);
       }
       if (typeof verb !== "string") {
-        throw new ScriptError("call: verb must be a string");
+        throw new ScriptError(`call: verb must be a string, got ${JSON.stringify(verb)}`);
       }
 
       if (ctx.sys?.call) {
@@ -1193,44 +1198,6 @@ const call = defineOpcode<[ScriptValue<any>, ScriptValue<string>, ...ScriptValue
 );
 export { call };
 
-const get = defineOpcode<[ScriptValue<any>, ScriptValue<string>], any>(
-  "get",
-  {
-    metadata: {
-      label: "Get",
-      category: "world",
-      description: "Get a property of an entity",
-      slots: [
-        { name: "Target", type: "block" },
-        { name: "Property", type: "string" },
-      ],
-    },
-    handler: async (args, ctx) => {
-      const [targetExpr, valExpr] = args;
-      const target = await evaluateTarget(targetExpr, ctx);
-      const val = await evaluate(valExpr, ctx);
-
-      if (!target) {
-        throw new ScriptError("get: target not found");
-      }
-      if (typeof val === "string") {
-        if (val.startsWith("prop:")) {
-          const propName = val.substring(5);
-          return target[propName];
-        }
-        // Special properties
-        if (val === "name") return target["name"];
-        if (val === "location") return target["location_id"];
-        if (val === "owner") return target["owner_id"];
-        if (val === "kind") return target["kind"];
-        if (val === "id") return target.id;
-      }
-      return null;
-    },
-  }
-);
-export { get };
-
 const schedule = defineOpcode<[ScriptValue<string>, ScriptValue<any[]>, ScriptValue<number>], void>(
   "schedule",
   {
@@ -1247,19 +1214,17 @@ const schedule = defineOpcode<[ScriptValue<string>, ScriptValue<any[]>, ScriptVa
     handler: async (args, ctx) => {
       const [verbExpr, argsExpr, delayExpr] = args;
       const verb = await evaluate(verbExpr, ctx);
-      const callArgs = await evaluate(argsExpr, ctx);
-      const delay = await evaluate(delayExpr, ctx);
-
-      if (
-        typeof verb !== "string" ||
-        !Array.isArray(callArgs) ||
-        typeof delay !== "number"
-      ) {
-        throw new ScriptError(
-          "schedule: verb must be a string, args must be an array, delay must be a number"
-        );
+      if (typeof verb !== "string") {
+        throw new ScriptError(`schedule: verb must be a string, got ${JSON.stringify(verb)}`);
       }
-
+      const callArgs = await evaluate(argsExpr, ctx);
+      if (!Array.isArray(callArgs)) {
+        throw new ScriptError(`schedule: args must be an array, got ${JSON.stringify(callArgs)}`);
+      }
+      const delay = await evaluate(delayExpr, ctx);
+      if (typeof delay !== "number") {
+        throw new ScriptError(`schedule: delay must be a number, got ${JSON.stringify(delay)}`);
+      }
       ctx.sys?.schedule?.(ctx.this.id, verb, callArgs, delay);
     },
   }
@@ -1302,8 +1267,10 @@ const verbs = defineOpcode<[ScriptValue<any>], any[]>(
         throw new ScriptError("verbs: no getVerbs function available");
       }
       const [entityExpr] = args;
-      const entity = await evaluateTarget(entityExpr, ctx);
-      if (!entity) return [];
+      const entity = await evaluate(entityExpr, ctx);
+      if (typeof entity !== "object") {
+        throw new ScriptError(`verbs: entity must be an object, got ${JSON.stringify(entity)}`);
+      }
       return ctx.sys.getVerbs(entity.id);
     },
   }

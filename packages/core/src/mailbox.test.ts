@@ -88,8 +88,8 @@ describe("Mailbox Verification", () => {
     try {
       await evaluate(["move", itemId, mailboxId], ctx);
       expect(true).toBe(false); // Should not reach here
-    } catch (e: any) {
-      expect(e.message).toContain("permission denied");
+    } catch (error: any) {
+      expect(error.message).toContain("permission denied");
     }
   });
 

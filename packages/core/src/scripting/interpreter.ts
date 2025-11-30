@@ -1,4 +1,4 @@
-import { Entity, getEntity, Verb } from "../repo";
+import { Entity, Verb } from "../repo";
 import { ScriptValue } from "./def";
 
 export type ScriptSystemContext = {
@@ -145,77 +145,6 @@ export function createScriptContext(
     vars: {},
     ...ctx,
   };
-}
-
-// TODO: Remove this function
-export async function evaluateTarget(
-  targetExpr: unknown,
-  ctx: ScriptContext,
-): Promise<Entity | null> {
-  const val = await evaluate(targetExpr, ctx);
-  if (val === "me") return ctx.caller;
-  if (val === "this") return ctx.this;
-  if (val === "here") {
-    if (ctx.caller["location"]) {
-      return getEntity(ctx.caller["location"]);
-    }
-    return null;
-  }
-  if (typeof val === "number") {
-    return getEntity(val);
-  }
-  if (typeof val === "string") {
-    // Search in room or inventory
-    // 1. Inventory
-    // We assume 'contents' is a list of IDs. We need to resolve them to check names.
-
-    const resolveList = async (ids: unknown) => {
-      if (
-        !ids ||
-        !Array.isArray(ids) ||
-        ids.some((id) => typeof id !== "number")
-      ) {
-        throw new Error("Expected a list of ids for 'contents'");
-      }
-      const entities = [];
-      for (const id of ids) {
-        const entity = getEntity(id);
-        if (!entity) {
-          throw new Error(`Invalid entity id ${id}`);
-        }
-        entities.push(entity);
-      }
-      return entities;
-    };
-
-    const inventoryIds = ctx.caller["contents"] || [];
-    const inventory = await resolveList(inventoryIds);
-    const item = inventory.find(
-      (entity) => entity["name"]?.toLowerCase() === val.toLowerCase(),
-    );
-    if (item) return item;
-
-    // 2. Room
-    if (ctx.caller["location"]) {
-      const room = getEntity(ctx.caller["location"]);
-      if (room) {
-        const roomContentIds = room["contents"] || [];
-        const roomContents = await resolveList(roomContentIds);
-        const roomItem = roomContents.find(
-          (entity) => entity["name"]?.toLowerCase() === val.toLowerCase(),
-        );
-        if (roomItem) return roomItem;
-      }
-    }
-  }
-  if (typeof val === "object" && val !== null && "id" in val) {
-    return val as Entity;
-  }
-  throw new ScriptError(
-    `evaluateTarget: failed to match ${JSON.stringify(
-      targetExpr,
-    )} (evaluated to ${JSON.stringify(val)})`,
-  );
 }
 
 export async function resolveProps(
