@@ -19,6 +19,7 @@ import {
   ScriptSystemContext,
   registerLibrary,
   createScriptContext,
+  ScriptError,
 } from "./interpreter";
 import * as Core from "./lib/core";
 import * as List from "./lib/list";
@@ -29,9 +30,9 @@ import {
   createEntity,
   getEntity,
   updateEntity,
-  deleteEntity,
   Entity,
   getVerb,
+  getVerbs,
 } from "../repo";
 
 describe("Hotel Scripting", () => {
@@ -56,20 +57,33 @@ describe("Hotel Scripting", () => {
 
     // Setup Sys Context
     sys = {
-      move: (id: number, dest: number) => {
-        updateEntity(id, { location_id: dest });
-        if (caller && caller.id === id) {
-          caller["location_id"] = dest;
-        }
-      },
-      create: createEntity,
-      destroy: deleteEntity,
       send: (msg: any) => {
         if (msg.type === "message") {
           messages.push(msg.text);
         }
       },
-    } as any;
+      call: async (caller, targetId, verbName, args, warnings) => {
+        const target = getEntity(targetId);
+        if (!target) {
+          throw new ScriptError(`Target ${targetId} not found`);
+        }
+        const verbs = getVerbs(targetId);
+        const verb = verbs.find((v) => v.name === verbName);
+        if (!verb) {
+          throw new ScriptError(`Verb ${verbName} not found on ${targetId}`);
+        }
+        return await evaluate(
+          verb.code,
+          createScriptContext({
+            caller,
+            this: target,
+            args,
+            sys,
+            warnings,
+          }),
+        );
+      },
+    };
 
     // Setup Environment
     const lobbyId = createEntity({ name: "Main Lobby", kind: "ROOM" });
@@ -109,7 +123,7 @@ describe("Hotel Scripting", () => {
     });
 
     // Move caller to room
-    updateEntity(caller.id, { location_id: roomId });
+    updateEntity({ ...caller, location: roomId });
     caller = getEntity(caller.id)!;
 
     // Clear messages
@@ -129,7 +143,7 @@ describe("Hotel Scripting", () => {
     );
 
     caller = getEntity(caller.id)!;
-    expect(caller["location_id"]).toBe(hotelLobby.id); // Back in lobby
+    expect(caller["location"]).toBe(hotelLobby.id); // Back in lobby
     expect(getEntity(roomId)).toBeNull(); // Destroyed
   });
 
@@ -146,7 +160,7 @@ describe("Hotel Scripting", () => {
     // Caller starts in Hotel Lobby from beforeEach
 
     // 1. Enter Elevator
-    updateEntity(caller.id, { location_id: elevator.id });
+    updateEntity({ ...caller, location: elevator.id });
     caller = getEntity(caller.id)!; // Refresh
 
     const ctx = {

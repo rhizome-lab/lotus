@@ -109,6 +109,10 @@ export class AiPlugin implements Plugin {
     ctx.registerCommand("gen", this.handleGen.bind(this));
     ctx.registerCommand("image", this.handleImage.bind(this));
 
+    // TODO: Remove unsafe type assertions (`as number`) etc because,
+    // well, they're unsafe and will crash at runtime.
+    // TODO: Switch `handleGen` to use `generateObject`.
+    // This means switching templates to use JSON Schema to specify the shape.
     // Register default templates
     this.registerTemplate({
       name: "item",
@@ -148,12 +152,12 @@ export class AiPlugin implements Plugin {
 
     // Check room contents.
     const playerEntity = ctx.core.getEntity(ctx.player.id);
-    if (!playerEntity || !playerEntity.location_id) {
+    if (!playerEntity || !playerEntity["location"]) {
       ctx.send({ type: "message", text: "You are nowhere." });
       return;
     }
 
-    const roomItems = ctx.core.getContents(playerEntity.location_id);
+    const roomItems = ctx.core.getContents(playerEntity["location"] as number);
     const target = roomItems.find(
       (e: any) => e.name.toLowerCase() === targetName.toLowerCase(),
     );
@@ -173,16 +177,20 @@ export class AiPlugin implements Plugin {
       const model = await getModel();
       const { text } = await generateText({
         model,
-        system: `You are roleplaying as ${target.name}. 
-        Description: ${target.props["description"] ?? "A mysterious entity."}
-        Adjectives: ${target.props["adjectives"]?.join(", ") ?? "none"}
-        Keep your response short and in character.`,
+        system: `You are roleplaying as ${target["name"]}.\
+${target["description"] ? `\nDescription: ${target["description"]}` : ""}
+${
+  target["adjectives"]
+    ? `\nAdjectives: ${(target["adjectives"] as string[]).join(", ")}`
+    : ""
+}
+Keep your response short and in character.`,
         prompt: message,
       });
 
       ctx.send({
         type: "message",
-        text: `${target.name} says: "${text}"`,
+        text: `${target["name"]} says: "${text}"`,
       });
     } catch (error: any) {
       console.error("AI Error:", error);
@@ -218,6 +226,7 @@ export class AiPlugin implements Plugin {
     try {
       const prompt = template.prompt(ctx, instruction);
       const model = await getModel();
+      // TODO: Actually the AI SDK supports JSON output
       const { text } = await generateText({
         model,
         system: "You are a JSON generator. Output valid JSON only.",
@@ -232,7 +241,7 @@ export class AiPlugin implements Plugin {
       const data = JSON.parse(jsonStr);
 
       const playerEntity = ctx.core.getEntity(ctx.player.id);
-      if (!playerEntity || !playerEntity.location_id) return;
+      if (!playerEntity || !playerEntity["location"]) return;
 
       if (templateName === "room") {
         // Create room and exit
@@ -264,14 +273,17 @@ export class AiPlugin implements Plugin {
         ctx.core.createEntity({
           name: data.name,
           kind: "ITEM",
-          location_id: playerEntity.location_id,
+          location_id: playerEntity["location"],
           props: {
             description: data.description,
             adjectives: data.adjectives,
             custom_css: data.custom_css,
           },
         });
-        const room = this.getResolvedRoom(ctx, playerEntity.location_id);
+        const room = this.getResolvedRoom(
+          ctx,
+          playerEntity["location"] as number,
+        );
         if (room) {
           ctx.send(room);
           ctx.send({ type: "message", text: `Created ${data.name}.` });
@@ -324,7 +336,7 @@ export class AiPlugin implements Plugin {
       // Let's try to find a target like 'look' does, or default to room.
 
       const playerEntity = ctx.core.getEntity(ctx.player.id);
-      if (!playerEntity || !playerEntity.location_id) return;
+      if (!playerEntity || !playerEntity["location"]) return;
 
       // Simple logic: If args start with "room", update room. If "item <name>", update item.
       // But the instruction is the prompt.
@@ -342,14 +354,17 @@ export class AiPlugin implements Plugin {
         return;
       }
 
-      let targetId = null;
+      let targetId: number | null = null;
       if (targetName === "room" || targetName === "here") {
-        targetId = playerEntity.location_id;
+        targetId = playerEntity["location"] as number;
       } else {
         // Find item
-        const roomItems = ctx.core.getContents(playerEntity.location_id);
+        const roomItems = ctx.core.getContents(
+          playerEntity["location"] as number,
+        );
         const item = roomItems.find(
-          (i) => i.name.toLowerCase() === targetName.toLowerCase(),
+          (i) =>
+            (i["name"] as string).toLowerCase() === targetName.toLowerCase(),
         );
         if (item) targetId = item.id;
       }
@@ -357,14 +372,15 @@ export class AiPlugin implements Plugin {
       if (targetId) {
         const entity = ctx.core.getEntity(targetId);
         if (entity) {
-          const newProps = { ...entity.props, image: publicUrl };
-          ctx.core.updateEntity(targetId, { props: newProps });
-          const room = { ...ctx.core.getEntity(playerEntity.location_id) };
+          ctx.core.updateEntity({ ...entity, image: publicUrl });
+          const room = {
+            ...ctx.core.getEntity(playerEntity["location"] as number),
+          };
           if (room) {
             ctx.send(room);
             ctx.send({
               type: "message",
-              text: `Image generated for ${entity.name}.`,
+              text: `Image generated for ${entity["name"]}.`,
             });
           }
           return;

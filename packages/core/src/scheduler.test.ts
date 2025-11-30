@@ -14,13 +14,7 @@ mock.module("./db", () => ({ db }));
 
 // Import modules AFTER mocking
 import { scheduler } from "./scheduler";
-import {
-  createEntity,
-  addVerb,
-  getEntity,
-  deleteEntity,
-  getVerbs,
-} from "./repo";
+import { createEntity, addVerb, getEntity } from "./repo";
 import { registerLibrary, ScriptSystemContext } from "./scripting/interpreter";
 import * as Core from "./scripting/lib/core";
 import * as Object from "./scripting/lib/object";
@@ -32,13 +26,9 @@ describe("Scheduler Verification", () => {
   // Start Scheduler
   scheduler.setContextFactory(
     (): ScriptSystemContext => ({
-      create: createEntity,
       send: (msg) => console.log("[Scheduler System Message]:", msg),
-      destroy: deleteEntity,
       schedule: scheduler.schedule.bind(scheduler),
       call: async () => null, // Scheduler doesn't support call yet? Or we can implement it.
-      getVerbs: async (id) => getVerbs(id),
-      getEntity: async (id) => getEntity(id),
     }),
   );
 

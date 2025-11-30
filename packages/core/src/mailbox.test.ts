@@ -33,22 +33,18 @@ describe("Mailbox Verification", () => {
     // 2. Create Mailbox for Receiver
     mailboxId = createEntity({
       name: "Receiver's Mailbox",
-      kind: "ITEM",
-      owner_id: receiverId,
-      props: {
-        permissions: {
-          view: [receiverId], // Only receiver can view
-          enter: [], // No manual entry
-        },
+      owner: receiverId,
+      permissions: {
+        view: [receiverId], // Only receiver can view
+        enter: [], // No manual entry
       },
     });
 
     // 3. Create Item to send
     itemId = createEntity({
       name: "Letter",
-      kind: "ITEM",
-      owner_id: senderId,
-      location_id: senderId, // Held by sender
+      owner: senderId,
+      location: senderId, // Held by sender
     });
   });
 
@@ -57,7 +53,7 @@ describe("Mailbox Verification", () => {
       { id: senderId, props: {} } as any,
       {
         id: mailboxId,
-        owner_id: receiverId,
+        owner: receiverId,
         props: { permissions: { view: [receiverId] } },
       } as any,
       "view",
@@ -70,7 +66,7 @@ describe("Mailbox Verification", () => {
       { id: receiverId, props: {} } as any,
       {
         id: mailboxId,
-        owner_id: receiverId,
+        owner: receiverId,
         props: { permissions: { view: [receiverId] } },
       } as any,
       "view",
@@ -110,8 +106,7 @@ describe("Mailbox Verification", () => {
         give: (target: number, dest: number, owner: number) => {
           given = true;
           // Simulate what sys.give does
-          const { updateEntity } = require("./repo");
-          updateEntity(target, { location_id: dest, owner_id: owner });
+          updateEntity({ ...target, location: dest, owner: owner });
         },
       },
     } as any;

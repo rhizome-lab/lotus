@@ -24,7 +24,7 @@ export interface CommandContext {
     getContents: (id: number) => Entity[];
     moveEntity: (id: number, destId: number, detail?: string | null) => void;
     createEntity: (data: any) => number;
-    updateEntity: (id: number, data: any) => void;
+    updateEntity: (entity: Entity) => void;
     deleteEntity: (id: number) => void;
     canEdit: (playerId: number, entityId: number) => boolean;
     resolveProps: (entity: Entity) => Promise<Entity>;
