@@ -1028,7 +1028,7 @@ export const apply = defineOpcode<
 
 // TODO: Return verb result value?
 export const call = defineOpcode<
-  [ScriptValue<unknown>, ScriptValue<string>, ...ScriptValue<unknown>[]],
+  [ScriptValue<Entity>, ScriptValue<string>, ...ScriptValue<unknown>[]],
   null
 >("call", {
   metadata: {

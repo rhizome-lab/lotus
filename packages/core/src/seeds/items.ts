@@ -37,8 +37,9 @@ export function seedItems(locationId: number) {
         Core["not"](Core["var"]("chapter")),
         Core["throw"]("Chapter not found."),
       ),
-      Core["tell"](
+      Core["call"](
         Core["caller"](),
+        "tell",
         String["str.concat"](
           "Reading: ",
           Object["obj.get"](Core["var"]("chapter"), "title"),
@@ -54,8 +55,9 @@ export function seedItems(locationId: number) {
     "list_chapters",
     Core["seq"](
       Core["let"]("chapters", Object["obj.get"](Core["this"](), "chapters")),
-      Core["tell"](
+      Core["call"](
         Core["caller"](),
+        "tell",
         String["str.concat"](
           "Chapters:\n",
           String["str.join"](
@@ -100,7 +102,7 @@ export function seedItems(locationId: number) {
 
       List["list.push"](Core["var"]("chapters"), Core["var"]("newChapter")),
       Object["obj.set"](Core["this"](), "chapters", Core["var"]("chapters")), // Save back to entity
-      Core["tell"](Core["caller"](), "Chapter added."),
+      Core["call"](Core["caller"](), "tell", "Chapter added."),
     ),
   );
 
@@ -139,19 +141,23 @@ export function seedItems(locationId: number) {
           ),
         ),
       ),
-    ),
-    Core["tell"](
-      Core["caller"](),
-      String["str.concat"](
-        "Found ",
-        List["list.len"](Core["var"]("results")),
-        " matches:\n",
-        List["list.join"](
-          List["list.map"](
-            Core["var"]("results"),
-            Core["lambda"](["c"], Object["obj.get"](Core["var"]("c"), "title")),
+      Core["call"](
+        Core["caller"](),
+        "tell",
+        String["str.concat"](
+          "Found ",
+          List["list.len"](Core["var"]("results")),
+          " matches:\n",
+          String["str.join"](
+            List["list.map"](
+              Core["var"]("results"),
+              Core["lambda"](
+                ["c"],
+                Object["obj.get"](Core["var"]("c"), "title"),
+              ),
+            ),
+            "\n",
           ),
-          "\n",
         ),
       ),
     ),
