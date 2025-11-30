@@ -16,7 +16,7 @@ describe("Scripting Verification", () => {
 
   const caller = mockEntity(1);
   const target = mockEntity(2);
-  target.owner_id = 1;
+  target["owner"] = 1;
   const sys = {
     move: mock(() => {}),
     create: mock(() => 3),

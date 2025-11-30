@@ -16,13 +16,12 @@ import {
   registerLibrary,
   ScriptSystemContext,
 } from "../scripting/interpreter";
-import { StringLibrary } from "../scripting/lib/string";
-import { ObjectLibrary } from "../scripting/lib/object";
-import { TimeLibrary } from "../scripting/lib/time";
-import { WorldLibrary } from "../scripting/lib/world";
-import { ListLibrary } from "../scripting/lib/list";
+import * as Core from "../scripting/lib/core";
+import * as String from "../scripting/lib/string";
+import * as Object from "../scripting/lib/object";
+import * as List from "../scripting/lib/list";
+import * as Time from "../scripting/lib/time";
 import { seedHotel } from "./hotel";
-import { CoreLibrary } from "../scripting/lib/core";
 
 describe("Hotel Seed", () => {
   let lobbyId: number;
@@ -32,12 +31,11 @@ describe("Hotel Seed", () => {
 
   beforeAll(async () => {
     // Register libraries
-    registerLibrary(CoreLibrary);
-    registerLibrary(StringLibrary);
-    registerLibrary(ObjectLibrary);
-    registerLibrary(TimeLibrary);
-    registerLibrary(WorldLibrary);
-    registerLibrary(ListLibrary);
+    registerLibrary(Core);
+    registerLibrary(String);
+    registerLibrary(Object);
+    registerLibrary(Time);
+    registerLibrary(List);
 
     // Initialize DB
     db.run("DELETE FROM entities");
@@ -52,32 +50,18 @@ describe("Hotel Seed", () => {
     const playerId = createEntity({
       name: "Tester",
       kind: "ACTOR",
-      location_id: lobbyId,
+      ["location"]: lobbyId,
       props: { is_wizard: true },
     });
     player = getEntity(playerId);
 
     // Mock System Context
     sys = {
-      move: (id, dest) => {
-        const e = getEntity(id);
-        if (e) {
-          // Direct DB update for test
-          db.query("UPDATE entities SET location_id = ? WHERE id = ?").run(
-            dest,
-            id,
-          );
-        }
-      },
       create: (data) => createEntity(data),
       send: () => {}, // Mock send
       destroy: () => {}, // Mock destroy
-      getAllEntities: () => [],
       schedule: () => {},
-      broadcast: () => {},
-      give: () => {},
       call: async () => null,
-      triggerEvent: async () => {},
     };
   });
 
@@ -98,8 +82,8 @@ describe("Hotel Seed", () => {
     // 3. Execute 'west' verb to create West Wing
     const westVerb = getVerb(floorLobbyId, "west")!;
 
-    // Mock player location
-    sys.move(player.id, floorLobbyId);
+    // TODO: `move` does not support `id`
+    sys.call(player, player.id, "move", [floorLobbyId], []);
 
     await evaluate(
       westVerb.code,
@@ -112,9 +96,9 @@ describe("Hotel Seed", () => {
 
     // Player should be in West Wing now
     const playerAfterWest = getEntity(player.id)!;
-    const westWingId = playerAfterWest.location_id!;
+    const westWingId = playerAfterWest["location"] as number;
     const westWing = getEntity(westWingId)!;
-    expect(westWing.name).toContain("West Wing");
+    expect(westWing["name"]).toContain("West Wing");
 
     // 4. Try to enter invalid room (e.g. 51)
     const enterVerb = getVerb(westWingId, "enter")!;
@@ -132,7 +116,7 @@ describe("Hotel Seed", () => {
     expect(output).toContain("Room numbers in the West Wing are 1-50");
 
     // Player should still be in West Wing
-    expect(getEntity(player.id)!.location_id).toBe(westWingId);
+    expect(getEntity(player.id)!["location"]).toBe(westWingId);
 
     // 5. Try to enter valid room (e.g. 10)
     await evaluate(
@@ -142,28 +126,34 @@ describe("Hotel Seed", () => {
 
     // Player should be in Room 10
     const playerInRoom = getEntity(player.id)!;
-    const room = getEntity(playerInRoom.location_id!)!;
-    expect(room.name).toBe("Room 10");
+    const room = getEntity(playerInRoom["location"] as number)!;
+    expect(room["name"]).toBe("Room 10");
   });
 
   test("East Wing Room Validation", async () => {
     // 1. Find Floor Lobby Proto
     const floorLobbyProto = db
-      .query("SELECT id FROM entities WHERE name = 'Floor Lobby Proto'")
-      .get() as { id: number };
+      // TODO: name is in prop now; use sqlite json tools
+      .query<{ id: number }, []>(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Floor Lobby Proto'",
+      )
+      .get()!;
 
     // 2. Create a Floor Lobby instance
-    const floorLobbyId = createEntity({
-      name: "Floor 2 Lobby",
-      kind: "ROOM",
-      prototype_id: floorLobbyProto.id,
-      props: { floor: 2 },
-    });
+    const floorLobbyId = createEntity(
+      {
+        name: "Floor 2 Lobby",
+        kind: "ROOM",
+        props: { floor: 2 },
+      },
+      floorLobbyProto.id,
+    );
 
     // 3. Execute 'east' verb to create East Wing
     const eastVerb = getVerb(floorLobbyId, "east")!;
 
-    sys.move(player.id, floorLobbyId);
+    // TODO: `move` does not support `id`
+    sys.call(player, player.id, "move", [floorLobbyId], []);
 
     await evaluate(
       eastVerb.code,
@@ -175,9 +165,9 @@ describe("Hotel Seed", () => {
     );
 
     const playerAfterEast = getEntity(player.id)!;
-    const eastWingId = playerAfterEast.location_id!;
+    const eastWingId = playerAfterEast["location"] as number;
     const eastWing = getEntity(eastWingId)!;
-    expect(eastWing.name).toContain("East Wing");
+    expect(eastWing["name"]).toContain("East Wing");
 
     // 4. Try to enter invalid room (e.g. 10)
     const enterVerb = getVerb(eastWingId, "enter")!;
@@ -200,7 +190,7 @@ describe("Hotel Seed", () => {
     );
 
     const playerInRoom = getEntity(player.id)!;
-    const room = getEntity(playerInRoom.location_id!)!;
-    expect(room.name).toBe("Room 60");
+    const room = getEntity(playerInRoom["location"] as number)!;
+    expect(room["name"]).toBe("Room 60");
   });
 });
