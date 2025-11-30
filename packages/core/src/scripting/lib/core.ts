@@ -1,5 +1,11 @@
 import { evaluate, resolveProps, ScriptError } from "../interpreter";
-import { Entity, updateEntity, Verb } from "../../repo";
+import {
+  Entity,
+  getPrototypeId,
+  setPrototypeId,
+  updateEntity,
+  Verb,
+} from "../../repo";
 import { defineOpcode, ScriptValue } from "../def";
 
 // Values
@@ -1205,6 +1211,79 @@ export const set_entity = defineOpcode<ScriptValue<Entity>[], null>("set_entity"
       entities.push(target);
     }
     updateEntity(...entities);
+    return null;
+  },
+});
+
+export const get_prototype = defineOpcode<[ScriptValue<Entity>], number | null>(
+  "get_prototype",
+  {
+    metadata: {
+      label: "Get Prototype",
+      category: "world",
+      description: "Get entity prototype ID",
+      slots: [{ name: "Entity", type: "block" }],
+    },
+    handler: async (args, ctx) => {
+      if (args.length !== 1) {
+        throw new ScriptError("get_prototype: expected 1 argument");
+      }
+      const [entityExpr] = args;
+      const entity = await evaluate(entityExpr, ctx);
+      if (
+        typeof entity !== "object" ||
+        !entity ||
+        typeof entity.id !== "number"
+      ) {
+        throw new ScriptError(
+          `get_prototype: expected entity, got ${JSON.stringify(entity)}`,
+        );
+      }
+      return getPrototypeId(entity.id);
+    },
+  },
+);
+
+export const set_prototype = defineOpcode<
+  [ScriptValue<Entity>, ScriptValue<number | null>],
+  null
+>("set_prototype", {
+  metadata: {
+    label: "Set Prototype",
+    category: "action",
+    description: "Set entity prototype",
+    slots: [
+      { name: "Entity", type: "block" },
+      { name: "PrototypeID", type: "number" },
+    ],
+  },
+  handler: async (args, ctx) => {
+    if (args.length !== 2) {
+      throw new ScriptError("set_prototype: expected 2 arguments");
+    }
+    const [entityExpr, protoIdExpr] = args;
+    const entity = await evaluate(entityExpr, ctx);
+    const protoId = await evaluate(protoIdExpr, ctx);
+
+    if (
+      typeof entity !== "object" ||
+      !entity ||
+      typeof entity.id !== "number"
+    ) {
+      throw new ScriptError(
+        `set_prototype: expected entity, got ${JSON.stringify(entity)}`,
+      );
+    }
+
+    if (protoId !== null && typeof protoId !== "number") {
+      throw new ScriptError(
+        `set_prototype: expected number or null for prototype ID, got ${JSON.stringify(
+          protoId,
+        )}`,
+      );
+    }
+
+    setPrototypeId(entity.id, protoId);
     return null;
   },
 });

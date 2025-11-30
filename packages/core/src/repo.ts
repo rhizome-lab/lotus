@@ -250,3 +250,19 @@ export function deleteEntity(id: number) {
   });
   transaction();
 }
+
+export function getPrototypeId(id: number): number | null {
+  const row = db
+    .query<{ prototype_id: number | null }, [number]>(
+      "SELECT prototype_id FROM entities WHERE id = ?",
+    )
+    .get(id);
+  return row ? row.prototype_id : null;
+}
+
+export function setPrototypeId(id: number, prototypeId: number | null) {
+  db.query("UPDATE entities SET prototype_id = ? WHERE id = ?").run(
+    prototypeId,
+    id,
+  );
+}
