@@ -7,13 +7,9 @@ import * as Time from "./scripting/lib/time";
 import * as Object from "./scripting/lib/object";
 
 export function seed() {
-  // TODO: $.slug no longer exists
-  const root = db
-    .query(
-      "SELECT id FROM entities WHERE json_extract(props, '$.slug') = 'sys:root'",
-    )
-    .get();
-  if (root) {
+  // Check for any row at all.
+  const root = db.query("SELECT id FROM entities").get();
+  if (root != null) {
     console.log("Database already seeded.");
     return;
   }
@@ -23,16 +19,12 @@ export function seed() {
   // 1. Create The Void (Root Zone)
   const voidId = createEntity({
     name: "The Void",
-    slug: "sys:root",
-    kind: "ZONE",
     description: "An endless expanse of nothingness.",
   });
 
   // 2. Create Player Prototype
   const playerBaseId = createEntity({
     name: "Player Base",
-    slug: "sys:player_base",
-    kind: "ACTOR",
     description: "A generic adventurer.",
     body_type: "humanoid",
     // Slots are just definitions of where things can go
@@ -250,8 +242,6 @@ export function seed() {
   // 3. Create a Lobby Room
   const lobbyId = createEntity({
     name: "Lobby",
-    slug: "area:lobby",
-    kind: "ROOM",
     location_id: voidId,
     description: "A cozy lobby with a crackling fireplace.",
   });
@@ -260,7 +250,6 @@ export function seed() {
   const playerId = createEntity(
     {
       name: "Guest",
-      kind: "ACTOR",
       location_id: lobbyId,
       description: "A confused looking guest.",
     },
@@ -270,7 +259,6 @@ export function seed() {
   // 5. Create some furniture (Table)
   const tableId = createEntity({
     name: "Oak Table",
-    kind: "ITEM",
     location_id: lobbyId,
     description: "A sturdy oak table.",
     slots: ["surface", "under"], // Generalizable slots!
@@ -279,7 +267,6 @@ export function seed() {
   // 6. Create a Cup ON the table
   createEntity({
     name: "Ceramic Cup",
-    kind: "ITEM",
     location_id: tableId,
     description: "A chipped ceramic cup.",
     location_detail: "surface", // It's ON the table
@@ -288,7 +275,6 @@ export function seed() {
   // 7. Create a Backpack
   const backpackId = createEntity({
     name: "Leather Backpack",
-    kind: "ITEM",
     location_id: playerId,
     description: "A worn leather backpack.",
     slots: ["main", "front_pocket"],
@@ -298,7 +284,6 @@ export function seed() {
   // 8. Create a Badge ON the Backpack
   createEntity({
     name: "Scout Badge",
-    kind: "ITEM",
     location_id: backpackId,
     description: "A merit badge.",
     location_detail: "surface", // Attached to the outside? Or maybe we define a slot for it.
@@ -307,14 +292,12 @@ export function seed() {
   // Create another room
   const gardenId = createEntity({
     name: "Garden",
-    kind: "ROOM",
     description: "A lush garden with blooming flowers.",
   });
 
   // Link Lobby and Garden
   createEntity({
     name: "north",
-    kind: "EXIT",
     location_id: lobbyId,
     direction: "north",
     destination_id: gardenId,
@@ -322,7 +305,6 @@ export function seed() {
 
   createEntity({
     name: "south",
-    kind: "EXIT",
     location_id: gardenId,
     direction: "south",
     destination_id: lobbyId,
@@ -331,14 +313,12 @@ export function seed() {
   // 9. Create a Gemstore
   const gemstoreId = createEntity({
     name: "Gemstore",
-    kind: "ROOM",
     description: "A glittering shop filled with rare stones and oddities.",
   });
 
   // Link Lobby and Gemstore
   createEntity({
     name: "east",
-    kind: "EXIT",
     location_id: lobbyId,
     direction: "east",
     destination_id: gemstoreId,
@@ -346,7 +326,6 @@ export function seed() {
 
   createEntity({
     name: "west",
-    kind: "EXIT",
     location_id: gemstoreId,
     direction: "west",
     destination_id: lobbyId,
@@ -355,7 +334,6 @@ export function seed() {
   // Items in Gemstore
   createEntity({
     name: "Black Obsidian",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A pitch black stone.",
     adjectives: [
@@ -368,7 +346,6 @@ export function seed() {
 
   createEntity({
     name: "Silver Dagger",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A gleaming silver blade.",
     adjectives: ["color:silver", "material:metal", "material:silver"],
@@ -376,7 +353,6 @@ export function seed() {
 
   createEntity({
     name: "Gold Coin",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A heavy gold coin.",
     adjectives: [
@@ -389,7 +365,6 @@ export function seed() {
 
   createEntity({
     name: "Platinum Ring",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A precious platinum ring.",
     adjectives: [
@@ -402,7 +377,6 @@ export function seed() {
 
   createEntity({
     name: "Radioactive Isotope",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "It glows with a sickly light.",
     adjectives: ["effect:radioactive", "effect:glowing"],
@@ -410,7 +384,6 @@ export function seed() {
 
   createEntity({
     name: "Electric Blue Potion",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A crackling blue liquid.",
     adjectives: ["color:electric blue", "effect:glowing"],
@@ -418,7 +391,6 @@ export function seed() {
 
   createEntity({
     name: "Ethereal Mist",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A swirling white mist.",
     adjectives: ["color:white", "effect:ethereal"],
@@ -426,7 +398,6 @@ export function seed() {
 
   createEntity({
     name: "Transparent Cube",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "You can barely see it.",
     adjectives: ["effect:transparent", "material:glass"],
@@ -434,7 +405,6 @@ export function seed() {
 
   const wigStandId = createEntity({
     name: "Wig Stand",
-    kind: "ITEM",
     location_id: gemstoreId,
     description: "A stand holding various wigs.",
     slots: ["surface"],
@@ -443,7 +413,6 @@ export function seed() {
   if (wigStandId) {
     createEntity({
       name: "Auburn Wig",
-      kind: "ITEM",
       location_id: wigStandId,
       description: "A reddish-brown wig.",
       adjectives: ["color:auburn"],
@@ -452,7 +421,6 @@ export function seed() {
 
     createEntity({
       name: "Blonde Wig",
-      kind: "ITEM",
       location_id: wigStandId,
       description: "A bright yellow wig.",
       adjectives: ["color:blonde"],
@@ -461,7 +429,6 @@ export function seed() {
 
     createEntity({
       name: "Brunette Wig",
-      kind: "ITEM",
       location_id: wigStandId,
       description: "A dark brown wig.",
       adjectives: ["color:brunette"],
@@ -474,7 +441,6 @@ export function seed() {
   // Watch Item
   const watchId = createEntity({
     name: "Golden Watch",
-    kind: "ITEM",
     location_id: lobbyId,
     props: {
       description: "A beautiful golden pocket watch.",
@@ -491,7 +457,6 @@ export function seed() {
   // Teleporter Item
   const teleporterId = createEntity({
     name: "Teleporter Stone",
-    kind: "ITEM",
     location_id: lobbyId,
     props: {
       description: "A humming stone that vibrates with energy.",
@@ -512,7 +477,6 @@ export function seed() {
   // Status Item
   const statusId = createEntity({
     name: "Status Orb",
-    kind: "ITEM",
     location_id: lobbyId,
     props: {
       description: "A crystal orb that shows world statistics.",
@@ -531,8 +495,7 @@ export function seed() {
 
   // Color Library
   const colorLibId = createEntity({
-    name: "Color Library",
-    kind: "ITEM", // Or a system object
+    name: "Color Library", // Or a system object
     location_id: voidId, // Hidden
     props: {
       colors: [
@@ -570,7 +533,6 @@ export function seed() {
   // Mood Ring
   const moodRingId = createEntity({
     name: "Mood Ring",
-    kind: "ITEM",
     location_id: lobbyId,
     props: {
       description: "A ring that changes color based on... something.",
@@ -613,7 +575,6 @@ export function seed() {
   // 1. Dynamic Mood Ring (Getter)
   const dynamicRingId = createEntity({
     name: "Dynamic Mood Ring",
-    kind: "ITEM",
     location_id: lobbyId,
     props: {
       description: "A ring that shimmers with the current second.",
@@ -642,7 +603,6 @@ export function seed() {
   // 2. Special Watch (Local Broadcast)
   const specialWatchId = createEntity({
     name: "Broadcasting Watch",
-    kind: "ITEM",
     location_id: lobbyId,
     props: { description: "A watch that announces the time to you." },
   });
@@ -668,7 +628,6 @@ export function seed() {
 
   const clockId = createEntity({
     name: "Grandfather Clock",
-    kind: "ITEM",
     location_id: lobbyId,
     props: { description: "A loud clock." },
   });
@@ -691,8 +650,7 @@ export function seed() {
 
   // 4. Clock Tower (Global Broadcast)
   const towerId = createEntity({
-    name: "Clock Tower",
-    kind: "ITEM", // Or ROOM/BUILDING
+    name: "Clock Tower", // Or ROOM/BUILDING
     location_id: voidId, // Hidden, or visible somewhere
     props: { description: "The source of time." },
   });
@@ -717,7 +675,6 @@ export function seed() {
   // A prototype for mailboxes.
   const mailboxProtoId = createEntity({
     name: "Mailbox Prototype",
-    kind: "ITEM",
     props: {
       description: "A secure mailbox.",
       permissions: {
@@ -738,7 +695,6 @@ export function seed() {
   // Give the player a mailbox
   createEntity({
     name: "My Mailbox",
-    kind: "ITEM",
     location_id: playerId, // Carried by player
     prototype_id: mailboxProtoId,
     owner_id: playerId,
