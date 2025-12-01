@@ -275,11 +275,9 @@ export function seed() {
               ),
               // Return RoomChangeMessage and Look result
               List["list.new"](
-                Object["obj.new"](
-                  "type",
-                  "room_change",
-                  "roomId",
-                  Core["var"]("destId"),
+                Core["send"](
+                  "room_id",
+                  Object["obj.new"]("roomId", Core["var"]("destId")),
                 ),
                 Core["log"](
                   Str["str.concat"](
