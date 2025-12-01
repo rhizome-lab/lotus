@@ -95,7 +95,7 @@ All comparison operators support chaining (e.g., `["<", 1, 2, 3]` checks `1 < 2`
 - `["create", data]`: Creates a new entity. `data` is an object with props. Returns the new ID.
 - `["destroy", target]`: Destroys an entity.
 - `["entity", id]`: Gets an entity by ID.
-- `["set_entity", ...entities]`: Updates properties of one or more entities.
+- `["set_entity", ...entities]`: Transactional update of properties for one or more entities.
 - `["get_prototype", entity]`: Gets the prototype ID of an entity.
 - `["set_prototype", entity, protoId]`: Sets the prototype ID of an entity.
 - `["resolve_props", entity]`: Returns an entity with all properties resolved (merged with prototype).
@@ -193,4 +193,4 @@ Permissions are handled via the `System` entity. To check if an actor can edit a
 
 - `actor`: The entity attempting the action.
 - `target`: The entity being accessed.
-- `type`: The type of access (e.g., "edit", "read").
+- `type`: The type of access (e.g., "read", "write", "execute", "delete").

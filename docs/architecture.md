@@ -40,7 +40,8 @@ Viwo features a custom scripting language (Lisp-like S-expressions) for dynamic 
 
 - **Verbs**: Scripts attached to entities that define actions (e.g., `push`, `open`).
 - **Interpreter**: A secure sandbox that executes scripts with access to game primitives.
-- **Libraries**: Modular libraries (`core`, `list`, `object`, `string`, `time`) provide functionality.
+- **Context**: `ScriptContext` directly includes a `send` function for communication.
+- **Libraries**: Modular libraries (`core`, `list`, `object`, `string`, `time`) provide functionality, decoupled from the core interpreter.
 
 ## AI Integration
 
@@ -74,3 +75,9 @@ Communication between Client and Server uses the JSON-RPC 2.0 protocol.
   - `shared/`: Shared types and schemas.
 - `plugins/`
   - `ai/`: AI integration plugin.
+
+## Testing Strategy
+
+- **In-Memory Database**: Tests use an in-memory SQLite database (`:memory:`) seeded with initial data to ensure isolation and speed.
+- **Permissions**: Tests leverage the `system.can_edit` verb to verify permission logic.
+- **Mocking**: We avoid `spyOn` for `global.localStorage` where possible, preferring dependency injection or cleaner mocks.
