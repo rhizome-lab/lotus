@@ -39,48 +39,54 @@ export function seed() {
         Object["obj.get"](Core["caller"](), "location"),
       ),
       Core["let"]("location", Core["entity"](Core["var"]("locationId"))),
-      // Search contents first
-      Core["let"](
-        "foundInContents",
-        List["list.find"](
-          Object["obj.get"](Core["var"]("location"), "contents"),
-          Core["lambda"](
-            ["id"],
-            Core["seq"](
-              Core["let"](
-                "props",
-                Core["resolve_props"](Core["entity"](Core["var"]("id"))),
-              ),
-              Core["=="](
-                Object["obj.get"](Core["var"]("props"), "name"),
-                Core["var"]("query"),
-              ),
+      // Search contents only
+      List["list.find"](
+        Object["obj.get"](Core["var"]("location"), "contents"),
+        Core["lambda"](
+          ["id"],
+          Core["seq"](
+            Core["let"](
+              "props",
+              Core["resolve_props"](Core["entity"](Core["var"]("id"))),
+            ),
+            Core["=="](
+              Object["obj.get"](Core["var"]("props"), "name"),
+              Core["var"]("query"),
             ),
           ),
         ),
       ),
-      Core["if"](
-        Core["var"]("foundInContents"),
-        Core["var"]("foundInContents"),
-        // If not found in contents, search exits
-        List["list.find"](
-          Object["obj.get"](Core["var"]("location"), "exits"),
-          Core["lambda"](
-            ["id"],
-            Core["seq"](
-              Core["let"](
-                "props",
-                Core["resolve_props"](Core["entity"](Core["var"]("id"))),
+    ),
+  );
+
+  addVerb(
+    entityBaseId,
+    "find_exit",
+    Core["seq"](
+      Core["let"]("query", Core["arg"](0)),
+      Core["let"](
+        "locationId",
+        Object["obj.get"](Core["caller"](), "location"),
+      ),
+      Core["let"]("location", Core["entity"](Core["var"]("locationId"))),
+      // Search exits
+      List["list.find"](
+        Object["obj.get"](Core["var"]("location"), "exits"),
+        Core["lambda"](
+          ["id"],
+          Core["seq"](
+            Core["let"](
+              "props",
+              Core["resolve_props"](Core["entity"](Core["var"]("id"))),
+            ),
+            Core["or"](
+              Core["=="](
+                Object["obj.get"](Core["var"]("props"), "name"),
+                Core["var"]("query"),
               ),
-              Core["or"](
-                Core["=="](
-                  Object["obj.get"](Core["var"]("props"), "name"),
-                  Core["var"]("query"),
-                ),
-                Core["=="](
-                  Object["obj.get"](Core["var"]("props"), "direction"),
-                  Core["var"]("query"),
-                ),
+              Core["=="](
+                Object["obj.get"](Core["var"]("props"), "direction"),
+                Core["var"]("query"),
               ),
             ),
           ),
@@ -100,7 +106,7 @@ export function seed() {
         Core["seq"](
           Core["let"](
             "exitId",
-            Core["call"](Core["this"](), "find", Core["var"]("direction")),
+            Core["call"](Core["this"](), "find_exit", Core["var"]("direction")),
           ),
           Core["if"](
             Core["var"]("exitId"),
