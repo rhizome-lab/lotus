@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { expect, beforeEach } from "bun:test";
 import {
   evaluate,
   ScriptContext,
@@ -7,8 +7,9 @@ import {
 } from "../interpreter";
 import * as Core from "./core";
 import * as List from "./list";
+import { createLibraryTester } from "./test-utils";
 
-describe("List Library", () => {
+createLibraryTester(List, "List Library", (test) => {
   registerLibrary(Core);
   registerLibrary(List);
 
@@ -21,11 +22,24 @@ describe("List Library", () => {
     });
   });
 
+  test("list.new", async () => {
+    expect(await evaluate(List["list.new"](1, 2, 3), ctx)).toEqual([1, 2, 3]);
+  });
+
   test("list.len", async () => {
     expect(
       await evaluate(List["list.len"](List["list.new"](1, 2, 3)), ctx),
     ).toBe(3);
     expect(await evaluate(List["list.len"](List["list.new"]()), ctx)).toBe(0);
+  });
+
+  test("list.empty", async () => {
+    expect(await evaluate(List["list.empty"](List["list.new"]()), ctx)).toBe(
+      true,
+    );
+    expect(await evaluate(List["list.empty"](List["list.new"](1)), ctx)).toBe(
+      false,
+    );
   });
 
   test("list.get", async () => {
@@ -44,7 +58,7 @@ describe("List Library", () => {
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 99, 3]);
   });
 
-  test("list.push/pop", async () => {
+  test("list.push", async () => {
     const localCtx = { ...ctx, locals: {} };
     await evaluate(Core["let"]("l", List["list.new"](1, 2)), localCtx);
 
@@ -52,6 +66,11 @@ describe("List Library", () => {
       await evaluate(List["list.push"](Core["var"]("l"), 3), localCtx),
     ).toBe(3); // Returns new length
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 2, 3]);
+  });
+
+  test("list.pop", async () => {
+    const localCtx = { ...ctx, locals: {} };
+    await evaluate(Core["let"]("l", List["list.new"](1, 2, 3)), localCtx);
 
     expect(await evaluate(List["list.pop"](Core["var"]("l")), localCtx)).toBe(
       3,
@@ -59,7 +78,7 @@ describe("List Library", () => {
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 2]);
   });
 
-  test("list.unshift/shift", async () => {
+  test("list.unshift", async () => {
     const localCtx = { ...ctx, locals: {} };
     await evaluate(Core["let"]("l", List["list.new"](2, 3)), localCtx);
 
@@ -67,6 +86,11 @@ describe("List Library", () => {
       await evaluate(List["list.unshift"](Core["var"]("l"), 1), localCtx),
     ).toBe(3);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 2, 3]);
+  });
+
+  test("list.shift", async () => {
+    const localCtx = { ...ctx, locals: {} };
+    await evaluate(Core["let"]("l", List["list.new"](1, 2, 3)), localCtx);
 
     expect(await evaluate(List["list.shift"](Core["var"]("l")), localCtx)).toBe(
       1,
@@ -125,6 +149,13 @@ describe("List Library", () => {
     await evaluate(Core["let"]("l", List["list.new"]("b", "a", "c")), localCtx);
     await evaluate(List["list.sort"](Core["var"]("l")), localCtx);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual(["a", "b", "c"]);
+  });
+
+  test("list.find", async () => {
+    const gt1 = Core["lambda"](["x"], Core[">"](Core["var"]("x"), 1));
+    expect(
+      await evaluate(List["list.find"](List["list.new"](1, 2, 3), gt1), ctx),
+    ).toBe(2);
   });
 
   // HOF tests

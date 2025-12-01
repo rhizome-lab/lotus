@@ -1372,7 +1372,7 @@ export const call = defineOpcode<
 });
 
 export const schedule = defineOpcode<
-  [ScriptValue<string>, readonly ScriptValue<unknown>[], ScriptValue<number>],
+  [ScriptValue<string>, ScriptValue<unknown>, ScriptValue<number>],
   null
 >("schedule", {
   metadata: {

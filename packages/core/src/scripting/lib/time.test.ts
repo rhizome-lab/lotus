@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { expect, beforeEach } from "bun:test";
 import {
   evaluate,
   ScriptContext,
@@ -8,8 +8,9 @@ import {
 } from "../interpreter";
 import * as Core from "./core";
 import * as Time from "./time";
+import { createLibraryTester } from "./test-utils";
 
-describe("Time Library", () => {
+createLibraryTester(Time, "Time Library", (test) => {
   registerLibrary(Core);
   registerLibrary(Time);
 
@@ -28,7 +29,7 @@ describe("Time Library", () => {
     expect(new Date(ts).getTime()).toBeLessThanOrEqual(Date.now());
   });
 
-  test("time.format edge cases", async () => {
+  test("time.format", async () => {
     expect(
       await evaluate(Time["time.format"]("invalid-date", "time"), ctx).catch(
         (e) => e,
@@ -47,7 +48,26 @@ describe("Time Library", () => {
     ).toBe("string");
   });
 
-  test("time.offset units", async () => {
+  test("time.parse", async () => {
+    const iso = "2023-01-01T12:00:00.000Z";
+    expect(await evaluate(Time["time.parse"](iso), ctx)).toBe(iso);
+  });
+
+  test("time.from_timestamp", async () => {
+    const ts = 1672574400000; // 2023-01-01T12:00:00.000Z
+    expect(await evaluate(Time["time.from_timestamp"](ts), ctx)).toBe(
+      "2023-01-01T12:00:00.000Z",
+    );
+  });
+
+  test("time.to_timestamp", async () => {
+    const iso = "2023-01-01T12:00:00.000Z";
+    expect(await evaluate(Time["time.to_timestamp"](iso), ctx)).toBe(
+      1672574400000,
+    );
+  });
+
+  test("time.offset", async () => {
     const base = "2023-01-01T00:00:00.000Z";
 
     // Years
