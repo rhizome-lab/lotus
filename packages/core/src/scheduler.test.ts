@@ -37,11 +37,7 @@ describe("Scheduler Verification", () => {
 
   beforeAll(() => {
     // Create a test entity
-    entityId = createEntity({
-      name: "SchedulerTestEntity",
-      kind: "ITEM",
-      props: { count: 0 },
-    });
+    entityId = createEntity({ name: "SchedulerTestEntity", count: 0 });
 
     // Add a verb that increments the count
     addVerb(

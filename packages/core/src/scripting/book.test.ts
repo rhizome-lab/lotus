@@ -24,7 +24,6 @@ describe("Book Item Scripting", () => {
     book = {
       id: 1,
       name: "Test Book",
-      kind: "ITEM",
       props: {
         chapters: [
           { title: "Chapter 1", content: "Content 1" },
@@ -36,7 +35,6 @@ describe("Book Item Scripting", () => {
     caller = {
       id: 2,
       name: "Reader",
-      kind: "ACTOR",
       // Disable permissions checks
       props: { is_wizard: true },
     } as any;

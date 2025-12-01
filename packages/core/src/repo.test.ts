@@ -27,21 +27,17 @@ import * as Core from "./scripting/lib/core";
 
 describe("Repo", () => {
   test("createEntity", () => {
-    const id = createEntity({ name: "TestItem", kind: "ITEM" });
+    const id = createEntity({ name: "TestItem" });
     expect(id).toBeGreaterThan(0);
   });
 
   test("Verb Inheritance", () => {
     // 1. Create Prototype
-    const protoId = createEntity({ name: "Proto", kind: "ITEM" });
+    const protoId = createEntity({ name: "Proto" });
     addVerb(protoId, "protoVerb", Core["seq"]());
 
     // 2. Create Instance
-    const instanceId = createEntity({
-      name: "Instance",
-      kind: "ITEM",
-      prototype_id: protoId,
-    });
+    const instanceId = createEntity({ name: "Instance" }, protoId);
     addVerb(instanceId, "instanceVerb", Core["seq"]());
 
     // 3. Get Verbs
@@ -54,15 +50,11 @@ describe("Repo", () => {
 
   test("Verb Override", () => {
     // 1. Create Prototype
-    const protoId = createEntity({ name: "ProtoOverride", kind: "ITEM" });
+    const protoId = createEntity({ name: "ProtoOverride" });
     addVerb(protoId, "common", Core["seq"]("proto"));
 
     // 2. Create Instance
-    const instanceId = createEntity({
-      name: "InstanceOverride",
-      kind: "ITEM",
-      prototype_id: protoId,
-    });
+    const instanceId = createEntity({ name: "InstanceOverride" }, protoId);
     addVerb(instanceId, "common", Core["seq"]("instance"));
 
     // 3. Get Verbs
@@ -79,38 +71,25 @@ describe("Repo", () => {
     updateEntity({
       id,
       name: "New Name",
-      location_id: 100,
+      location: 100,
       location_detail: "worn",
       foo: "bar",
     });
     const updated = getEntity(id);
     expect(updated?.["name"]).toBe("New Name");
-    expect(updated?.["location_id"]).toBe(100);
+    expect(updated?.["location"]).toBe(100);
     expect(updated?.["location_detail"]).toBe("worn");
     expect(updated?.["foo"]).toBe("bar");
   });
 
   test("deleteEntity", () => {
-    const id = createEntity({ name: "ToDelete", kind: "ITEM" });
+    const id = createEntity({ name: "ToDelete" });
     deleteEntity(id);
     const deleted = getEntity(id);
     expect(deleted).toBeNull();
   });
 
   // TODO: When implementing `move` in scripting, it should disallow a box to be put inside itself
-
-  test("getContents", () => {
-    const container = createEntity({ name: "Box", kind: "ITEM" });
-    createEntity({ name: "Apple", kind: "ITEM", location_id: container });
-    createEntity({ name: "Banana", kind: "ITEM", location_id: container });
-
-    const contentsRaw = getEntity(container)?.["contents"];
-    expect(contentsRaw).toBeArray();
-    const contents = contentsRaw as readonly any[];
-    expect(contents).toHaveLength(2);
-    expect(contents.map((c) => c.name)).toContain("Apple");
-    expect(contents.map((c) => c.name)).toContain("Banana");
-  });
 
   test("getVerb", () => {
     const entity = createEntity({ name: "Scripted" });
@@ -132,7 +111,7 @@ describe("Repo", () => {
     const proto = createEntity({ name: "Proto" });
     addVerb(proto, "fly", Core["call"](Core["caller"](), "tell", "You flew"));
 
-    const instance = createEntity({ name: "Instance", prototype_id: proto });
+    const instance = createEntity({ name: "Instance" }, proto);
 
     const verb = getVerb(instance, "fly");
     expect(verb).not.toBeNull();

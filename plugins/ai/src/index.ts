@@ -252,12 +252,9 @@ Keep your response short and in character.`,
         // Simpler: Create a room and move player there.
         const newRoomId = ctx.core.createEntity({
           name: data.name,
-          kind: "ROOM",
-          props: {
-            description: data.description,
-            adjectives: data.adjectives,
-            custom_css: data.custom_css,
-          },
+          description: data.description,
+          adjectives: data.adjectives,
+          custom_css: data.custom_css,
         });
         ctx.core.moveEntity(ctx.player.id, newRoomId);
         const room = this.getResolvedRoom(ctx, newRoomId);
@@ -272,13 +269,10 @@ Keep your response short and in character.`,
         // Default: Create item in current room
         ctx.core.createEntity({
           name: data.name,
-          kind: "ITEM",
-          location_id: playerEntity["location"],
-          props: {
-            description: data.description,
-            adjectives: data.adjectives,
-            custom_css: data.custom_css,
-          },
+          location: playerEntity["location"],
+          description: data.description,
+          adjectives: data.adjectives,
+          custom_css: data.custom_css,
         });
         const room = this.getResolvedRoom(
           ctx,

@@ -21,25 +21,34 @@ import * as Object from "../scripting/lib/object";
 import * as List from "../scripting/lib/list";
 import * as Time from "../scripting/lib/time";
 import { seedHotel } from "./hotel";
+import { seed } from "../seed";
 
 describe("Hotel Seed", () => {
+  registerLibrary(Core);
+  registerLibrary(String);
+  registerLibrary(Object);
+  registerLibrary(Time);
+  registerLibrary(List);
+
   let lobbyId: number;
   let voidId: number;
   let player: any;
 
   beforeAll(async () => {
-    // Register libraries
-    registerLibrary(Core);
-    registerLibrary(String);
-    registerLibrary(Object);
-    registerLibrary(Time);
-    registerLibrary(List);
-
-    // Initialize DB
-    db.run("DELETE FROM entities");
     // Create basic world
-    voidId = createEntity({ name: "Void", kind: "ROOM" });
-    lobbyId = createEntity({ name: "Lobby", kind: "ROOM" });
+    seed();
+    const void_ = db
+      .query<{ id: number }, []>(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'The Void'",
+      )
+      .get()!;
+    voidId = void_.id;
+    const lobby = db
+      .query<{ id: number }, []>(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Lobby'",
+      )
+      .get()!;
+    lobbyId = lobby.id;
 
     // Seed Hotel
     seedHotel(lobbyId, voidId);
@@ -47,9 +56,8 @@ describe("Hotel Seed", () => {
     // Create a player
     const playerId = createEntity({
       name: "Tester",
-      kind: "ACTOR",
-      ["location"]: lobbyId,
-      props: { is_wizard: true },
+      location: lobbyId,
+      is_wizard: true,
     });
     player = getEntity(playerId);
   });
@@ -63,12 +71,10 @@ describe("Hotel Seed", () => {
       .get()!;
 
     // 2. Create a Floor Lobby instance (mocking the elevator 'out' logic)
-    const floorLobbyId = createEntity({
-      name: "Floor 1 Lobby",
-      kind: "ROOM",
-      prototype_id: floorLobbyProto.id,
-      props: { floor: 1 },
-    });
+    const floorLobbyId = createEntity(
+      { name: "Floor 1 Lobby", floor: 1 },
+      floorLobbyProto.id,
+    );
 
     // 3. Execute 'west' verb to create West Wing
     const westVerb = getVerb(floorLobbyId, "west")!;
@@ -76,10 +82,7 @@ describe("Hotel Seed", () => {
     // TODO: `move` does not support `id`
     await evaluate(
       Core["call"](player, "move", floorLobbyId),
-      createScriptContext({
-        caller: player,
-        this: player,
-      }),
+      createScriptContext({ caller: player, this: player }),
     );
 
     await evaluate(
@@ -136,11 +139,7 @@ describe("Hotel Seed", () => {
 
     // 2. Create a Floor Lobby instance
     const floorLobbyId = createEntity(
-      {
-        name: "Floor 2 Lobby",
-        kind: "ROOM",
-        props: { floor: 2 },
-      },
+      { name: "Floor 2 Lobby", floor: 2 },
       floorLobbyProto.id,
     );
 

@@ -77,11 +77,7 @@ describe("Player Commands", () => {
 
   it("should inspect item", async () => {
     // Create item in room
-    createEntity({
-      name: "Box",
-      kind: "ITEM",
-      location_id: room.id,
-    });
+    createEntity({ name: "Box", location: room.id });
 
     await runCommand("look", ["Box"]);
     expect(sentMessages[0]?.name).toEqual("Box");
@@ -94,14 +90,14 @@ describe("Player Commands", () => {
 
   it("should move", async () => {
     // Create start room
-    const startRoomId = createEntity({ name: "Start Room", kind: "ROOM" });
+    const startRoomId = createEntity({ name: "Start Room" });
     // Move player to start room
     updateEntity({ ...player, location: startRoomId });
     player["location"] = startRoomId;
     room = getEntity(startRoomId)!;
 
     // Create another room
-    const otherRoomId = createEntity({ name: "Other Room", kind: "ROOM" });
+    const otherRoomId = createEntity({ name: "Other Room" });
     // Create exit
     const exitId = createEntity({
       name: "north",
@@ -123,15 +119,16 @@ describe("Player Commands", () => {
     await runCommand("dig", ["south", "New Room"]);
 
     // Check if new room exists
-    const allRooms = db
-      .query("SELECT * FROM entities WHERE kind = 'ROOM'")
-      .all() as any[];
-    const newRoom = allRooms.find((r) => r.name === "New Room");
-    expect(newRoom).toBeDefined();
+    const newRoomId = db
+      .query<{ id: number }, []>(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'New Room'",
+      )
+      .get();
+    expect(newRoomId).toBeDefined();
 
     // Check if player moved
     const updatedPlayer = getEntity(player.id)!;
-    expect(updatedPlayer["location"]).toBe(newRoom.id);
+    expect(updatedPlayer["location"]).toBe(newRoomId);
   });
 
   it("should create item", async () => {
@@ -147,9 +144,8 @@ describe("Player Commands", () => {
   it("should set property", async () => {
     const itemId = createEntity({
       name: "Stone",
-      kind: "ITEM",
-      location_id: room.id,
-      props: { weight: 10 },
+      location: room.id,
+      weight: 10,
     });
 
     await runCommand("set", ["Stone", "weight", 20]);

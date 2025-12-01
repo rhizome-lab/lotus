@@ -51,7 +51,7 @@ describe("Hotel Scripting", () => {
     };
 
     // Setup Environment
-    const lobbyId = createEntity({ name: "Main Lobby", kind: "ROOM" });
+    const lobbyId = createEntity({ name: "Main Lobby" });
     const voidId = 0;
 
     // Seed Hotel
@@ -66,25 +66,21 @@ describe("Hotel Scripting", () => {
     hotelLobby = getEntity(hotelLobbyData.id)!;
 
     // Setup Caller
-    const callerId = createEntity({
-      name: "Guest",
-      kind: "ACTOR",
-      location_id: hotelLobby.id,
-    });
+    const callerId = createEntity({ name: "Guest", location: hotelLobby.id });
     caller = getEntity(callerId)!;
   });
 
   it("should leave a room (move and destroy)", async () => {
     // 1. Manually create a room (since visit is gone)
     const roomProto = db
-      .query("SELECT id FROM entities WHERE name = 'Hotel Room Prototype'")
+      .query(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Hotel Room Prototype'",
+      )
       .get() as any;
-    const roomId = createEntity({
-      name: "Room 101",
-      kind: "ROOM",
-      prototype_id: roomProto.id,
-      props: { lobby_id: hotelLobby.id },
-    });
+    const roomId = createEntity(
+      { name: "Room 101", lobby_id: hotelLobby.id },
+      roomProto.id,
+    );
 
     // Move caller to room
     updateEntity({ ...caller, location: roomId });
@@ -155,7 +151,7 @@ describe("Hotel Scripting", () => {
     }
 
     caller = getEntity(caller.id)!;
-    const floorLobbyId = caller["location_id"];
+    const floorLobbyId = caller["location"];
     expect(floorLobbyId).not.toBe(elevator.id);
     const floorLobby = getEntity(floorLobbyId as never)!;
     expect(floorLobby["name"]).toBe("Floor 5 Lobby");
@@ -168,7 +164,7 @@ describe("Hotel Scripting", () => {
     }
 
     caller = getEntity(caller.id)!;
-    const wingId = caller["location_id"];
+    const wingId = caller["location"];
     const wing = getEntity(wingId as never)!;
     expect(wing["name"]).toBe("Floor 5 West Wing");
 
@@ -180,7 +176,7 @@ describe("Hotel Scripting", () => {
     }
 
     caller = getEntity(caller.id)!;
-    const roomId = caller["location_id"];
+    const roomId = caller["location"];
     const room = getEntity(roomId as never)!;
     expect(room["name"]).toBe("Room 5");
 
@@ -198,7 +194,7 @@ describe("Hotel Scripting", () => {
     }
 
     caller = getEntity(caller.id)!;
-    expect(caller["location_id"]).toBe(wingId);
+    expect(caller["location"]).toBe(wingId);
     expect(getEntity(roomId as never)).toBeNull(); // Room destroyed
 
     // Verify furnishings destroyed (by checking if they exist in DB)
@@ -219,7 +215,7 @@ describe("Hotel Scripting", () => {
     }
 
     caller = getEntity(caller.id)!;
-    expect(caller["location_id"]).toBe(floorLobbyId);
+    expect(caller["location"]).toBe(floorLobbyId);
     expect(getEntity(wingId as never)).toBeNull(); // Wing destroyed
 
     // 8. Elevator (back to Elevator)
@@ -230,7 +226,7 @@ describe("Hotel Scripting", () => {
     }
 
     caller = getEntity(caller.id)!;
-    expect(caller["location_id"]).toBe(elevator.id);
+    expect(caller["location"]).toBe(elevator.id);
     expect(getEntity(floorLobbyId as never)).toBeNull(); // Lobby destroyed
   });
 });

@@ -1488,46 +1488,37 @@ export const entity = defineOpcode<[ScriptValue<number>], Entity>("entity", {
 });
 
 /**
- * Updates an entity's properties.
+ * Updates one or more entities' properties transactionally.
  */
-export const set_entity = defineOpcode<
-  [ScriptValue<number>, ScriptValue<Record<string, unknown>>],
-  void
->("set_entity", {
+export const set_entity = defineOpcode<ScriptValue<Entity>[], void>("set_entity", {
   metadata: {
     label: "Update Entity",
     category: "action",
     description: "Update entity properties",
-    slots: [
-      { name: "ID", type: "number" },
-      { name: "Props", type: "block" },
-    ],
-    parameters: [
-      { name: "id", type: "number" },
-      { name: "props", type: "Record<string, unknown>" },
-    ],
+    slots: [{ name: "Entities", type: "block" }],
+    parameters: [{ name: "...entities", type: "Entity[]" }],
     returnType: "void",
   },
   handler: async (args, ctx) => {
-    if (args.length !== 2) {
-      throw new ScriptError("set_entity: expected 2 arguments");
+    if (args.length < 1) {
+      throw new ScriptError("set_entity: expected at least 1 argument");
     }
-    const [idExpr, propsExpr] = args;
-    const id = await evaluate(idExpr, ctx);
-    const props = await evaluate(propsExpr, ctx);
+    const entities: Entity[] = [];
+    for (const arg of args) {
+      const entity = await evaluate(arg, ctx);
+      if (
+        !entity ||
+        typeof entity !== "object" ||
+        typeof (entity as any).id !== "number"
+      ) {
+        throw new ScriptError(
+          `set_entity: expected entity object, got ${JSON.stringify(entity)}`,
+        );
+      }
+      entities.push(entity as Entity);
+    }
 
-    if (typeof id !== "number") {
-      throw new ScriptError(
-        `set_entity: expected number for id, got ${JSON.stringify(id)}`,
-      );
-    }
-    if (typeof props !== "object" || props === null) {
-      throw new ScriptError(
-        `set_entity: expected object for props, got ${JSON.stringify(props)}`,
-      );
-    }
-
-    updateEntity({ id, ...props });
+    updateEntity(...entities);
     return undefined;
   },
 });

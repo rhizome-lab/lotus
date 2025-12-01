@@ -51,10 +51,10 @@ describe("Mailbox Verification", () => {
     system = getEntity(systemRes.id)!;
 
     // 1. Create Sender and Receiver
-    const senderId = createEntity({ name: "Sender", kind: "ACTOR" });
+    const senderId = createEntity({ name: "Sender" });
     sender = getEntity(senderId)!;
 
-    const receiverId = createEntity({ name: "Receiver", kind: "ACTOR" });
+    const receiverId = createEntity({ name: "Receiver" });
     receiver = getEntity(receiverId)!;
 
     // 2. Create Mailbox for Receiver

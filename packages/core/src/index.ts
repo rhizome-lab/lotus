@@ -71,7 +71,6 @@ export function startServer(port: number = 8080) {
         const playerId = createEntity(
           {
             name: "Player",
-            kind: "ACTOR",
             location: 1, // Start in The Void (or Lobby if seeded)
             description: "A new player.",
           },

@@ -1,4 +1,4 @@
-import { describe, test, expect, mock, beforeAll } from "bun:test";
+import { describe, test, expect, beforeAll } from "bun:test";
 import { evaluate, registerLibrary, ScriptContext } from "./interpreter";
 import * as Core from "./lib/core";
 import * as String from "./lib/string";
@@ -10,18 +10,6 @@ const ctx: ScriptContext = {
   this: { id: 2 },
   args: [],
   gas: 1000,
-  sys: {
-    move: mock(() => {}),
-    create: mock(() => 3),
-    send: mock(() => {}),
-    destroy: mock(() => {}),
-    call: mock(async (_caller, targetId, verb, args, _warnings) => {
-      if (targetId === 2 && verb === "test") {
-        return "called " + args.join(",");
-      }
-      return null;
-    }),
-  } as any,
   warnings: [],
   vars: {},
 };
@@ -45,16 +33,22 @@ describe("Interpreter Libraries", () => {
       // (let x 10)
       // (let addX (lambda (y) (+ x y)))
       // (apply addX 5) -> 15
-      const localCtx = { ...ctx, locals: {} };
-      await evaluate(Core["let"]("x", 10), localCtx);
-      await evaluate(
-        Core["let"](
-          "addX",
-          Core["lambda"](["y"], Core["+"](Core["var"]("x"), Core["var"]("y"))),
+      expect(
+        await evaluate(
+          Core["seq"](
+            Core["let"]("x", 10),
+            Core["let"](
+              "addX",
+              Core["lambda"](
+                ["y"],
+                Core["+"](Core["var"]("x"), Core["var"]("y")),
+              ),
+            ),
+            Core["apply"](Core["var"]("addX"), 5),
+          ),
+          ctx,
         ),
-        localCtx,
-      );
-      expect(await evaluate(Core["apply"]("addX", 5), localCtx)).toBe(15);
+      ).toBe(15);
     });
   });
 });

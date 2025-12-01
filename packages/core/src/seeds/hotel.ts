@@ -172,11 +172,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
             String["str.concat"]("Floor ", Core["var"]("floor"), " Lobby"),
           ),
           Object["obj.set"](Core["var"]("lobbyData"), "kind", "ROOM"),
-          Object["obj.set"](
-            Core["var"]("lobbyData"),
-            "prototype_id",
-            floorLobbyProtoId,
-          ),
+          Core["set_prototype"](Core["var"]("lobbyData"), floorLobbyProtoId),
           Core["let"]("props", {}),
           Object["obj.set"](
             Core["var"]("props"),
@@ -247,7 +243,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
         String["str.concat"]("Floor ", Core["var"]("floor"), " West Wing"),
       ),
       Object["obj.set"](Core["var"]("wingData"), "kind", "ROOM"),
-      Object["obj.set"](Core["var"]("wingData"), "prototype_id", wingProtoId),
+      Core["set_prototype"](Core["var"]("wingData"), wingProtoId),
       Core["let"]("props", Object["obj.new"]()),
       Object["obj.set"](
         Core["var"]("props"),
@@ -282,7 +278,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
         String["str.concat"]("Floor ", Core["var"]("floor"), " East Wing"),
       ),
       Object["obj.set"](Core["var"]("wingData"), "kind", "ROOM"),
-      Object["obj.set"](Core["var"]("wingData"), "prototype_id", wingProtoId),
+      Core["set_prototype"](Core["var"]("wingData"), wingProtoId),
       Core["let"]("props", Object["obj.new"]()),
       Object["obj.set"](
         Core["var"]("props"),
@@ -392,11 +388,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
             String["str.concat"]("Room ", Core["var"]("roomNum")),
           ),
           Object["obj.set"](Core["var"]("roomData"), "kind", "ROOM"),
-          Object["obj.set"](
-            Core["var"]("roomData"),
-            "prototype_id",
-            hotelRoomProtoId,
-          ),
+          Core["set_prototype"](Core["var"]("roomData"), hotelRoomProtoId),
           Core["let"]("props", Object["obj.new"]()),
           Object["obj.set"](
             Core["var"]("props"),
@@ -418,7 +410,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
           Core["let"]("bedData", Object["obj.new"]()),
           Object["obj.set"](Core["var"]("bedData"), "name", "Bed"),
           Object["obj.set"](Core["var"]("bedData"), "kind", "ITEM"),
-          Object["obj.set"](Core["var"]("bedData"), "prototype_id", bedProtoId),
+          Core["set_prototype"](Core["var"]("bedData"), bedProtoId),
           Object["obj.set"](
             Core["var"]("bedData"),
             "location",
@@ -428,11 +420,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
           Core["let"]("lampData", Object["obj.new"]()),
           Object["obj.set"](Core["var"]("lampData"), "name", "Lamp"),
           Object["obj.set"](Core["var"]("lampData"), "kind", "ITEM"),
-          Object["obj.set"](
-            Core["var"]("lampData"),
-            "prototype_id",
-            lampProtoId,
-          ),
+          Core["set_prototype"](Core["var"]("lampData"), lampProtoId),
           Object["obj.set"](
             Core["var"]("lampData"),
             "location",
@@ -442,11 +430,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
           Core["let"]("chairData", Object["obj.new"]()),
           Object["obj.set"](Core["var"]("chairData"), "name", "Chair"),
           Object["obj.set"](Core["var"]("chairData"), "kind", "ITEM"),
-          Object["obj.set"](
-            Core["var"]("chairData"),
-            "prototype_id",
-            chairProtoId,
-          ),
+          Core["set_prototype"](Core["var"]("chairData"), chairProtoId),
           Object["obj.set"](
             Core["var"]("chairData"),
             "location",

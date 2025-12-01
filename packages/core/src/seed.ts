@@ -359,17 +359,15 @@ export function seed() {
         ),
         Core["let"](
           "contents",
-          Core["or"](
-            Object["obj.get"](Core["var"]("room"), "contents"),
+          Object["obj.get"](
+            Core["var"]("room"),
+            "contents",
             List["list.new"](),
           ),
         ),
         Core["let"](
           "exits",
-          Core["or"](
-            Object["obj.get"](Core["var"]("room"), "exits"),
-            List["list.new"](),
-          ),
+          Object["obj.get"](Core["var"]("room"), "exits", List["list.new"]()),
         ),
         Core["let"](
           "resolvedContents",
@@ -420,8 +418,9 @@ export function seed() {
       Core["let"]("player", Core["resolve_props"](Core["caller"]())),
       Core["let"](
         "contents",
-        Core["or"](
-          Object["obj.get"](Core["var"]("player"), "contents"),
+        Object["obj.get"](
+          Core["var"]("player"),
+          "contents",
           List["list.new"](),
         ),
       ),

@@ -190,7 +190,7 @@ const objGet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptVal
 export { objGet as "obj.get" };
 
 /**
- * Sets a property on an object.
+ * Sets a property on an object. Returns the entire object.
  */
 const objSet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptValue<unknown>], any>(
   "obj.set",
@@ -233,7 +233,7 @@ const objSet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptVal
         throw new ScriptError(`obj.set: disallowed key '${key}'`);
       }
       obj[key] = val;
-      return val;
+      return obj;
     },
   }
 );

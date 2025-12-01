@@ -8,15 +8,12 @@ export function seedItems(locationId: number) {
   // 6. Book Item
   const bookId = createEntity({
     name: "Dusty Book",
-    kind: "ITEM",
-    location_id: locationId,
-    props: {
-      description: "A dusty old book. It seems to have many chapters.",
-      chapters: [
-        { title: "Introduction", content: "Welcome to the world of Viwo." },
-        { title: "Chapter 1", content: "The beginning of the journey." },
-      ],
-    },
+    location: locationId,
+    description: "A dusty old book. It seems to have many chapters.",
+    chapters: [
+      { title: "Introduction", content: "Welcome to the world of Viwo." },
+      { title: "Chapter 1", content: "The beginning of the journey." },
+    ],
   });
 
   addVerb(
