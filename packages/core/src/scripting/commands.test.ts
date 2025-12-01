@@ -9,12 +9,7 @@ initSchema(db);
 // Mock the db module
 mock.module("../db", () => ({ db }));
 
-import {
-  evaluate,
-  ScriptSystemContext,
-  registerLibrary,
-  createScriptContext,
-} from "./interpreter";
+import { evaluate, registerLibrary, createScriptContext } from "./interpreter";
 import * as Core from "./lib/core";
 import * as List from "./lib/list";
 import * as String from "./lib/string";
@@ -31,7 +26,7 @@ describe("Player Commands", () => {
 
   let player: Entity;
   let room: Entity;
-  let sys: ScriptSystemContext;
+  let send: (msg: unknown) => void;
   let sentMessages: any[] = [];
 
   beforeEach(() => {
@@ -43,24 +38,9 @@ describe("Player Commands", () => {
     sentMessages = [];
 
     // Setup Sys Context
-    sys = {
-      send: (msg) => {
-        sentMessages.push(msg);
-      },
-      call: async (caller, targetId, verbName, args) => {
-        const verb = getVerb(targetId, verbName);
-        if (verb) {
-          await evaluate(
-            verb.code,
-            createScriptContext({
-              caller,
-              this: getEntity(targetId)!,
-              args,
-              sys,
-            }),
-          );
-        }
-      },
+    // Setup Send
+    send = (msg) => {
+      sentMessages.push(msg);
     };
 
     // Seed DB (creates sys:player_base, Lobby, Guest, etc.)
@@ -85,7 +65,7 @@ describe("Player Commands", () => {
         caller: player,
         this: player,
         args,
-        sys,
+        send,
       }),
     );
   };

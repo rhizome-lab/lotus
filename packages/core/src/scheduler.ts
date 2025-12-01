@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { getEntity, getVerb } from "./repo";
-import { evaluate, ScriptSystemContext } from "./scripting/interpreter";
+import { evaluate } from "./scripting/interpreter";
 
 export class TaskScheduler {
   constructor() {}
@@ -17,10 +17,9 @@ export class TaskScheduler {
     ).run(entityId, verb, JSON.stringify(args), executeAt);
   }
 
-  private contextFactory: (() => ScriptSystemContext) | null = null;
-
-  setContextFactory(factory: () => ScriptSystemContext) {
-    this.contextFactory = factory;
+  private sendFactory: (() => (msg: unknown) => void) | null = null;
+  setSendFactory(factory: () => (msg: unknown) => void) {
+    this.sendFactory = factory;
   }
 
   async process() {
@@ -37,11 +36,11 @@ export class TaskScheduler {
       `DELETE FROM scheduled_tasks WHERE id IN (${ids.join(",")})`,
     ).run();
 
-    if (!this.contextFactory) {
-      throw new Error("[Scheduler] No context factory set.");
+    if (!this.sendFactory) {
+      throw new Error("[Scheduler] No send factory set.");
     }
 
-    const sys = this.contextFactory();
+    const send = this.sendFactory();
 
     for (const task of tasks) {
       try {
@@ -55,7 +54,7 @@ export class TaskScheduler {
             this: entity,
             args: args,
             gas: 1000,
-            sys,
+            send,
             warnings: [],
             vars: {},
           });

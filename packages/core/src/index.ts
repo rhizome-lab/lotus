@@ -4,8 +4,6 @@ import {
   createScriptContext,
   evaluate,
   registerLibrary,
-  ScriptError,
-  ScriptSystemContext,
 } from "./scripting/interpreter";
 import * as Core from "./scripting/lib/core";
 import * as List from "./scripting/lib/list";
@@ -14,6 +12,7 @@ import * as String from "./scripting/lib/string";
 import * as Time from "./scripting/lib/time";
 import { seed } from "./seed";
 import { PluginManager, CommandContext } from "./plugin";
+import { scheduler } from "./scheduler";
 import {
   JsonRpcRequest,
   JsonRpcResponse,
@@ -32,6 +31,15 @@ registerLibrary(List);
 registerLibrary(Object);
 registerLibrary(String);
 registerLibrary(Time);
+
+// Initialize scheduler
+scheduler.setSendFactory(() => {
+  // TODO: This is a hack. We need a way to send messages to the right client.
+  // For now, we just log to console as scheduled tasks might not have a connected client.
+  return (msg: unknown) => {
+    console.log("[Scheduled Task Output]", msg);
+  };
+});
 
 // Seed the database
 seed();
@@ -244,69 +252,44 @@ async function executeVerb(
     caller: player,
     this: getEntity(verb.source)!,
     args,
-    sys: createSystemContext(ws),
+    send: createSendFunction(ws),
   });
 
   await evaluate(verb.code, ctx);
 }
 
-function createSystemContext(ws: WebSocket): ScriptSystemContext {
-  return {
-    send: (msg: unknown) => {
-      // If it's a string, wrap it in a message notification
-      if (typeof msg === "string") {
-        const notification: JsonRpcNotification = {
-          jsonrpc: "2.0",
-          method: "message",
-          params: { type: "info", text: msg },
-        };
-        ws.send(JSON.stringify(notification));
-      } else if (
-        typeof msg === "object" &&
-        msg !== null &&
-        "type" in msg &&
-        (msg as any).type === "update"
-      ) {
-        // Handle update messages specifically as notifications
-        const notification: JsonRpcNotification = {
-          jsonrpc: "2.0",
-          method: "update",
-          params: msg,
-        };
-        ws.send(JSON.stringify(notification));
-      } else {
-        // Fallback for other objects, try to send as notification if it looks like one, or just wrap it
-        // Ideally we should enforce specific notification types
-        // For now, let's assume if it has a 'type' it can be a method name, or we wrap it in 'message'
-        console.warn("Sending unstructured object:", msg);
-        const notification: JsonRpcNotification = {
-          jsonrpc: "2.0",
-          method: "message",
-          params: msg,
-        };
-        ws.send(JSON.stringify(notification));
-      }
-    },
-    call: async (caller, targetId, verbName, args, warnings) => {
-      const target = getEntity(targetId);
-      if (!target) {
-        throw new ScriptError(`Target ${targetId} not found`);
-      }
-      const verbs = getVerbs(targetId);
-      const verb = verbs.find((v) => v.name === verbName);
-      if (!verb) {
-        throw new ScriptError(`Verb ${verbName} not found on ${targetId}`);
-      }
-      return await evaluate(
-        verb.code,
-        createScriptContext({
-          caller,
-          this: target,
-          args,
-          sys: createSystemContext(ws),
-          warnings,
-        }),
-      );
-    },
+function createSendFunction(ws: WebSocket): (msg: unknown) => void {
+  return (msg: unknown) => {
+    // If it's a string, wrap it in a message notification
+    if (typeof msg === "string") {
+      const notification: JsonRpcNotification = {
+        jsonrpc: "2.0",
+        method: "message",
+        params: { type: "info", text: msg },
+      };
+      ws.send(JSON.stringify(notification));
+    } else if (
+      typeof msg === "object" &&
+      msg !== null &&
+      "type" in msg &&
+      (msg as any).type === "update"
+    ) {
+      // Handle update messages specifically as notifications
+      const notification: JsonRpcNotification = {
+        jsonrpc: "2.0",
+        method: "update",
+        params: msg,
+      };
+      ws.send(JSON.stringify(notification));
+    } else {
+      // Fallback for other objects
+      console.warn("Sending unstructured object:", msg);
+      const notification: JsonRpcNotification = {
+        jsonrpc: "2.0",
+        method: "message",
+        params: msg,
+      };
+      ws.send(JSON.stringify(notification));
+    }
   };
 }

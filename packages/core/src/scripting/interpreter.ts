@@ -2,29 +2,12 @@ import { getVerbs } from "../repo";
 import { ScriptValue } from "./def";
 import { Entity } from "@viwo/shared/jsonrpc";
 
-export type ScriptSystemContext = {
-  send: (msg: unknown) => void;
-  call: (
-    caller: Entity,
-    targetId: number,
-    verb: string,
-    args: readonly unknown[],
-    warnings: string[],
-  ) => Promise<any>;
-  schedule?: (
-    entityId: number,
-    verb: string,
-    args: readonly unknown[],
-    delay: number,
-  ) => void;
-};
-
 export type ScriptContext = {
   caller: Entity;
   this: Entity;
   args: readonly unknown[];
   gas: number; // Gas limit
-  sys?: ScriptSystemContext;
+  send?: (msg: unknown) => void;
   warnings: string[];
   vars: Record<string, unknown>;
 };
@@ -128,7 +111,7 @@ export async function evaluate<T>(
 }
 
 export function createScriptContext(
-  ctx: Pick<ScriptContext, "caller" | "this" | "sys"> & Partial<ScriptContext>,
+  ctx: Pick<ScriptContext, "caller" | "this"> & Partial<ScriptContext>,
 ): ScriptContext {
   return {
     args: [],
@@ -143,7 +126,7 @@ export async function resolveProps(
   entity: Entity,
   ctx: ScriptContext,
 ): Promise<Entity> {
-  if (!ctx.sys) {
+  if (!ctx.send) {
     return entity;
   }
 
@@ -167,7 +150,7 @@ export async function resolveProps(
         set gas(value) {
           ctx.gas = value;
         },
-        sys: ctx.sys,
+        send: ctx.send,
         warnings: ctx.warnings,
         vars: {},
       });

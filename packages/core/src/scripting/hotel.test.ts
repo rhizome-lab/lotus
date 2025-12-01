@@ -14,25 +14,13 @@ mock.module("../permissions", () => ({
   checkPermission: () => true,
 }));
 
-import {
-  evaluate,
-  ScriptSystemContext,
-  registerLibrary,
-  createScriptContext,
-  ScriptError,
-} from "./interpreter";
+import { evaluate, registerLibrary, createScriptContext } from "./interpreter";
 import * as Core from "./lib/core";
 import * as List from "./lib/list";
 import * as String from "./lib/string";
 import * as Object from "./lib/object";
 import { seedHotel } from "../seeds/hotel";
-import {
-  createEntity,
-  getEntity,
-  updateEntity,
-  getVerb,
-  getVerbs,
-} from "../repo";
+import { createEntity, getEntity, updateEntity, getVerb } from "../repo";
 import { Entity } from "@viwo/shared/jsonrpc";
 
 describe("Hotel Scripting", () => {
@@ -44,7 +32,7 @@ describe("Hotel Scripting", () => {
   let hotelLobby: Entity;
   let caller: Entity;
   let messages: string[] = [];
-  let sys: ScriptSystemContext;
+  let send: (msg: unknown) => void;
 
   beforeEach(() => {
     // Reset DB state
@@ -55,33 +43,11 @@ describe("Hotel Scripting", () => {
     messages = [];
 
     // Setup Sys Context
-    sys = {
-      send: (msg: any) => {
-        if (msg.type === "message") {
-          messages.push(msg.text);
-        }
-      },
-      call: async (caller, targetId, verbName, args, warnings) => {
-        const target = getEntity(targetId);
-        if (!target) {
-          throw new ScriptError(`Target ${targetId} not found`);
-        }
-        const verbs = getVerbs(targetId);
-        const verb = verbs.find((v) => v.name === verbName);
-        if (!verb) {
-          throw new ScriptError(`Verb ${verbName} not found on ${targetId}`);
-        }
-        return await evaluate(
-          verb.code,
-          createScriptContext({
-            caller,
-            this: target,
-            args,
-            sys,
-            warnings,
-          }),
-        );
-      },
+    // Setup Send
+    send = (msg: any) => {
+      if (msg.type === "message") {
+        messages.push(msg.text);
+      }
     };
 
     // Setup Environment
@@ -134,7 +100,7 @@ describe("Hotel Scripting", () => {
 
     await evaluate(
       leaveVerb!.code,
-      createScriptContext({ caller, this: getEntity(roomId)!, sys }),
+      createScriptContext({ caller, this: getEntity(roomId)!, send }),
     );
 
     expect(messages[0]).toBe(
@@ -167,7 +133,7 @@ describe("Hotel Scripting", () => {
       this: elevator,
       args: [],
       warnings: [],
-      sys,
+      send,
     } as any; // Cast to any to avoid strict type checks on sys if needed, or ScriptContext
 
     // 2. Push 5

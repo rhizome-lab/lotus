@@ -1,4 +1,4 @@
-import { evaluate, resolveProps, ScriptError } from "../interpreter";
+import { evaluate, resolveProps, ScriptError, createScriptContext } from "../interpreter";
 import {
   createEntity,
   deleteEntity,
@@ -8,7 +8,9 @@ import {
   setPrototypeId,
   updateEntity,
   Verb,
+  getVerb,
 } from "../../repo";
+import { scheduler } from "../../scheduler";
 import { defineOpcode, ScriptValue } from "../def";
 import { Entity } from "@viwo/shared/jsonrpc";
 
@@ -1234,16 +1236,21 @@ export const call = defineOpcode<
       );
     }
 
-    if (ctx.sys?.call) {
-      return await ctx.sys.call(
-        ctx.caller,
-        target.id,
-        verb,
-        evaluatedArgs,
-        ctx.warnings,
-      );
+    const targetVerb = getVerb(target.id, verb);
+    if (!targetVerb) {
+      throw new ScriptError(`call: verb ${verb} not found on ${target.id}`);
     }
-    return null;
+
+    return await evaluate(
+      targetVerb.code,
+      createScriptContext({
+        caller: ctx.caller,
+        this: target,
+        args: evaluatedArgs,
+        ...(ctx.send ? { send: ctx.send } : {}),
+        warnings: ctx.warnings,
+      }),
+    );
   },
 });
 
@@ -1287,7 +1294,7 @@ export const schedule = defineOpcode<
         `schedule: delay must be a number, got ${JSON.stringify(delay)}`,
       );
     }
-    ctx.sys?.schedule?.(ctx.this.id, verb, callArgs, delay);
+    scheduler.schedule(ctx.this.id, verb, callArgs, delay);
     return null;
   },
 });
@@ -1304,7 +1311,7 @@ export const send = defineOpcode<[ScriptValue<unknown>], null>("send", {
   handler: async (args, ctx) => {
     const [msgExpr] = args;
     const msg = await evaluate(msgExpr, ctx);
-    ctx.sys?.send?.(msg);
+    ctx.send?.(msg);
     return null;
   },
 });
