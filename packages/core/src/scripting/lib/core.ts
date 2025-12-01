@@ -1238,7 +1238,7 @@ export const call = defineOpcode<
 
     const targetVerb = getVerb(target.id, verb);
     if (!targetVerb) {
-      throw new ScriptError(`call: verb ${verb} not found on ${target.id}`);
+      throw new ScriptError(`call: verb '${verb}' not found on ${target.id}`);
     }
 
     return await evaluate(

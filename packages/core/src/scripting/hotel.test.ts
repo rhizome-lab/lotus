@@ -58,12 +58,11 @@ describe("Hotel Scripting", () => {
     seedHotel(lobbyId, voidId);
 
     // Find Hotel Lobby
-    const allEntities = db
-      .query("SELECT id, name FROM entities")
-      .all() as any[];
-    const hotelLobbyData = allEntities.find(
-      (e) => e.name === "Grand Hotel Lobby",
-    );
+    const hotelLobbyData = db
+      .query<{ id: number }, []>(
+        "SELECT id, props FROM entities WHERE json_extract(props, '$.name') = 'Grand Hotel Lobby'",
+      )
+      .get()!;
     hotelLobby = getEntity(hotelLobbyData.id)!;
 
     // Setup Caller
@@ -114,10 +113,11 @@ describe("Hotel Scripting", () => {
 
   it("should navigate elevator -> floor lobby -> wing -> room and back", async () => {
     // Find Elevator (it's persistent)
-    const allEntities = db
-      .query("SELECT id, name FROM entities")
-      .all() as any[];
-    const elevatorData = allEntities.find((e) => e.name === "Hotel Elevator");
+    const elevatorData = db
+      .query<{ id: number }, []>(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Hotel Elevator'",
+      )
+      .get()!;
     let elevator = getEntity(elevatorData.id)!;
     expect(elevator).toBeDefined();
 

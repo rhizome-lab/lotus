@@ -14,7 +14,6 @@ import {
   createScriptContext,
   evaluate,
   registerLibrary,
-  ScriptSystemContext,
 } from "../scripting/interpreter";
 import * as Core from "../scripting/lib/core";
 import * as String from "../scripting/lib/string";
@@ -26,7 +25,6 @@ import { seedHotel } from "./hotel";
 describe("Hotel Seed", () => {
   let lobbyId: number;
   let voidId: number;
-  let sys: ScriptSystemContext;
   let player: any;
 
   beforeAll(async () => {
@@ -54,20 +52,15 @@ describe("Hotel Seed", () => {
       props: { is_wizard: true },
     });
     player = getEntity(playerId);
-
-    // Mock System Context
-    sys = {
-      send: () => {}, // Mock send
-      schedule: () => {},
-      call: async () => null,
-    };
   });
 
   test("West Wing Room Validation", async () => {
     // 1. Find Floor Lobby Proto
     const floorLobbyProto = db
-      .query("SELECT id FROM entities WHERE name = 'Floor Lobby Proto'")
-      .get() as { id: number };
+      .query<{ id: number }, []>(
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Floor Lobby Proto'",
+      )
+      .get()!;
 
     // 2. Create a Floor Lobby instance (mocking the elevator 'out' logic)
     const floorLobbyId = createEntity({
@@ -81,14 +74,22 @@ describe("Hotel Seed", () => {
     const westVerb = getVerb(floorLobbyId, "west")!;
 
     // TODO: `move` does not support `id`
-    sys.call(player, player.id, "move", [floorLobbyId], []);
+    await evaluate(
+      Core["call"](player, "move", floorLobbyId),
+      createScriptContext({
+        caller: player,
+        this: player,
+      }),
+    );
 
     await evaluate(
       westVerb.code,
       createScriptContext({
         caller: player,
         this: getEntity(floorLobbyId)!,
-        sys,
+        send: (msg: any) => {
+          output = msg.text || JSON.stringify(msg);
+        },
       }),
     );
 
@@ -101,13 +102,9 @@ describe("Hotel Seed", () => {
     // 4. Try to enter invalid room (e.g. 51)
     const enterVerb = getVerb(westWingId, "enter")!;
     let output = "";
-    sys.send = (msg: any) => {
-      output = msg.text || JSON.stringify(msg);
-    }; // Capture output
-
     await evaluate(
       enterVerb.code,
-      createScriptContext({ caller: player, this: westWing, args: [51], sys }),
+      createScriptContext({ caller: player, this: westWing, args: [51] }),
     );
 
     // Should fail and tell user
@@ -119,7 +116,7 @@ describe("Hotel Seed", () => {
     // 5. Try to enter valid room (e.g. 10)
     await evaluate(
       enterVerb.code,
-      createScriptContext({ caller: player, this: westWing, args: [10], sys }),
+      createScriptContext({ caller: player, this: westWing, args: [10] }),
     );
 
     // Player should be in Room 10
@@ -151,14 +148,22 @@ describe("Hotel Seed", () => {
     const eastVerb = getVerb(floorLobbyId, "east")!;
 
     // TODO: `move` does not support `id`
-    sys.call(player, player.id, "move", [floorLobbyId], []);
+    await evaluate(
+      Core["call"](player, "move", floorLobbyId),
+      createScriptContext({
+        caller: player,
+        this: player,
+      }),
+    );
 
     await evaluate(
       eastVerb.code,
       createScriptContext({
         caller: player,
         this: getEntity(floorLobbyId)!,
-        sys,
+        send: (msg: any) => {
+          output = msg.text || JSON.stringify(msg);
+        },
       }),
     );
 
@@ -170,13 +175,10 @@ describe("Hotel Seed", () => {
     // 4. Try to enter invalid room (e.g. 10)
     const enterVerb = getVerb(eastWingId, "enter")!;
     let output = "";
-    sys.send = (msg: any) => {
-      output = msg.text || JSON.stringify(msg);
-    };
 
     await evaluate(
       enterVerb.code,
-      createScriptContext({ caller: player, this: eastWing, args: [10], sys }),
+      createScriptContext({ caller: player, this: eastWing, args: [10] }),
     );
 
     expect(output).toContain("Room numbers in the East Wing are 51-99");
@@ -184,7 +186,7 @@ describe("Hotel Seed", () => {
     // 5. Try to enter valid room (e.g. 60)
     await evaluate(
       enterVerb.code,
-      createScriptContext({ caller: player, this: eastWing, args: [60], sys }),
+      createScriptContext({ caller: player, this: eastWing, args: [60] }),
     );
 
     const playerInRoom = getEntity(player.id)!;
