@@ -290,21 +290,8 @@ describe("Recursive Move Check", () => {
     );
 
     // 3. Attempt to move Box into Item
-    // We need to execute the 'move' verb on the Box (since it inherits from Entity Base which has 'move')
-    // But wait, 'move' is usually called by the *mover* (the actor).
-    // The 'move' verb on Entity Base (which Player inherits) allows the player to move *themselves*.
-    // Let's check seed.ts again.
-    // "move" on Entity Base:
-    // Core["let"]("arg", Core["arg"](0)), ...
-    // Core["let"]("mover", Core["caller"]()), ...
-    // Core["set_entity"](Object["obj.set"](Core["var"]("mover"), "location", Core["var"]("destId")), ...)
-
-    // So 'move' moves the CALLER.
-
-    // To test moving a box into an item, we need to make the Box the caller?
-    // Or maybe we need a 'put' verb?
-    // The TODO says: "Core/Repo: When implementing `move` in scripting, ensure it disallows a box to be put inside itself"
-    // If 'move' only moves the caller, then we can simulate the Box trying to move itself into the Item.
+    // 'move' verb on Entity Base moves the CALLER.
+    // To test moving a box into an item, we simulate the Box acting as the caller.
 
     // Let's simulate the Box acting as the caller.
     const ctx = createScriptContext({

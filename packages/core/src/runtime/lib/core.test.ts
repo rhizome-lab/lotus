@@ -233,56 +233,10 @@ createLibraryTester(Core, "Core Library", (test) => {
     // type: "forward"
     // payload: { target: 103, type: "message", payload: "Hello!" }
 
-    // Note: The mock for 'say_hello' uses a raw AST structure which might not be directly executable by 'evaluate'
-    // if 'evaluate' expects compiled opcodes or a specific structure.
-    // However, looking at 'get_dynamic', it returns "resolved_value" which is a string.
-    // The 'fail' verb returns Std["throw"]...
-    // We need to make sure 'say_hello' returns something that calls 'send'.
-    // Since we can't easily construct a full AST here without importing more,
-    // let's rely on the fact that we can pass a custom function as code if the evaluator supports it,
-    // OR we can use a simple opcode if available.
-    // But wait, the mock returns 'code'. 'evaluate' takes this code.
-    // If 'evaluate' handles AST objects, we are good.
-    // Let's assume we can use a simple function if the evaluator allows it, or we need to construct a valid AST.
-    // Given the imports, we don't have 'call' opcode readily available to construct AST.
-    // Let's try to use a simpler approach: Mock 'getVerb' to return a function as code?
-    // 'evaluate' in 'viwo/scripting' usually handles ASTs.
-    // Let's check 'get_dynamic' again. It returns "resolved_value". This implies 'evaluate' can handle primitive values.
-    // If we want side effects (send), we need an opcode.
-    // Let's use a mocked opcode or just assume the AST I wrote above works if 'call' is a standard opcode.
-    // But 'call' is defined in this file's module 'Core'.
-    // So we can use Core["call"]... but that's for calling verbs.
-    // We want to call the 'send' function from the context.
-    // There is no standard opcode exposed here to call 'send' directly unless we use a specific library.
-    // Actually, 'StdLib' might have 'print' or similar.
-    // Let's check imports. 'StdLib as Std'.
-    // Let's see if we can use a custom opcode for testing or if we can use 'Core.sudo' recursively? No.
-    // Let's look at how 'fail' is defined: Std["throw"]("verb failed").
-    // This suggests we can use library functions to generate AST/Opcodes.
-    // Does Std have a 'print' or 'send'?
-    // If not, we might need to define a temporary opcode or use a different approach.
-    // Let's try to define a 'send_message' opcode in the mock? No, we can't easily extend the library in the mock.
-
-    // Alternative: Use a spy on the context's send function and verify it was called with the right arguments.
-    // But we need the code to actually trigger it.
-    // Let's assume for this test that we can use a dummy AST that the evaluator will process,
-    // OR we can use `Core.create` or something that is available.
-    // Wait, `Core` is what we are testing.
-    // Let's look at `Core.test.ts` imports again.
-    // We have `Core`, `List`, `Std`.
-    // Maybe we can use `Std.print`?
-    // If `Std.print` calls `ctx.send`, we are good.
-    // Let's assume `Std.print` exists and uses `ctx.send`.
-    // If not, we might need to find another way.
-    // Let's check `packages/core/src/runtime/lib/core.ts` again... it imports `StdLib`.
-    // Let's assume `StdLib` has `print`.
-
-    // Let's try to use a custom function as 'code' if evaluate supports it.
-    // If not, we might fail.
-    // Let's look at `evaluate` signature. `evaluate(script: ScriptValue<T>, ctx: ScriptContext): Promise<T>`.
-    // If script is a function, it executes it?
-    // If so, we can just pass `(ctx) => ctx.send(...)`.
-    // Let's try that.
+    // Execute the 'say_hello' verb via sudo.
+    // This should trigger a 'send' call which we expect to be forwarded.
+    // We use a simple lambda for the verb code in this mock scenario if needed,
+    // but here we are testing the routing logic, so we assume the verb execution works.
     await evaluate(
       Core["sudo"]({ id: 103 }, "say_hello", List["list.new"]()),
       botForwardCtx,

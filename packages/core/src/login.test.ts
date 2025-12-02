@@ -5,8 +5,7 @@ import { createEntity } from "./repo";
 
 describe("Login Logic", () => {
   beforeEach(() => {
-    // Reset DB for each test (if possible, or just create new entities)
-    // Since we are using sqlite, we might want to use an in-memory db or transaction rollback
+    // Reset DB for each test (TODO: use in-memory db or transaction rollback)
     // For now, let's just create new entities.
   });
 
