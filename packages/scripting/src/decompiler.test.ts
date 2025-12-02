@@ -1,5 +1,10 @@
 import { describe, test, expect } from "bun:test";
 import { decompile } from "./decompiler";
+import * as Std from "./lib/std";
+import * as MathLib from "./lib/math";
+import * as List from "./lib/list";
+import * as ObjectLib from "./lib/object";
+import * as BooleanLib from "./lib/boolean";
 
 describe("Decompiler", () => {
   test("literals", () => {
@@ -10,18 +15,14 @@ describe("Decompiler", () => {
   });
 
   test("simple sequence (statement)", () => {
-    const script = ["seq", ["let", "x", 1], ["var", "x"]];
-    // When decompiled as a statement (default for top-level seq if we pass isStatement=true, but default is false)
-    // Wait, default isStatement=false.
-    // But usually we want to decompile the whole script as a block?
-    // The editor will likely call it with isStatement=true for the root.
+    const script = Std.seq(Std.let("x", 1), Std.var("x"));
 
     const expected = "let x = 1;\nx;";
     expect(decompile(script, 0, true)).toBe(expected);
   });
 
   test("nested sequence", () => {
-    const script = ["seq", ["if", true, ["seq", ["let", "y", 2]], null]];
+    const script = Std.seq(Std.if(true, Std.seq(Std.let("y", 2)), null));
 
     const expected = `if (true) {
   let y = 2;
@@ -30,22 +31,27 @@ describe("Decompiler", () => {
   });
 
   test("infix operators", () => {
-    expect(decompile(["+", 1, 2])).toBe("(1 + 2)");
-    expect(decompile(["*", 3, 4])).toBe("(3 * 4)");
-    expect(decompile(["==", 1, 1])).toBe("(1 === 1)");
+    expect(decompile(MathLib["+"](1, 2))).toBe("(1 + 2)");
+    expect(decompile(MathLib["*"](3, 4))).toBe("(3 * 4)");
+    expect(decompile(BooleanLib["=="](1, 1))).toBe("(1 === 1)");
+  });
+
+  test("nested infix operators", () => {
+    // (1 + (2 * 3))
+    const script = MathLib["+"](1, MathLib["*"](2, 3));
+    expect(decompile(script)).toBe("(1 + (2 * 3))");
   });
 
   test("lambda", () => {
-    const script = ["lambda", ["x"], ["+", ["var", "x"], 1]];
+    const script = Std.lambda(["x"], MathLib["+"](Std.var("x"), 1));
     expect(decompile(script)).toBe("(x) => (x + 1)");
   });
 
   test("lambda with block", () => {
-    const script = [
-      "lambda",
+    const script = Std.lambda(
       ["x"],
-      ["seq", ["let", "y", 1], ["+", ["var", "x"], ["var", "y"]]],
-    ];
+      Std.seq(Std.let("y", 1), MathLib["+"](Std.var("x"), Std.var("y"))),
+    );
     const expected = `(x) => {
   let y = 1;
   return (x + y);
@@ -54,7 +60,35 @@ describe("Decompiler", () => {
   });
 
   test("function call", () => {
-    const script = ["apply", ["var", "f"], 1, 2];
+    const script = Std.apply(Std.var("f"), 1, 2);
     expect(decompile(script)).toBe("f(1, 2)");
+  });
+
+  test("loops", () => {
+    // while (true) { log("loop") }
+    const whileScript = Std.while(true, Std.log("loop"));
+    const expectedWhile = `while (true) {
+  console.log("loop");
+}`;
+    expect(decompile(whileScript, 0, true)).toBe(expectedWhile);
+
+    // for (x of list) { log(x) }
+    const forScript = Std.for(
+      "x",
+      List["list.new"](1, 2),
+      Std.log(Std.var("x")),
+    );
+    const expectedFor = `for (const x of [1, 2]) {
+  console.log(x);
+}`;
+    expect(decompile(forScript, 0, true)).toBe(expectedFor);
+  });
+
+  test("data structures", () => {
+    const list = List["list.new"](1, 2, 3);
+    expect(decompile(list)).toBe("[1, 2, 3]");
+
+    const obj = ObjectLib["obj.new"]("a", 1, "b", 2);
+    expect(decompile(obj)).toBe('{ "a": 1, "b": 2 }');
   });
 });
