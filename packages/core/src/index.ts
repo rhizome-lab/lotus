@@ -12,6 +12,7 @@ import {
   MathLib,
   BooleanLib,
   StdLib,
+  compile,
 } from "@viwo/scripting";
 import * as Core from "./runtime/lib/core";
 
@@ -351,6 +352,17 @@ export async function handleJsonRpcRequest(
  * @param args - Arguments passed to the verb.
  * @param ws - The WebSocket connection for sending messages.
  */
+// Cache for compiled verbs: JSON string -> Compiled Function
+const verbCache = new Map<string, (ctx: any) => any>();
+
+/**
+ * Executes a verb script.
+ *
+ * @param player - The player entity executing the verb.
+ * @param verb - The verb definition.
+ * @param args - Arguments passed to the verb.
+ * @param ws - The WebSocket connection for sending messages.
+ */
 function executeVerb(
   player: Entity,
   verb: { name: string; code: any; source: number },
@@ -364,7 +376,26 @@ function executeVerb(
     send: createSendFunction(ws),
   });
 
-  evaluate(verb.code, ctx);
+  // Check cache
+  const codeKey = JSON.stringify(verb.code);
+  let compiled = verbCache.get(codeKey);
+
+  if (!compiled) {
+    try {
+      compiled = compile(verb.code);
+      verbCache.set(codeKey, compiled!);
+    } catch (e) {
+      console.error("Failed to compile verb:", e);
+      // Fallback to interpreter? Or just throw?
+      // For now, let's fallback to evaluate to be safe, or just re-throw.
+      // Given we want to move to compiler, let's throw but log it.
+      throw e;
+    }
+  }
+
+  if (compiled) {
+    compiled(ctx);
+  }
 }
 
 /**
