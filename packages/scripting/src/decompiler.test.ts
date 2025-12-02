@@ -9,28 +9,52 @@ describe("Decompiler", () => {
     expect(decompile(null)).toBe("null");
   });
 
-  test("simple sequence", () => {
+  test("simple sequence (statement)", () => {
     const script = ["seq", ["let", "x", 1], ["var", "x"]];
-    const expected = 'let("x", 1);\nvar("x");';
-    expect(decompile(script)).toBe(expected);
+    // When decompiled as a statement (default for top-level seq if we pass isStatement=true, but default is false)
+    // Wait, default isStatement=false.
+    // But usually we want to decompile the whole script as a block?
+    // The editor will likely call it with isStatement=true for the root.
+
+    const expected = "let x = 1;\nx;";
+    expect(decompile(script, 0, true)).toBe(expected);
   });
 
   test("nested sequence", () => {
     const script = ["seq", ["if", true, ["seq", ["let", "y", 2]], null]];
-    // Note: The decompiler currently formats nested seqs with indentation
-    // seq(
-    //   let("y", 2)
-    // )
-    // So the if call would be: if(true, seq(...), null)
 
-    const output = decompile(script);
-    expect(output).toContain("if(true");
-    expect(output).toContain("seq(");
-    expect(output).toContain('let("y", 2)');
+    const expected = `if (true) {
+  let y = 2;
+}`;
+    expect(decompile(script, 0, true)).toBe(expected);
+  });
+
+  test("infix operators", () => {
+    expect(decompile(["+", 1, 2])).toBe("(1 + 2)");
+    expect(decompile(["*", 3, 4])).toBe("(3 * 4)");
+    expect(decompile(["==", 1, 1])).toBe("(1 === 1)");
+  });
+
+  test("lambda", () => {
+    const script = ["lambda", ["x"], ["+", ["var", "x"], 1]];
+    expect(decompile(script)).toBe("(x) => (x + 1)");
+  });
+
+  test("lambda with block", () => {
+    const script = [
+      "lambda",
+      ["x"],
+      ["seq", ["let", "y", 1], ["+", ["var", "x"], ["var", "y"]]],
+    ];
+    const expected = `(x) => {
+  let y = 1;
+  return (x + y);
+}`;
+    expect(decompile(script)).toBe(expected);
   });
 
   test("function call", () => {
-    const script = ["+", 1, 2];
-    expect(decompile(script)).toBe("+(1, 2)");
+    const script = ["apply", ["var", "f"], 1, 2];
+    expect(decompile(script)).toBe("f(1, 2)");
   });
 });

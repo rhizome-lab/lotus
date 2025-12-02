@@ -1,4 +1,8 @@
-export function decompile(script: any, indentLevel: number = 0): string {
+export function decompile(
+  script: any,
+  indentLevel: number = 0,
+  isStatement: boolean = false,
+): string {
   const indent = "  ".repeat(indentLevel);
 
   if (script === null || script === undefined) {
@@ -19,38 +23,271 @@ export function decompile(script: any, indentLevel: number = 0): string {
     }
 
     const opcode = script[0];
+    const args = script.slice(1);
 
-    // Handle sequence specifically for better formatting
+    // --- Control Flow ---
+
     if (opcode === "seq") {
-      // If it's the top-level script (indentLevel 0), join with newlines
-      if (indentLevel === 0) {
-        const statements = script
-          .slice(1)
-          .map((stmt) => decompile(stmt, indentLevel));
-        return statements.join(";\n") + (statements.length > 0 ? ";" : "");
-      }
+      // seq is always a block statement if isStatement is true
+      // If isStatement is false, it's an IIFE or block expression?
+      // For simplicity, let's assume seq is mostly used as a block.
 
-      // Nested seq
-      const statements = script
-        .slice(1)
-        .map((stmt) => decompile(stmt, indentLevel + 1));
-      return `seq(\n${statements
-        .map((s) => indent + "  " + s)
-        .join(",\n")}\n${indent})`;
+      const statements = args.map((stmt) => {
+        // The last statement in a sequence might need to be a return if it's an expression context?
+        // But ViwoScript returns the last value.
+        // In TS, a block doesn't return.
+        // If we are in an expression context (e.g. lambda body), we might wrap in IIFE or just use { ... } if it's a lambda body.
+
+        // For now, let's just decompile as statements.
+        return decompile(stmt, indentLevel + (isStatement ? 0 : 1), true);
+      });
+
+      if (isStatement) {
+        // Top level or inside another block
+        return statements
+          .map((s) => (s.endsWith("}") || s.endsWith(";") ? s : s + ";"))
+          .join("\n" + indent);
+      } else {
+        // Expression context (e.g. lambda body, or argument)
+        // If it's a lambda body, we can return a block `{ ... }`
+        // But we don't know if we are in a lambda body here.
+        // Let's assume expression context means we need an expression.
+        // (() => { ... })()
+        return `(() => {\n${statements
+          .map((s) => indent + "  " + (s.endsWith("}") ? s : s + ";"))
+          .join("\n")}\n${indent}})()`;
+      }
     }
 
-    // Handle other opcodes
-    const args = script.slice(1).map((arg) => decompile(arg, indentLevel + 1));
+    if (opcode === "if") {
+      const [cond, thenBranch, elseBranch] = args;
+      if (isStatement) {
+        const thenCode = decompile(thenBranch, indentLevel + 1, true);
+        let out = `if (${decompile(
+          cond,
+          indentLevel,
+          false,
+        )}) {\n${indent}  ${thenCode}${
+          thenCode.endsWith("}") || thenCode.endsWith(";") ? "" : ";"
+        }\n${indent}}`;
+        if (elseBranch) {
+          const elseCode = decompile(elseBranch, indentLevel + 1, true);
+          out += ` else {\n${indent}  ${elseCode}${
+            elseCode.endsWith("}") || elseCode.endsWith(";") ? "" : ";"
+          }\n${indent}}`;
+        }
+        return out;
+      } else {
+        // Ternary
+        return `${decompile(cond, indentLevel, false)} ? ${decompile(
+          thenBranch,
+          indentLevel,
+          false,
+        )} : ${decompile(elseBranch || null, indentLevel, false)}`;
+      }
+    }
 
-    // Special handling for infix operators if we wanted to be fancy, but function call style is safer for now
-    // except maybe for math/logic if we want it to look like JS.
-    // For now, let's stick to function call syntax for everything to match the internal representation closely.
-    // e.g. ["+", 1, 2] -> "+(1, 2)"
-    // But wait, the opcodes are namespaced in many cases (e.g. MathLib["+"]).
-    // The editor uses raw opcodes.
-    // Let's try to make it look somewhat readable.
+    if (opcode === "while") {
+      const [cond, body] = args;
+      // While is a statement. If used as expression, it returns null (or last result).
+      // TS while doesn't return.
+      // If expression, wrap in IIFE?
+      if (isStatement) {
+        const bodyCode = decompile(body, indentLevel + 1, true);
+        return `while (${decompile(
+          cond,
+          indentLevel,
+          false,
+        )}) {\n${indent}  ${bodyCode}${
+          bodyCode.endsWith("}") || bodyCode.endsWith(";") ? "" : ";"
+        }\n${indent}}`;
+      } else {
+        return `(() => { while (${decompile(
+          cond,
+          indentLevel + 1,
+          false,
+        )}) { ${decompile(body, indentLevel + 1, true)}; } })()`;
+      }
+    }
 
-    return `${opcode}(${args.join(", ")})`;
+    if (opcode === "for") {
+      const [varName, list, body] = args;
+      if (isStatement) {
+        const bodyCode = decompile(body, indentLevel + 1, true);
+        return `for (const ${varName} of ${decompile(
+          list,
+          indentLevel,
+          false,
+        )}) {\n${indent}  ${bodyCode}${
+          bodyCode.endsWith("}") || bodyCode.endsWith(";") ? "" : ";"
+        }\n${indent}}`;
+      } else {
+        return `(() => { for (const ${varName} of ${decompile(
+          list,
+          indentLevel + 1,
+          false,
+        )}) { ${decompile(body, indentLevel + 1, true)}; } })()`;
+      }
+    }
+
+    // --- Variables ---
+
+    if (opcode === "let") {
+      const [name, val] = args;
+      // let returns the value.
+      if (isStatement) {
+        return `let ${name} = ${decompile(val, indentLevel, false)}`;
+      } else {
+        // (let x = ...) is not valid.
+        // But maybe we can just output the assignment if it was already declared?
+        // No, let declares.
+        // We can't declare in expression.
+        // Fallback to function call or just assume it's valid in our "TS-like" script?
+        // User wants "valid TS".
+        // So we must use IIFE if it's an expression.
+        return `(() => { let ${name} = ${decompile(
+          val,
+          indentLevel + 1,
+          false,
+        )}; return ${name}; })()`;
+      }
+    }
+
+    if (opcode === "set") {
+      const [name, val] = args;
+      // Assignment is an expression in JS.
+      return `${name} = ${decompile(val, indentLevel, false)}`;
+    }
+
+    if (opcode === "var") {
+      const [name] = args;
+      return String(name);
+    }
+
+    // --- Functions ---
+
+    if (opcode === "lambda") {
+      const [params, body] = args;
+      // Lambda is an expression.
+      // (args) => { ... }
+      // If body is a seq, it will be decompiled as a block (if we pass isStatement=true? No, lambda body is a block).
+
+      // Check if body is a sequence
+      const bodyIsSeq = Array.isArray(body) && body[0] === "seq";
+
+      if (bodyIsSeq) {
+        // Decompile seq contents as statements
+        const statements = body
+          .slice(1)
+          .map((stmt: any) => decompile(stmt, indentLevel + 1, true));
+        // Add return to the last statement if it's not a control flow that returns?
+        // In ViwoScript, last value is returned.
+        // In TS, we need explicit return.
+        if (statements.length > 0) {
+          const lastIdx = statements.length - 1;
+          const last = statements[lastIdx]!;
+          if (
+            !last.startsWith("return ") &&
+            !last.startsWith("if") &&
+            !last.startsWith("while") &&
+            !last.startsWith("for")
+          ) {
+            statements[lastIdx] = "return " + last;
+          }
+        }
+
+        return `(${params.join(", ")}) => {\n${statements
+          .map(
+            (s: string) =>
+              indent +
+              "  " +
+              (s.endsWith("}") || s.endsWith(";") ? s : s + ";"),
+          )
+          .join("\n")}\n${indent}}`;
+      } else {
+        // Single expression body
+        return `(${params.join(", ")}) => ${decompile(
+          body,
+          indentLevel,
+          false,
+        )}`;
+      }
+    }
+
+    if (opcode === "apply") {
+      const [func, ...funcArgs] = args;
+      return `${decompile(func, indentLevel, false)}(${funcArgs
+        .map((a: any) => decompile(a, indentLevel, false))
+        .join(", ")})`;
+    }
+
+    // --- Infix Operators ---
+    const infixOps: Record<string, string> = {
+      "+": "+",
+      "-": "-",
+      "*": "*",
+      "/": "/",
+      "%": "%",
+      "==": "===",
+      "!=": "!==",
+      "<": "<",
+      ">": ">",
+      "<=": "<=",
+      ">=": ">=",
+      and: "&&",
+      or: "||",
+    };
+
+    if (infixOps[opcode]) {
+      const op = infixOps[opcode];
+      return `(${decompile(args[0], indentLevel, false)} ${op} ${decompile(
+        args[1],
+        indentLevel,
+        false,
+      )})`;
+    }
+
+    if (opcode === "^") {
+      return `Math.pow(${decompile(args[0], indentLevel, false)}, ${decompile(
+        args[1],
+        indentLevel,
+        false,
+      )})`;
+    }
+
+    if (opcode === "not") {
+      return `!${decompile(args[0], indentLevel, false)}`;
+    }
+
+    // --- Standard Library ---
+
+    if (opcode === "log") {
+      return `console.log(${args
+        .map((a: any) => decompile(a, indentLevel, false))
+        .join(", ")})`;
+    }
+
+    if (opcode === "throw") {
+      return `throw ${decompile(args[0], indentLevel, false)}`;
+    }
+
+    if (opcode === "try") {
+      const [tryBlock, errVar, catchBlock] = args;
+      return `try {\n${indent}  ${decompile(
+        tryBlock,
+        indentLevel + 1,
+        true,
+      )};\n${indent}} catch (${errVar}) {\n${indent}  ${decompile(
+        catchBlock,
+        indentLevel + 1,
+        true,
+      )};\n${indent}}`;
+    }
+
+    // Generic function call
+    return `${opcode}(${args
+      .map((arg: any) => decompile(arg, indentLevel, false))
+      .join(", ")})`;
   }
 
   return JSON.stringify(script);

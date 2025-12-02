@@ -107,7 +107,7 @@ export const ScriptEditor: Component = () => {
             class="script-editor__code-preview"
             style={{ flex: 1, height: "100%", overflow: "hidden" }}
           >
-            <MonacoEditor value={decompile(script())} />
+            <MonacoEditor value={decompile(script(), 0, true)} />
           </div>
         </div>
       </div>
