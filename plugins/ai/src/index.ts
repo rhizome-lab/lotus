@@ -1,9 +1,11 @@
 import { Plugin, PluginContext, CommandContext } from "@viwo/core";
-import { generateText } from "ai";
+import { generateText, generateObject } from "ai";
+import { z } from "zod";
 
-export interface GenerationTemplate {
+export interface GenerationTemplate<T = any> {
   name: string;
   description: string;
+  schema: z.ZodType<T>;
   prompt: (context: CommandContext, instruction?: string) => string;
 }
 
@@ -102,7 +104,7 @@ async function getModel(modelSpec?: string) {
 export class AiPlugin implements Plugin {
   name = "ai";
   version = "0.1.0";
-  private templates: Map<string, GenerationTemplate> = new Map();
+  private templates: Map<string, GenerationTemplate<any>> = new Map();
 
   onLoad(ctx: PluginContext) {
     ctx.registerCommand("talk", this.handleTalk.bind(this));
@@ -115,22 +117,28 @@ export class AiPlugin implements Plugin {
     this.registerTemplate({
       name: "item",
       description: "Generate an item",
+      schema: z.object({
+        name: z.string(),
+        description: z.string(),
+        adjectives: z.array(z.string()),
+        custom_css: z.string().optional(),
+      }),
       prompt: (_ctx, instruction) => `
-        You are a creative game master. Create a JSON object for an item based on the description: "${instruction}".
-        The JSON should have: name, description, adjectives (array of strings).
-        Example: {"name": "Rusty Sword", "description": "An old sword.", "adjectives": ["rusty", "sharp"]}
-        Return ONLY the JSON.
+        You are a creative game master. Create an item based on the description: "${instruction}".
       `,
     });
 
     this.registerTemplate({
       name: "room",
       description: "Generate a room",
+      schema: z.object({
+        name: z.string(),
+        description: z.string(),
+        adjectives: z.array(z.string()),
+        custom_css: z.string().optional(),
+      }),
       prompt: (_ctx, instruction) => `
-        You are a creative game master. Create a JSON object for a room based on the description: "${instruction}".
-        The JSON should have: name, description, adjectives (array of strings).
-        Example: {"name": "Dark Cave", "description": "A dark and damp cave.", "adjectives": ["dark", "damp"]}
-        Return ONLY the JSON.
+        You are a creative game master. Create a room based on the description: "${instruction}".
       `,
     });
   }
@@ -212,19 +220,12 @@ Keep your response short and in character.`,
     try {
       const prompt = template.prompt(ctx, instruction);
       const model = await getModel();
-      // Note: AI SDK supports JSON output (tracked in TODO.md)
-      const { text } = await generateText({
+
+      const { object: data } = await generateObject({
         model,
-        system: "You are a JSON generator. Output valid JSON only.",
+        schema: template.schema,
         prompt: prompt,
       });
-
-      // Extract JSON from code block if present
-      const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) ||
-        text.match(/```\n([\s\S]*?)\n```/) || [null, text];
-      const jsonStr = jsonMatch[1] || text;
-
-      const data = JSON.parse(jsonStr);
 
       const playerEntity = ctx.core.getEntity(ctx.player.id);
       if (!playerEntity || !playerEntity["location"]) return;

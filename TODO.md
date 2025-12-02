@@ -6,9 +6,6 @@
 
 ## Features & Enhancements
 
-- **AI Plugin**: Switch `handleGen` to use `generateObject` for structured output. (Ref: `plugins/ai/src/index.ts`)
-- **AI Plugin**: Use JSON Schema to specify the shape of generated objects. (Ref: `plugins/ai/src/index.ts`)
-- **AI Plugin**: Remove unsafe type assertions. (Ref: `plugins/ai/src/index.ts`)
 - **Scripting**: Better script errors (stack traces, line numbers (optional), diagnostic showing the code that errored, etc.)
 
 ## Documentation
