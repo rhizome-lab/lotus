@@ -56,10 +56,14 @@ Standard math and logic operators are mapped to their infix counterparts:
 
 ### Data Structures
 
-| Opcode                     | TypeScript Equivalent |
-| :------------------------- | :-------------------- |
-| `["list.new", ...items]`   | `[items...]`          |
-| `["obj.new", k1, v1, ...]` | `{ k1: v1, ... }`     |
+| Opcode                        | TypeScript Equivalent   |
+| :---------------------------- | :---------------------- | ------------------------------------------------------------------------- |
+| `["list.new", ...items]`      | `[items...]`            |
+| `["obj.new", k1, v1, ...]`    | `{ k1: v1, ... }`       |
+| `["obj.get", obj, key, def?]` | `obj[key]` or `obj.key` | Uses dot notation for valid identifiers. Supports default value via `??`. |
+| `["obj.set", obj, key, val]`  | `obj[key] = val`        |                                                                           |
+| `["obj.has", obj, key]`       | `key in obj`            |                                                                           |
+| `["obj.del", obj, key]`       | `delete obj[key]`       |                                                                           |
 
 ### Standard Library
 

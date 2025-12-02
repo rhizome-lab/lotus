@@ -240,6 +240,67 @@ export function decompile(
       return `{ ${props.join(", ")} }`;
     }
 
+    if (opcode === "obj.get") {
+      const [obj, key, def] = args;
+      const objCode = decompile(obj, indentLevel, false);
+      const keyCode = decompile(key, indentLevel, false);
+
+      let access = `${objCode}[${keyCode}]`;
+      // Optimization: use dot notation if key is a valid identifier string literal
+      if (keyCode.startsWith('"') && keyCode.endsWith('"')) {
+        const inner = keyCode.slice(1, -1);
+        if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(inner)) {
+          access = `${objCode}.${inner}`;
+        }
+      }
+
+      if (def !== undefined) {
+        return `(${access} ?? ${decompile(def, indentLevel, false)})`;
+      }
+      return access;
+    }
+
+    if (opcode === "obj.set") {
+      const [obj, key, val] = args;
+      const objCode = decompile(obj, indentLevel, false);
+      const keyCode = decompile(key, indentLevel, false);
+      const valCode = decompile(val, indentLevel, false);
+
+      let access = `${objCode}[${keyCode}]`;
+      if (keyCode.startsWith('"') && keyCode.endsWith('"')) {
+        const inner = keyCode.slice(1, -1);
+        if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(inner)) {
+          access = `${objCode}.${inner}`;
+        }
+      }
+
+      return `${access} = ${valCode}`;
+    }
+
+    if (opcode === "obj.has") {
+      const [obj, key] = args;
+      return `${decompile(key, indentLevel, false)} in ${decompile(
+        obj,
+        indentLevel,
+        false,
+      )}`;
+    }
+
+    if (opcode === "obj.del") {
+      const [obj, key] = args;
+      const objCode = decompile(obj, indentLevel, false);
+      const keyCode = decompile(key, indentLevel, false);
+
+      let access = `${objCode}[${keyCode}]`;
+      if (keyCode.startsWith('"') && keyCode.endsWith('"')) {
+        const inner = keyCode.slice(1, -1);
+        if (/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(inner)) {
+          access = `${objCode}.${inner}`;
+        }
+      }
+      return `delete ${access}`;
+    }
+
     // --- Infix Operators ---
     const infixOps: Record<string, string> = {
       "+": "+",

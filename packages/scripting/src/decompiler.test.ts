@@ -90,5 +90,27 @@ describe("Decompiler", () => {
 
     const obj = ObjectLib["obj.new"]("a", 1, "b", 2);
     expect(decompile(obj)).toBe('{ "a": 1, "b": 2 }');
+
+    // obj.get
+    expect(decompile(ObjectLib["obj.get"](Std.var("o"), "k"))).toBe("o.k");
+    expect(decompile(ObjectLib["obj.get"](Std.var("o"), "invalid-key"))).toBe(
+      'o["invalid-key"]',
+    );
+    expect(decompile(ObjectLib["obj.get"](Std.var("o"), "k", "default"))).toBe(
+      '(o.k ?? "default")',
+    );
+
+    // obj.set
+    expect(decompile(ObjectLib["obj.set"](Std.var("o"), "k", 3))).toBe(
+      "o.k = 3",
+    );
+
+    // obj.has
+    expect(decompile(ObjectLib["obj.has"](Std.var("o"), "k"))).toBe('"k" in o');
+
+    // obj.del
+    expect(decompile(ObjectLib["obj.del"](Std.var("o"), "k"))).toBe(
+      "delete o.k",
+    );
   });
 });
