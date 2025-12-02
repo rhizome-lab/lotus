@@ -17,6 +17,7 @@ export default defineConfig({
           { text: "Architecture", link: "/architecture" },
           { text: "Codebase Map", link: "/codebase_map" },
           { text: "Web Frontend", link: "/web_frontend" },
+          { text: "TUI", link: "/tui" },
           { text: "Discord Bot", link: "/discord_bot" },
         ],
       },
