@@ -17,13 +17,13 @@ export interface CommandContext {
   player: PlayerContext;
   command: string;
   args: any[];
-  send: (msg: any) => void;
+  send: (type: string, payload: unknown) => void;
   /** Core methods exposed to plugins */
   core: {
     getEntity: (id: number) => Entity | null;
     getContents: (id: number) => Entity[];
     moveEntity: (id: number, destId: number, detail?: string | null) => void;
-    createEntity: (data: any) => number;
+    createEntity: (data: Record<string, unknown>) => number;
     updateEntity: (entity: Entity) => void;
     deleteEntity: (id: number) => void;
     canEdit: (playerId: number, entityId: number) => boolean;

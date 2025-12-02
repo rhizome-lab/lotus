@@ -1,5 +1,6 @@
 /// <reference types="bun" />
 import { describe, test, expect, beforeEach, mock } from "bun:test";
+import { loadBindings } from "./keybinds";
 
 // Mock localStorage BEFORE import
 const localStorageMock = (() => {
@@ -59,8 +60,6 @@ describe("Keybinds Store", () => {
   });
 
   test("loadBindings with existing data", () => {
-    const { loadBindings } = require("./keybinds");
-
     // Assuming `spyOn` is available globally or imported, e.g., from Jest or a similar test utility.
     // If using Bun's `mock`, it would be `const getItemSpy = mock(global.localStorage, "getItem").mockReturnValue(...)`
     global.localStorage.setItem(

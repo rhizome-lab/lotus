@@ -3,6 +3,7 @@ import { createEntity, getEntity } from "./repo";
 import {
   createScriptContext,
   evaluate,
+  getOpcodeMetadata,
   registerLibrary,
 } from "./scripting/interpreter";
 import * as Core from "./scripting/lib/core";
@@ -237,7 +238,6 @@ async function handleJsonRpcRequest(
       }
     }
     case "get_opcodes": {
-      const { getOpcodeMetadata } = require("./scripting/interpreter");
       return {
         jsonrpc: "2.0",
         id: req.id,

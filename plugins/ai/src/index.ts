@@ -144,14 +144,14 @@ export class AiPlugin implements Plugin {
     const message = ctx.args.slice(1).join(" ");
 
     if (!targetName || !message) {
-      ctx.send({ type: "message", text: "Usage: talk <npc> <message>" });
+      ctx.send("message", "Usage: talk <npc> <message>");
       return;
     }
 
     // Check room contents.
     const playerEntity = ctx.core.getEntity(ctx.player.id);
     if (!playerEntity || !playerEntity["location"]) {
-      ctx.send({ type: "message", text: "You are nowhere." });
+      ctx.send("message", "You are nowhere.");
       return;
     }
 
@@ -161,15 +161,9 @@ export class AiPlugin implements Plugin {
     );
 
     if (!target) {
-      ctx.send({
-        type: "message",
-        text: `You don't see '${targetName}' here.`,
-      });
+      ctx.send("message", `You don't see '${targetName}' here.`);
       return;
     }
-
-    // Check if it's an actor? Or just anything?
-    // Let's allow talking to anything for now, but maybe prioritize ACTOR.
 
     try {
       const model = await getModel();
@@ -186,13 +180,10 @@ Keep your response short and in character.`,
         prompt: message,
       });
 
-      ctx.send({
-        type: "message",
-        text: `${target["name"]} says: "${text}"`,
-      });
+      ctx.send("message", `${target["name"]} says: "${text}"`);
     } catch (error: any) {
       console.error("AI Error:", error);
-      ctx.send({ type: "error", text: `AI Error: ${error.message}` });
+      ctx.send("error", `AI Error: ${error.message}`);
     }
   }
 
@@ -201,25 +192,22 @@ Keep your response short and in character.`,
     const instruction = ctx.args.slice(1).join(" ");
 
     if (!templateName) {
-      ctx.send({
-        type: "message",
-        text: `Usage: gen <template> [instruction]. Available templates: ${Array.from(
+      ctx.send(
+        "message",
+        `Usage: gen <template> [instruction]. Available templates: ${Array.from(
           this.templates.keys(),
         ).join(", ")}`,
-      });
+      );
       return;
     }
 
     const template = this.templates.get(templateName);
     if (!template) {
-      ctx.send({
-        type: "error",
-        text: `Template '${templateName}' not found.`,
-      });
+      ctx.send("error", `Template '${templateName}' not found.`);
       return;
     }
 
-    ctx.send({ type: "message", text: "Generating..." });
+    ctx.send("message", "Generating...");
 
     try {
       const prompt = template.prompt(ctx, instruction);
@@ -250,13 +238,10 @@ Keep your response short and in character.`,
           custom_css: data.custom_css,
         });
         ctx.core.moveEntity(ctx.player.id, newRoomId);
-        const room = this.getResolvedRoom(ctx, newRoomId);
+        const room = await this.getResolvedRoom(ctx, newRoomId);
         if (room) {
-          ctx.send(room);
-          ctx.send({
-            type: "message",
-            text: `You are transported to ${data.name}.`,
-          });
+          ctx.send("room_id", { roomId: room.id });
+          ctx.send("message", `You are transported to ${data.name}.`);
         }
       } else {
         // Default: Create item in current room
@@ -267,18 +252,18 @@ Keep your response short and in character.`,
           adjectives: data.adjectives,
           custom_css: data.custom_css,
         });
-        const room = this.getResolvedRoom(
+        const room = await this.getResolvedRoom(
           ctx,
           playerEntity["location"] as number,
         );
         if (room) {
-          ctx.send(room);
-          ctx.send({ type: "message", text: `Created ${data.name}.` });
+          ctx.send("room_id", { roomId: room.id });
+          ctx.send("message", `Created ${data.name}.`);
         }
       }
     } catch (error: any) {
       console.error("AI Error:", error);
-      ctx.send({ type: "error", text: `AI Error: ${error.message}` });
+      ctx.send("error", `AI Error: ${error.message}`);
     }
   }
 
@@ -286,14 +271,11 @@ Keep your response short and in character.`,
     const instruction = ctx.args.join(" ");
 
     if (!instruction) {
-      ctx.send({
-        type: "message",
-        text: "Usage: image <description>",
-      });
+      ctx.send("message", "Usage: image <description>");
       return;
     }
 
-    ctx.send({ type: "message", text: "Generating image..." });
+    ctx.send("message", "Generating image...");
 
     try {
       const model = await getModel("openai:dall-e-3");
@@ -322,10 +304,15 @@ Keep your response short and in character.`,
       const prompt = ctx.args.slice(1).join(" ");
 
       if (!targetName || !prompt) {
-        ctx.send({ type: "message", text: "Usage: image <target> <prompt>" });
+        ctx.send("message", "Usage: image <target> <prompt>");
         return;
       }
 
+      const playerEntity = ctx.core.getEntity(ctx.player.id);
+      if (!playerEntity) {
+        ctx.send("message", "You are nowhere.");
+        return;
+      }
       let targetId: number | null = null;
       if (targetName === "room" || targetName === "here") {
         targetId = playerEntity["location"] as number;
@@ -349,23 +336,17 @@ Keep your response short and in character.`,
             ...ctx.core.getEntity(playerEntity["location"] as number),
           };
           if (room) {
-            ctx.send(room);
-            ctx.send({
-              type: "message",
-              text: `Image generated for ${entity["name"]}.`,
-            });
+            ctx.send("room_id", { roomId: room.id });
+            ctx.send("message", `Image generated for ${entity["name"]}.`);
           }
           return;
         }
       }
 
-      ctx.send({
-        type: "message",
-        text: `Could not find target '${targetName}'.`,
-      });
+      ctx.send("message", `Could not find target '${targetName}'.`);
     } catch (error: any) {
       console.error("AI Image Error:", error);
-      ctx.send({ type: "error", text: `AI Image Error: ${error.message}` });
+      ctx.send("error", `AI Image Error: ${error.message}`);
     }
   }
 

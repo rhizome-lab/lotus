@@ -1,4 +1,4 @@
-import { describe, test, expect, mock } from "bun:test";
+import { describe, test, expect, mock, beforeAll } from "bun:test";
 import { Database } from "bun:sqlite";
 import { initSchema } from "../schema";
 
@@ -18,6 +18,7 @@ import {
 import * as Core from "./lib/core";
 import * as Object from "./lib/object";
 import * as List from "./lib/list";
+import * as String from "./lib/string";
 import { createEntity, getEntity } from "../repo";
 import { Entity } from "@viwo/shared/jsonrpc";
 
@@ -172,5 +173,120 @@ describe("Interpreter", () => {
       // @ts-expect-error
       await evaluate(Core["call"]("other", "tell", "msg"), ctx).catch((e) => e),
     ).toBeInstanceOf(ScriptError);
+  });
+});
+
+describe("Interpreter Errors and Warnings", () => {
+  registerLibrary(Core);
+
+  const ctx: ScriptContext = {
+    caller: { id: 1 },
+    this: { id: 2 },
+    args: [],
+    gas: 1000,
+    warnings: [],
+    vars: {},
+  };
+
+  test("throw", async () => {
+    try {
+      await evaluate(Core["throw"]("Something went wrong"), ctx);
+      expect(true).toBe(false); // Should not reach here
+    } catch (e: any) {
+      expect(e.message).toBe("Something went wrong");
+    }
+  });
+
+  test("try/catch", async () => {
+    // try { throw "error" } catch { return "caught" }
+    const script = Core["try"](
+      Core["throw"]("oops"),
+      "this should be unused", // No error var
+      "caught",
+    );
+    expect(await evaluate(script, ctx)).toBe("caught");
+  });
+
+  test("try/catch with error variable", async () => {
+    // try { throw "error" } catch(e) { return e }
+    const localCtx = { ...ctx, locals: {} };
+    const script = Core["try"](
+      Core["throw"]("oops"),
+      "err",
+      Core["var"]("err"),
+    );
+    expect(await evaluate(script, localCtx)).toBe("oops");
+  });
+
+  test("try/catch no error", async () => {
+    // try { return "ok" } catch { return "bad" }
+    const script = Core["try"]("ok", "this should be unused", "bad");
+    expect(await evaluate(script, ctx)).toBe("ok");
+  });
+
+  test("warn", async () => {
+    const warnings: string[] = [];
+    const localCtx = { ...ctx, warnings };
+    await evaluate(Core["warn"]("Be careful"), localCtx);
+    expect(localCtx.warnings).toContain("Be careful");
+  });
+
+  test("nested try/catch", async () => {
+    const script = Core["try"](
+      Core["try"](
+        Core["throw"]("inner"),
+        "this should be unused", // No error var
+        Core["throw"]("outer"),
+      ),
+      "e",
+      Core["var"]("e"),
+    );
+    expect(await evaluate(script, { ...ctx, vars: {} })).toBe("outer");
+  });
+});
+
+describe("Interpreter Libraries", () => {
+  const ctx: ScriptContext = {
+    caller: { id: 1 },
+    this: { id: 2 },
+    args: [],
+    gas: 1000,
+    warnings: [],
+    vars: {},
+  };
+
+  beforeAll(() => {
+    registerLibrary(Core);
+    registerLibrary(String);
+    registerLibrary(List);
+    registerLibrary(Object);
+  });
+
+  describe("Lambda & HOF", () => {
+    test("lambda & apply", async () => {
+      // (lambda (x) (+ x 1))
+      const inc = Core["lambda"](["x"], Core["+"](Core["var"]("x"), 1));
+      expect(await evaluate(Core["apply"](inc, 1), ctx)).toBe(2);
+    });
+
+    test("closure capture", async () => {
+      // (let x 10); (let addX (lambda (y) (+ x y))); (apply addX 5) -> 15
+      expect(
+        await evaluate(
+          Core["seq"](
+            Core["let"]("x", 10),
+            Core["let"](
+              "addX",
+              Core["lambda"](
+                ["y"],
+                Core["+"](Core["var"]("x"), Core["var"]("y")),
+              ),
+            ),
+            Core["apply"](Core["var"]("addX"), 5),
+          ),
+          ctx,
+        ),
+      ).toBe(15);
+    });
   });
 });

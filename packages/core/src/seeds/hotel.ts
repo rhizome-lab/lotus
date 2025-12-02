@@ -82,16 +82,7 @@ export function seedHotel(lobbyId: number, voidId: number) {
         Core["var"]("contents"),
         Core["seq"](
           Core["let"]("item", Core["entity"](Core["var"]("itemId"))),
-          Core["if"](
-            Core["and"](
-              Core["var"]("item"),
-              Core["!="](
-                Object["obj.get"](Core["var"]("item"), "kind", "UNKNOWN"),
-                "ACTOR",
-              ),
-            ),
-            Core["destroy"](Core["var"]("item")),
-          ),
+          Core["if"](Core["var"]("item"), Core["destroy"](Core["var"]("item"))),
         ),
       ),
       Core["destroy"](Core["this"]()),
