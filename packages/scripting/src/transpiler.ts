@@ -4,6 +4,7 @@ import * as MathLib from "./lib/math";
 import * as List from "./lib/list";
 import * as ObjectLib from "./lib/object";
 import * as BooleanLib from "./lib/boolean";
+import { RESERVED_TYPESCRIPT_KEYWORDS } from "./type_generator";
 
 export function transpile(code: string): any {
   const sourceFile = ts.createSourceFile(
@@ -13,10 +14,11 @@ export function transpile(code: string): any {
     true,
   );
 
+  const scope = new Set<string>();
   const statements: any[] = [];
 
   sourceFile.statements.forEach((stmt) => {
-    const result = transpileNode(stmt);
+    const result = transpileNode(stmt, scope);
     if (result !== undefined) {
       statements.push(result);
     }
@@ -32,13 +34,13 @@ export function transpile(code: string): any {
   return Std.seq(...statements);
 }
 
-function transpileNode(node: ts.Node): any {
+function transpileNode(node: ts.Node, scope: Set<string>): any {
   if (ts.isExpressionStatement(node)) {
-    return transpileNode(node.expression);
+    return transpileNode(node.expression, scope);
   }
 
   if (ts.isParenthesizedExpression(node)) {
-    return transpileNode(node.expression);
+    return transpileNode(node.expression, scope);
   }
 
   if (ts.isNumericLiteral(node)) {
@@ -72,15 +74,16 @@ function transpileNode(node: ts.Node): any {
       const decl = declList.declarations[0];
       if (ts.isVariableDeclaration(decl) && decl.initializer) {
         const name = decl.name.getText();
-        const value = transpileNode(decl.initializer);
+        scope.add(name);
+        const value = transpileNode(decl.initializer, scope);
         return Std.let(name, value);
       }
     }
   }
 
   if (ts.isBinaryExpression(node)) {
-    const left = transpileNode(node.left);
-    const right = transpileNode(node.right);
+    const left = transpileNode(node.left, scope);
+    const right = transpileNode(node.right, scope);
     const op = node.operatorToken.kind;
 
     switch (op) {
@@ -131,12 +134,12 @@ function transpileNode(node: ts.Node): any {
 
   if (ts.isPrefixUnaryExpression(node)) {
     if (node.operator === ts.SyntaxKind.ExclamationToken) {
-      return BooleanLib.not(transpileNode(node.operand));
+      return BooleanLib.not(transpileNode(node.operand, scope));
     }
   }
 
   if (ts.isDeleteExpression(node)) {
-    const expr = transpileNode(node.expression);
+    const expr = transpileNode(node.expression, scope);
     // expr should be ["obj.get", obj, key]
     if (Array.isArray(expr) && expr[0] === "obj.get") {
       return ObjectLib["obj.del"](expr[1], expr[2]);
@@ -148,7 +151,7 @@ function transpileNode(node: ts.Node): any {
   }
 
   if (ts.isArrayLiteralExpression(node)) {
-    const elements = node.elements.map(transpileNode);
+    const elements = node.elements.map((e) => transpileNode(e, scope));
     return List["list.new"](...elements);
   }
 
@@ -160,7 +163,7 @@ function transpileNode(node: ts.Node): any {
         // Strip quotes if present
         const cleanKey =
           key.startsWith('"') || key.startsWith("'") ? key.slice(1, -1) : key;
-        const val = transpileNode(prop.initializer);
+        const val = transpileNode(prop.initializer, scope);
         props.push(cleanKey, val);
       }
     });
@@ -168,53 +171,62 @@ function transpileNode(node: ts.Node): any {
   }
 
   if (ts.isPropertyAccessExpression(node)) {
-    const obj = transpileNode(node.expression);
+    const obj = transpileNode(node.expression, scope);
     const key = node.name.text;
     return ObjectLib["obj.get"](obj, key);
   }
 
   if (ts.isElementAccessExpression(node)) {
-    const obj = transpileNode(node.expression);
-    const key = transpileNode(node.argumentExpression);
+    const obj = transpileNode(node.expression, scope);
+    const key = transpileNode(node.argumentExpression, scope);
     return ObjectLib["obj.get"](obj, key);
   }
 
   if (ts.isCallExpression(node)) {
     const expr = node.expression;
-    const args = node.arguments.map(transpileNode);
+    const args = node.arguments.map((a) => transpileNode(a, scope));
 
-    // Check if it's a known global function or just a variable call
-    // If expr is an identifier, we can check if it's a special opcode or just a var
-    // But for now, let's treat everything as "apply" unless we want to support direct opcodes like "log"
+    let opcodeName: string | null = null;
 
     if (ts.isIdentifier(expr)) {
-      const name = expr.text;
-      // Optimisation: if it's a known opcode, use it directly?
-      // But ViwoScript uses ["apply", func, args...] for user functions
-      // and ["log", msg] for builtins.
-      // Let's assume standard library calls are direct opcodes if they match?
-      // Or maybe we should just output ["apply", ["var", name], args] and let the runtime handle it?
-      // Wait, `log` is an opcode. `["log", "msg"]`.
-      // If I write `log("msg")` in TS, I want `["log", "msg"]`.
-      // If I write `myFunc("msg")`, I want `["apply", ["var", "myFunc"], "msg"]`.
-
-      // List of known opcodes that look like functions
-      const knownOpcodes = new Set(["log"]);
-      if (knownOpcodes.has(name)) {
-        if (name === "log") {
-          return Std.log(args[0], ...args.slice(1));
-        }
-        return [name, ...args];
+      opcodeName = expr.text;
+      // If it's a local variable, it's NOT an opcode call
+      if (scope.has(opcodeName)) {
+        opcodeName = null;
       }
-      return Std.apply(Std.var(name), ...args);
+    } else if (ts.isPropertyAccessExpression(expr)) {
+      const lhs = expr.expression;
+      const rhs = expr.name;
+      if (ts.isIdentifier(lhs)) {
+        opcodeName = `${lhs.text}.${rhs.text}`;
+        // If lhs is local, then it's a method call on a local, not an opcode namespace
+        if (scope.has(lhs.text)) {
+          opcodeName = null;
+        }
+      }
     }
 
-    return Std.apply(transpileNode(expr), ...args);
+    if (opcodeName) {
+      // Handle sanitization reversal (remove trailing underscore)
+      if (opcodeName.endsWith("_")) {
+        const potentialOpcode = opcodeName.slice(0, -1);
+        if (RESERVED_TYPESCRIPT_KEYWORDS.has(potentialOpcode)) {
+          opcodeName = potentialOpcode;
+        }
+      }
+
+      // Heuristic: If it's not a local variable, assume it's an opcode.
+      return [opcodeName, ...args];
+    }
+
+    return Std.apply(transpileNode(expr, scope), ...args);
   }
 
   if (ts.isArrowFunction(node)) {
     const params = node.parameters.map((p) => p.name.getText());
-    let body = transpileNode(node.body);
+    const fnScope = new Set(scope);
+    params.forEach((p) => fnScope.add(p));
+    let body = transpileNode(node.body, fnScope);
 
     // If body is a block, it returns a "seq".
     // Lambda body in ViwoScript can be a seq.
@@ -223,15 +235,16 @@ function transpileNode(node: ts.Node): any {
   }
 
   if (ts.isBlock(node)) {
-    const stmts = node.statements.map(transpileNode);
+    const blockScope = new Set(scope);
+    const stmts = node.statements.map((s) => transpileNode(s, blockScope));
     return Std.seq(...stmts);
   }
 
   if (ts.isIfStatement(node)) {
-    const cond = transpileNode(node.expression);
-    const thenStmt = transpileNode(node.thenStatement);
+    const cond = transpileNode(node.expression, scope);
+    const thenStmt = transpileNode(node.thenStatement, scope);
     const elseStmt = node.elseStatement
-      ? transpileNode(node.elseStatement)
+      ? transpileNode(node.elseStatement, scope)
       : null;
 
     if (elseStmt) {
@@ -241,19 +254,21 @@ function transpileNode(node: ts.Node): any {
   }
 
   if (ts.isWhileStatement(node)) {
-    const cond = transpileNode(node.expression);
-    const body = transpileNode(node.statement);
+    const cond = transpileNode(node.expression, scope);
+    const body = transpileNode(node.statement, scope);
     return Std.while(cond, body);
   }
 
   if (ts.isTryStatement(node)) {
-    const tryBlock = transpileNode(node.tryBlock);
+    const tryBlock = transpileNode(node.tryBlock, scope);
     const catchClause = node.catchClause;
     if (catchClause) {
       const errVar = catchClause.variableDeclaration
         ? catchClause.variableDeclaration.name.getText()
         : "err";
-      const catchBlock = transpileNode(catchClause.block);
+      const catchScope = new Set(scope);
+      catchScope.add(errVar);
+      const catchBlock = transpileNode(catchClause.block, catchScope);
       return Std.try(tryBlock, errVar, catchBlock);
     }
     // ViwoScript try expects catch
@@ -261,17 +276,19 @@ function transpileNode(node: ts.Node): any {
   }
 
   if (ts.isThrowStatement(node)) {
-    return Std.throw(transpileNode(node.expression));
+    return Std.throw(transpileNode(node.expression, scope));
   }
 
   if (ts.isForOfStatement(node)) {
     const initializer = node.initializer;
     let varName = "";
+    const loopScope = new Set(scope);
     if (ts.isVariableDeclarationList(initializer)) {
       varName = initializer.declarations[0]!.name.getText();
+      loopScope.add(varName);
     }
-    const list = transpileNode(node.expression);
-    const body = transpileNode(node.statement);
+    const list = transpileNode(node.expression, scope);
+    const body = transpileNode(node.statement, loopScope);
 
     return Std.for(varName, list, body);
   }
@@ -282,7 +299,7 @@ function transpileNode(node: ts.Node): any {
     // If we are in a block, `return x` might be tricky if it's not the last statement.
     // For now, let's just return the expression.
     if (node.expression) {
-      return transpileNode(node.expression);
+      return transpileNode(node.expression, scope);
     }
     return null;
   }

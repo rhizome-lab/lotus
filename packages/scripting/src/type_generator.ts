@@ -1,6 +1,6 @@
 import { OpcodeMetadata } from "./interpreter";
 
-const RESERVED_TYPESCRIPT_KEYWORDS = new Set([
+export const RESERVED_TYPESCRIPT_KEYWORDS = new Set([
   "if",
   "else",
   "while",

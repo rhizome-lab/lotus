@@ -88,9 +88,34 @@ describe("transpiler", () => {
   });
 
   test("function calls", () => {
-    expect(transpile("f(x)")).toEqual(Std.apply(Std.var("f"), Std.var("x")));
+    expect(transpile("f(x)")).toEqual(["f", Std.var("x")]);
     expect(transpile("log('msg')")).toEqual(Std.log("msg"));
     expect(transpile("throw('err')")).toEqual(Std.throw("err"));
+    expect(transpile("obj.get(o, 'k')")).toEqual(
+      ObjectLib["obj.get"](Std.var("o"), "k"),
+    );
+    expect(transpile("list.push(l, 1)")).toEqual(
+      List["list.push"](Std.var("l"), 1),
+    );
+    // Sanitization test (mocking if_ usage if possible, or just checking logic)
+    // Since we can't easily import type_generator output here, we assume user writes if_
+    // But 'if' is a keyword, so we can't write `if(...)` as a call in TS source unless it's valid TS.
+    // `if_` is valid TS identifier.
+    // We need to ensure OPS has 'if'. It does.
+    // expect(transpile("if_(c, t, e)")).toEqual(Std.if(Std.var("c"), Std.var("t"), Std.var("e")));
+    // Actually Std.if returns ["if", ...].
+  });
+
+  test("shadowing opcodes", () => {
+    const code = `
+      let log = (msg) => { return msg; };
+      log("hello");
+    `;
+    const expected = Std.seq(
+      Std.let("log", Std.lambda(["msg"], Std.seq(Std.var("msg")))),
+      Std.apply(Std.var("log"), "hello"),
+    );
+    expect(transpile(code)).toEqual(expected);
   });
 
   test("lambdas", () => {
