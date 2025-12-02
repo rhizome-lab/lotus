@@ -5,8 +5,8 @@ import {
   StdLib,
   MathLib,
   BooleanLib,
+  compile,
 } from "@viwo/scripting";
-import { compile } from "../../scripting/src/compiler";
 
 registerLibrary(StdLib);
 registerLibrary(MathLib);

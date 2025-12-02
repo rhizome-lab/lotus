@@ -5,8 +5,7 @@ The Compiler is a tool designed to transform the internal JSON representation of
 ## Usage
 
 ```typescript
-import { compile } from "@viwo/scripting/compiler";
-import { createScriptContext } from "@viwo/scripting";
+import { compile, createScriptContext } from "@viwo/scripting";
 
 const script = ["seq", ["let", "x", 1], ["var", "x"]];
 const compiledFn = compile(script);

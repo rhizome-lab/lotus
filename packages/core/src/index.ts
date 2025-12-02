@@ -32,6 +32,12 @@ export { Core as CoreLib };
 export { db } from "./db";
 export { createEntity, getEntity, addVerb, updateEntity } from "./repo";
 
+// Scheduler is started by the application (server/client)
+export { scheduler } from "./scheduler";
+
+// Seed the database
+export { seed } from "./seed";
+
 export const pluginManager = new PluginManager();
 
 // Registry of connected clients: PlayerID -> WebSocket
@@ -83,12 +89,6 @@ scheduler.setSendFactory((entityId: number) => {
     );
   };
 });
-
-// Scheduler is started by the application (server/client)
-export { scheduler } from "./scheduler";
-
-// Seed the database
-export { seed } from "./seed";
 
 /**
  * Starts the Viwo Core Server.

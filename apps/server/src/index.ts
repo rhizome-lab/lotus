@@ -1,4 +1,5 @@
 import { startServer, pluginManager, seed, scheduler } from "@viwo/core";
+import { AiPlugin } from "@viwo/plugin-ai";
 
 async function main() {
   console.log("Starting Viwo Server...");
