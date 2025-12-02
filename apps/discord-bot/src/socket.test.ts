@@ -121,16 +121,15 @@ describe("GameSocket", () => {
 describe("SocketManager", () => {
   test("Singleton behavior", () => {
     const manager = new SocketManager();
-    const s1 = manager.getSocket(1);
-    const s2 = manager.getSocket(1);
+    const s1 = manager.getSocket();
+    const s2 = manager.getSocket();
     expect(s1).toBe(s2);
-
-    const s3 = manager.getSocket(2);
-    expect(s1).not.toBe(s3);
   });
 
-  test("System socket", () => {
+  test("Socket connection", () => {
     const manager = new SocketManager();
-    expect(manager.getSystemSocket()).toBeDefined();
+    const socket = manager.getSocket();
+    expect(socket).toBeDefined();
+    // We can't easily test connection without a real server, but we can check it exists
   });
 });

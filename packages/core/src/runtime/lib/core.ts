@@ -424,3 +424,87 @@ export const resolve_props = defineOpcode<[ScriptValue<Entity>], Entity>(
     },
   },
 );
+
+/**
+ * Executes a verb on an entity as if called by that entity (impersonation).
+ * Restricted to System (ID 3) and Bot (ID 4).
+ */
+export const sudo = defineOpcode<
+  [ScriptValue<Entity>, ScriptValue<string>, ...ScriptValue<unknown>[]],
+  any
+>("sudo", {
+  metadata: {
+    label: "Sudo",
+    category: "system",
+    description: "Execute verb as another entity",
+    slots: [
+      { name: "Target", type: "block" },
+      { name: "Verb", type: "string" },
+      { name: "Args", type: "block" },
+    ],
+    parameters: [
+      { name: "target", type: "Entity" },
+      { name: "verb", type: "string" },
+      { name: "args", type: "unknown[]" },
+    ],
+    returnType: "any",
+  },
+  handler: async (args, ctx) => {
+    const [targetExpr, verbExpr, argsExpr] = args;
+    const target = await evaluate(targetExpr, ctx);
+    if (
+      !target ||
+      typeof target !== "object" ||
+      !("id" in target) ||
+      typeof target.id !== "number"
+    ) {
+      throw new ScriptError(
+        `sudo: target must be an entity, got ${JSON.stringify(target)}`,
+      );
+    }
+    const verb = await evaluate(verbExpr, ctx);
+    if (typeof verb !== "string") {
+      throw new ScriptError(
+        `sudo: verb must be a string, got ${JSON.stringify(verb)}`,
+      );
+    }
+
+    // Security Check
+    const callerId = ctx.caller.id;
+    // System = 3, Bot = 4
+    if (callerId !== 3 && callerId !== 4) {
+      throw new ScriptError("sudo: permission denied");
+    }
+
+    // Evaluate arguments
+    const evaluatedArgs = await evaluate(argsExpr, ctx);
+    if (!Array.isArray(evaluatedArgs)) {
+      throw new ScriptError(
+        `sudo: args must be an array, got ${JSON.stringify(evaluatedArgs)}`,
+      );
+    }
+
+    const targetVerb = getVerb(target.id, verb);
+    if (!targetVerb) {
+      throw new ScriptError(`sudo: verb '${verb}' not found on ${target.id}`);
+    }
+
+    // Execute with target as caller AND this
+    // This effectively impersonates the user
+    return await evaluate(
+      targetVerb.code,
+      createScriptContext({
+        caller: target, // Impersonation
+        this: target,
+        args: evaluatedArgs,
+        ...(ctx.send ? { send: ctx.send } : {}), // Keep original output channel? Or should we capture it?
+        // For now, keep original send so Bot gets the output
+        warnings: ctx.warnings,
+        stack: [
+          ...(ctx.stack ?? []),
+          { name: `sudo:${verb}`, args: evaluatedArgs },
+        ],
+      }),
+    );
+  },
+});

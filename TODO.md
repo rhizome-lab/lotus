@@ -1,9 +1,5 @@
 # Viwo TODOs
 
-## Documentation
-
-- **Discord Bot**: Implement a way to route Core -> Discord messages more intelligently. Currently relies on socketManager, but might need reverse lookup for Entity -> (DiscordUser, Channel). (Ref: `apps/discord-bot/src/index.ts`)
-
 ## Long-term Vision
 
 - **Editor**: Use `apps/web/src/utils/type_generator.ts` to generate types for a Monaco editor (+ LSP) for the script editor.

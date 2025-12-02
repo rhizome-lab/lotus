@@ -149,4 +149,48 @@ createLibraryTester(Core, "Core Library", (test) => {
       dynamic: "resolved_value",
     });
   });
+
+  test("sudo", async () => {
+    // 1. Deny if not system/bot
+    const userCtx = createScriptContext({
+      caller: { id: 100 } as any,
+      this: { id: 100 } as any,
+      args: [],
+      send: () => {},
+    });
+    expect(
+      evaluate(
+        Core["sudo"]({ id: 101 }, "get_dynamic", List["list.new"]()),
+        userCtx,
+      ),
+    ).rejects.toThrow("permission denied");
+
+    // 2. Allow if System (ID 3)
+    const systemCtx = createScriptContext({
+      caller: { id: 3 } as any,
+      this: { id: 3 } as any,
+      args: [],
+      send: () => {},
+    });
+    expect(
+      await evaluate(
+        Core["sudo"]({ id: 101 }, "get_dynamic", List["list.new"]()),
+        systemCtx,
+      ),
+    ).toBe("resolved_value");
+
+    // 3. Allow if Bot (ID 4)
+    const botCtx = createScriptContext({
+      caller: { id: 4 } as any,
+      this: { id: 4 } as any,
+      args: [],
+      send: () => {},
+    });
+    expect(
+      await evaluate(
+        Core["sudo"]({ id: 101 }, "get_dynamic", List["list.new"]()),
+        botCtx,
+      ),
+    ).toBe("resolved_value");
+  });
 });

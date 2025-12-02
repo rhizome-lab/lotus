@@ -43,6 +43,19 @@ export function seed() {
     location: voidId,
   });
 
+  // 4. Create Discord Bot Entity
+  const botId = createEntity({
+    name: "Discord Bot",
+    description: "The bridge to Discord.",
+    location: voidId,
+  });
+
+  addVerb(
+    botId,
+    "sudo",
+    Core["sudo"](Core["entity"](Std["arg"](0)), Std["arg"](1), Std["arg"](2)),
+  );
+
   addVerb(
     systemId,
     "can_edit",

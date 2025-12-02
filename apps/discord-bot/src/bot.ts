@@ -67,13 +67,18 @@ export class DiscordBot {
           message.author.displayName,
         );
 
-        // 3. Get Socket
-        const socket = socketManager.getSocket(entityId);
+        // 3. Get Socket (Single Bot Socket)
+        const socket = socketManager.getSocket();
 
-        // 4. Send Message to Core (assuming raw input for now)
+        // 4. Send Message to Core via sudo
         const parts = message.content.split(" ");
         if (parts[0]) {
-          socket.execute(parts[0], parts.slice(1));
+          // execute("sudo", [targetId, verb, ...args])
+          socket.execute("sudo", [
+            entityId, // Target ID
+            parts[0], // Verb
+            parts.slice(1), // Args
+          ]);
         }
       } catch (error) {
         console.error("Error handling message:", error);

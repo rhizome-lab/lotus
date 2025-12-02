@@ -1,4 +1,12 @@
-import { describe, test, expect, mock, beforeEach, spyOn } from "bun:test";
+import {
+  describe,
+  test,
+  expect,
+  mock,
+  beforeEach,
+  spyOn,
+  Mock,
+} from "bun:test";
 
 // Mock dependencies
 const mockDb = {
@@ -19,15 +27,9 @@ mock.module("./db", () => ({ db: mockDb }));
 
 // Import real socketManager
 import { socketManager } from "./socket";
+import { SessionManager } from "./session";
 
 // Mock GameSockets
-const mockSystemSocket = {
-  send: mock(() => {}),
-  execute: mock(() => {}),
-  on: mock(() => {}),
-  off: mock(() => {}),
-  connect: mock(() => {}),
-} as any;
 
 const mockPlayerSocket = {
   send: mock(() => {}),
@@ -38,7 +40,7 @@ const mockPlayerSocket = {
 } as any;
 
 describe("Session Manager", () => {
-  let sessionManager: any;
+  let sessionManager: SessionManager;
 
   beforeEach(async () => {
     mockDb.getActiveEntity.mockClear();
@@ -49,23 +51,21 @@ describe("Session Manager", () => {
     mockDb.run.mockClear();
 
     // Reset socket mocks
-    mockSystemSocket.execute.mockClear();
-    mockSystemSocket.on.mockClear();
-    mockSystemSocket.off.mockClear();
+    mockPlayerSocket.execute.mockClear();
+    mockPlayerSocket.on.mockClear();
+    mockPlayerSocket.off.mockClear();
 
     // Spy on socketManager methods
-    if (!socketManager.getSystemSocket.mock) {
-      spyOn(socketManager, "getSystemSocket");
-    }
-    if (!socketManager.getSocket.mock) {
+    if (
+      !(socketManager.getSocket as Mock<typeof socketManager.getSocket>).mock
+    ) {
       spyOn(socketManager, "getSocket");
     }
 
-    (socketManager.getSystemSocket as any).mockReturnValue(mockSystemSocket);
     (socketManager.getSocket as any).mockReturnValue(mockPlayerSocket);
 
-    // Default behavior for system socket
-    mockSystemSocket.on.mockImplementation(
+    // Default behavior for socket
+    mockPlayerSocket.on.mockImplementation(
       (event: string, _handler: Function) => {
         if (event === "message") {
           // no-op
@@ -74,12 +74,12 @@ describe("Session Manager", () => {
     );
 
     // We need to trigger the message handler when execute is called.
-    mockSystemSocket.execute.mockImplementation((cmd: string, args: any[]) => {
+    mockPlayerSocket.execute.mockImplementation((cmd: string, args: any[]) => {
       if (cmd === "create_player") {
         const name = args[0];
         // Find the registered message handler
         // We need to capture it from the .on call
-        const call = mockSystemSocket.on.mock.calls.find(
+        const call = mockPlayerSocket.on.mock.calls.find(
           (c: any) => c[0] === "message",
         );
         if (call) {
@@ -127,7 +127,7 @@ describe("Session Manager", () => {
     mockDb.getDefaultEntity.mockReturnValue(null);
 
     // Override execute to NOT trigger response
-    mockSystemSocket.execute.mockImplementation(() => {});
+    mockPlayerSocket.execute.mockImplementation(() => {});
 
     // Mock setTimeout to trigger immediately
     const originalSetTimeout = global.setTimeout;

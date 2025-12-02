@@ -54,36 +54,33 @@ export class GameSocket extends EventEmitter {
 }
 
 export class SocketManager extends EventEmitter {
-  private sockets: Map<number, GameSocket> = new Map();
-  private systemSocket: GameSocket;
+  private socket: GameSocket;
 
   constructor() {
     super();
-    // System socket for creating players, etc. (acting as Guest or Admin)
-    this.systemSocket = new GameSocket();
+    // Connect as the Bot Entity
+    this.socket = new GameSocket(CONFIG.BOT_ENTITY_ID);
   }
 
   connect() {
-    this.systemSocket.connect();
+    this.socket.connect();
+
+    this.socket.on("message", (data) => {
+      if (data.method === "forward") {
+        // Forwarded message from Core
+        // params: { target: entityId, type: string, payload: any }
+        const { target, type, payload } = data.params;
+        this.emit("message", target, { type, ...payload });
+      } else {
+        // Direct message to Bot (e.g. login response)
+        // We might want to handle this, but for now ignore or log
+        console.log("Bot received direct message:", data);
+      }
+    });
   }
 
-  getSystemSocket() {
-    return this.systemSocket;
-  }
-
-  getSocket(entityId: number): GameSocket {
-    if (!this.sockets.has(entityId)) {
-      const socket = new GameSocket(entityId);
-      socket.connect();
-
-      // Forward messages to the manager
-      socket.on("message", (data) => {
-        this.emit("message", entityId, data);
-      });
-
-      this.sockets.set(entityId, socket);
-    }
-    return this.sockets.get(entityId)!;
+  getSocket() {
+    return this.socket;
   }
 }
 

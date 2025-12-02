@@ -47,11 +47,32 @@ registerLibrary(BooleanLib);
 
 // Initialize scheduler
 // Initialize scheduler
+const BOT_ENTITY_ID = 4;
+
 scheduler.setSendFactory((entityId: number) => {
   const ws = clients.get(entityId);
   if (ws) {
     return createSendFunction(ws);
   }
+
+  // If no direct connection, check if Bot is connected
+  const botWs = clients.get(BOT_ENTITY_ID);
+  if (botWs) {
+    return (type: string, payload: unknown) => {
+      // Forward to Bot
+      const notification: JsonRpcNotification = {
+        jsonrpc: "2.0",
+        method: "forward",
+        params: {
+          target: entityId,
+          type,
+          payload,
+        },
+      };
+      botWs.send(JSON.stringify(notification));
+    };
+  }
+
   // Fallback for entities without a connected client (e.g. NPCs, Rooms)
   return (type: string, payload: unknown) => {
     console.log(

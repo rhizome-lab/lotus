@@ -33,7 +33,7 @@ export class SessionManager {
 
   private async createPlayer(name: string): Promise<number> {
     return new Promise((resolve, reject) => {
-      const sys = socketManager.getSystemSocket();
+      const sys = socketManager.getSocket();
 
       // Temporary listener for the response
       const handler = (msg: any) => {
