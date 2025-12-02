@@ -27,8 +27,13 @@ export default defineConfig({
           { text: "Compiler", link: "/compiler" },
           { text: "Decompiler", link: "/decompiler" },
           { text: "Transpiler", link: "/transpiler" },
+          { text: "Scheduler", link: "/scheduler" },
           { text: "API", link: "/api" },
         ],
+      },
+      {
+        text: "Plugins",
+        items: [{ text: "AI Integration", link: "/plugins/ai" }],
       },
     ],
 
