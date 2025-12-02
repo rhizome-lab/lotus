@@ -88,7 +88,7 @@ describe("Decompiler", () => {
     const list = List["list.new"](1, 2, 3);
     expect(decompile(list)).toBe("[1, 2, 3]");
 
-    const obj = ObjectLib["obj.new"]("a", 1, "b", 2);
+    const obj = ObjectLib["obj.new"](["a", 1], ["b", 2]);
     expect(decompile(obj)).toBe('{ "a": 1, "b": 2 }');
 
     // obj.get

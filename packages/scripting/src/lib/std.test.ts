@@ -205,4 +205,9 @@ createLibraryTester(Std, "Core Library", (test) => {
     // We mocked send in ctx, just check it doesn't crash
     await evaluate(Std["send"]("message", "hello"), ctx);
   });
+
+  test("quote", async () => {
+    expect(await evaluate(Std["quote"]([1, 2, 3]), ctx)).toEqual([1, 2, 3]);
+    expect(await evaluate(Std["quote"]("hello"), ctx)).toBe("hello");
+  });
 });

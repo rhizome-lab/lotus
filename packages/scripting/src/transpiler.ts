@@ -194,7 +194,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
         const cleanKey =
           key.startsWith('"') || key.startsWith("'") ? key.slice(1, -1) : key;
         const val = transpileNode(prop.initializer, scope);
-        props.push(cleanKey, val);
+        props.push([cleanKey, val]);
       }
     });
     return ObjectLib["obj.new"](...props);

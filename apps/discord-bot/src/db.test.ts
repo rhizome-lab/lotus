@@ -40,7 +40,7 @@ describe("Discord Bot DB", () => {
 
     const sessions = db.getSessionsForEntity(200);
     expect(sessions).toHaveLength(1);
-    expect(sessions[0].discord_id).toBe("user1");
-    expect(sessions[0].channel_id).toBe("chan1");
+    expect(sessions[0]?.discord_id).toBe("user1");
+    expect(sessions[0]?.channel_id).toBe("chan1");
   });
 });

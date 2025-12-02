@@ -230,9 +230,9 @@ export function decompile(
 
     if (opcode === "obj.new") {
       const props = [];
-      for (let i = 0; i < args.length; i += 2) {
-        const key = decompile(args[i], indentLevel, false);
-        const val = decompile(args[i + 1], indentLevel, false);
+      for (const arg of args) {
+        const key = decompile(arg[0], indentLevel, false);
+        const val = decompile(arg[1], indentLevel, false);
         // If key is a string literal, strip quotes if it's a valid identifier?
         // For simplicity, let's keep quotes or just use the string.
         props.push(`${key}: ${val}`);

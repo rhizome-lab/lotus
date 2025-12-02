@@ -40,6 +40,7 @@ export async function resolveProps(
         send: ctx.send,
         warnings: ctx.warnings,
         vars: {},
+        stack: [],
       });
 
       if (result !== undefined) {

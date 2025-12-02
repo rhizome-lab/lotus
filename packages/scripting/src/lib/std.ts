@@ -573,11 +573,17 @@ export const apply = defineOpcode<
       newVars[func.args[i]] = evaluatedArgs[i];
     }
 
-    return await evaluate(func.body, {
+    const newCtx = {
       ...ctx,
       vars: newVars,
       stack: [...ctx.stack, { name: "<lambda>", args: evaluatedArgs }],
-    });
+    };
+
+    if (func.execute) {
+      return func.execute(newCtx);
+    }
+
+    return await evaluate(func.body, newCtx);
   },
 });
 
@@ -613,3 +619,22 @@ export const send = defineOpcode<[ScriptValue<string>, ScriptValue<unknown>], nu
     return null;
   },
 });
+
+/**
+ * Returns the argument as is, without evaluation.
+ * Used for passing arrays as values to opcodes.
+ */
+export const quote = defineOpcode<[any], any>("quote", {
+  metadata: {
+    label: "Quote",
+    category: "data",
+    description: "Return value unevaluated",
+    slots: [{ name: "Value", type: "block" }],
+    parameters: [{ name: "value", type: "unknown" }],
+    returnType: "any",
+  },
+  handler: async (args, _ctx) => {
+    return args[0];
+  },
+});
+

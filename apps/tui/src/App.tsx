@@ -49,7 +49,7 @@ const App = () => {
     }
     if (playerId && entities.has(playerId)) {
       const player = entities.get(playerId);
-      const contents = player?.contents as number[] | undefined;
+      const contents = player?.["contents"] as number[] | undefined;
       if (contents && Array.isArray(contents)) {
         const items = contents
           .map((id) => entities.get(id))
@@ -115,8 +115,9 @@ const App = () => {
 
   // Helper to get room contents
   const getRoomContents = () => {
-    if (!room || !room.contents || !Array.isArray(room.contents)) return [];
-    return room.contents
+    if (!room || !room["contents"] || !Array.isArray(room["contents"]))
+      return [];
+    return room["contents"]
       .map((id: number) => clientState.entities.get(id))
       .filter((e: Entity | undefined): e is Entity => !!e);
   };
@@ -172,15 +173,13 @@ const App = () => {
           {room ? (
             <>
               <Text bold color="cyan">
-                {room.name as string}
+                {room["name"] as string}
               </Text>
-              <Text italic>{room.description as string}</Text>
+              <Text italic>{room["description"] as string}</Text>
               <Box marginTop={1}>
                 <Text underline>Contents:</Text>
                 {getRoomContents().map((item: Entity, idx: number) => (
-                  <Text key={idx}>
-                    - {item.name as string} ({item.kind as string})
-                  </Text>
+                  <Text key={idx}>- {item["name"] as string}</Text>
                 ))}
               </Box>
             </>
@@ -196,7 +195,7 @@ const App = () => {
           </Text>
           {inventory.length > 0 ? (
             inventory.map((item, idx) => (
-              <Text key={idx}>- {item.name as string}</Text>
+              <Text key={idx}>- {item["name"] as string}</Text>
             ))
           ) : (
             <Text color="gray">(empty)</Text>

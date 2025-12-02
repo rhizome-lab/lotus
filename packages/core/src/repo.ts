@@ -1,7 +1,7 @@
 import { SQLQueryBindings } from "bun:sqlite";
 import { db } from "./db";
-import { ScriptValue } from "./scripting/def";
 import { Entity } from "@viwo/shared/jsonrpc";
+import { ScriptValue } from "@viwo/scripting";
 
 /**
  * Fetches an entity by ID, resolving its properties against its prototype.
