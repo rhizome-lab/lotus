@@ -10,3 +10,4 @@ export * as StdLib from "./lib/std";
 export * from "./lib/test-utils";
 export * from "./type_generator";
 export * from "./decompiler";
+export * from "./transpiler";
