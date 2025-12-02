@@ -32,6 +32,10 @@ export interface GameState {
 export type StateListener = (state: GameState) => void;
 export type MessageListener = (message: GameMessage) => void;
 
+/**
+ * Client for interacting with the Viwo Core server via WebSocket and JSON-RPC.
+ * Manages connection state, message handling, and entity synchronization.
+ */
 export class ViwoClient {
   private socket: WebSocket | null = null;
   private state: GameState = {
@@ -58,6 +62,10 @@ export class ViwoClient {
     this.reconnectInterval = reconnectInterval;
   }
 
+  /**
+   * Connects to the WebSocket server.
+   * Automatically handles reconnection if the connection is lost.
+   */
   public connect() {
     if (this.state.isConnected || this.socket) return;
 
@@ -100,6 +108,9 @@ export class ViwoClient {
     };
   }
 
+  /**
+   * Disconnects from the server and stops reconnection attempts.
+   */
   public disconnect() {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -128,6 +139,12 @@ export class ViwoClient {
     }
   }
 
+  /**
+   * Executes a command on the server.
+   * @param command The command name (verb).
+   * @param args Arguments for the command.
+   * @returns A promise that resolves with the result of the command.
+   */
   public execute(
     command: string,
     args: readonly CommandArgument[],
@@ -135,6 +152,12 @@ export class ViwoClient {
     return this.sendRequest("execute", [command, ...args]);
   }
 
+  /**
+   * Sends a generic JSON-RPC request.
+   * @param method The JSON-RPC method.
+   * @param params The parameters for the method.
+   * @returns A promise that resolves with the result.
+   */
   public sendRequest(method: string, params: any): Promise<any> {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       return Promise.reject(new Error("Socket not connected"));
@@ -155,12 +178,21 @@ export class ViwoClient {
     });
   }
 
+  /**
+   * Fetches the list of available opcodes from the server.
+   * @returns A promise that resolves with the opcode metadata.
+   */
   public async fetchOpcodes() {
     const opcodes = await this.sendRequest("get_opcodes", []);
     this.updateState({ opcodes });
     return opcodes;
   }
 
+  /**
+   * Subscribes to game state updates.
+   * @param listener The callback function.
+   * @returns A function to unsubscribe.
+   */
   public subscribe(listener: StateListener) {
     this.stateListeners.add(listener);
     // Send current state immediately
@@ -168,6 +200,11 @@ export class ViwoClient {
     return () => this.stateListeners.delete(listener);
   }
 
+  /**
+   * Subscribes to game messages (chat, errors).
+   * @param listener The callback function.
+   * @returns A function to unsubscribe.
+   */
   public onMessage(listener: MessageListener) {
     this.messageListeners.add(listener);
     return () => this.messageListeners.delete(listener);
@@ -217,24 +254,8 @@ export class ViwoClient {
       if ("result" in response) {
         resolve(response.result);
 
-        // Special handling for get_opcodes response
-        // We might need a better way to identify this request, but for now assuming it's based on content or we track IDs
-        // Since we don't track which ID was for get_opcodes easily without extra map,
-        // we can check if the result looks like opcodes or just rely on the caller to handle it.
-        // BUT, the original code handled it globally.
-        // Let's see if we can infer it.
-        if (
-          Array.isArray(response.result) &&
-          response.result.length > 0 &&
-          response.result[0].name &&
-          response.result[0].handler
-        ) {
-          // This check is weak.
-          // Better: we can't easily know.
-          // However, the original code had: if (response.id === 0)
-          // I am using dynamic IDs.
-          // Maybe I should just expose a specific method for get_opcodes that updates the state.
-        }
+        // Note: We don't explicitly track which request was for opcodes here.
+        // The state update for opcodes is handled in fetchOpcodes().
       } else {
         console.error("RPC Error:", response.error);
         this.addMessage({

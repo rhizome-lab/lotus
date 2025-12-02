@@ -1285,7 +1285,7 @@ body {
 .script-editor__palette {
   min-height: 0;
   overflow: auto;
-  /* TODO: This is a temporary hack. */
+  /* Note: Fixed height required because parent container does not constrain height properly. */
   height: 400px;
 }
 

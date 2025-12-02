@@ -18,7 +18,8 @@ export class GameSocket extends EventEmitter {
         console.log(`Socket connected (Entity: ${this.entityId})`);
 
         if (this.entityId) {
-          // TODO: Is this even correct?
+          // Note: 'login' command is currently a placeholder for future auth implementation.
+          // The server currently assigns a new player ID on connection.
           this.execute("login", [this.entityId.toString()]);
         }
       } else if (!state.isConnected && this.connected) {

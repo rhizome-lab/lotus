@@ -89,8 +89,6 @@ describe("Repo", () => {
     expect(deleted).toBeNull();
   });
 
-  // TODO: When implementing `move` in scripting, it should disallow a box to be put inside itself
-
   test("getVerb", () => {
     const entity = createEntity({ name: "Scripted" });
     addVerb(

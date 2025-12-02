@@ -220,7 +220,6 @@ async function handleJsonRpcRequest(
   }
 }
 
-// TODO: Move this to scripting too
 /**
  * Resolves all available verbs for a player based on their context (self, room, items, inventory).
  *

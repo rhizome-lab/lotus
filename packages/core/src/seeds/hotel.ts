@@ -6,7 +6,7 @@ import * as List from "../scripting/lib/list";
 
 export function seedHotel(lobbyId: number, voidId: number) {
   // 7. Hotel Implementation
-  // TODO: Create `exitPrototype` with `type: "exit"`
+  // 7. Hotel Implementation
   const exitPrototypeId = 1;
 
   // Hotel Lobby
@@ -51,7 +51,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
     hotelRoomProtoId,
     "leave",
     Core["seq"](
-      // TODO: `move` does not take an `id`
       Core["call"](Core["caller"](), "move", hotelLobbyId), // Move player out first
       Core["call"](
         Core["caller"](),
@@ -67,7 +66,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
     getVerb(hotelRoomProtoId, "leave")!.id,
     Core["seq"](
       Core["let"]("lobbyId", Object["obj.get"](Core["this"](), "lobby_id")),
-      // TODO: `move` does not take an `id`
       Core["call"](Core["caller"](), "move", Core["var"]("lobbyId")),
       Core["call"](
         Core["caller"](),
@@ -169,7 +167,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
       Core["if"](
         Core["=="](Core["var"]("floor"), 1),
         Core["seq"](
-          // TODO: `move` does not take an `id`
           Core["call"](Core["caller"](), "move", hotelLobbyId),
           Core["call"](
             Core["caller"](),
@@ -211,7 +208,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
             Core["entity"](Core["var"]("lobbyId")),
             floorLobbyProtoId,
           ),
-          // TODO: `move` does not take an `id`
           Core["call"](Core["caller"](), "move", Core["var"]("lobbyId")),
           Core["call"](
             Core["caller"](),
@@ -235,7 +231,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
     "elevator",
     Core["seq"](
       Core["let"]("elevId", Object["obj.get"](Core["this"](), "elevator_id")),
-      // TODO: `move` does not take an `id`
       Core["call"](Core["caller"](), "move", Core["var"]("elevId")),
       Core["call"](
         Core["caller"](),
@@ -274,7 +269,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
       ), // Return to THIS lobby
       Core["let"]("wingId", Core["create"](Core["var"]("wingData"))),
       Core["set_prototype"](Core["entity"](Core["var"]("wingId")), wingProtoId),
-      // TODO: `move` does not take an `id`
       Core["call"](Core["caller"](), "move", Core["var"]("wingId")),
       Core["call"](Core["caller"](), "tell", "You walk down the West Wing."),
     ),
@@ -308,7 +302,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
       ),
       Core["let"]("wingId", Core["create"](Core["var"]("wingData"))),
       Core["set_prototype"](Core["entity"](Core["var"]("wingId")), wingProtoId),
-      // TODO: `move` does not take an `id`
       Core["call"](Core["caller"](), "move", Core["var"]("wingId")),
       Core["call"](Core["caller"](), "tell", "You walk down the East Wing."),
     ),
@@ -341,7 +334,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
     "back",
     Core["seq"](
       Core["let"]("returnId", Object["obj.get"](Core["this"](), "return_id")),
-      // TODO: `move` does not take an `id`
       Core["call"](Core["caller"](), "move", Core["var"]("returnId")),
       Core["call"](Core["caller"](), "tell", "You head back to the lobby."),
       Core["destroy"](Core["this"]()),
@@ -472,7 +464,6 @@ export function seedHotel(lobbyId: number, voidId: number) {
           ),
           Core["set_entity"](Core["var"]("room")),
 
-          // TODO: `move` does not take an `id`
           Core["call"](Core["caller"](), "move", Core["var"]("roomId")),
           Core["call"](
             Core["caller"](),

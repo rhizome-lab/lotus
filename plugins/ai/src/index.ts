@@ -109,10 +109,8 @@ export class AiPlugin implements Plugin {
     ctx.registerCommand("gen", this.handleGen.bind(this));
     ctx.registerCommand("image", this.handleImage.bind(this));
 
-    // TODO: Remove unsafe type assertions (`as number`) etc because,
-    // well, they're unsafe and will crash at runtime.
-    // TODO: Switch `handleGen` to use `generateObject`.
-    // This means switching templates to use JSON Schema to specify the shape.
+    // Note: Type assertions are currently unsafe. Tracked in docs/TODO.md.
+    // Note: Future improvement: Switch `handleGen` to use `generateObject`. Tracked in docs/TODO.md.
     // Register default templates
     this.registerTemplate({
       name: "item",
@@ -226,7 +224,7 @@ Keep your response short and in character.`,
     try {
       const prompt = template.prompt(ctx, instruction);
       const model = await getModel();
-      // TODO: Actually the AI SDK supports JSON output
+      // Note: AI SDK supports JSON output (tracked in TODO.md)
       const { text } = await generateText({
         model,
         system: "You are a JSON generator. Output valid JSON only.",
