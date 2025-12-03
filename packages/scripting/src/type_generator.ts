@@ -62,6 +62,10 @@ interface Verb {
 }
 
 // Standard library functions
+interface Capability {
+  readonly __brand: "Capability";
+  readonly id: string;
+}
 `;
 
   const namespaces: Record<string, string[]> = {};

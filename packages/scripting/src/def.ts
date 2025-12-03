@@ -1,11 +1,17 @@
 import { OpcodeHandler, OpcodeMetadata } from "./interpreter";
 
+export interface Capability {
+  readonly __brand: "Capability";
+  readonly id: string;
+}
+
 type UnknownUnion =
   | string
   | number
   | boolean
   | null
   | undefined
+  | Capability
   | (Record<string, unknown> & { readonly length?: never })
   | (Record<string, unknown> & { readonly slice?: never });
 

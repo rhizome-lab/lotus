@@ -286,3 +286,60 @@ export function setPrototypeId(id: number, prototypeId: number | null) {
     id,
   );
 }
+
+export interface Capability {
+  id: string;
+  owner_id: number;
+  type: string;
+  params: Record<string, unknown>;
+}
+
+export function createCapability(
+  ownerId: number,
+  type: string,
+  params: Record<string, unknown>,
+): string {
+  const id = crypto.randomUUID();
+  db.query(
+    "INSERT INTO capabilities (id, owner_id, type, params) VALUES (?, ?, ?, ?)",
+  ).run(id, ownerId, type, JSON.stringify(params));
+  return id;
+}
+
+export function getCapabilities(ownerId: number): Capability[] {
+  const rows = db
+    .query<
+      { id: string; owner_id: number; type: string; params: string },
+      [number]
+    >("SELECT id, owner_id, type, params FROM capabilities WHERE owner_id = ?")
+    .all(ownerId);
+  return rows.map((r) => ({
+    ...r,
+    params: JSON.parse(r.params),
+  }));
+}
+
+export function getCapability(id: string): Capability | null {
+  const row = db
+    .query<
+      { id: string; owner_id: number; type: string; params: string },
+      [string]
+    >("SELECT id, owner_id, type, params FROM capabilities WHERE id = ?")
+    .get(id);
+  if (!row) return null;
+  return {
+    ...row,
+    params: JSON.parse(row.params),
+  };
+}
+
+export function deleteCapability(id: string) {
+  db.query("DELETE FROM capabilities WHERE id = ?").run(id);
+}
+
+export function updateCapabilityOwner(id: string, newOwnerId: number) {
+  db.query("UPDATE capabilities SET owner_id = ? WHERE id = ?").run(
+    newOwnerId,
+    id,
+  );
+}

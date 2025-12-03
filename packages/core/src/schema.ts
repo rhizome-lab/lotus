@@ -44,4 +44,20 @@ export function initSchema(db: Database) {
     )
   `,
   ).run();
+
+  db.query(
+    `
+    CREATE TABLE IF NOT EXISTS capabilities (
+      id TEXT PRIMARY KEY,
+      owner_id INTEGER NOT NULL,
+      type TEXT NOT NULL,
+      params TEXT NOT NULL,
+      FOREIGN KEY(owner_id) REFERENCES entities(id) ON DELETE CASCADE
+    )
+  `,
+  ).run();
+
+  db.query(
+    "CREATE INDEX IF NOT EXISTS idx_capabilities_owner ON capabilities(owner_id)",
+  ).run();
 }

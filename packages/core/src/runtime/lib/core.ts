@@ -10,55 +10,121 @@ import {
   updateEntity,
   Verb,
   getVerb,
+  getCapability,
+  createCapability,
 } from "../../repo";
 import { scheduler } from "../../scheduler";
-import { defineOpcode, ScriptValue } from "@viwo/scripting";
+import { defineOpcode, ScriptValue, Capability } from "@viwo/scripting";
 import { Entity } from "@viwo/shared/jsonrpc";
+
+// Helper to verify capabilities
+function checkCapability(
+  cap: unknown,
+  type: string,
+  ownerId: number,
+  paramsMatch?: (params: Record<string, unknown>) => boolean,
+): void {
+  if (
+    !cap ||
+    typeof cap !== "object" ||
+    (cap as any).__brand !== "Capability"
+  ) {
+    throw new ScriptError(`Expected capability for ${type}`);
+  }
+  const dbCap = getCapability((cap as Capability).id);
+  if (!dbCap) {
+    throw new ScriptError("Invalid capability");
+  }
+  if (dbCap.owner_id !== ownerId) {
+    throw new ScriptError("Capability not owned by caller");
+  }
+  if (dbCap.type !== type) {
+    throw new ScriptError(
+      `Expected capability of type ${type}, got ${dbCap.type}`,
+    );
+  }
+  // Allow wildcard params (superuser)
+  if (dbCap.params && dbCap.params["*"] === true) {
+    return;
+  }
+  if (paramsMatch && !paramsMatch(dbCap.params)) {
+    throw new ScriptError("Capability parameters do not match requirements");
+  }
+}
 
 // Entity Interaction
 
 /**
  * Creates a new entity.
  */
-export const create = defineOpcode<[ScriptValue<object>], number>("create", {
+export const create = defineOpcode<
+  [ScriptValue<Capability>, ScriptValue<object>],
+  number
+>("create", {
   metadata: {
     label: "Create",
     category: "action",
-    description: "Create a new entity",
-    slots: [{ name: "Data", type: "block" }],
-    parameters: [{ name: "data", type: "object" }],
+    description: "Create a new entity (requires sys.create)",
+    slots: [
+      { name: "Cap", type: "block" },
+      { name: "Data", type: "block" },
+    ],
+    parameters: [
+      { name: "cap", type: "Capability" },
+      { name: "data", type: "object" },
+    ],
     returnType: "number",
   },
   handler: (args, ctx) => {
-    if (args.length !== 1) {
-      throw new ScriptError("create: expected `data``");
+    if (args.length !== 2) {
+      throw new ScriptError("create: expected capability and data");
     }
-    const [dataExpr] = args;
+    const [capExpr, dataExpr] = args;
+    const cap = evaluate(capExpr, ctx);
     const data = evaluate(dataExpr, ctx);
+
+    checkCapability(cap, "sys.create", ctx.this.id);
+
     if (typeof data !== "object") {
       throw new ScriptError(
         `create: expected object, got ${JSON.stringify(data)}`,
       );
     }
-    return createEntity(data);
+    const newId = createEntity(data);
+
+    // Mint entity.control for the new entity and give to creator
+    createCapability(ctx.this.id, "entity.control", { target_id: newId });
+
+    return newId;
   },
 });
 
 /**
  * Destroys an entity.
  */
-export const destroy = defineOpcode<[ScriptValue<Entity>], null>("destroy", {
+export const destroy = defineOpcode<
+  [ScriptValue<Capability>, ScriptValue<Entity>],
+  null
+>("destroy", {
   metadata: {
     label: "Destroy",
     category: "action",
-    description: "Destroy an entity",
-    slots: [{ name: "Target", type: "block", default: "this" }],
-    parameters: [{ name: "target", type: "Entity" }],
+    description: "Destroy an entity (requires entity.control)",
+    slots: [
+      { name: "Cap", type: "block" },
+      { name: "Target", type: "block" },
+    ],
+    parameters: [
+      { name: "cap", type: "Capability" },
+      { name: "target", type: "Entity" },
+    ],
     returnType: "null",
   },
   handler: (args, ctx) => {
-    const [targetExpr] = args;
+    const [capExpr, targetExpr] = args;
+    const cap = evaluate(capExpr, ctx);
     const target = evaluate(targetExpr, ctx);
+
     if (
       typeof target !== "object" ||
       !target ||
@@ -68,6 +134,11 @@ export const destroy = defineOpcode<[ScriptValue<Entity>], null>("destroy", {
         `destroy: target must be an entity, got ${JSON.stringify(target)}`,
       );
     }
+
+    checkCapability(cap, "entity.control", ctx.this.id, (params) => {
+      return params.target_id === target.id;
+    });
+
     deleteEntity(target.id);
     return null;
   },
@@ -276,41 +347,73 @@ export const entity = defineOpcode<[ScriptValue<number>], Entity>("entity", {
 /**
  * Updates one or more entities' properties transactionally.
  */
-export const set_entity = defineOpcode<ScriptValue<Entity>[], void>(
-  "set_entity",
-  {
-    metadata: {
-      label: "Update Entity",
-      category: "action",
-      description: "Update entity properties",
-      slots: [{ name: "Entities", type: "block" }],
-      parameters: [{ name: "...entities", type: "Entity[]" }],
-      returnType: "void",
-    },
-    handler: (args, ctx) => {
-      if (args.length < 1) {
-        throw new ScriptError("set_entity: expected at least 1 argument");
-      }
-      const entities: Entity[] = [];
-      for (const arg of args) {
-        const entity = evaluate(arg, ctx);
-        if (
-          !entity ||
-          typeof entity !== "object" ||
-          typeof (entity as any).id !== "number"
-        ) {
-          throw new ScriptError(
-            `set_entity: expected entity object, got ${JSON.stringify(entity)}`,
-          );
-        }
-        entities.push(entity as Entity);
-      }
-
-      updateEntity(...entities);
-      return undefined;
-    },
+export const set_entity = defineOpcode<
+  [ScriptValue<Capability>, ...ScriptValue<Entity>[]],
+  void
+>("set_entity", {
+  metadata: {
+    label: "Update Entity",
+    category: "action",
+    description: "Update entity properties (requires entity.control)",
+    slots: [
+      { name: "Cap", type: "block" },
+      { name: "Entities", type: "block" },
+    ],
+    parameters: [
+      { name: "cap", type: "Capability" },
+      { name: "...entities", type: "Entity[]" },
+    ],
+    returnType: "void",
   },
-);
+  handler: (args, ctx) => {
+    if (args.length < 2) {
+      throw new ScriptError("set_entity: expected capability and entities");
+    }
+    const [capExpr, ...entityExprs] = args;
+    const cap = evaluate(capExpr, ctx);
+
+    const entities: Entity[] = [];
+    for (const arg of entityExprs) {
+      const entity = evaluate(arg, ctx);
+      if (
+        !entity ||
+        typeof entity !== "object" ||
+        typeof (entity as any).id !== "number"
+      ) {
+        throw new ScriptError(
+          `set_entity: expected entity object, got ${JSON.stringify(entity)}`,
+        );
+      }
+      entities.push(entity as Entity);
+    }
+
+    // Verify capability for ALL entities
+    // This assumes the capability allows controlling ALL of them, or we need multiple capabilities?
+    // For simplicity, let's assume the capability must be valid for ALL targets (e.g. if it's a wildcard or if we passed a specific one that matches)
+    // Actually, if we update multiple entities, we probably need multiple capabilities or a capability that covers all.
+    // But typically set_entity is used for one entity or a group.
+    // Let's iterate and check.
+    // Wait, if we pass ONE capability, it must cover ALL entities.
+    // If we want to support multiple capabilities, we'd need a list of capabilities.
+    // For now, let's enforce that the single capability covers ALL targets.
+    // e.g. entity.control with target_id matching, OR target_id is missing (wildcard? no, we said strict).
+
+    // Strict mode: One capability per call? Or maybe the capability has a list of targets?
+    // Let's assume for now we only support updating ONE entity per call if using specific capabilities.
+    // IF args has multiple entities, the capability must be valid for ALL of them.
+    // This implies the capability is likely a "wildcard" or the user has to make multiple calls.
+    // Let's stick to: Check capability against EACH entity.
+
+    for (const entity of entities) {
+      checkCapability(cap, "entity.control", ctx.this.id, (params) => {
+        return params.target_id === entity.id;
+      });
+    }
+
+    updateEntity(...entities);
+    return undefined;
+  },
+});
 
 /**
  * Gets the prototype ID of an entity.
@@ -347,28 +450,33 @@ export const get_prototype = defineOpcode<[ScriptValue<Entity>], number | null>(
 );
 
 export const set_prototype = defineOpcode<
-  [ScriptValue<Entity>, ScriptValue<number | null>],
+  [ScriptValue<Capability>, ScriptValue<Entity>, ScriptValue<number | null>],
   null
 >("set_prototype", {
   metadata: {
     label: "Set Prototype",
     category: "action",
-    description: "Set entity prototype",
+    description: "Set entity prototype (requires entity.control)",
     slots: [
+      { name: "Cap", type: "block" },
       { name: "Entity", type: "block" },
       { name: "PrototypeID", type: "number" },
     ],
     parameters: [
+      { name: "cap", type: "Capability" },
       { name: "target", type: "Entity" },
       { name: "prototype", type: "number | null" },
     ],
     returnType: "null",
   },
   handler: (args, ctx) => {
-    if (args.length !== 2) {
-      throw new ScriptError("set_prototype: expected 2 arguments");
+    if (args.length !== 3) {
+      throw new ScriptError(
+        "set_prototype: expected capability, entity, and prototype ID",
+      );
     }
-    const [entityExpr, protoIdExpr] = args;
+    const [capExpr, entityExpr, protoIdExpr] = args;
+    const cap = evaluate(capExpr, ctx);
     const entity = evaluate(entityExpr, ctx);
     const protoId = evaluate(protoIdExpr, ctx);
 
@@ -381,6 +489,10 @@ export const set_prototype = defineOpcode<
         `set_prototype: expected entity, got ${JSON.stringify(entity)}`,
       );
     }
+
+    checkCapability(cap, "entity.control", ctx.this.id, (params) => {
+      return params.target_id === entity.id;
+    });
 
     if (protoId !== null && typeof protoId !== "number") {
       throw new ScriptError(
@@ -430,19 +542,26 @@ export const resolve_props = defineOpcode<[ScriptValue<Entity>], Entity>(
  * Restricted to System (ID 3) and Bot (ID 4).
  */
 export const sudo = defineOpcode<
-  [ScriptValue<Entity>, ScriptValue<string>, ...ScriptValue<unknown>[]],
+  [
+    ScriptValue<Capability>,
+    ScriptValue<Entity>,
+    ScriptValue<string>,
+    ...ScriptValue<unknown>[],
+  ],
   any
 >("sudo", {
   metadata: {
     label: "Sudo",
     category: "system",
-    description: "Execute verb as another entity",
+    description: "Execute verb as another entity (requires sys.sudo)",
     slots: [
+      { name: "Cap", type: "block" },
       { name: "Target", type: "block" },
       { name: "Verb", type: "string" },
       { name: "Args", type: "block" },
     ],
     parameters: [
+      { name: "cap", type: "Capability" },
       { name: "target", type: "Entity" },
       { name: "verb", type: "string" },
       { name: "args", type: "unknown[]" },
@@ -450,8 +569,12 @@ export const sudo = defineOpcode<
     returnType: "any",
   },
   handler: (args, ctx) => {
-    const [targetExpr, verbExpr, argsExpr] = args;
+    const [capExpr, targetExpr, verbExpr, argsExpr] = args;
+    const cap = evaluate(capExpr, ctx);
     const target = evaluate(targetExpr, ctx);
+
+    checkCapability(cap, "sys.sudo", ctx.this.id);
+
     if (
       !target ||
       typeof target !== "object" ||
@@ -469,13 +592,6 @@ export const sudo = defineOpcode<
       );
     }
 
-    // Security Check
-    const callerId = ctx.caller.id;
-    // System = 3, Bot = 4
-    if (callerId !== 3 && callerId !== 4) {
-      throw new ScriptError("sudo: permission denied");
-    }
-
     // Evaluate arguments
     const evaluatedArgs = evaluate(argsExpr, ctx);
     if (!Array.isArray(evaluatedArgs)) {
@@ -491,6 +607,7 @@ export const sudo = defineOpcode<
 
     // Capture send function to satisfy TS in closure
     const originalSend = ctx.send;
+    const callerId = ctx.caller.id;
 
     // Execute with target as caller AND this
     // This effectively impersonates the user

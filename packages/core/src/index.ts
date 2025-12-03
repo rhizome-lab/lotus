@@ -1,5 +1,11 @@
 import { serve } from "bun";
-import { createEntity, deleteEntity, getEntity, updateEntity } from "./repo";
+import {
+  createEntity,
+  deleteEntity,
+  getEntity,
+  updateEntity,
+  createCapability,
+} from "./repo";
 import {
   createScriptContext,
   evaluate,
@@ -15,6 +21,7 @@ import {
   compile,
 } from "@viwo/scripting";
 import * as Core from "./runtime/lib/core";
+import * as Kernel from "./runtime/lib/kernel";
 
 import { PluginManager, CommandContext } from "./plugin";
 import { scheduler } from "./scheduler";
@@ -46,6 +53,7 @@ const clients = new Map<number, Bun.ServerWebSocket<{ userId: number }>>();
 
 registerLibrary(StdLib);
 registerLibrary(Core);
+registerLibrary(Kernel);
 registerLibrary(ListLib);
 registerLibrary(ObjectLib);
 registerLibrary(StringLib);
@@ -123,6 +131,10 @@ export function startServer(port: number = 8080) {
           },
           2, // Inherit from Player Base
         );
+
+        // Mint capabilities for new player
+        createCapability(playerId, "sys.create", {});
+        createCapability(playerId, "entity.control", { target_id: playerId });
 
         ws.data = { userId: playerId };
         clients.set(playerId, ws);
