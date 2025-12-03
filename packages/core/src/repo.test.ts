@@ -1,18 +1,4 @@
-import { describe, test, expect, mock } from "bun:test";
-import { Database } from "bun:sqlite";
-
-import { initSchema } from "./schema";
-
-// Setup in-memory DB
-const db = new Database(":memory:");
-
-// Initialize Schema
-initSchema(db);
-
-// Mock the db module
-mock.module("./db", () => ({ db }));
-
-// Import repo after mocking
+import { describe, test, expect } from "bun:test";
 import {
   createEntity,
   addVerb,

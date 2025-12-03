@@ -80,7 +80,17 @@ export function seedHotel(
         "tell",
         "You leave the room and it fades away behind you.",
       ),
-      CoreLib["destroy"](Std["this"]()), // Destroy the room
+      Std["let"](
+        "cap",
+        KernelLib["get_capability"](
+          "entity.control",
+          Object["obj.new"]([
+            "target_id",
+            Object["obj.get"](Std["this"](), "id"),
+          ]),
+        ),
+      ),
+      CoreLib["destroy"](Std["var"]("cap"), Std["this"]()), // Destroy the room
     ),
   );
 
@@ -113,23 +123,51 @@ export function seedHotel(
         Std["var"]("contents"),
         Std["seq"](
           Std["let"]("item", CoreLib["entity"](Std["var"]("itemId"))),
-          Std["if"](Std["var"]("item"), CoreLib["destroy"](Std["var"]("item"))),
+          Std["if"](
+            Std["var"]("item"),
+            Std["seq"](
+              Std["let"](
+                "itemCap",
+                KernelLib["get_capability"](
+                  "entity.control",
+                  Object["obj.new"]([
+                    "target_id",
+                    Object["obj.get"](Std["var"]("item"), "id"),
+                  ]),
+                ),
+              ),
+              CoreLib["destroy"](Std["var"]("itemCap"), Std["var"]("item")),
+            ),
+          ),
         ),
       ),
-      CoreLib["destroy"](Std["this"]()),
+      Std["let"](
+        "cap",
+        KernelLib["get_capability"](
+          "entity.control",
+          Object["obj.new"]([
+            "target_id",
+            Object["obj.get"](Std["this"](), "id"),
+          ]),
+        ),
+      ),
+      CoreLib["destroy"](Std["var"]("cap"), Std["this"]()),
     ),
   );
 
   // 8. Hotel Elevator & Floors
 
   // Elevator (Persistent)
-  const elevatorId = createEntity({
-    name: "Hotel Elevator",
-    location: hotelLobbyId,
-    description:
-      "A polished brass elevator. Buttons for floors 1-100. Type 'push <floor>' to select.",
-    current_floor: 1,
-  });
+  const elevatorId = createEntity(
+    {
+      name: "Hotel Elevator",
+      location: hotelLobbyId,
+      description:
+        "A polished brass elevator. Buttons for floors 1-100. Type 'push <floor>' to select.",
+      current_floor: 1,
+    },
+    entityBaseId,
+  );
 
   createCapability(elevatorId, "sys.create", {});
   createCapability(elevatorId, "entity.control", { "*": true });
@@ -298,7 +336,17 @@ export function seedHotel(
         "tell",
         "You step back into the elevator.",
       ),
-      CoreLib["destroy"](Std["this"]()),
+      Std["let"](
+        "cap",
+        KernelLib["get_capability"](
+          "entity.control",
+          Object["obj.new"]([
+            "target_id",
+            Object["obj.get"](Std["this"](), "id"),
+          ]),
+        ),
+      ),
+      CoreLib["destroy"](Std["var"]("cap"), Std["this"]()),
     ),
   );
 
@@ -465,7 +513,17 @@ export function seedHotel(
       Std["let"]("returnId", Object["obj.get"](Std["this"](), "return_id")),
       CoreLib["call"](Std["caller"](), "move", Std["var"]("returnId")),
       CoreLib["call"](Std["caller"](), "tell", "You head back to the lobby."),
-      CoreLib["destroy"](Std["this"]()),
+      Std["let"](
+        "cap",
+        KernelLib["get_capability"](
+          "entity.control",
+          Object["obj.new"]([
+            "target_id",
+            Object["obj.get"](Std["this"](), "id"),
+          ]),
+        ),
+      ),
+      CoreLib["destroy"](Std["var"]("cap"), Std["this"]()),
     ),
   );
 
@@ -650,6 +708,14 @@ export function seedHotel(
               Std["var"]("roomFilter"),
             ),
             Std["var"]("room"),
+          ),
+
+          KernelLib["give_capability"](
+            KernelLib["get_capability"](
+              "entity.control",
+              Std["var"]("roomFilter"),
+            ),
+            CoreLib["entity"](Std["var"]("roomId")),
           ),
 
           CoreLib["call"](Std["caller"](), "move", Std["var"]("roomId")),

@@ -1,15 +1,5 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { Database } from "bun:sqlite";
-import { initSchema } from "./schema";
+import { describe, test, expect, beforeEach } from "bun:test";
 import { BooleanLib, StdLib as Std } from "@viwo/scripting";
-
-// Setup in-memory DB
-const db = new Database(":memory:");
-initSchema(db);
-
-// Mock the db module
-mock.module("./db", () => ({ db }));
-
 import {
   evaluate,
   createScriptContext,
@@ -19,13 +9,16 @@ import {
 } from "@viwo/scripting";
 import { Entity } from "@viwo/shared/jsonrpc";
 import { createEntity, getEntity, addVerb, updateEntity } from "./repo";
-import { CoreLib } from ".";
+import { CoreLib, db } from ".";
+import * as KernelLib from "./runtime/lib/kernel";
 import { seed } from "./seed";
 
 describe("Mailbox Verification", () => {
   registerLibrary(Std);
   registerLibrary(ObjectLib);
   registerLibrary(List);
+  registerLibrary(CoreLib);
+  registerLibrary(KernelLib);
 
   let sender: Entity;
   let receiver: Entity;
@@ -37,6 +30,7 @@ describe("Mailbox Verification", () => {
     // Reset DB state
     db.query("DELETE FROM entities").run();
     db.query("DELETE FROM verbs").run();
+    db.query("DELETE FROM capabilities").run();
     db.query("DELETE FROM sqlite_sequence").run();
 
     // Seed (creates base entities)
@@ -107,7 +101,7 @@ describe("Mailbox Verification", () => {
     expect(check(sender, mailbox, "enter")).toBe(false);
   });
 
-  test("should allow deposit via give opcode", () => {
+  test("should allow deposit via give opcode", async () => {
     // Logic: Check owner, update location, update owner.
 
     const giveVerb = Std["seq"](
@@ -123,7 +117,18 @@ describe("Mailbox Verification", () => {
             "newOwner",
             ObjectLib["obj.get"](Std["var"]("dest"), "owner"),
           ),
+          Std["let"](
+            "cap",
+            KernelLib["get_capability"](
+              "entity.control",
+              ObjectLib["obj.new"]([
+                "target_id",
+                ObjectLib["obj.get"](Std["var"]("item"), "id"),
+              ]),
+            ),
+          ),
           CoreLib["set_entity"](
+            Std["var"]("cap"),
             ObjectLib["obj.merge"](
               Std["var"]("item"),
               ObjectLib["obj.new"](
@@ -153,7 +158,7 @@ describe("Mailbox Verification", () => {
       args: [],
     });
 
-    const result = evaluate(callGive, ctx);
+    const result = await evaluate(callGive, ctx);
     expect(result).toBe(true);
 
     const updatedItem = getEntity(item.id)!;

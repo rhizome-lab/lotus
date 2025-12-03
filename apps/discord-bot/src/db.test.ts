@@ -1,17 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { DatabaseManager } from "./db";
-// import { Database } from "bun:sqlite";
-
-// Mock config
-const mockConfig = {
-  DB_PATH: ":memory:",
-};
-
-// Mock module
-import { mock } from "bun:test";
-mock.module("./config", () => ({
-  CONFIG: mockConfig,
-}));
 
 describe("Discord Bot DB", () => {
   let db: DatabaseManager;

@@ -277,13 +277,13 @@ function executeLoop(
           scriptError = e;
           if (scriptError.stackTrace.length === 0) {
             scriptError.stackTrace = [
-              ...ctx.stack,
+              ...(ctx.stack ?? []),
               ...createStackTrace(sp, stackOp, stackArgs),
             ];
           }
         } else {
           scriptError = new ScriptError(e.message ?? String(e), [
-            ...ctx.stack,
+            ...(ctx.stack ?? []),
             ...createStackTrace(sp, stackOp, stackArgs),
           ]);
         }

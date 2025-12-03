@@ -1,14 +1,4 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { Database } from "bun:sqlite";
-import { initSchema } from "./schema";
-
-// Setup in-memory DB
-const db = new Database(":memory:");
-initSchema(db);
-
-// Mock the db module
-mock.module("./db", () => ({ db }));
-
+import { describe, test, expect, beforeEach } from "bun:test";
 import {
   evaluate,
   createScriptContext,
@@ -19,7 +9,7 @@ import {
 } from "@viwo/scripting";
 import { Entity } from "@viwo/shared/jsonrpc";
 import { createEntity, getEntity } from "./repo";
-import { CoreLib } from ".";
+import { CoreLib, db } from ".";
 import { seed } from "./seed";
 
 describe("Scripted Permissions", () => {

@@ -1,31 +1,20 @@
-import { describe, it, expect, beforeAll, mock } from "bun:test";
-import { Database } from "bun:sqlite";
-
-import { initSchema } from "./schema";
-
-// Setup in-memory DB
-const db = new Database(":memory:");
-
-// Initialize Schema
-initSchema(db);
-
-// Mock the db module
-mock.module("./db", () => ({ db }));
-
-// Import modules AFTER mocking
+import { describe, it, expect, beforeAll } from "bun:test";
 import { scheduler } from "./scheduler";
-import { createEntity, addVerb, getEntity } from "./repo";
+import { createEntity, addVerb, getEntity, createCapability } from "./repo";
 import {
   registerLibrary,
   StdLib as Std,
   ObjectLib as Object,
   MathLib,
 } from "@viwo/scripting";
-import { CoreLib } from ".";
+import { CoreLib, db } from ".";
+import * as KernelLib from "./runtime/lib/kernel";
 
 describe("Scheduler Verification", () => {
   registerLibrary(Std);
   registerLibrary(Object);
+  registerLibrary(CoreLib);
+  registerLibrary(KernelLib);
 
   // Start Scheduler
   // Start Scheduler
@@ -42,16 +31,30 @@ describe("Scheduler Verification", () => {
   beforeAll(() => {
     // Create a test entity
     entityId = createEntity({ name: "SchedulerTestEntity", count: 0 });
+    createCapability(entityId, "entity.control", { target_id: entityId });
 
     // Add a verb that increments the count
     addVerb(
       entityId,
       "increment",
-      CoreLib["set_entity"](
-        Object["obj.set"](
-          Std["this"](),
-          "count",
-          MathLib["+"](Object["obj.get"](Std["this"](), "count"), 1),
+      Std["seq"](
+        Std["let"](
+          "cap",
+          KernelLib["get_capability"](
+            "entity.control",
+            Object["obj.new"]([
+              "target_id",
+              Object["obj.get"](Std["this"](), "id"),
+            ]),
+          ),
+        ),
+        CoreLib["set_entity"](
+          Std["var"]("cap"),
+          Object["obj.set"](
+            Std["this"](),
+            "count",
+            MathLib["+"](Object["obj.get"](Std["this"](), "count"), 1),
+          ),
         ),
       ),
     );

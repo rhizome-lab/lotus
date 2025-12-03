@@ -35,7 +35,9 @@ export const get_capability = defineOpcode<
 
       // Check filter params
       for (const [k, v] of Object.entries(filter as Record<string, unknown>)) {
-        if (JSON.stringify(c.params[k]) !== JSON.stringify(v)) return false;
+        if (JSON.stringify(c.params[k]) !== JSON.stringify(v)) {
+          return false;
+        }
       }
       return true;
     });
@@ -133,7 +135,6 @@ export const delegate = defineOpcode<[Capability | null, object], Capability>(
       // TODO: In a real system, we'd need to ensure restrictions are actually restrictive (subset)
       // Here we'll just merge params for simplicity of the prototype
       const newParams = { ...parentCap.params, ...(restrictions as object) };
-
       const newId = createCapability(ctx.this.id, parentCap.type, newParams);
 
       return {

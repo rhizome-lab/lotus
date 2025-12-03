@@ -1,14 +1,4 @@
-import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { Database } from "bun:sqlite";
-import { initSchema } from "./schema";
-
-// Setup in-memory DB
-const db = new Database(":memory:");
-initSchema(db);
-
-// Mock the db module
-mock.module("./db", () => ({ db }));
-
+import { describe, test, expect, beforeEach } from "bun:test";
 import {
   evaluate,
   createScriptContext,
@@ -26,7 +16,7 @@ import {
 } from "./repo";
 import * as Core from "./runtime/lib/core";
 import * as Kernel from "./runtime/lib/kernel";
-import { CoreLib } from ".";
+import { CoreLib, db } from ".";
 
 describe("Capability Security", () => {
   registerLibrary(Std);
@@ -99,7 +89,7 @@ describe("Capability Security", () => {
 
     try {
       await evaluate(
-        CoreLib["create"](ObjectLib["obj.new"](["name", "Fail"])),
+        CoreLib["create"](null, ObjectLib["obj.new"](["name", "Fail"])),
         ctx,
       );
       expect(true).toBe(false); // Should not reach here

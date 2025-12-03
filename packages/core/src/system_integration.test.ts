@@ -1,13 +1,4 @@
 import { describe, test, expect, beforeEach, mock } from "bun:test";
-import { Database } from "bun:sqlite";
-import { initSchema } from "./schema";
-
-// Setup in-memory DB
-const db = new Database(":memory:");
-initSchema(db);
-
-// Mock the db module
-mock.module("./db", () => ({ db }));
 
 // Mock fs and fetch
 mock.module("node:fs/promises", () => ({
@@ -34,6 +25,7 @@ import { createEntity, getEntity, createCapability } from "./repo";
 import * as Kernel from "./runtime/lib/kernel";
 import * as FS from "./runtime/lib/fs";
 import * as Net from "./runtime/lib/net";
+import { db } from "./db";
 
 describe("System Integration Security", () => {
   registerLibrary(Std);

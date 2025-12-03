@@ -18,11 +18,6 @@ const mockDb = {
   run: mock(() => {}),
 };
 
-// Mock config
-mock.module("./config", () => ({
-  CONFIG: { CORE_URL: "ws://localhost:8080", DB_PATH: ":memory:" },
-}));
-
 mock.module("./db", () => ({ db: mockDb }));
 
 // Import real socketManager

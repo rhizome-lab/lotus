@@ -33,7 +33,7 @@ registerLibrary(ObjectLib);
 registerLibrary(BooleanLib);
 registerLibrary(Time);
 
-describe.skip("Hotel Scripting", () => {
+describe("Hotel Scripting", () => {
   let hotelLobby: Entity;
   let caller: Entity;
   let messages: unknown[] = [];
@@ -43,6 +43,7 @@ describe.skip("Hotel Scripting", () => {
     // Reset DB state
     db.query("DELETE FROM entities").run();
     db.query("DELETE FROM verbs").run();
+    db.query("DELETE FROM capabilities").run();
     db.query("DELETE FROM sqlite_sequence").run();
 
     messages = [];
@@ -105,7 +106,7 @@ describe.skip("Hotel Scripting", () => {
     createCapability(callerId, "entity.control", { target_id: callerId });
   });
 
-  it("should leave a room (move and destroy)", () => {
+  it("should leave a room (move and destroy)", async () => {
     // 1. Manually create a room (since visit is gone)
     const roomProto = db
       .query(
@@ -116,6 +117,7 @@ describe.skip("Hotel Scripting", () => {
       { name: "Room 101", lobby_id: hotelLobby.id },
       roomProto.id,
     );
+    createCapability(roomId, "entity.control", { target_id: roomId });
 
     // Move caller to room
     updateEntity({ ...caller, location: roomId });
@@ -128,7 +130,7 @@ describe.skip("Hotel Scripting", () => {
     const leaveVerb = getVerb(roomId, "leave");
     expect(leaveVerb).toBeDefined();
 
-    evaluate(
+    await evaluate(
       leaveVerb!.code,
       createScriptContext({ caller, this: getEntity(roomId)!, send }),
     );
@@ -142,7 +144,7 @@ describe.skip("Hotel Scripting", () => {
     expect(getEntity(roomId)).toBeNull(); // Destroyed
   });
 
-  it("should navigate elevator -> floor lobby -> wing -> room and back", () => {
+  it("should navigate elevator -> floor lobby -> wing -> room and back", async () => {
     // Find Elevator (it's persistent)
     const elevatorData = db
       .query<{ id: number }, []>(
@@ -168,7 +170,7 @@ describe.skip("Hotel Scripting", () => {
     const pushVerb = getVerb(elevator.id, "push");
     expect(pushVerb).toBeDefined();
     if (pushVerb) {
-      evaluate(pushVerb.code, { ...ctx, this: elevator, args: [5] });
+      await evaluate(pushVerb.code, { ...ctx, this: elevator, args: [5] });
     }
 
     // Verify state
@@ -179,7 +181,7 @@ describe.skip("Hotel Scripting", () => {
     const outVerb = getVerb(elevator.id, "out");
     expect(outVerb).toBeDefined();
     if (outVerb) {
-      evaluate(outVerb.code, { ...ctx, this: elevator, args: [] });
+      await evaluate(outVerb.code, { ...ctx, this: elevator, args: [] });
     }
 
     caller = getEntity(caller.id)!;
@@ -192,7 +194,7 @@ describe.skip("Hotel Scripting", () => {
     const westVerb = getVerb(floorLobby.id, "west");
     expect(westVerb).toBeDefined();
     if (westVerb) {
-      evaluate(westVerb.code, { ...ctx, this: floorLobby, args: [] });
+      await evaluate(westVerb.code, { ...ctx, this: floorLobby, args: [] });
     }
 
     caller = getEntity(caller.id)!;
@@ -204,7 +206,7 @@ describe.skip("Hotel Scripting", () => {
     const enterVerb = getVerb(wing.id, "enter");
     expect(enterVerb).toBeDefined();
     if (enterVerb) {
-      evaluate(enterVerb.code, { ...ctx, this: wing, args: ["5"] });
+      await evaluate(enterVerb.code, { ...ctx, this: wing, args: [5] });
     }
 
     caller = getEntity(caller.id)!;
@@ -223,7 +225,7 @@ describe.skip("Hotel Scripting", () => {
     const leaveVerb = getVerb(room.id, "leave");
     expect(leaveVerb).toBeDefined();
     if (leaveVerb) {
-      evaluate(leaveVerb.code, { ...ctx, this: room, args: [] });
+      await evaluate(leaveVerb.code, { ...ctx, this: room, args: [] });
     }
 
     caller = getEntity(caller.id)!;
@@ -238,7 +240,7 @@ describe.skip("Hotel Scripting", () => {
     const backVerb = getVerb(wing.id, "back");
     expect(backVerb).toBeDefined();
     if (backVerb) {
-      evaluate(backVerb.code, { ...ctx, this: wing, args: [] });
+      await evaluate(backVerb.code, { ...ctx, this: wing, args: [] });
     }
 
     caller = getEntity(caller.id)!;
@@ -249,7 +251,7 @@ describe.skip("Hotel Scripting", () => {
     const elevatorVerb = getVerb(floorLobby.id, "elevator");
     expect(elevatorVerb).toBeDefined();
     if (elevatorVerb) {
-      evaluate(elevatorVerb.code, { ...ctx, this: floorLobby, args: [] });
+      await evaluate(elevatorVerb.code, { ...ctx, this: floorLobby, args: [] });
     }
 
     caller = getEntity(caller.id)!;
