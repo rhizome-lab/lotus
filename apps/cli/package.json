@@ -6,7 +6,9 @@
     "dev": "bun run src/index.ts",
     "start": "bun run src/index.ts",
     "typecheck": "tsgo --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "dependencies": {
     "chalk": "^5.3.0",

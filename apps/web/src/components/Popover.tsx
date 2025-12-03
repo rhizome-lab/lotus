@@ -61,9 +61,7 @@ export default function Popover(props: PopoverProps) {
               if (triggerRef) {
                 // Use requestAnimationFrame to ensure layout is complete
                 requestAnimationFrame(() => {
-                  const triggerRect = (
-                    triggerRef as HTMLElement
-                  ).getBoundingClientRect();
+                  const triggerRect = (triggerRef as HTMLElement).getBoundingClientRect();
                   const contentRect = el.getBoundingClientRect();
                   const viewportHeight = window.innerHeight;
 
@@ -71,17 +69,10 @@ export default function Popover(props: PopoverProps) {
                   let left = triggerRect.left + window.scrollX;
 
                   // Check if it overflows the bottom
-                  if (
-                    triggerRect.bottom + contentRect.height + 5 >
-                    viewportHeight
-                  ) {
+                  if (triggerRect.bottom + contentRect.height + 5 > viewportHeight) {
                     // Check if it fits above
                     if (triggerRect.top - contentRect.height - 5 > 0) {
-                      top =
-                        triggerRect.top +
-                        window.scrollY -
-                        contentRect.height -
-                        5;
+                      top = triggerRect.top + window.scrollY - contentRect.height - 5;
                     }
                   }
 

@@ -73,11 +73,7 @@ describe("Decompiler", () => {
     expect(decompile(whileScript, 0, true)).toBe(expectedWhile);
 
     // for (x of list) { log(x) }
-    const forScript = Std.for(
-      "x",
-      List["list.new"](1, 2),
-      Std.log(Std.var("x")),
-    );
+    const forScript = Std.for("x", List["list.new"](1, 2), Std.log(Std.var("x")));
     const expectedFor = `for (const x of [1, 2]) {
   console.log(x);
 }`;
@@ -93,24 +89,18 @@ describe("Decompiler", () => {
 
     // obj.get
     expect(decompile(ObjectLib["obj.get"](Std.var("o"), "k"))).toBe("o.k");
-    expect(decompile(ObjectLib["obj.get"](Std.var("o"), "invalid-key"))).toBe(
-      'o["invalid-key"]',
-    );
+    expect(decompile(ObjectLib["obj.get"](Std.var("o"), "invalid-key"))).toBe('o["invalid-key"]');
     expect(decompile(ObjectLib["obj.get"](Std.var("o"), "k", "default"))).toBe(
       '(o.k ?? "default")',
     );
 
     // obj.set
-    expect(decompile(ObjectLib["obj.set"](Std.var("o"), "k", 3))).toBe(
-      "o.k = 3",
-    );
+    expect(decompile(ObjectLib["obj.set"](Std.var("o"), "k", 3))).toBe("o.k = 3");
 
     // obj.has
     expect(decompile(ObjectLib["obj.has"](Std.var("o"), "k"))).toBe('"k" in o');
 
     // obj.del
-    expect(decompile(ObjectLib["obj.del"](Std.var("o"), "k"))).toBe(
-      "delete o.k",
-    );
+    expect(decompile(ObjectLib["obj.del"](Std.var("o"), "k"))).toBe("delete o.k");
   });
 });

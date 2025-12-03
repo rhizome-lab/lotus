@@ -30,14 +30,8 @@ export function seedItems(locationId: number) {
         Std["throw"]("Please specify a chapter index (0-based)."),
       ),
       Std["let"]("chapters", Object["obj.get"](Std["this"](), "chapters")),
-      Std["let"](
-        "chapter",
-        List["list.get"](Std["var"]("chapters"), Std["var"]("index")),
-      ),
-      Std["if"](
-        Boolean["not"](Std["var"]("chapter")),
-        Std["throw"]("Chapter not found."),
-      ),
+      Std["let"]("chapter", List["list.get"](Std["var"]("chapters"), Std["var"]("index"))),
+      Std["if"](Boolean["not"](Std["var"]("chapter")), Std["throw"]("Chapter not found.")),
       CoreLib["call"](
         Std["caller"](),
         "tell",
@@ -80,9 +74,7 @@ export function seedItems(locationId: number) {
       Std["let"]("title", Std["arg"](0)),
       Std["let"]("content", Std["arg"](1)),
       Std["if"](
-        Boolean["not"](
-          Boolean["and"](Std["var"]("title"), Std["var"]("content")),
-        ),
+        Boolean["not"](Boolean["and"](Std["var"]("title"), Std["var"]("content"))),
         Std["throw"]("Usage: add_chapter <title> <content>"),
       ),
       Std["let"]("chapters", Object["obj.get"](Std["this"](), "chapters")),
@@ -90,11 +82,7 @@ export function seedItems(locationId: number) {
       // Construct new chapter object
       Std["let"]("newChapter", {}),
       Object["obj.set"](Std["var"]("newChapter"), "title", Std["var"]("title")),
-      Object["obj.set"](
-        Std["var"]("newChapter"),
-        "content",
-        Std["var"]("content"),
-      ),
+      Object["obj.set"](Std["var"]("newChapter"), "content", Std["var"]("content")),
 
       List["list.push"](Std["var"]("chapters"), Std["var"]("newChapter")),
       Object["obj.set"](Std["this"](), "chapters", Std["var"]("chapters")), // Save back to entity
@@ -116,21 +104,15 @@ export function seedItems(locationId: number) {
             ["c"],
             Boolean["or"](
               String["str.includes"](
-                String["str.lower"](
-                  Object["obj.get"](Std["var"]("c"), "title"),
-                ),
+                String["str.lower"](Object["obj.get"](Std["var"]("c"), "title")),
                 Std["var"]("query"),
               ),
               String["str.includes"](
-                String["str.lower"](
-                  Object["obj.get"](Std["var"]("c"), "title"),
-                ),
+                String["str.lower"](Object["obj.get"](Std["var"]("c"), "title")),
                 Std["var"]("query"),
               ),
               String["str.includes"](
-                String["str.lower"](
-                  Object["obj.get"](Std["var"]("c"), "content"),
-                ),
+                String["str.lower"](Object["obj.get"](Std["var"]("c"), "content")),
                 Std["var"]("query"),
               ),
             ),

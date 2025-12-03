@@ -2,11 +2,7 @@ import { db } from "./db";
 import { socketManager } from "./socket";
 
 export class SessionManager {
-  async ensureSession(
-    discordId: string,
-    channelId: string,
-    displayName: string,
-  ): Promise<number> {
+  async ensureSession(discordId: string, channelId: string, displayName: string): Promise<number> {
     // 1. Check active session
     let entityId = db.getActiveEntity(discordId, channelId);
     if (entityId) return entityId;

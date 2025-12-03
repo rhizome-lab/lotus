@@ -28,27 +28,22 @@ export type ScriptValue<T> =
   | (unknown extends T
       ? ScriptValue_<UnknownUnion>
       : object extends T
-      ? Extract<ScriptValue_<UnknownUnion>, object>
-      : ScriptValue_<T>)
+        ? Extract<ScriptValue_<UnknownUnion>, object>
+        : ScriptValue_<T>)
   | ScriptExpression<any[], T>;
 
 // Phantom type for return type safety
-export type ScriptExpression<
-  Args extends (string | ScriptValue_<unknown>)[],
-  Ret,
-> = [string, ...Args] & {
+export type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Ret> = [
+  string,
+  ...Args,
+] & {
   __returnType: Ret;
 };
 
-export interface OpcodeBuilder<
-  Args extends (string | ScriptValue_<unknown>)[],
-  Ret,
-> {
+export interface OpcodeBuilder<Args extends (string | ScriptValue_<unknown>)[], Ret> {
   (
     ...args: {
-      [K in keyof Args]: Args[K] extends ScriptRaw<infer T>
-        ? T
-        : ScriptValue<Args[K]>;
+      [K in keyof Args]: Args[K] extends ScriptRaw<infer T> ? T : ScriptValue<Args[K]>;
     }
   ): ScriptExpression<Args, Ret>;
   opcode: string;
@@ -63,10 +58,7 @@ export interface OpcodeBuilder<
  * @param def - The opcode definition (metadata and handler).
  * @returns A builder function that can be used to construct S-expressions for this opcode in TypeScript.
  */
-export function defineOpcode<
-  Args extends (string | ScriptValue_<unknown>)[] = never,
-  Ret = never,
->(
+export function defineOpcode<Args extends (string | ScriptValue_<unknown>)[] = never, Ret = never>(
   opcode: string,
   def: {
     metadata: Omit<OpcodeMetadata, "opcode">;

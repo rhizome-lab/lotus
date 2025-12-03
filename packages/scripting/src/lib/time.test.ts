@@ -41,15 +41,9 @@ createLibraryTester(Time, "Time Library", (test) => {
     ).toBeInstanceOf(ScriptError);
 
     const dateStr = "2023-01-01T12:00:00Z";
-    expect(typeof evaluate(Time["time.format"](dateStr, "time"), ctx)).toBe(
-      "string",
-    );
-    expect(typeof evaluate(Time["time.format"](dateStr, "date"), ctx)).toBe(
-      "string",
-    );
-    expect(typeof evaluate(Time["time.format"](dateStr, "full"), ctx)).toBe(
-      "string",
-    );
+    expect(typeof evaluate(Time["time.format"](dateStr, "time"), ctx)).toBe("string");
+    expect(typeof evaluate(Time["time.format"](dateStr, "date"), ctx)).toBe("string");
+    expect(typeof evaluate(Time["time.format"](dateStr, "full"), ctx)).toBe("string");
   });
 
   test("time.parse", () => {
@@ -59,9 +53,7 @@ createLibraryTester(Time, "Time Library", (test) => {
 
   test("time.from_timestamp", () => {
     const ts = 1672574400000; // 2023-01-01T12:00:00.000Z
-    expect(evaluate(Time["time.from_timestamp"](ts), ctx)).toBe(
-      "2023-01-01T12:00:00.000Z",
-    );
+    expect(evaluate(Time["time.from_timestamp"](ts), ctx)).toBe("2023-01-01T12:00:00.000Z");
   });
 
   test("time.to_timestamp", () => {

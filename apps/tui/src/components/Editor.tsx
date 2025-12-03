@@ -118,8 +118,7 @@ const Editor: React.FC<EditorProps> = ({
           if (completion) {
             setLines((prev) => {
               const line = prev[cursor.y] || "";
-              const newLine =
-                line.slice(0, cursor.x) + completion + line.slice(cursor.x);
+              const newLine = line.slice(0, cursor.x) + completion + line.slice(cursor.x);
               const newLines = [...prev];
               newLines[cursor.y] = newLine;
               return newLines;
@@ -139,8 +138,7 @@ const Editor: React.FC<EditorProps> = ({
         if (completion) {
           setLines((prev) => {
             const line = prev[cursor.y] || "";
-            const newLine =
-              line.slice(0, cursor.x) + completion + line.slice(cursor.x);
+            const newLine = line.slice(0, cursor.x) + completion + line.slice(cursor.x);
             const newLines = [...prev];
             newLines[cursor.y] = newLine;
             return newLines;
@@ -176,10 +174,7 @@ const Editor: React.FC<EditorProps> = ({
   return (
     <Box flexDirection="column" borderStyle="single" borderColor="yellow">
       <Box justifyContent="space-between">
-        <Text bold>
-          {" "}
-          Script Editor {isLoading ? "(AI Generating...)" : ""}{" "}
-        </Text>
+        <Text bold> Script Editor {isLoading ? "(AI Generating...)" : ""} </Text>
         <Text>
           {" "}
           Ln {cursor.y + 1}, Col {cursor.x + 1}{" "}
@@ -210,9 +205,7 @@ const Editor: React.FC<EditorProps> = ({
         })}
       </Box>
       <Box marginTop={1}>
-        <Text dimColor>
-          Ctrl+S: Save | Esc: Exit | Tab: AI | Ctrl+Space: Local
-        </Text>
+        <Text dimColor>Ctrl+S: Save | Esc: Exit | Tab: AI | Ctrl+Space: Local</Text>
       </Box>
     </Box>
   );

@@ -130,13 +130,7 @@ describe("Compiler", () => {
       run(
         Std["seq"](
           Std["let"]("x", 10),
-          Std["let"](
-            "addX",
-            Std["lambda"](
-              ["y"],
-              MathLib["+"](Std["var"]("x"), Std["var"]("y")),
-            ),
-          ),
+          Std["let"]("addX", Std["lambda"](["y"], MathLib["+"](Std["var"]("x"), Std["var"]("y")))),
           Std["apply"](Std["var"]("addX"), 5),
         ),
       ),
@@ -168,11 +162,7 @@ describe("Compiler", () => {
       Std["let"]("hasB", ObjectLib["obj.has"](Std["var"]("o"), "b")),
       ObjectLib["obj.del"](Std["var"]("o"), "b"),
       Std["let"]("hasBAfter", ObjectLib["obj.has"](Std["var"]("o"), "b")),
-      List["list.new"](
-        Std["var"]("res"),
-        Std["var"]("hasB"),
-        Std["var"]("hasBAfter"),
-      ),
+      List["list.new"](Std["var"]("res"), Std["var"]("hasB"), Std["var"]("hasBAfter")),
     );
 
     const res = run(script);

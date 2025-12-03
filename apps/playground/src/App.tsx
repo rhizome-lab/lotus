@@ -26,9 +26,7 @@ const App: Component = () => {
     } catch (e: any) {
       console.error(e);
       setOutput(
-        `Error: ${e.message}\n${
-          e.stackTrace ? JSON.stringify(e.stackTrace, null, 2) : ""
-        }`,
+        `Error: ${e.message}\n${e.stackTrace ? JSON.stringify(e.stackTrace, null, 2) : ""}`,
       );
     }
   };
@@ -43,23 +41,14 @@ const App: Component = () => {
       <header class="playground__header">
         <h1>Viwo Scripting Playground</h1>
         <div class="playground__controls">
-          <select
-            value={selectedExample()}
-            onChange={(e) => loadExample(e.currentTarget.value)}
-          >
-            <For each={Object.keys(examples)}>
-              {(name) => <option value={name}>{name}</option>}
-            </For>
+          <select value={selectedExample()} onChange={(e) => loadExample(e.currentTarget.value)}>
+            <For each={Object.keys(examples)}>{(name) => <option value={name}>{name}</option>}</For>
           </select>
           <button onClick={runScript}>Run</button>
         </div>
       </header>
       <div class="playground__main">
-        <ScriptEditor
-          value={script()}
-          onChange={setScript}
-          opcodes={playgroundOpcodes}
-        />
+        <ScriptEditor value={script()} onChange={setScript} opcodes={playgroundOpcodes} />
       </div>
       <div class="playground__output">
         <h3>Output</h3>

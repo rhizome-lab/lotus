@@ -93,18 +93,14 @@ describe("Theme Store", () => {
     expect(themeStore.state.themes.find((t: any) => t.id === id)).toBeDefined();
 
     themeStore.deleteTheme(id);
-    expect(
-      themeStore.state.themes.find((t: any) => t.id === id),
-    ).toBeUndefined();
+    expect(themeStore.state.themes.find((t: any) => t.id === id)).toBeUndefined();
     expect(themeStore.state.activeThemeId).toBe("default");
   });
 
   test("Delete Builtin Theme (Protected)", () => {
     themeStore.setActiveTheme("default");
     themeStore.deleteTheme("default");
-    expect(
-      themeStore.state.themes.find((t: any) => t.id === "default"),
-    ).toBeDefined();
+    expect(themeStore.state.themes.find((t: any) => t.id === "default")).toBeDefined();
   });
 
   test("Import Theme", () => {
@@ -121,24 +117,19 @@ describe("Theme Store", () => {
 
   test("Delete Active Theme", () => {
     themeStore.createTheme("To Delete");
-    const newTheme =
-      themeStore.state.themes[themeStore.state.themes.length - 1]!;
+    const newTheme = themeStore.state.themes[themeStore.state.themes.length - 1]!;
     themeStore.setActiveTheme(newTheme.id);
     expect(themeStore.state.activeThemeId).toBe(newTheme.id);
 
     themeStore.deleteTheme(newTheme.id);
-    expect(
-      themeStore.state.themes.find((t: any) => t.id === newTheme.id),
-    ).toBeUndefined();
+    expect(themeStore.state.themes.find((t: any) => t.id === newTheme.id)).toBeUndefined();
     expect(themeStore.state.activeThemeId).toBe("default");
   });
 
   test("Import Invalid Theme", () => {
     const alertSpy = spyOn(global, "alert").mockImplementation(() => {});
     themeStore.importTheme({}); // Empty object
-    expect(alertSpy).toHaveBeenCalledWith(
-      "Invalid theme format. Must be a valid Viwo Theme.",
-    );
+    expect(alertSpy).toHaveBeenCalledWith("Invalid theme format. Must be a valid Viwo Theme.");
     alertSpy.mockRestore();
   });
 
@@ -175,10 +166,7 @@ describe("Theme Store", () => {
     });
 
     test("Migrate from old single theme", () => {
-      global.localStorage.setItem(
-        "viwo_theme",
-        JSON.stringify({ "--bg-app": "red" }),
-      );
+      global.localStorage.setItem("viwo_theme", JSON.stringify({ "--bg-app": "red" }));
 
       const state = loadInitialState();
 

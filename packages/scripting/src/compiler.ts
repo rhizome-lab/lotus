@@ -294,9 +294,7 @@ function compileOpcodeCall(op: string, args: any[]): string {
         args[2] ? compileNode(args[2]) : "null"
       }`;
     case "obj.set":
-      return `((${compileNode(args[0])})[${compileNode(
-        args[1],
-      )}] = ${compileNode(args[2])})`;
+      return `((${compileNode(args[0])})[${compileNode(args[1])}] = ${compileNode(args[2])})`;
     case "obj.has":
       return `(${compileNode(args[1])} in ${compileNode(args[0])})`;
     case "obj.del":

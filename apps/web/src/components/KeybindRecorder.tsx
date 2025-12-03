@@ -27,10 +27,7 @@ export const KeybindRecorder = (props: Props) => {
 
   // Click outside to cancel
   const handleClickOutside = (e: MouseEvent) => {
-    if (
-      isRecording() &&
-      !(e.target as HTMLElement).closest(".keybind-recorder")
-    ) {
+    if (isRecording() && !(e.target as HTMLElement).closest(".keybind-recorder")) {
       setIsRecording(false);
     }
   };
@@ -47,9 +44,7 @@ export const KeybindRecorder = (props: Props) => {
 
   return (
     <button
-      class={`keybind-recorder ${
-        isRecording() ? "keybind-recorder--recording" : ""
-      }`}
+      class={`keybind-recorder ${isRecording() ? "keybind-recorder--recording" : ""}`}
       onClick={startRecording}
       title="Click to rebind"
     >

@@ -1,10 +1,4 @@
-import {
-  Client,
-  GatewayIntentBits,
-  Events,
-  ChannelType,
-  TextChannel,
-} from "discord.js";
+import { Client, GatewayIntentBits, Events, ChannelType, TextChannel } from "discord.js";
 import { CONFIG } from "./config";
 import { db } from "./db";
 import { sessionManager } from "./session";
@@ -122,9 +116,7 @@ export class DiscordBot {
           if (data.type === "message") {
             content = data.text;
           } else if (data.type === "room") {
-            content = `**${data.name}**\n${
-              data.description
-            }\n\n*Exits*: ${data.contents
+            content = `**${data.name}**\n${data.description}\n\n*Exits*: ${data.contents
               .filter((c: any) => c.kind === "EXIT")
               .map((c: any) => c.name)
               .join(", ")}\n*Items*: ${data.contents

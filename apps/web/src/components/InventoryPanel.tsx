@@ -4,8 +4,7 @@ import { gameStore, Entity } from "../store/game";
 const ItemView = (props: { item: Entity }) => {
   const [isExpanded, setIsExpanded] = createSignal(false);
   const hasContents = () =>
-    props.item["contents"] &&
-    (props.item["contents"] as readonly number[]).length > 0;
+    props.item["contents"] && (props.item["contents"] as readonly number[]).length > 0;
 
   const children = () => {
     if (!hasContents()) return [];
@@ -18,10 +17,7 @@ const ItemView = (props: { item: Entity }) => {
     <div class="inventory-panel__item-container">
       <div class="inventory-panel__item">
         <Show when={hasContents()}>
-          <button
-            class="inventory-panel__expand-btn"
-            onClick={() => setIsExpanded(!isExpanded())}
-          >
+          <button class="inventory-panel__expand-btn" onClick={() => setIsExpanded(!isExpanded())}>
             {isExpanded() ? "▼" : "▶"}
           </button>
         </Show>
@@ -29,9 +25,7 @@ const ItemView = (props: { item: Entity }) => {
           onClick={() => gameStore.execute("look", [props.item.id])}
           class={`inventory-panel__item-link ${
             (props.item["adjectives"] as readonly string[])
-              ?.map(
-                (a) => `attribute-${a.replace(/:/g, "-").replace(/ /g, "-")}`,
-              )
+              ?.map((a) => `attribute-${a.replace(/:/g, "-").replace(/ /g, "-")}`)
               .join(" ") || ""
           }`}
           style={{ "margin-left": hasContents() ? "0" : "20px" }}
@@ -43,20 +37,13 @@ const ItemView = (props: { item: Entity }) => {
             ({props.item["location_detail"] as string})
           </span>
         </Show>
-        <Show
-          when={
-            props.item["verbs"] &&
-            (props.item["verbs"] as readonly string[]).length > 0
-          }
-        >
+        <Show when={props.item["verbs"] && (props.item["verbs"] as readonly string[]).length > 0}>
           <span class="inventory-panel__item-verbs">
             <For each={props.item["verbs"] as readonly string[]}>
               {(verb) => (
                 <button
                   class="inventory-panel__verb-btn"
-                  onClick={() =>
-                    gameStore.execute(verb, [props.item["name"] as string])
-                  }
+                  onClick={() => gameStore.execute(verb, [props.item["name"] as string])}
                 >
                   {verb}
                 </button>

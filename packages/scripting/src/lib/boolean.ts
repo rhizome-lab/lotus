@@ -5,10 +5,7 @@ import { defineOpcode } from "../def";
 /**
  * Checks if all arguments are equal.
  */
-const eq = defineOpcode<
-  [unknown, unknown, ...unknown[]],
-  boolean
->("==", {
+const eq = defineOpcode<[unknown, unknown, ...unknown[]], boolean>("==", {
   metadata: {
     label: "==",
     category: "logic",
@@ -41,10 +38,7 @@ export { eq as "==" };
 /**
  * Checks if adjacent arguments are different.
  */
-const neq = defineOpcode<
-  [unknown, unknown, ...unknown[]],
-  boolean
->("!=", {
+const neq = defineOpcode<[unknown, unknown, ...unknown[]], boolean>("!=", {
   metadata: {
     label: "!=",
     category: "logic",
@@ -77,10 +71,7 @@ export { neq as "!=" };
 /**
  * Checks if arguments are strictly increasing.
  */
-const lt = defineOpcode<
-  [number, number, ...number[]],
-  boolean
->("<", {
+const lt = defineOpcode<[number, number, ...number[]], boolean>("<", {
   metadata: {
     label: "<",
     category: "logic",
@@ -113,10 +104,7 @@ export { lt as "<" };
 /**
  * Checks if arguments are strictly decreasing.
  */
-const gt = defineOpcode<
-  [number, number, ...number[]],
-  boolean
->(">", {
+const gt = defineOpcode<[number, number, ...number[]], boolean>(">", {
   metadata: {
     label: ">",
     category: "logic",
@@ -149,10 +137,7 @@ export { gt as ">" };
 /**
  * Checks if arguments are non-decreasing.
  */
-const lte = defineOpcode<
-  [number, number, ...number[]],
-  boolean
->("<=", {
+const lte = defineOpcode<[number, number, ...number[]], boolean>("<=", {
   metadata: {
     label: "<=",
     category: "logic",
@@ -185,10 +170,7 @@ export { lte as "<=" };
 /**
  * Checks if arguments are non-increasing.
  */
-const gte = defineOpcode<
-  [number, number, ...number[]],
-  boolean
->(">=", {
+const gte = defineOpcode<[number, number, ...number[]], boolean>(">=", {
   metadata: {
     label: ">=",
     category: "logic",
@@ -222,10 +204,7 @@ export { gte as ">=" };
 /**
  * Logical AND.
  */
-export const and = defineOpcode<
-  [boolean, boolean, ...boolean[]],
-  boolean
->("and", {
+export const and = defineOpcode<[boolean, boolean, ...boolean[]], boolean>("and", {
   metadata: {
     label: "And",
     category: "logic",
@@ -248,21 +227,21 @@ export const and = defineOpcode<
     const args = [a, b, ...rest];
     const next = (): any => {
       if (i >= args.length) return true;
-      
+
       const arg = args[i++];
       const result = evaluate(arg, ctx);
-      
+
       if (result instanceof Promise) {
         return result.then((res) => {
           if (!res) return false;
           return next();
         });
       }
-      
+
       if (!result) return false;
       return next();
     };
-    
+
     return next();
   },
 });
@@ -270,10 +249,7 @@ export const and = defineOpcode<
 /**
  * Logical OR.
  */
-export const or = defineOpcode<
-  [boolean, boolean, ...boolean[]],
-  boolean
->("or", {
+export const or = defineOpcode<[boolean, boolean, ...boolean[]], boolean>("or", {
   metadata: {
     label: "Or",
     category: "logic",
@@ -296,21 +272,21 @@ export const or = defineOpcode<
     const args = [a, b, ...rest];
     const next = (): any => {
       if (i >= args.length) return false;
-      
+
       const arg = args[i++];
       const result = evaluate(arg, ctx);
-      
+
       if (result instanceof Promise) {
         return result.then((res) => {
           if (res) return true;
           return next();
         });
       }
-      
+
       if (result) return true;
       return next();
     };
-    
+
     return next();
   },
 });

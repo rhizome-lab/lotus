@@ -45,37 +45,20 @@ createLibraryTester(StringLib, "String Library", (test) => {
   });
 
   test("str.split", () => {
-    expect(evaluate(StringLib["str.split"]("a,b,c", ","), ctx)).toEqual([
-      "a",
-      "b",
-      "c",
-    ]);
-    expect(evaluate(StringLib["str.split"]("abc", ""), ctx)).toEqual([
-      "a",
-      "b",
-      "c",
-    ]);
+    expect(evaluate(StringLib["str.split"]("a,b,c", ","), ctx)).toEqual(["a", "b", "c"]);
+    expect(evaluate(StringLib["str.split"]("abc", ""), ctx)).toEqual(["a", "b", "c"]);
   });
 
   test("str.join", () => {
-    expect(
-      evaluate(
-        StringLib["str.join"](List["list.new"]("a", "b", "c"), ","),
-        ctx,
-      ),
-    ).toBe("a,b,c");
-    expect(evaluate(StringLib["str.join"](List["list.new"](), ","), ctx)).toBe(
-      "",
+    expect(evaluate(StringLib["str.join"](List["list.new"]("a", "b", "c"), ","), ctx)).toBe(
+      "a,b,c",
     );
+    expect(evaluate(StringLib["str.join"](List["list.new"](), ","), ctx)).toBe("");
   });
 
   test("str.concat", () => {
-    expect(evaluate(StringLib["str.concat"]("hello", " world"), ctx)).toBe(
-      "hello world",
-    );
-    expect(evaluate(StringLib["str.concat"]("num: ", 123), ctx)).toBe(
-      "num: 123",
-    );
+    expect(evaluate(StringLib["str.concat"]("hello", " world"), ctx)).toBe("hello world");
+    expect(evaluate(StringLib["str.concat"]("num: ", 123), ctx)).toBe("num: 123");
   });
 
   test("str.slice", () => {
@@ -101,8 +84,6 @@ createLibraryTester(StringLib, "String Library", (test) => {
   });
 
   test("str.replace", () => {
-    expect(evaluate(StringLib["str.replace"]("hello", "l", "w"), ctx)).toBe(
-      "hewlo",
-    ); // Only first occurrence
+    expect(evaluate(StringLib["str.replace"]("hello", "l", "w"), ctx)).toBe("hewlo"); // Only first occurrence
   });
 });

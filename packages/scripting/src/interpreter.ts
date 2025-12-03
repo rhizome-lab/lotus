@@ -65,9 +65,7 @@ export class ScriptError extends Error {
         if (!frame) {
           continue;
         }
-        str += `  at ${frame.name} (${frame.args
-          .map((a) => JSON.stringify(a))
-          .join(", ")})\n`;
+        str += `  at ${frame.name} (${frame.args.map((a) => JSON.stringify(a)).join(", ")})\n`;
       }
     }
     return str;
@@ -101,10 +99,7 @@ export interface OpcodeMetadata {
   lazy?: boolean;
 }
 
-export type OpcodeHandler<Ret> = (
-  args: any[],
-  ctx: ScriptContext,
-) => Ret | Promise<Ret>;
+export type OpcodeHandler<Ret> = (args: any[], ctx: ScriptContext) => Ret | Promise<Ret>;
 
 export interface OpcodeDefinition {
   handler: OpcodeHandler<unknown>;
@@ -137,11 +132,7 @@ export function getOpcodeMetadata() {
   return Object.values(OPS).map((def) => def.metadata);
 }
 
-export function executeLambda(
-  lambda: any,
-  args: unknown[],
-  ctx: ScriptContext,
-): any {
+export function executeLambda(lambda: any, args: unknown[], ctx: ScriptContext): any {
   if (!lambda || lambda.type !== "lambda") return null;
 
   // Create new context
@@ -166,10 +157,7 @@ export function executeLambda(
  * @returns The result of the evaluation (or a Promise if async).
  * @throws ScriptError if execution fails or gas runs out.
  */
-export function evaluate<T>(
-  ast: ScriptValue<T>,
-  ctx: ScriptContext,
-): T | Promise<T> {
+export function evaluate<T>(ast: ScriptValue<T>, ctx: ScriptContext): T | Promise<T> {
   // If it's a simple value, return immediately
   if (!Array.isArray(ast)) {
     return ast as T;
@@ -295,15 +283,7 @@ function executeLoop(
 
       // Handle Async Result
       if (result instanceof Promise) {
-        return handleAsyncResult(
-          result,
-          ctx,
-          sp,
-          stackOp,
-          stackArgs,
-          stackAst,
-          stackIdx,
-        );
+        return handleAsyncResult(result, ctx, sp, stackOp, stackArgs, stackAst, stackIdx);
       }
 
       // If stack is empty, we are done
@@ -342,11 +322,7 @@ async function handleAsyncResult(
   return executeLoop(ctx, sp, stackOp, stackArgs, stackAst, stackIdx);
 }
 
-function createStackTrace(
-  sp: number,
-  stackOp: string[],
-  stackArgs: unknown[][],
-): StackFrame[] {
+function createStackTrace(sp: number, stackOp: string[], stackArgs: unknown[][]): StackFrame[] {
   const trace: StackFrame[] = [];
   for (let i = 0; i < sp; i += 1) {
     trace.push({
@@ -363,20 +339,14 @@ function validateArgs(
   params: { name: string; type: string; optional?: boolean }[],
 ) {
   const hasRest = params.some((p) => p.name.startsWith("..."));
-  const minArgs = params.filter(
-    (p) => !p.optional && !p.name.startsWith("..."),
-  ).length;
+  const minArgs = params.filter((p) => !p.optional && !p.name.startsWith("...")).length;
 
   if (args.length < minArgs) {
-    throw new ScriptError(
-      `${op}: expected at least ${minArgs} arguments, got ${args.length}`,
-    );
+    throw new ScriptError(`${op}: expected at least ${minArgs} arguments, got ${args.length}`);
   }
 
   if (!hasRest && args.length > params.length) {
-    throw new ScriptError(
-      `${op}: expected at most ${params.length} arguments, got ${args.length}`,
-    );
+    throw new ScriptError(`${op}: expected at most ${params.length} arguments, got ${args.length}`);
   }
 
   // Type checking
@@ -389,9 +359,7 @@ function validateArgs(
     }
     // Handle rest param logic
     const currentParam =
-      param.name.startsWith("...") || i >= params.length
-        ? params[params.length - 1]
-        : param;
+      param.name.startsWith("...") || i >= params.length ? params[params.length - 1] : param;
     if (!currentParam) {
       throw new ScriptError(
         `${op}: expected at least ${params.length} arguments, got ${args.length}`,
@@ -406,37 +374,24 @@ function validateArgs(
     if (currentParam.type.endsWith("[]")) {
       if (currentParam.name.startsWith("...")) {
         // Variadic
-        if (
-          type !== "any" &&
-          type !== "unknown" &&
-          typeof arg !== type &&
-          arg !== null
-        ) {
+        if (type !== "any" && type !== "unknown" && typeof arg !== type && arg !== null) {
           if (type === "object" && (typeof arg !== "object" || arg === null)) {
-            throw new ScriptError(
-              `${op}: expected ${type} for ${currentParam.name} at index ${i}`,
-            );
+            throw new ScriptError(`${op}: expected ${type} for ${currentParam.name} at index ${i}`);
           }
           if (type !== "object" && typeof arg !== type) {
-            throw new ScriptError(
-              `${op}: expected ${type} for ${currentParam.name} at index ${i}`,
-            );
+            throw new ScriptError(`${op}: expected ${type} for ${currentParam.name} at index ${i}`);
           }
         }
       } else {
         // Array argument
         if (!Array.isArray(arg)) {
-          throw new ScriptError(
-            `${op}: expected array for ${currentParam.name}`,
-          );
+          throw new ScriptError(`${op}: expected array for ${currentParam.name}`);
         }
       }
     } else {
       if (type === "object") {
         if (typeof arg !== "object" || arg === null) {
-          throw new ScriptError(
-            `${op}: expected object for ${currentParam.name}`,
-          );
+          throw new ScriptError(`${op}: expected object for ${currentParam.name}`);
         }
       } else if (typeof arg !== type) {
         if (type.includes("|")) {
@@ -459,14 +414,10 @@ function validateArgs(
             continue;
           }
           if (!types.includes(argType)) {
-            throw new ScriptError(
-              `${op}: expected ${type} for ${currentParam.name}`,
-            );
+            throw new ScriptError(`${op}: expected ${type} for ${currentParam.name}`);
           }
         } else {
-          throw new ScriptError(
-            `${op}: expected ${type} for ${currentParam.name}`,
-          );
+          throw new ScriptError(`${op}: expected ${type} for ${currentParam.name}`);
         }
       }
     }

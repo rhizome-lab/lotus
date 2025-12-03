@@ -1,12 +1,4 @@
-import {
-  describe,
-  test,
-  expect,
-  mock,
-  beforeEach,
-  spyOn,
-  Mock,
-} from "bun:test";
+import { describe, test, expect, mock, beforeEach, spyOn, Mock } from "bun:test";
 
 // Mock dependencies
 const mockDb = {
@@ -51,22 +43,18 @@ describe("Session Manager", () => {
     mockPlayerSocket.off.mockClear();
 
     // Spy on socketManager methods
-    if (
-      !(socketManager.getSocket as Mock<typeof socketManager.getSocket>).mock
-    ) {
+    if (!(socketManager.getSocket as Mock<typeof socketManager.getSocket>).mock) {
       spyOn(socketManager, "getSocket");
     }
 
     (socketManager.getSocket as any).mockReturnValue(mockPlayerSocket);
 
     // Default behavior for socket
-    mockPlayerSocket.on.mockImplementation(
-      (event: string, _handler: Function) => {
-        if (event === "message") {
-          // no-op
-        }
-      },
-    );
+    mockPlayerSocket.on.mockImplementation((event: string, _handler: Function) => {
+      if (event === "message") {
+        // no-op
+      }
+    });
 
     // We need to trigger the message handler when execute is called.
     mockPlayerSocket.execute.mockImplementation((cmd: string, args: any[]) => {
@@ -74,9 +62,7 @@ describe("Session Manager", () => {
         const name = args[0];
         // Find the registered message handler
         // We need to capture it from the .on call
-        const call = mockPlayerSocket.on.mock.calls.find(
-          (c: any) => c[0] === "message",
-        );
+        const call = mockPlayerSocket.on.mock.calls.find((c: any) => c[0] === "message");
         if (call) {
           const handler = call[1];
           // Simulate async response

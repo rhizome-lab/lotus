@@ -11,12 +11,7 @@ export function createLibraryTester(
     const coveredOpcodes = new Set<string>();
     const allOpcodes = Object.keys(library).filter((key) => {
       const val = library[key];
-      return (
-        typeof val === "function" &&
-        "opcode" in val &&
-        "handler" in val &&
-        "metadata" in val
-      );
+      return typeof val === "function" && "opcode" in val && "handler" in val && "metadata" in val;
     });
 
     const testOp: any = (name: string, ...args: any[]) => {
@@ -28,9 +23,7 @@ export function createLibraryTester(
         opcodeObj = library[name];
       } else {
         // Maybe name is the opcode string itself, find it in library
-        const key = Object.keys(library).find(
-          (k) => library[k].opcode === name,
-        );
+        const key = Object.keys(library).find((k) => library[k].opcode === name);
         if (key) opcodeObj = library[key];
       }
 

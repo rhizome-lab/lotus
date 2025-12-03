@@ -5,9 +5,7 @@ import { ALL_ADJECTIVES } from "@viwo/shared/constants/adjectives";
 export default function ItemCreator(props: { onClose?: () => void }) {
   const [name, setName] = createSignal("");
   const [description, setDescription] = createSignal("");
-  const [selectedAdjectives, setSelectedAdjectives] = createSignal<string[]>(
-    [],
-  );
+  const [selectedAdjectives, setSelectedAdjectives] = createSignal<string[]>([]);
   const [adjInput, setAdjInput] = createSignal("");
 
   const filteredAdjectives = () => {
@@ -90,10 +88,7 @@ export default function ItemCreator(props: { onClose?: () => void }) {
               <div class="builder__autocomplete-dropdown">
                 <For each={filteredAdjectives()}>
                   {(adj) => (
-                    <div
-                      class="builder__autocomplete-item"
-                      onClick={() => addAdjective(adj)}
-                    >
+                    <div class="builder__autocomplete-item" onClick={() => addAdjective(adj)}>
                       {adj}
                     </div>
                   )}

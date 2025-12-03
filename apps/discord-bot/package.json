@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "typecheck": "tsgo --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "dependencies": {
     "discord.js": "^14.16.3",

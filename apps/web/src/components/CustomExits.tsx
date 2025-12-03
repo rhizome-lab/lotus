@@ -24,9 +24,7 @@ export default function CustomExits() {
     return (room["exits"] as number[])
       .map((id) => gameStore.state.entities.get(id))
       .filter(
-        (item) =>
-          item &&
-          !STANDARD_DIRS.includes((item["name"] as string).toLowerCase()),
+        (item) => item && !STANDARD_DIRS.includes((item["name"] as string).toLowerCase()),
       ) as Entity[];
   };
 
@@ -37,11 +35,7 @@ export default function CustomExits() {
         <Popover
           contentClass="compass__popover"
           trigger={(triggerProps) => (
-            <button
-              class="compass__add-btn"
-              onClick={triggerProps.onClick}
-              title="Add Custom Exit"
-            >
+            <button class="compass__add-btn" onClick={triggerProps.onClick} title="Add Custom Exit">
               +
             </button>
           )}
@@ -58,15 +52,11 @@ export default function CustomExits() {
           {(exit) => (
             <div
               class="custom-exits__item"
-              onClick={() =>
-                gameStore.execute("move", [exit["name"] as string])
-              }
+              onClick={() => gameStore.execute("move", [exit["name"] as string])}
             >
               <span class="custom-exits__name">{exit["name"] as string}</span>
               <Show when={exit["destination_name"] as string}>
-                <span class="custom-exits__dest">
-                  &rarr; {exit["destination_name"] as string}
-                </span>
+                <span class="custom-exits__dest">&rarr; {exit["destination_name"] as string}</span>
               </Show>
             </div>
           )}

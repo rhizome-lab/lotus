@@ -85,5 +85,4 @@ Communication between Client and Server uses the JSON-RPC 2.0 protocol.
 ## Testing Strategy
 
 - **In-Memory Database**: Tests use an in-memory SQLite database (`:memory:`) seeded with initial data to ensure isolation and speed.
-- **Permissions**: Tests leverage the `system.can_edit` verb to verify permission logic.
 - **Mocking**: We avoid `spyOn` for `global.localStorage` where possible, preferring dependency injection or cleaner mocks.

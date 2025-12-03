@@ -1,18 +1,9 @@
-import {
-  defineOpcode,
-  ScriptError,
-  Capability,
-} from "@viwo/scripting";
+import { defineOpcode, ScriptError, Capability } from "@viwo/scripting";
 import { checkCapability } from "../utils";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 
-function checkFsCapability(
-  ctx: any,
-  cap: Capability,
-  type: string,
-  targetPath: string,
-) {
+function checkFsCapability(ctx: any, cap: Capability, type: string, targetPath: string) {
   checkCapability(cap, ctx.this.id, type, (params) => {
     const allowedPath = params["path"];
     if (!allowedPath || typeof allowedPath !== "string") {

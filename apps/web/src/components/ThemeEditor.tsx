@@ -6,15 +6,12 @@ interface Props {
 }
 
 export const ThemeEditor: Component<Props> = (props) => {
-  const colorKeys = Object.keys(themeStore.activeTheme.colors) as Array<
-    keyof ThemeColors
-  >;
+  const colorKeys = Object.keys(themeStore.activeTheme.colors) as Array<keyof ThemeColors>;
 
   const handleExport = () => {
     const theme = themeStore.activeTheme;
     const dataStr =
-      "data:text/json;charset=utf-8," +
-      encodeURIComponent(JSON.stringify(theme, null, 2));
+      "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(theme, null, 2));
     const downloadAnchorNode = document.createElement("a");
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute(
@@ -83,9 +80,7 @@ export const ThemeEditor: Component<Props> = (props) => {
             "align-items": "center",
           }}
         >
-          <h2 style={{ margin: 0, color: "var(--text-primary)" }}>
-            Theme Editor
-          </h2>
+          <h2 style={{ margin: 0, color: "var(--text-primary)" }}>Theme Editor</h2>
           <button
             onClick={props.onClose}
             style={{
@@ -149,14 +144,10 @@ export const ThemeEditor: Component<Props> = (props) => {
             style={{
               padding: "8px",
               background: "var(--bg-element)",
-              color: themeStore.activeTheme.isBuiltin
-                ? "var(--text-muted)"
-                : "var(--error-color)",
+              color: themeStore.activeTheme.isBuiltin ? "var(--text-muted)" : "var(--error-color)",
               border: "1px solid var(--border-color)",
               "border-radius": "4px",
-              cursor: themeStore.activeTheme.isBuiltin
-                ? "not-allowed"
-                : "pointer",
+              cursor: themeStore.activeTheme.isBuiltin ? "not-allowed" : "pointer",
             }}
             title="Delete Theme"
           >
@@ -189,12 +180,7 @@ export const ThemeEditor: Component<Props> = (props) => {
             title="Import Theme"
           >
             ⬆️
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              style={{ display: "none" }}
-            />
+            <input type="file" accept=".json" onChange={handleImport} style={{ display: "none" }} />
           </label>
         </div>
 
@@ -209,21 +195,13 @@ export const ThemeEditor: Component<Props> = (props) => {
             "border-radius": "4px",
           }}
         >
-          <div
-            style={{ display: "flex", "flex-direction": "column", gap: "5px" }}
-          >
-            <label
-              style={{ "font-size": "0.8em", color: "var(--text-secondary)" }}
-            >
-              Name
-            </label>
+          <div style={{ display: "flex", "flex-direction": "column", gap: "5px" }}>
+            <label style={{ "font-size": "0.8em", color: "var(--text-secondary)" }}>Name</label>
             <input
               type="text"
               value={themeStore.activeTheme.manifest.name}
               disabled={themeStore.activeTheme.isBuiltin}
-              onChange={(e) =>
-                themeStore.updateManifest({ name: e.currentTarget.value })
-              }
+              onChange={(e) => themeStore.updateManifest({ name: e.currentTarget.value })}
               style={{
                 padding: "5px",
                 background: "var(--bg-input)",
@@ -233,21 +211,13 @@ export const ThemeEditor: Component<Props> = (props) => {
               }}
             />
           </div>
-          <div
-            style={{ display: "flex", "flex-direction": "column", gap: "5px" }}
-          >
-            <label
-              style={{ "font-size": "0.8em", color: "var(--text-secondary)" }}
-            >
-              Author
-            </label>
+          <div style={{ display: "flex", "flex-direction": "column", gap: "5px" }}>
+            <label style={{ "font-size": "0.8em", color: "var(--text-secondary)" }}>Author</label>
             <input
               type="text"
               value={themeStore.activeTheme.manifest.author}
               disabled={themeStore.activeTheme.isBuiltin}
-              onChange={(e) =>
-                themeStore.updateManifest({ author: e.currentTarget.value })
-              }
+              onChange={(e) => themeStore.updateManifest({ author: e.currentTarget.value })}
               style={{
                 padding: "5px",
                 background: "var(--bg-input)",
@@ -312,9 +282,7 @@ export const ThemeEditor: Component<Props> = (props) => {
                         ? themeStore.activeTheme.colors[key]
                         : "#000000"
                     }
-                    onChange={(e) =>
-                      themeStore.updateColor(key, e.currentTarget.value)
-                    }
+                    onChange={(e) => themeStore.updateColor(key, e.currentTarget.value)}
                     style={{
                       border: "none",
                       padding: 0,
@@ -327,9 +295,7 @@ export const ThemeEditor: Component<Props> = (props) => {
                   <input
                     type="text"
                     value={themeStore.activeTheme.colors[key]}
-                    onChange={(e) =>
-                      themeStore.updateColor(key, e.currentTarget.value)
-                    }
+                    onChange={(e) => themeStore.updateColor(key, e.currentTarget.value)}
                     style={{
                       flex: 1,
                       background: "var(--bg-input)",

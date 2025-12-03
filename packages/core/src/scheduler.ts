@@ -17,30 +17,22 @@ export class TaskScheduler {
    * @param args - Arguments to pass to the verb.
    * @param delayMs - Delay in milliseconds.
    */
-  schedule(
-    entityId: number,
-    verb: string,
-    args: readonly unknown[],
-    delayMs: number,
-  ) {
+  schedule(entityId: number, verb: string, args: readonly unknown[], delayMs: number) {
     const executeAt = Date.now() + delayMs;
     db.query(
       "INSERT INTO scheduled_tasks (entity_id, verb, args, execute_at) VALUES (?, ?, ?, ?)",
     ).run(entityId, verb, JSON.stringify(args), executeAt);
   }
 
-  private sendFactory: (
-    entityId: number,
-  ) => (type: string, payload: unknown) => void = () => () => {};
+  private sendFactory: (entityId: number) => (type: string, payload: unknown) => void =
+    () => () => {};
   /**
    * Sets the factory function for creating the 'send' function used in scheduled tasks.
    * This allows the scheduler to send messages to clients even when triggered asynchronously.
    *
    * @param factory - A function that returns a send function for a given entity ID.
    */
-  setSendFactory(
-    factory: (entityId: number) => (type: string, payload: unknown) => void,
-  ) {
+  setSendFactory(factory: (entityId: number) => (type: string, payload: unknown) => void) {
     this.sendFactory = factory;
   }
 
@@ -74,17 +66,13 @@ export class TaskScheduler {
    */
   async process() {
     const now = Date.now();
-    const tasks = db
-      .query("SELECT * FROM scheduled_tasks WHERE execute_at <= ?")
-      .all(now) as any[];
+    const tasks = db.query("SELECT * FROM scheduled_tasks WHERE execute_at <= ?").all(now) as any[];
 
     if (tasks.length === 0) return;
 
     // Delete tasks immediately
     const ids = tasks.map((t) => t.id);
-    db.query(
-      `DELETE FROM scheduled_tasks WHERE id IN (${ids.join(",")})`,
-    ).run();
+    db.query(`DELETE FROM scheduled_tasks WHERE id IN (${ids.join(",")})`).run();
 
     if (!this.sendFactory) {
       throw new Error("[Scheduler] No send factory set.");

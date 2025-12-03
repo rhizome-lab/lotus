@@ -8,12 +8,7 @@ import {
   ListLib as List,
 } from "@viwo/scripting";
 import { Entity } from "@viwo/shared/jsonrpc";
-import {
-  createEntity,
-  getEntity,
-  createCapability,
-  getCapabilities,
-} from "./repo";
+import { createEntity, getEntity, createCapability, getCapabilities } from "./repo";
 import * as Core from "./runtime/lib/core";
 import * as Kernel from "./runtime/lib/kernel";
 import { CoreLib, db } from ".";
@@ -63,11 +58,7 @@ describe("Capability Security", () => {
     // Admin mints a capability for themselves
     const ctx = createScriptContext({ caller: admin, this: admin, args: [] });
     const newCap = await evaluate(
-      Kernel["mint"](
-        Kernel["get_capability"]("sys.mint"),
-        "test.cap",
-        ObjectLib["obj.new"](),
-      ),
+      Kernel["mint"](Kernel["get_capability"]("sys.mint"), "test.cap", ObjectLib["obj.new"]()),
       ctx,
     );
     expect(newCap).not.toBeNull();
@@ -88,10 +79,7 @@ describe("Capability Security", () => {
     // expect(async () => await evaluate(...)).toThrow() works in bun test?
 
     try {
-      await evaluate(
-        CoreLib["create"](null, ObjectLib["obj.new"](["name", "Fail"])),
-        ctx,
-      );
+      await evaluate(CoreLib["create"](null, ObjectLib["obj.new"](["name", "Fail"])), ctx);
       expect(true).toBe(false); // Should not reach here
     } catch (e) {
       expect(e).toBeDefined();
@@ -135,10 +123,7 @@ describe("Capability Security", () => {
 
     await evaluate(
       CoreLib["set_entity"](
-        Kernel["get_capability"](
-          "entity.control",
-          ObjectLib["obj.new"](["*", true]),
-        ),
+        Kernel["get_capability"]("entity.control", ObjectLib["obj.new"](["*", true])),
         ObjectLib["obj.set"](CoreLib["entity"](targetId), "name", "Modified"),
       ),
       ctx,

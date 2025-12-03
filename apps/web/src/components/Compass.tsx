@@ -11,10 +11,7 @@ export default function Compass() {
 
     return (room["exits"] as number[])
       .map((id) => gameStore.state.entities.get(id))
-      .find(
-        (item) =>
-          item && (item["name"] as string).toLowerCase() === dir.toLowerCase(),
-      );
+      .find((item) => item && (item["name"] as string).toLowerCase() === dir.toLowerCase());
   };
 
   const handleDir = (dir: string) => {
@@ -51,9 +48,7 @@ export default function Compass() {
                 "compass__cell-dest--active": !!exit(),
               }}
             >
-              {exit()
-                ? ((exit()?.["destination_name"] ?? exit()?.["name"]) as string)
-                : "+"}
+              {exit() ? ((exit()?.["destination_name"] ?? exit()?.["name"]) as string) : "+"}
             </div>
           </button>
         )}

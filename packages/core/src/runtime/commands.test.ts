@@ -12,14 +12,7 @@ import {
 } from "@viwo/scripting";
 import * as Core from "./lib/core";
 import * as Kernel from "./lib/kernel";
-import {
-  createEntity,
-  getEntity,
-  updateEntity,
-  getVerb,
-  addVerb,
-  createCapability,
-} from "../repo";
+import { createEntity, getEntity, updateEntity, getVerb, addVerb, createCapability } from "../repo";
 import { Entity } from "@viwo/shared/jsonrpc";
 import { seed } from "../seed";
 
@@ -69,9 +62,7 @@ describe("Player Commands", () => {
 
     // Get Guest Player
     const guest = db
-      .query<Entity, []>(
-        "SELECT * FROM entities WHERE json_extract(props, '$.name') = 'Guest'",
-      )
+      .query<Entity, []>("SELECT * FROM entities WHERE json_extract(props, '$.name') = 'Guest'")
       .get()!;
     player = getEntity(guest.id)!;
     // Make player admin to allow create/dig/set
@@ -269,10 +260,7 @@ describe("Recursive Move Check", () => {
       )
       .get()!;
 
-    const callerId = createEntity(
-      { name: "Player", location: voidEntity.id },
-      playerBase.id,
-    );
+    const callerId = createEntity({ name: "Player", location: voidEntity.id }, playerBase.id);
     caller = getEntity(callerId)!;
   });
 
@@ -284,19 +272,13 @@ describe("Recursive Move Check", () => {
       )
       .get()!;
 
-    const boxId = createEntity(
-      { name: "Box", location: caller["location"] },
-      entityBase.id,
-    );
+    const boxId = createEntity({ name: "Box", location: caller["location"] }, entityBase.id);
     // Add dummy look verb to Box since move calls it
     addVerb(boxId, "look", StdLib["let"]("dummy", 1));
     const box = getEntity(boxId)!;
 
     // 2. Create an Item inside the Box
-    const itemId = createEntity(
-      { name: "Item", location: boxId },
-      entityBase.id,
-    );
+    const itemId = createEntity({ name: "Item", location: boxId }, entityBase.id);
 
     // 3. Attempt to move Box into Item
     // 'move' verb on Entity Base moves the CALLER.

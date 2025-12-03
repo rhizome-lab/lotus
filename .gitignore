@@ -37,6 +37,3 @@ pnpm-debug.log*
 # .env
 .env
 .env.*
-
-# scratch
-scratch/

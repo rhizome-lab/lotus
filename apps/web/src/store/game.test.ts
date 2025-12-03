@@ -70,8 +70,7 @@ describe("Game Store", () => {
     }
 
     expect(gameStore.state.messages.length).toBeGreaterThan(0);
-    const lastMsg =
-      gameStore.state.messages[gameStore.state.messages.length - 1];
+    const lastMsg = gameStore.state.messages[gameStore.state.messages.length - 1];
     if (lastMsg && lastMsg.type === "message") {
       expect(lastMsg.text).toBe("Hello World");
     }

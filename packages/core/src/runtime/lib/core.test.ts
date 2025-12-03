@@ -153,15 +153,13 @@ createLibraryTester(Core, "Core Library", (test) => {
 
   test("get_verb", () => {
     // Mock returns a verb for id 101
-    expect(evaluate(Core["get_verb"]({ id: 101 }, "get_dynamic"), ctx)).toEqual(
-      {
-        id: 1,
-        entity_id: 101,
-        name: "get_dynamic",
-        code: "resolved_value",
-        permissions: {},
-      },
-    );
+    expect(evaluate(Core["get_verb"]({ id: 101 }, "get_dynamic"), ctx)).toEqual({
+      id: 1,
+      entity_id: 101,
+      name: "get_dynamic",
+      code: "resolved_value",
+      permissions: {},
+    });
     // Mock returns null for id 1
     expect(evaluate(Core["get_verb"]({ id: 1 }, "missing"), ctx)).toBe(null);
   });
@@ -204,10 +202,7 @@ createLibraryTester(Core, "Core Library", (test) => {
     const fakeCap = { __brand: "Capability" as const, id: crypto.randomUUID() };
 
     expect(() =>
-      evaluate(
-        Core["sudo"](fakeCap, { id: 101 }, "get_dynamic", List["list.new"]()),
-        userCtx,
-      ),
+      evaluate(Core["sudo"](fakeCap, { id: 101 }, "get_dynamic", List["list.new"]()), userCtx),
     ).toThrow("Invalid capability"); // Or "Capability not owned"
 
     // 2. Allow if System (ID 3) with valid cap
@@ -219,15 +214,7 @@ createLibraryTester(Core, "Core Library", (test) => {
       send: () => {},
     });
     expect(
-      evaluate(
-        Core["sudo"](
-          sysSudoCap,
-          { id: 101 },
-          "get_dynamic",
-          List["list.new"](),
-        ),
-        systemCtx,
-      ),
+      evaluate(Core["sudo"](sysSudoCap, { id: 101 }, "get_dynamic", List["list.new"]()), systemCtx),
     ).toBe("resolved_value");
 
     // 3. Allow if Bot (ID 4) with valid cap
@@ -239,15 +226,7 @@ createLibraryTester(Core, "Core Library", (test) => {
       send: () => {},
     });
     expect(
-      evaluate(
-        Core["sudo"](
-          botSudoCap,
-          { id: 101 },
-          "get_dynamic",
-          List["list.new"](),
-        ),
-        botCtx,
-      ),
+      evaluate(Core["sudo"](botSudoCap, { id: 101 }, "get_dynamic", List["list.new"]()), botCtx),
     ).toBe("resolved_value");
 
     // 4. Verify message forwarding for Bot
@@ -261,10 +240,7 @@ createLibraryTester(Core, "Core Library", (test) => {
       },
     });
 
-    evaluate(
-      Core["sudo"](botSudoCap, { id: 103 }, "say_hello", List["list.new"]()),
-      botForwardCtx,
-    );
+    evaluate(Core["sudo"](botSudoCap, { id: 103 }, "say_hello", List["list.new"]()), botForwardCtx);
 
     expect(sentMessage).toEqual({
       type: "forward",

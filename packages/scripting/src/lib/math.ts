@@ -4,10 +4,7 @@ import { defineOpcode } from "../def";
 /**
  * Adds numbers.
  */
-const add = defineOpcode<
-  [number, number, ...number[]],
-  number
->("+", {
+const add = defineOpcode<[number, number, ...number[]], number>("+", {
   metadata: {
     label: "+",
     category: "math",
@@ -37,10 +34,7 @@ export { add as "+" };
 /**
  * Subtracts numbers.
  */
-const sub = defineOpcode<
-  [number, number, ...number[]],
-  number
->("-", {
+const sub = defineOpcode<[number, number, ...number[]], number>("-", {
   metadata: {
     label: "-",
     category: "math",
@@ -70,10 +64,7 @@ export { sub as "-" };
 /**
  * Multiplies numbers.
  */
-const mul = defineOpcode<
-  [number, number, ...number[]],
-  number
->("*", {
+const mul = defineOpcode<[number, number, ...number[]], number>("*", {
   metadata: {
     label: "*",
     category: "math",
@@ -103,10 +94,7 @@ export { mul as "*" };
 /**
  * Divides numbers.
  */
-const div = defineOpcode<
-  [number, number, ...number[]],
-  number
->("/", {
+const div = defineOpcode<[number, number, ...number[]], number>("/", {
   metadata: {
     label: "/",
     category: "math",
@@ -136,37 +124,32 @@ export { div as "/" };
 /**
  * Calculates the modulo of two numbers.
  */
-const mod = defineOpcode<[number, number], number>(
-  "%",
-  {
-    metadata: {
-      label: "%",
-      category: "math",
-      description: "Modulo",
-      layout: "infix",
-      slots: [
-        { name: "A", type: "block" },
-        { name: "B", type: "block" },
-      ],
-      parameters: [
-        { name: "a", type: "number" },
-        { name: "b", type: "number" },
-      ],
-      returnType: "number",
-    },
-    handler: ([a, b], _ctx) => {
+const mod = defineOpcode<[number, number], number>("%", {
+  metadata: {
+    label: "%",
+    category: "math",
+    description: "Modulo",
+    layout: "infix",
+    slots: [
+      { name: "A", type: "block" },
+      { name: "B", type: "block" },
+    ],
+    parameters: [
+      { name: "a", type: "number" },
+      { name: "b", type: "number" },
+    ],
+    returnType: "number",
+  },
+  handler: ([a, b], _ctx) => {
     return a % b;
-  },  },
-);
+  },
+});
 export { mod as "%" };
 
 /**
  * Calculates exponentiation (power tower).
  */
-const pow = defineOpcode<
-  [number, number, ...number[]],
-  number
->("^", {
+const pow = defineOpcode<[number, number, ...number[]], number>("^", {
   metadata: {
     label: "^",
     category: "math",
@@ -201,10 +184,7 @@ export { pow as "^" };
  * - `random(max)`: Returns a number between 0 (inclusive) and `max` (inclusive). If `max` is an integer, returns an integer.
  * - `random(min, max)`: Returns a number between `min` (inclusive) and `max` (inclusive). If `min` and `max` are integers, returns an integer.
  */
-export const random = defineOpcode<
-  [number?, number?],
-  number
->("random", {
+export const random = defineOpcode<[number?, number?], number>("random", {
   metadata: {
     label: "Random",
     category: "math",
@@ -222,18 +202,18 @@ export const random = defineOpcode<
   handler: (args, _ctx) => {
     // random(max), random(min, max) or random() -> 0..1
     if (args.length === 0) return Math.random();
-    
+
     let min = 0;
     let max = 1;
-    
+
     if (args.length === 1) {
       max = args[0] as number;
     } else {
       [min, max] = args as [number, number];
     }
-    
+
     const shouldFloor = min % 1 === 0 && max % 1 === 0;
-    
+
     if (min > max) {
       throw new Error("random: min must be less than or equal to max");
     }

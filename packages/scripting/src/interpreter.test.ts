@@ -1,10 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import {
-  evaluate,
-  ScriptContext,
-  registerLibrary,
-  ScriptError,
-} from "./interpreter";
+import { evaluate, ScriptContext, registerLibrary, ScriptError } from "./interpreter";
 import * as Std from "./lib/std";
 import * as ObjectLib from "./lib/object";
 import * as List from "./lib/list";
@@ -238,10 +233,7 @@ describe("Interpreter Libraries", () => {
             Std["let"]("x", 10),
             Std["let"](
               "addX",
-              Std["lambda"](
-                ["y"],
-                MathLib["+"](Std["var"]("x"), Std["var"]("y")),
-              ),
+              Std["lambda"](["y"], MathLib["+"](Std["var"]("x"), Std["var"]("y"))),
             ),
             Std["apply"](Std["var"]("addX"), 5),
           ),

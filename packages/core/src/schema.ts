@@ -57,7 +57,5 @@ export function initSchema(db: Database) {
   `,
   ).run();
 
-  db.query(
-    "CREATE INDEX IF NOT EXISTS idx_capabilities_owner ON capabilities(owner_id)",
-  ).run();
+  db.query("CREATE INDEX IF NOT EXISTS idx_capabilities_owner ON capabilities(owner_id)").run();
 }

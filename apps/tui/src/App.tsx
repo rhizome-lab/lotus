@@ -59,9 +59,7 @@ const App = () => {
       const player = entities.get(playerId);
       const contents = player?.["contents"] as number[] | undefined;
       if (contents && Array.isArray(contents)) {
-        const items = contents
-          .map((id) => entities.get(id))
-          .filter((e): e is Entity => !!e);
+        const items = contents.map((id) => entities.get(id)).filter((e): e is Entity => !!e);
         setInventory(items);
       }
     }
@@ -88,14 +86,8 @@ const App = () => {
     };
   }, []);
 
-  const addLog = (
-    message: string | object,
-    type: "info" | "error" | "other" = "info",
-  ) => {
-    setLogs((prev) => [
-      ...prev,
-      { id: Math.random().toString(36).substr(2, 9), message, type },
-    ]);
+  const addLog = (message: string | object, type: "info" | "error" | "other" = "info") => {
+    setLogs((prev) => [...prev, { id: Math.random().toString(36).substr(2, 9), message, type }]);
   };
 
   const handleSubmit = (input: string) => {
@@ -154,10 +146,7 @@ const App = () => {
       // For now, let's just log it and maybe try a command if one exists, or just update local state.
       // The viwo protocol usually uses 'program' command or similar.
       // Let's assume 'program <id> <content>'
-      clientRef.current.execute("program", [
-        editingScript.id.toString(),
-        content,
-      ]);
+      clientRef.current.execute("program", [editingScript.id.toString(), content]);
       addLog(`Saved script ${editingScript.id}`, "info");
       setMode("GAME");
       setEditingScript(null);
@@ -187,9 +176,7 @@ const App = () => {
         // Filter opcodes
         // We cast opcodes to any[] because we don't have the type imported,
         // but we know it has an 'opcode' field.
-        const matches = clientState.opcodes.filter((op: any) =>
-          op.opcode.startsWith(prefix),
-        );
+        const matches = clientState.opcodes.filter((op: any) => op.opcode.startsWith(prefix));
         if (matches.length > 0) {
           // Return the suffix of the first match
           // In a real TUI, we'd show a list. Here we just complete the first one.
@@ -207,13 +194,10 @@ const App = () => {
   ) => {
     if (!clientRef.current) return null;
     try {
-      const completion = await clientRef.current.callPluginMethod(
-        "ai_completion",
-        {
-          code,
-          position,
-        },
-      );
+      const completion = await clientRef.current.callPluginMethod("ai_completion", {
+        code,
+        position,
+      });
       return typeof completion === "string" ? completion : null;
     } catch (e) {
       addLog(`AI Error: ${e}`, "error");
@@ -223,8 +207,7 @@ const App = () => {
 
   // Helper to get room contents
   const getRoomContents = () => {
-    if (!room || !room["contents"] || !Array.isArray(room["contents"]))
-      return [];
+    if (!room || !room["contents"] || !Array.isArray(room["contents"])) return [];
     return room["contents"]
       .map((id: number) => clientState.entities.get(id))
       .filter((e: Entity | undefined): e is Entity => !!e);
@@ -266,17 +249,9 @@ const App = () => {
                 {logs.slice(-20).map((log) => (
                   <Box key={log.id}>
                     <Text
-                      color={
-                        log.type === "error"
-                          ? "red"
-                          : log.type === "info"
-                          ? "white"
-                          : "blue"
-                      }
+                      color={log.type === "error" ? "red" : log.type === "info" ? "white" : "blue"}
                     >
-                      {typeof log.message === "string"
-                        ? log.message
-                        : JSON.stringify(log.message)}
+                      {typeof log.message === "string" ? log.message : JSON.stringify(log.message)}
                     </Text>
                   </Box>
                 ))}
@@ -312,9 +287,7 @@ const App = () => {
                 Inventory
               </Text>
               {inventory.length > 0 ? (
-                inventory.map((item, idx) => (
-                  <Text key={idx}>- {item["name"] as string}</Text>
-                ))
+                inventory.map((item, idx) => <Text key={idx}>- {item["name"] as string}</Text>)
               ) : (
                 <Text color="gray">(empty)</Text>
               )}
@@ -324,11 +297,7 @@ const App = () => {
           {/* Input Bar */}
           <Box borderStyle="single" borderColor="blue">
             <Text color="green">&gt; </Text>
-            <TextInput
-              value={query}
-              onChange={setQuery}
-              onSubmit={handleSubmit}
-            />
+            <TextInput value={query} onChange={setQuery} onSubmit={handleSubmit} />
           </Box>
         </>
       )}

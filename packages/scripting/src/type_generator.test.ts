@@ -36,9 +36,7 @@ describe("generateTypeDefinitions", () => {
 
     const defs = generateTypeDefinitions(opcodes);
     expect(defs).toContain("declare namespace list {");
-    expect(defs).toContain(
-      "function map<T, U>(list: T[], fn: (item: T) => U): U[];",
-    );
+    expect(defs).toContain("function map<T, U>(list: T[], fn: (item: T) => U): U[];");
   });
 
   test("generates global function definitions with generics", () => {

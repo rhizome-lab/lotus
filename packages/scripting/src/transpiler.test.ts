@@ -36,17 +36,13 @@ describe("transpiler", () => {
     expect(transpile("1 >= 2")).toEqual(BooleanLib[">="](1, 2));
     expect(transpile("true && false")).toEqual(BooleanLib.and(true, false));
     expect(transpile("true || false")).toEqual(BooleanLib.or(true, false));
-    expect(transpile("'a' in obj")).toEqual(
-      ObjectLib["obj.has"](Std.var("obj"), "a"),
-    );
+    expect(transpile("'a' in obj")).toEqual(ObjectLib["obj.has"](Std.var("obj"), "a"));
     expect(transpile("2 ** 3")).toEqual(MathLib["^"](2, 3));
   });
 
   test("nested binary ops", () => {
     expect(transpile("1 + 2 * 3")).toEqual(MathLib["+"](1, MathLib["*"](2, 3)));
-    expect(transpile("(1 + 2) * 3")).toEqual(
-      MathLib["*"](MathLib["+"](1, 2), 3),
-    );
+    expect(transpile("(1 + 2) * 3")).toEqual(MathLib["*"](MathLib["+"](1, 2), 3));
     expect(transpile("1 * 2 + 3")).toEqual(MathLib["+"](MathLib["*"](1, 2), 3));
     expect(transpile("1 + 2 + 3")).toEqual(MathLib["+"](MathLib["+"](1, 2), 3));
   });
@@ -60,43 +56,27 @@ describe("transpiler", () => {
   });
 
   test("objects", () => {
-    expect(transpile("({ a: 1, b: 2 })")).toEqual(
-      ObjectLib["obj.new"](["a", 1], ["b", 2]),
-    );
+    expect(transpile("({ a: 1, b: 2 })")).toEqual(ObjectLib["obj.new"](["a", 1], ["b", 2]));
     expect(transpile("({ 'a': 1 })")).toEqual(ObjectLib["obj.new"](["a", 1]));
-    expect(transpile("delete obj.x")).toEqual(
-      ObjectLib["obj.del"](Std.var("obj"), "x"),
-    );
-    expect(transpile("delete obj['x']")).toEqual(
-      ObjectLib["obj.del"](Std.var("obj"), "x"),
-    );
+    expect(transpile("delete obj.x")).toEqual(ObjectLib["obj.del"](Std.var("obj"), "x"));
+    expect(transpile("delete obj['x']")).toEqual(ObjectLib["obj.del"](Std.var("obj"), "x"));
   });
 
   test("property access", () => {
-    expect(transpile("obj.x")).toEqual(
-      ObjectLib["obj.get"](Std.var("obj"), "x"),
-    );
-    expect(transpile("obj['x']")).toEqual(
-      ObjectLib["obj.get"](Std.var("obj"), "x"),
-    );
+    expect(transpile("obj.x")).toEqual(ObjectLib["obj.get"](Std.var("obj"), "x"));
+    expect(transpile("obj['x']")).toEqual(ObjectLib["obj.get"](Std.var("obj"), "x"));
   });
 
   test("property assignment", () => {
-    expect(transpile("obj.x = 1")).toEqual(
-      ObjectLib["obj.set"](Std.var("obj"), "x", 1),
-    );
+    expect(transpile("obj.x = 1")).toEqual(ObjectLib["obj.set"](Std.var("obj"), "x", 1));
   });
 
   test("function calls", () => {
     expect(transpile("f(x)")).toEqual(["f", Std.var("x")]);
     expect(transpile("log('msg')")).toEqual(Std.log("msg"));
     expect(transpile("throw('err')")).toEqual(Std.throw("err"));
-    expect(transpile("obj.get(o, 'k')")).toEqual(
-      ObjectLib["obj.get"](Std.var("o"), "k"),
-    );
-    expect(transpile("list.push(l, 1)")).toEqual(
-      List["list.push"](Std.var("l"), 1),
-    );
+    expect(transpile("obj.get(o, 'k')")).toEqual(ObjectLib["obj.get"](Std.var("o"), "k"));
+    expect(transpile("list.push(l, 1)")).toEqual(List["list.push"](Std.var("l"), 1));
     // Sanitization test (mocking if_ usage if possible, or just checking logic)
     // Since we can't easily import type_generator output here, we assume user writes if_
     // But 'if' is a keyword, so we can't write `if(...)` as a call in TS source unless it's valid TS.
@@ -151,9 +131,7 @@ describe("transpiler", () => {
   });
 
   test("lambdas", () => {
-    expect(transpile("(x) => x + 1")).toEqual(
-      Std.lambda(["x"], MathLib["+"](Std.var("x"), 1)),
-    );
+    expect(transpile("(x) => x + 1")).toEqual(Std.lambda(["x"], MathLib["+"](Std.var("x"), 1)));
     expect(transpile("(x) => { return x + 1; }")).toEqual(
       Std.lambda(["x"], Std.seq(MathLib["+"](Std.var("x"), 1))),
     );
@@ -162,15 +140,11 @@ describe("transpiler", () => {
   test("control flow", () => {
     expect(transpile("if (true) 1 else 2")).toEqual(Std.if(true, 1, 2));
     expect(transpile("if (true) { 1; }")).toEqual(Std.if(true, Std.seq(1)));
-    expect(transpile("while (true) { 1; }")).toEqual(
-      Std.while(true, Std.seq(1)),
-    );
+    expect(transpile("while (true) { 1; }")).toEqual(Std.while(true, Std.seq(1)));
     expect(transpile("for (const x of list) { x; }")).toEqual(
       Std.for("x", Std.var("list"), Std.seq(Std.var("x"))),
     );
-    expect(transpile("try { 1; } catch (e) { 2; }")).toEqual(
-      Std.try(Std.seq(1), "e", Std.seq(2)),
-    );
+    expect(transpile("try { 1; } catch (e) { 2; }")).toEqual(Std.try(Std.seq(1), "e", Std.seq(2)));
   });
 
   test("sequence", () => {

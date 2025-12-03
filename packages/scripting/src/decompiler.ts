@@ -63,11 +63,7 @@ export function decompile(
       const [cond, thenBranch, elseBranch] = args;
       if (isStatement) {
         const thenCode = decompile(thenBranch, indentLevel + 1, true);
-        let out = `if (${decompile(
-          cond,
-          indentLevel,
-          false,
-        )}) {\n${indent}  ${thenCode}${
+        let out = `if (${decompile(cond, indentLevel, false)}) {\n${indent}  ${thenCode}${
           thenCode.endsWith("}") || thenCode.endsWith(";") ? "" : ";"
         }\n${indent}}`;
         if (elseBranch) {
@@ -94,11 +90,7 @@ export function decompile(
       // If expression, wrap in IIFE?
       if (isStatement) {
         const bodyCode = decompile(body, indentLevel + 1, true);
-        return `while (${decompile(
-          cond,
-          indentLevel,
-          false,
-        )}) {\n${indent}  ${bodyCode}${
+        return `while (${decompile(cond, indentLevel, false)}) {\n${indent}  ${bodyCode}${
           bodyCode.endsWith("}") || bodyCode.endsWith(";") ? "" : ";"
         }\n${indent}}`;
       } else {
@@ -177,9 +169,7 @@ export function decompile(
 
       if (bodyIsSeq) {
         // Decompile seq contents as statements
-        const statements = body
-          .slice(1)
-          .map((stmt: any) => decompile(stmt, indentLevel + 1, true));
+        const statements = body.slice(1).map((stmt: any) => decompile(stmt, indentLevel + 1, true));
         // Add return to the last statement if it's not a control flow that returns?
         // In ViwoScript, last value is returned.
         // In TS, we need explicit return.
@@ -197,20 +187,11 @@ export function decompile(
         }
 
         return `(${params.join(", ")}) => {\n${statements
-          .map(
-            (s: string) =>
-              indent +
-              "  " +
-              (s.endsWith("}") || s.endsWith(";") ? s : s + ";"),
-          )
+          .map((s: string) => indent + "  " + (s.endsWith("}") || s.endsWith(";") ? s : s + ";"))
           .join("\n")}\n${indent}}`;
       } else {
         // Single expression body
-        return `(${params.join(", ")}) => ${decompile(
-          body,
-          indentLevel,
-          false,
-        )}`;
+        return `(${params.join(", ")}) => ${decompile(body, indentLevel, false)}`;
       }
     }
 
@@ -279,11 +260,7 @@ export function decompile(
 
     if (opcode === "obj.has") {
       const [obj, key] = args;
-      return `${decompile(key, indentLevel, false)} in ${decompile(
-        obj,
-        indentLevel,
-        false,
-      )}`;
+      return `${decompile(key, indentLevel, false)} in ${decompile(obj, indentLevel, false)}`;
     }
 
     if (opcode === "obj.del") {
@@ -342,9 +319,7 @@ export function decompile(
     // --- Standard Library ---
 
     if (opcode === "log") {
-      return `console.log(${args
-        .map((a: any) => decompile(a, indentLevel, false))
-        .join(", ")})`;
+      return `console.log(${args.map((a: any) => decompile(a, indentLevel, false)).join(", ")})`;
     }
 
     if (opcode === "throw") {
@@ -365,9 +340,7 @@ export function decompile(
     }
 
     // Generic function call
-    return `${opcode}(${args
-      .map((arg: any) => decompile(arg, indentLevel, false))
-      .join(", ")})`;
+    return `${opcode}(${args.map((arg: any) => decompile(arg, indentLevel, false)).join(", ")})`;
   }
 
   return JSON.stringify(script);

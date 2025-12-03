@@ -7,7 +7,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsgo --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "dependencies": {
     "@monaco-editor/loader": "^1.7.0",

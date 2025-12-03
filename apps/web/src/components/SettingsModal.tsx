@@ -31,10 +31,7 @@ export const SettingsModal = (props: Props) => {
               </For>
             </div>
             <div class="settings-actions">
-              <button
-                class="btn btn--secondary"
-                onClick={() => keybindsStore.resetDefaults()}
-              >
+              <button class="btn btn--secondary" onClick={() => keybindsStore.resetDefaults()}>
                 Reset to Defaults
               </button>
             </div>

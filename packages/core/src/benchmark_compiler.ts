@@ -77,6 +77,4 @@ console.log(`Compiled Execution: ${timeExec.toFixed(2)}ms`);
 console.log(`Result: ${result2}`);
 
 console.log(`Speedup (Exec only): ${(timeInterp / timeExec).toFixed(2)}x`);
-console.log(
-  `Speedup (Total): ${(timeInterp / (compileTime + timeExec)).toFixed(2)}x`,
-);
+console.log(`Speedup (Total): ${(timeInterp / (compileTime + timeExec)).toFixed(2)}x`);

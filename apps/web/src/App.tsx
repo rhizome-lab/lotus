@@ -20,10 +20,7 @@ function App() {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     // Ignore if typing in an input or textarea
-    if (
-      e.target instanceof HTMLInputElement ||
-      e.target instanceof HTMLTextAreaElement
-    ) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
       return;
     }
 
@@ -73,16 +70,11 @@ function App() {
 
   return (
     <div class="app">
-      <SettingsModal
-        isOpen={showSettings()}
-        onClose={() => setShowSettings(false)}
-      />
+      <SettingsModal isOpen={showSettings()} onClose={() => setShowSettings(false)} />
       {/* Custom CSS Injection */}
       <style>
         {themeStore.state.allowCustomCss && gameStore.state.roomId
-          ? (gameStore.state.entities.get(gameStore.state.roomId)?.[
-              "custom_css"
-            ] as string) ?? ""
+          ? ((gameStore.state.entities.get(gameStore.state.roomId)?.["custom_css"] as string) ?? "")
           : ""}
       </style>
 
@@ -93,32 +85,19 @@ function App() {
       <header class="app__header">
         <div class="app__title">Viwo</div>
         <div class="app__header-controls">
-          <div
-            class={`app__status ${
-              gameStore.state.isConnected ? "app__status--online" : ""
-            }`}
-          >
+          <div class={`app__status ${gameStore.state.isConnected ? "app__status--online" : ""}`}>
             {gameStore.state.isConnected ? "ONLINE" : "OFFLINE"}
           </div>
-          <button
-            class="app__builder-btn"
-            onClick={() => setShowThemeEditor(true)}
-          >
+          <button class="app__builder-btn" onClick={() => setShowThemeEditor(true)}>
             Theme
           </button>
           <button
-            class={`app__builder-btn ${
-              showBuilder() ? "app__builder-btn--active" : ""
-            }`}
+            class={`app__builder-btn ${showBuilder() ? "app__builder-btn--active" : ""}`}
             onClick={() => setShowBuilder(!showBuilder())}
           >
             Builder
           </button>
-          <button
-            onClick={() => setShowSettings(true)}
-            class="app__settings-btn"
-            title="Settings"
-          >
+          <button onClick={() => setShowSettings(true)} class="app__settings-btn" title="Settings">
             ⚙️
           </button>
         </div>

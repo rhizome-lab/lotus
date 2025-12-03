@@ -16,15 +16,7 @@ export const ADJECTIVE_REGISTRY = {
   ],
   modifiers: ["light", "dark", "pastel", "neon"],
   effects: ["glowing", "transparent", "ethereal"],
-  materials: [
-    "stone",
-    "obsidian",
-    "metal",
-    "glass",
-    "silver",
-    "gold",
-    "platinum",
-  ],
+  materials: ["stone", "obsidian", "metal", "glass", "silver", "gold", "platinum"],
 };
 
 export const ALL_ADJECTIVES = [

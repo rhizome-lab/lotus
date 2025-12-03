@@ -14,9 +14,7 @@ function getSidebarItems(dir: string) {
     .map((file) => {
       const name = path.basename(file, ".md");
       // Convert snake_case or kebab-case to Title Case for display
-      const text = name
-        .replace(/[-_]/g, " ")
-        .replace(/\b\w/g, (l) => l.toUpperCase());
+      const text = name.replace(/[-_]/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
       return {
         text,
         link: `/${dir}/${name}`,
@@ -63,9 +61,7 @@ export default withMermaid(
         },
       ],
 
-      socialLinks: [
-        { icon: "github", link: "https://github.com/pterror/viwo" },
-      ],
+      socialLinks: [{ icon: "github", link: "https://github.com/pterror/viwo" }],
     },
   }),
 );

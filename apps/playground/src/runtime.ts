@@ -48,11 +48,9 @@ const customLog: OpcodeDefinition = {
 registerLibrary({ log: customLog });
 
 // Export opcodes for the editor
-export const playgroundOpcodes: BlockDefinition[] = getOpcodeMetadata().map(
-  (meta) => ({
-    ...meta,
-    // Ensure type is compatible with BlockDefinition
-    type: (meta.returnType as any) || "statement",
-    category: meta.category as any,
-  }),
-);
+export const playgroundOpcodes: BlockDefinition[] = getOpcodeMetadata().map((meta) => ({
+  ...meta,
+  // Ensure type is compatible with BlockDefinition
+  type: (meta.returnType as any) || "statement",
+  category: meta.category as any,
+}));

@@ -10,7 +10,9 @@
     "dev": "bun run --watch src/dev.ts",
     "typecheck": "tsgo --noEmit",
     "test": "bun test",
-    "db:wipe": "rm -f world.sqlite"
+    "db:wipe": "rm -f world.sqlite",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "dependencies": {
     "ws": "^8.18.0",

@@ -1,10 +1,5 @@
 import { expect, beforeEach } from "bun:test";
-import {
-  evaluate,
-  ScriptContext,
-  registerLibrary,
-  createScriptContext,
-} from "../interpreter";
+import { evaluate, ScriptContext, registerLibrary, createScriptContext } from "../interpreter";
 import * as BooleanOps from "./boolean";
 import { createLibraryTester } from "./test-utils";
 

@@ -80,10 +80,7 @@ describe("Book Item Scripting", () => {
     const script = Std["seq"](
       Std["let"]("index", Std["arg"](0)),
       Std["let"]("chapters", Object["obj.get"](Std["this"](), "chapters")),
-      Std["let"](
-        "chapter",
-        List["list.get"](Std["var"]("chapters"), Std["var"]("index")),
-      ),
+      Std["let"]("chapter", List["list.get"](Std["var"]("chapters"), Std["var"]("index"))),
       Std["if"](
         Std["var"]("chapter"),
         CoreLib["call"](
@@ -134,15 +131,9 @@ describe("Book Item Scripting", () => {
       Std["let"]("chapters", Object["obj.get"](Std["this"](), "chapters")),
       Std["let"]("newChapter", {}),
       Object["obj.set"](Std["var"]("newChapter"), "title", Std["var"]("title")),
-      Object["obj.set"](
-        Std["var"]("newChapter"),
-        "content",
-        Std["var"]("content"),
-      ),
+      Object["obj.set"](Std["var"]("newChapter"), "content", Std["var"]("content")),
       List["list.push"](Std["var"]("chapters"), Std["var"]("newChapter")),
-      CoreLib["set_entity"](
-        Object["obj.set"](Std["this"](), "chapters", Std["var"]("chapters")),
-      ),
+      CoreLib["set_entity"](Object["obj.set"](Std["this"](), "chapters", Std["var"]("chapters"))),
       CoreLib["call"](Std["caller"](), "tell", "Chapter added."),
     );
 
@@ -172,15 +163,11 @@ describe("Book Item Scripting", () => {
             ["c"],
             BooleanLib["or"](
               String["str.includes"](
-                String["str.lower"](
-                  Object["obj.get"](Std["var"]("c"), "title"),
-                ),
+                String["str.lower"](Object["obj.get"](Std["var"]("c"), "title")),
                 String["str.lower"](Std["var"]("query")),
               ),
               String["str.includes"](
-                String["str.lower"](
-                  Object["obj.get"](Std["var"]("c"), "content"),
-                ),
+                String["str.lower"](Object["obj.get"](Std["var"]("c"), "content")),
                 String["str.lower"](Std["var"]("query")),
               ),
             ),

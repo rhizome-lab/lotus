@@ -78,11 +78,7 @@ describe("Repo", () => {
 
   test("getVerb", () => {
     const entity = createEntity({ name: "Scripted" });
-    addVerb(
-      entity,
-      "jump",
-      CoreLib["call"](StdLib["caller"](), "tell", "You jumped"),
-    );
+    addVerb(entity, "jump", CoreLib["call"](StdLib["caller"](), "tell", "You jumped"));
 
     const verb = getVerb(entity, "jump");
     expect(verb).not.toBeNull();
@@ -94,11 +90,7 @@ describe("Repo", () => {
 
   test("getVerb Inheritance", () => {
     const proto = createEntity({ name: "Proto" });
-    addVerb(
-      proto,
-      "fly",
-      CoreLib["call"](StdLib["caller"](), "tell", "You flew"),
-    );
+    addVerb(proto, "fly", CoreLib["call"](StdLib["caller"](), "tell", "You flew"));
 
     const instance = createEntity({ name: "Instance" }, proto);
 

@@ -17,12 +17,16 @@
     "db:wipe": "bun --filter @viwo/core db:wipe",
     "viwo-admin": "bun --filter @viwo/admin-cli start",
     "typecheck": "bun --filter '*' typecheck",
-    "test": "bun --filter '*' test"
+    "test": "bun --filter '*' test",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "^1.3.3",
     "@typescript/native-preview": "^7.0.0-dev.20251202.1",
+    "oxfmt": "^0.16.0",
+    "oxlint": "^1.31.0",
     "typescript": "^6.0.0-dev.20251202"
   }
 }

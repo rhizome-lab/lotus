@@ -67,11 +67,7 @@ describe("PluginManager", () => {
       core: {} as any,
     };
 
-    const result = await manager.handleRpcMethod(
-      "double",
-      { value: 21 },
-      cmdCtx,
-    );
+    const result = await manager.handleRpcMethod("double", { value: 21 }, cmdCtx);
     expect(result).toEqual({ result: 42 });
     expect(handler).toHaveBeenCalledWith({ value: 21 }, cmdCtx);
   });

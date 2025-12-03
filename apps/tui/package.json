@@ -6,7 +6,9 @@
     "dev": "bun run src/index.tsx",
     "start": "bun run src/index.tsx",
     "typecheck": "tsgo --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "dependencies": {
     "ink": "^5.0.0",

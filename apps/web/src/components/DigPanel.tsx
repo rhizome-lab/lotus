@@ -30,8 +30,7 @@ export default function DigPanel(props: DigPanelProps) {
   };
 
   const showInput = () => props.variant !== "compass";
-  const showCompassGrid = () =>
-    props.variant === "default" || props.variant === undefined;
+  const showCompassGrid = () => props.variant === "default" || props.variant === undefined;
 
   return (
     <div class="builder__panel dig-panel">
@@ -59,18 +58,14 @@ export default function DigPanel(props: DigPanelProps) {
           <button
             type="button"
             onClick={() => setMode("new")}
-            class={`builder__tab ${
-              mode() === "new" ? "builder__tab--active" : ""
-            }`}
+            class={`builder__tab ${mode() === "new" ? "builder__tab--active" : ""}`}
           >
             New Room
           </button>
           <button
             type="button"
             onClick={() => setMode("existing")}
-            class={`builder__tab ${
-              mode() === "existing" ? "builder__tab--active" : ""
-            }`}
+            class={`builder__tab ${mode() === "existing" ? "builder__tab--active" : ""}`}
           >
             Existing Room
           </button>
@@ -105,17 +100,15 @@ export default function DigPanel(props: DigPanelProps) {
         <Show when={showCompassGrid()}>
           <div class="dig-panel__row">
             <div class="dig-panel__compass">
-              <For
-                each={["nw", "n", "ne", "w", "center", "e", "sw", "s", "se"]}
-              >
+              <For each={["nw", "n", "ne", "w", "center", "e", "sw", "s", "se"]}>
                 {(dir) => (
                   <div
                     class={`dig-panel__cell ${
                       dir === "center"
                         ? "dig-panel__cell--center"
                         : direction() === dir
-                        ? "dig-panel__cell--active"
-                        : ""
+                          ? "dig-panel__cell--active"
+                          : ""
                     }`}
                     onClick={() => dir !== "center" && setDirection(dir)}
                   >
@@ -125,12 +118,8 @@ export default function DigPanel(props: DigPanelProps) {
               </For>
             </div>
             <div class="builder__row builder__row--column dig-panel__direction-wrapper">
-              <div class="builder__title dig-panel__direction-label">
-                DIRECTION
-              </div>
-              <div class="dig-panel__direction-value">
-                {direction().toUpperCase()}
-              </div>
+              <div class="builder__title dig-panel__direction-label">DIRECTION</div>
+              <div class="dig-panel__direction-value">{direction().toUpperCase()}</div>
             </div>
           </div>
         </Show>

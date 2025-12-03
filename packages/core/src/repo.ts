@@ -37,14 +37,9 @@ export function getEntity(id: number): Entity | null {
  * @param prototypeId - Optional prototype ID.
  * @returns The ID of the newly created entity.
  */
-export function createEntity(
-  props: object,
-  prototypeId: number | null = null,
-): number {
+export function createEntity(props: object, prototypeId: number | null = null): number {
   const info = db
-    .query(
-      "INSERT INTO entities (prototype_id, props) VALUES (?, ?) RETURNING id",
-    )
+    .query("INSERT INTO entities (prototype_id, props) VALUES (?, ?) RETURNING id")
     .get(prototypeId, JSON.stringify(props)) as { id: number };
   return info.id;
 }
@@ -139,11 +134,7 @@ export function getVerbs(entityId: number): Verb[] {
 }
 
 // Recursive lookup
-function lookupVerb(
-  id: number,
-  name: string,
-  visited: Set<number>,
-): Verb | null {
+function lookupVerb(id: number, name: string, visited: Set<number>): Verb | null {
   if (visited.has(id)) return null;
   visited.add(id);
 
@@ -207,10 +198,7 @@ export function addVerb(
   code: ScriptValue<unknown>,
   permissions: Record<string, unknown> = { call: "public" },
 ) {
-  db.query<
-    unknown,
-    [entityId: number, name: string, code: string, permissions: string]
-  >(
+  db.query<unknown, [entityId: number, name: string, code: string, permissions: string]>(
     "INSERT INTO verbs (entity_id, name, code, permissions) VALUES (?, ?, ?, ?)",
   ).run(entityId, name, JSON.stringify(code), JSON.stringify(permissions));
 }
@@ -282,10 +270,7 @@ export function getPrototypeId(id: number): number | null {
  * @param prototypeId - The new prototype ID or null to remove inheritance.
  */
 export function setPrototypeId(id: number, prototypeId: number | null) {
-  db.query("UPDATE entities SET prototype_id = ? WHERE id = ?").run(
-    prototypeId,
-    id,
-  );
+  db.query("UPDATE entities SET prototype_id = ? WHERE id = ?").run(prototypeId, id);
 }
 
 export interface Capability {
@@ -301,18 +286,20 @@ export function createCapability(
   params: Record<string, unknown>,
 ): string {
   const id = crypto.randomUUID();
-  db.query(
-    "INSERT INTO capabilities (id, owner_id, type, params) VALUES (?, ?, ?, ?)",
-  ).run(id, ownerId, type, JSON.stringify(params));
+  db.query("INSERT INTO capabilities (id, owner_id, type, params) VALUES (?, ?, ?, ?)").run(
+    id,
+    ownerId,
+    type,
+    JSON.stringify(params),
+  );
   return id;
 }
 
 export function getCapabilities(ownerId: number): Capability[] {
   const rows = db
-    .query<
-      { id: string; owner_id: number; type: string; params: string },
-      [number]
-    >("SELECT id, owner_id, type, params FROM capabilities WHERE owner_id = ?")
+    .query<{ id: string; owner_id: number; type: string; params: string }, [number]>(
+      "SELECT id, owner_id, type, params FROM capabilities WHERE owner_id = ?",
+    )
     .all(ownerId);
   return rows.map((r) => ({
     ...r,
@@ -322,10 +309,9 @@ export function getCapabilities(ownerId: number): Capability[] {
 
 export function getCapability(id: string): Capability | null {
   const row = db
-    .query<
-      { id: string; owner_id: number; type: string; params: string },
-      [string]
-    >("SELECT id, owner_id, type, params FROM capabilities WHERE id = ?")
+    .query<{ id: string; owner_id: number; type: string; params: string }, [string]>(
+      "SELECT id, owner_id, type, params FROM capabilities WHERE id = ?",
+    )
     .get(id);
   if (!row) return null;
   return {
@@ -339,8 +325,5 @@ export function deleteCapability(id: string) {
 }
 
 export function updateCapabilityOwner(id: string, newOwnerId: number) {
-  db.query("UPDATE capabilities SET owner_id = ? WHERE id = ?").run(
-    newOwnerId,
-    id,
-  );
+  db.query("UPDATE capabilities SET owner_id = ? WHERE id = ?").run(newOwnerId, id);
 }

@@ -17,22 +17,17 @@ export default function Builder() {
     setDescription("");
   };
 
-  const [scriptCode, setScriptCode] = createSignal(
-    "// Start typing your script here...\n\n",
-  );
+  const [scriptCode, setScriptCode] = createSignal("// Start typing your script here...\n\n");
 
   const handleAICompletion = async (
     code: string,
     position: { lineNumber: number; column: number },
   ) => {
     try {
-      const completion = await gameStore.client.callPluginMethod(
-        "ai_completion",
-        {
-          code,
-          position,
-        },
-      );
+      const completion = await gameStore.client.callPluginMethod("ai_completion", {
+        code,
+        position,
+      });
       if (typeof completion === "string") {
         return completion;
       }
@@ -50,41 +45,31 @@ export default function Builder() {
       <div class="builder__tabs">
         <button
           onClick={() => setActiveTab("room")}
-          class={`builder__tab ${
-            activeTab() === "room" ? "builder__tab--active" : ""
-          }`}
+          class={`builder__tab ${activeTab() === "room" ? "builder__tab--active" : ""}`}
         >
           Room
         </button>
         <button
           onClick={() => setActiveTab("create")}
-          class={`builder__tab ${
-            activeTab() === "create" ? "builder__tab--active" : ""
-          }`}
+          class={`builder__tab ${activeTab() === "create" ? "builder__tab--active" : ""}`}
         >
           Create Item
         </button>
         <button
           onClick={() => setActiveTab("edit")}
-          class={`builder__tab ${
-            activeTab() === "edit" ? "builder__tab--active" : ""
-          }`}
+          class={`builder__tab ${activeTab() === "edit" ? "builder__tab--active" : ""}`}
         >
           Edit Item
         </button>
         <button
           onClick={() => setActiveTab("script")}
-          class={`builder__tab ${
-            activeTab() === "script" ? "builder__tab--active" : ""
-          }`}
+          class={`builder__tab ${activeTab() === "script" ? "builder__tab--active" : ""}`}
         >
           Script (Blocks)
         </button>
         <button
           onClick={() => setActiveTab("script-code")}
-          class={`builder__tab ${
-            activeTab() === "script-code" ? "builder__tab--active" : ""
-          }`}
+          class={`builder__tab ${activeTab() === "script-code" ? "builder__tab--active" : ""}`}
         >
           Script (Code)
         </button>

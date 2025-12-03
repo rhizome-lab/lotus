@@ -1,10 +1,5 @@
 import { expect, beforeEach } from "bun:test";
-import {
-  evaluate,
-  ScriptContext,
-  registerLibrary,
-  createScriptContext,
-} from "../interpreter";
+import { evaluate, ScriptContext, registerLibrary, createScriptContext } from "../interpreter";
 import * as Core from "./std";
 import * as List from "./list";
 import * as MathLib from "./math";
@@ -31,28 +26,18 @@ createLibraryTester(List, "List Library", (test) => {
   });
 
   test("list.len", async () => {
-    expect(
-      await evaluate(List["list.len"](List["list.new"](1, 2, 3)), ctx),
-    ).toBe(3);
+    expect(await evaluate(List["list.len"](List["list.new"](1, 2, 3)), ctx)).toBe(3);
     expect(await evaluate(List["list.len"](List["list.new"]()), ctx)).toBe(0);
   });
 
   test("list.empty", async () => {
-    expect(await evaluate(List["list.empty"](List["list.new"]()), ctx)).toBe(
-      true,
-    );
-    expect(await evaluate(List["list.empty"](List["list.new"](1)), ctx)).toBe(
-      false,
-    );
+    expect(await evaluate(List["list.empty"](List["list.new"]()), ctx)).toBe(true);
+    expect(await evaluate(List["list.empty"](List["list.new"](1)), ctx)).toBe(false);
   });
 
   test("list.get", async () => {
-    expect(
-      await evaluate(List["list.get"](List["list.new"](10, 20), 1), ctx),
-    ).toBe(20);
-    expect(
-      await evaluate(List["list.get"](List["list.new"](10, 20), 5), ctx),
-    ).toBe(undefined);
+    expect(await evaluate(List["list.get"](List["list.new"](10, 20), 1), ctx)).toBe(20);
+    expect(await evaluate(List["list.get"](List["list.new"](10, 20), 5), ctx)).toBe(undefined);
   });
 
   test("list.set", async () => {
@@ -66,9 +51,7 @@ createLibraryTester(List, "List Library", (test) => {
     const localCtx = { ...ctx, locals: {} };
     await evaluate(Core["let"]("l", List["list.new"](1, 2)), localCtx);
 
-    expect(
-      await evaluate(List["list.push"](Core["var"]("l"), 3), localCtx),
-    ).toBe(3); // Returns new length
+    expect(await evaluate(List["list.push"](Core["var"]("l"), 3), localCtx)).toBe(3); // Returns new length
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 2, 3]);
   });
 
@@ -76,9 +59,7 @@ createLibraryTester(List, "List Library", (test) => {
     const localCtx = { ...ctx, locals: {} };
     await evaluate(Core["let"]("l", List["list.new"](1, 2, 3)), localCtx);
 
-    expect(await evaluate(List["list.pop"](Core["var"]("l")), localCtx)).toBe(
-      3,
-    ); // Returns popped value
+    expect(await evaluate(List["list.pop"](Core["var"]("l")), localCtx)).toBe(3); // Returns popped value
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 2]);
   });
 
@@ -86,9 +67,7 @@ createLibraryTester(List, "List Library", (test) => {
     const localCtx = { ...ctx, locals: {} };
     await evaluate(Core["let"]("l", List["list.new"](2, 3)), localCtx);
 
-    expect(
-      await evaluate(List["list.unshift"](Core["var"]("l"), 1), localCtx),
-    ).toBe(3);
+    expect(await evaluate(List["list.unshift"](Core["var"]("l"), 1), localCtx)).toBe(3);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 2, 3]);
   });
 
@@ -96,18 +75,16 @@ createLibraryTester(List, "List Library", (test) => {
     const localCtx = { ...ctx, locals: {} };
     await evaluate(Core["let"]("l", List["list.new"](1, 2, 3)), localCtx);
 
-    expect(await evaluate(List["list.shift"](Core["var"]("l")), localCtx)).toBe(
-      1,
-    );
+    expect(await evaluate(List["list.shift"](Core["var"]("l")), localCtx)).toBe(1);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([2, 3]);
   });
 
   test("list.slice", async () => {
     const list = [1, 2, 3, 4, 5];
     // list.slice returns a new list
-    expect(
-      await evaluate(List["list.slice"](List["list.new"](...list), 1, 3), ctx),
-    ).toEqual([2, 3]);
+    expect(await evaluate(List["list.slice"](List["list.new"](...list), 1, 3), ctx)).toEqual([
+      2, 3,
+    ]);
   });
 
   test("list.splice", async () => {
@@ -115,30 +92,20 @@ createLibraryTester(List, "List Library", (test) => {
     await evaluate(Core["let"]("l", List["list.new"](1, 2, 3, 4)), localCtx);
 
     // Remove 2 elements starting at index 1, insert 99
-    const removed = await evaluate(
-      List["list.splice"](Core["var"]("l"), 1, 2, 99),
-      localCtx,
-    );
+    const removed = await evaluate(List["list.splice"](Core["var"]("l"), 1, 2, 99), localCtx);
     expect(removed).toEqual([2, 3]);
     expect(await evaluate(Core["var"]("l"), localCtx)).toEqual([1, 99, 4]);
   });
 
   test("list.concat", async () => {
     expect(
-      await evaluate(
-        List["list.concat"](List["list.new"](1), List["list.new"](2)),
-        ctx,
-      ),
+      await evaluate(List["list.concat"](List["list.new"](1), List["list.new"](2)), ctx),
     ).toEqual([1, 2]);
   });
 
   test("list.includes", async () => {
-    expect(
-      await evaluate(List["list.includes"](List["list.new"](1, 2), 2), ctx),
-    ).toBe(true);
-    expect(
-      await evaluate(List["list.includes"](List["list.new"](1, 2), 3), ctx),
-    ).toBe(false);
+    expect(await evaluate(List["list.includes"](List["list.new"](1, 2), 2), ctx)).toBe(true);
+    expect(await evaluate(List["list.includes"](List["list.new"](1, 2), 3), ctx)).toBe(false);
   });
 
   test("list.reverse", async () => {
@@ -157,39 +124,29 @@ createLibraryTester(List, "List Library", (test) => {
 
   test("list.find", async () => {
     const gt1 = Core["lambda"](["x"], BooleanLib[">"](Core["var"]("x"), 1));
-    expect(
-      await evaluate(List["list.find"](List["list.new"](1, 2, 3), gt1), ctx),
-    ).toBe(2);
+    expect(await evaluate(List["list.find"](List["list.new"](1, 2, 3), gt1), ctx)).toBe(2);
   });
 
   // HOF tests
   test("list.map", async () => {
     const inc = Core["lambda"](["x"], MathLib["+"](Core["var"]("x"), 1));
-    expect(
-      await evaluate(List["list.map"](List["list.new"](1, 2, 3), inc), ctx),
-    ).toEqual([2, 3, 4]);
+    expect(await evaluate(List["list.map"](List["list.new"](1, 2, 3), inc), ctx)).toEqual([
+      2, 3, 4,
+    ]);
   });
 
   test("list.filter", async () => {
     // (lambda (x) (> x 1))
     const gt1 = Core["lambda"](["x"], BooleanLib[">"](Core["var"]("x"), 1));
-    expect(
-      await evaluate(List["list.filter"](List["list.new"](1, 2, 3), gt1), ctx),
-    ).toEqual([2, 3]);
+    expect(await evaluate(List["list.filter"](List["list.new"](1, 2, 3), gt1), ctx)).toEqual([
+      2, 3,
+    ]);
   });
 
   test("list.reduce", async () => {
     // (lambda (acc x) (+ acc x))
-    const sum = Core["lambda"](
-      ["acc", "x"],
-      MathLib["+"](Core["var"]("acc"), Core["var"]("x")),
-    );
-    expect(
-      await evaluate(
-        List["list.reduce"](List["list.new"](1, 2, 3), sum, 0),
-        ctx,
-      ),
-    ).toBe(6);
+    const sum = Core["lambda"](["acc", "x"], MathLib["+"](Core["var"]("acc"), Core["var"]("x")));
+    expect(await evaluate(List["list.reduce"](List["list.new"](1, 2, 3), sum, 0), ctx)).toBe(6);
   });
 
   test("list.flatMap", async () => {
@@ -198,8 +155,8 @@ createLibraryTester(List, "List Library", (test) => {
       ["x"],
       List["list.new"](Core["var"]("x"), MathLib["+"](Core["var"]("x"), 1)),
     );
-    expect(
-      await evaluate(List["list.flatMap"](List["list.new"](1, 3), dup), ctx),
-    ).toEqual([1, 2, 3, 4]);
+    expect(await evaluate(List["list.flatMap"](List["list.new"](1, 3), dup), ctx)).toEqual([
+      1, 2, 3, 4,
+    ]);
   });
 });

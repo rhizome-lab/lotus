@@ -58,7 +58,7 @@ export const seq = defineOpcode<unknown[], any>("seq", {
     if (args.length === 0) {
       throw new ScriptError("seq: expected at least one argument");
     }
-    
+
     let i = 0;
     let lastResult: any = null;
 
@@ -66,14 +66,14 @@ export const seq = defineOpcode<unknown[], any>("seq", {
       while (i < args.length) {
         const step = args[i++];
         const result = evaluate(step, ctx);
-        
+
         if (result instanceof Promise) {
           return result.then((res) => {
             lastResult = res;
             return next();
           });
         }
-        
+
         lastResult = result;
       }
       return lastResult;
@@ -86,10 +86,7 @@ export const seq = defineOpcode<unknown[], any>("seq", {
 /**
  * Conditional execution.
  */
-const ifOp = defineOpcode<
-  [boolean, unknown, unknown?],
-  any
->("if", {
+const ifOp = defineOpcode<[boolean, unknown, unknown?], any>("if", {
   metadata: {
     label: "If",
     category: "logic",
@@ -131,75 +128,69 @@ export { ifOp as if };
 /**
  * Repeats a body while a condition is true.
  */
-const whileOp = defineOpcode<[boolean, unknown], any>(
-  "while",
-  {
-    metadata: {
-      label: "While",
-      category: "logic",
-      description: "Loop while condition is true",
-      layout: "control-flow",
-      slots: [
-        { name: "Condition", type: "block" },
-        { name: "Body", type: "block" },
-      ],
-      parameters: [
-        { name: "condition", type: "any" },
-        { name: "body", type: "any" },
-      ],
-      returnType: "any",
-      lazy: true,
-    },
-    handler: ([cond, body], ctx) => {
-      let lastResult: any = null;
+const whileOp = defineOpcode<[boolean, unknown], any>("while", {
+  metadata: {
+    label: "While",
+    category: "logic",
+    description: "Loop while condition is true",
+    layout: "control-flow",
+    slots: [
+      { name: "Condition", type: "block" },
+      { name: "Body", type: "block" },
+    ],
+    parameters: [
+      { name: "condition", type: "any" },
+      { name: "body", type: "any" },
+    ],
+    returnType: "any",
+    lazy: true,
+  },
+  handler: ([cond, body], ctx) => {
+    let lastResult: any = null;
 
-      const loop = (): any => {
-        const condResult = evaluate(cond, ctx);
-        
-        if (condResult instanceof Promise) {
-          return condResult.then((res) => {
-            if (res) {
-              const bodyResult = evaluate(body, ctx);
-              if (bodyResult instanceof Promise) {
-                return bodyResult.then((bRes) => {
-                  lastResult = bRes;
-                  return loop();
-                });
-              }
-              lastResult = bodyResult;
-              return loop();
+    const loop = (): any => {
+      const condResult = evaluate(cond, ctx);
+
+      if (condResult instanceof Promise) {
+        return condResult.then((res) => {
+          if (res) {
+            const bodyResult = evaluate(body, ctx);
+            if (bodyResult instanceof Promise) {
+              return bodyResult.then((bRes) => {
+                lastResult = bRes;
+                return loop();
+              });
             }
-            return lastResult;
+            lastResult = bodyResult;
+            return loop();
+          }
+          return lastResult;
+        });
+      }
+
+      if (condResult) {
+        const bodyResult = evaluate(body, ctx);
+        if (bodyResult instanceof Promise) {
+          return bodyResult.then((bRes) => {
+            lastResult = bRes;
+            return loop();
           });
         }
+        lastResult = bodyResult;
+        return loop();
+      }
+      return lastResult;
+    };
 
-        if (condResult) {
-          const bodyResult = evaluate(body, ctx);
-          if (bodyResult instanceof Promise) {
-            return bodyResult.then((bRes) => {
-              lastResult = bRes;
-              return loop();
-            });
-          }
-          lastResult = bodyResult;
-          return loop();
-        }
-        return lastResult;
-      };
-
-      return loop();
-    },
+    return loop();
   },
-);
+});
 export { whileOp as while };
 
 /**
  * Iterates over a list.
  */
-const forOp = defineOpcode<
-  [string, readonly unknown[], unknown],
-  any
->("for", {
+const forOp = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
   metadata: {
     label: "For Loop",
     category: "logic",
@@ -221,17 +212,17 @@ const forOp = defineOpcode<
   handler: ([varName, listExpr, body], ctx) => {
     const runLoop = (list: any[]) => {
       if (!Array.isArray(list)) return null;
-      
+
       let i = 0;
       let lastResult: any = null;
-      
+
       const next = (): any => {
         if (i >= list.length) return lastResult;
-        
+
         const item = list[i++];
         ctx.vars = ctx.vars || {};
         ctx.vars[varName] = item;
-        
+
         const result = evaluate(body, ctx);
         if (result instanceof Promise) {
           return result.then((res) => {
@@ -242,7 +233,7 @@ const forOp = defineOpcode<
         lastResult = result;
         return next();
       };
-      
+
       return next();
     };
 
@@ -259,22 +250,19 @@ export { forOp as for };
 /**
  * Converts a value to a JSON string.
  */
-const jsonStringify = defineOpcode<[unknown], string>(
-  "json.stringify",
-  {
-    metadata: {
-      label: "JSON Stringify",
-      category: "data",
-      description: "Convert to JSON string",
-      slots: [{ name: "Value", type: "block" }],
-      parameters: [{ name: "value", type: "unknown" }],
-      returnType: "string",
-    },
-    handler: ([val], _ctx) => {
-      return JSON.stringify(val);
-    },
+const jsonStringify = defineOpcode<[unknown], string>("json.stringify", {
+  metadata: {
+    label: "JSON Stringify",
+    category: "data",
+    description: "Convert to JSON string",
+    slots: [{ name: "Value", type: "block" }],
+    parameters: [{ name: "value", type: "unknown" }],
+    returnType: "string",
   },
-);
+  handler: ([val], _ctx) => {
+    return JSON.stringify(val);
+  },
+});
 export { jsonStringify as "json.stringify" };
 
 /**
@@ -302,7 +290,10 @@ export { jsonParse as "json.parse" };
 /**
  * Returns the type of a value.
  */
-export const typeof_ = defineOpcode<[unknown], "string" | "number" | "boolean" | "object"| "null" | "array">("typeof", {
+export const typeof_ = defineOpcode<
+  [unknown],
+  "string" | "number" | "boolean" | "object" | "null" | "array"
+>("typeof", {
   metadata: {
     label: "Type Of",
     category: "logic",
@@ -314,7 +305,7 @@ export const typeof_ = defineOpcode<[unknown], "string" | "number" | "boolean" |
   handler: ([val], _ctx) => {
     if (Array.isArray(val)) return "array";
     if (val === null) return "null";
-    return typeof val as "string" | "number" | "boolean" | "object"| "null" | "array";
+    return typeof val as "string" | "number" | "boolean" | "object" | "null" | "array";
   },
 });
 export { typeof_ as typeof };
@@ -390,16 +381,13 @@ const set_ = defineOpcode<[string, unknown], any>("set", {
     return value;
   },
 });
-export { set_ as set }
+export { set_ as set };
 
 // System
 /**
  * Logs a message to the console/client.
  */
-export const log = defineOpcode<
-  [unknown, ...unknown[]],
-  null
->("log", {
+export const log = defineOpcode<[unknown, ...unknown[]], null>("log", {
   metadata: {
     label: "Log",
     category: "action",
@@ -452,7 +440,6 @@ export const args = defineOpcode<[], readonly any[]>("args", {
   },
 });
 
-
 /**
  * Sends a warning message to the client.
  */
@@ -488,10 +475,7 @@ const throwOp = defineOpcode<[unknown], never>("throw", {
 });
 export { throwOp as throw };
 
-const tryOp = defineOpcode<
-  [unknown, string, unknown],
-  any
->("try", {
+const tryOp = defineOpcode<[unknown, string, unknown], any>("try", {
   metadata: {
     label: "Try/Catch",
     category: "logic",
@@ -515,7 +499,7 @@ const tryOp = defineOpcode<
       return evaluate(tryBlock, ctx);
     } catch (e: any) {
       if (catchBlock) {
-      if (errorVar && typeof errorVar === "string") {
+        if (errorVar && typeof errorVar === "string") {
           if (!ctx.vars) ctx.vars = {};
           ctx.vars[errorVar] = e.message || String(e);
         }
@@ -529,42 +513,36 @@ export { tryOp as try };
 /**
  * Creates a lambda (anonymous function).
  */
-export const lambda = defineOpcode<[ScriptRaw<readonly string[]>, unknown], any>(
-  "lambda",
-  {
-    metadata: {
-      label: "Lambda",
-      category: "func",
-      description: "Create a lambda function",
-      slots: [
-        { name: "Args", type: "block" },
-        { name: "Body", type: "block" },
-      ],
-      parameters: [
-        { name: "args", type: "string[]" },
-        { name: "body", type: "any" },
-      ],
+export const lambda = defineOpcode<[ScriptRaw<readonly string[]>, unknown], any>("lambda", {
+  metadata: {
+    label: "Lambda",
+    category: "func",
+    description: "Create a lambda function",
+    slots: [
+      { name: "Args", type: "block" },
+      { name: "Body", type: "block" },
+    ],
+    parameters: [
+      { name: "args", type: "string[]" },
+      { name: "body", type: "any" },
+    ],
     returnType: "any",
-      lazy: true,
-    },
-    handler: ([argNames, body], ctx) => {
-      return {
-        type: "lambda",
-        args: argNames,
-        body,
-        closure: { ...ctx.vars },
-      };
-    },
+    lazy: true,
   },
-);
+  handler: ([argNames, body], ctx) => {
+    return {
+      type: "lambda",
+      args: argNames,
+      body,
+      closure: { ...ctx.vars },
+    };
+  },
+});
 
 /**
  * Calls a lambda function.
  */
-export const apply = defineOpcode<
-  [unknown, ...unknown[]],
-  any
->("apply", {
+export const apply = defineOpcode<[unknown, ...unknown[]], any>("apply", {
   metadata: {
     label: "Apply",
     category: "func",
@@ -584,9 +562,7 @@ export const apply = defineOpcode<
       throw new ScriptError("apply: func not found");
     }
     if ((func as any).type !== "lambda") {
-      throw new ScriptError(
-        `apply: func must be a lambda, got ${JSON.stringify(func)}`,
-      );
+      throw new ScriptError(`apply: func must be a lambda, got ${JSON.stringify(func)}`);
     }
 
     const lambdaFunc = func as any;
@@ -622,11 +598,11 @@ export const send = defineOpcode<[string, unknown], null>("send", {
     description: "Send a system message",
     slots: [
       { name: "Type", type: "string" },
-      { name: "Payload", type: "block" }
+      { name: "Payload", type: "block" },
     ],
     parameters: [
       { name: "type", type: "string" },
-      { name: "payload", type: "unknown" }
+      { name: "payload", type: "unknown" },
     ],
     returnType: "null",
   },

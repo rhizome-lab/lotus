@@ -9,7 +9,9 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsgo --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "oxlint",
+    "format": "oxfmt"
   },
   "dependencies": {
     "@viwo/shared": "workspace:*",

@@ -8,13 +8,7 @@ import {
   ListLib as List,
 } from "@viwo/scripting";
 import { Entity } from "@viwo/shared/jsonrpc";
-import {
-  createEntity,
-  getEntity,
-  addVerb,
-  updateEntity,
-  createCapability,
-} from "./repo";
+import { createEntity, getEntity, addVerb, updateEntity, createCapability } from "./repo";
 import { CoreLib, db } from ".";
 import * as KernelLib from "./runtime/lib/kernel";
 import { seed } from "./seed";
@@ -44,9 +38,7 @@ describe("Mailbox Verification", () => {
 
     // Get System Entity
     const systemRes = db
-      .query<Entity, []>(
-        "SELECT * FROM entities WHERE json_extract(props, '$.name') = 'System'",
-      )
+      .query<Entity, []>("SELECT * FROM entities WHERE json_extract(props, '$.name') = 'System'")
       .get();
     if (!systemRes) throw new Error("System entity not found");
     system = getEntity(systemRes.id)!;
@@ -118,18 +110,12 @@ describe("Mailbox Verification", () => {
           Object["obj.get"](Std["caller"](), "id"),
         ),
         Std["seq"](
-          Std["let"](
-            "newOwner",
-            Object["obj.get"](Std["var"]("dest"), "owner"),
-          ),
+          Std["let"]("newOwner", Object["obj.get"](Std["var"]("dest"), "owner")),
           Std["let"](
             "cap",
             KernelLib["get_capability"](
               "entity.control",
-              Object["obj.new"]([
-                "target_id",
-                Object["obj.get"](Std["var"]("item"), "id"),
-              ]),
+              Object["obj.new"](["target_id", Object["obj.get"](Std["var"]("item"), "id")]),
             ),
           ),
           CoreLib["set_entity"](
@@ -179,10 +165,7 @@ describe("Mailbox Verification", () => {
         KernelLib["has_capability"](
           Std["caller"](),
           "entity.control",
-          Object["obj.new"]([
-            "target_id",
-            Object["obj.get"](Std["var"]("target"), "id"),
-          ]),
+          Object["obj.new"](["target_id", Object["obj.get"](Std["var"]("target"), "id")]),
         ),
         Object["obj.get"](Std["var"]("target"), "contents", List["list.new"]()),
         List["list.new"](),
@@ -214,10 +197,7 @@ describe("Mailbox Verification", () => {
         KernelLib["has_capability"](
           Std["caller"](),
           "entity.control",
-          Object["obj.new"]([
-            "target_id",
-            Object["obj.get"](Std["var"]("target"), "id"),
-          ]),
+          Object["obj.new"](["target_id", Object["obj.get"](Std["var"]("target"), "id")]),
         ),
         Object["obj.get"](Std["var"]("target"), "contents", List["list.new"]()),
         List["list.new"](),

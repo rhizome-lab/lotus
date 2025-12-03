@@ -22,10 +22,7 @@ const Fibonacci = StdLib.seq(
   StdLib["while"](
     BooleanLib["<"](StdLib["var"]("count"), 8),
     StdLib.seq(
-      StdLib["let"](
-        "temp",
-        MathLib["+"](StdLib["var"]("a"), StdLib["var"]("b")),
-      ),
+      StdLib["let"]("temp", MathLib["+"](StdLib["var"]("a"), StdLib["var"]("b"))),
       StdLib.log(StdLib["var"]("temp")),
       StdLib.set("a", StdLib["var"]("b")),
       StdLib.set("b", StdLib["var"]("temp")),

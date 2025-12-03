@@ -1,10 +1,6 @@
 import { expect, beforeEach, mock } from "bun:test";
 import { createLibraryTester } from "./test-utils";
-import {
-  createScriptContext,
-  registerLibrary,
-  ScriptContext,
-} from "../interpreter";
+import { createScriptContext, registerLibrary, ScriptContext } from "../interpreter";
 import { evaluate } from "../interpreter";
 import * as Std from "./std";
 import * as List from "./list";
@@ -179,9 +175,7 @@ createLibraryTester(Std, "Core Library", (test) => {
   });
 
   test("try", () => {
-    expect(
-      evaluate(Std["try"](Std["throw"]("oops"), "err", Std["var"]("err")), ctx),
-    ).toBe("oops");
+    expect(evaluate(Std["try"](Std["throw"]("oops"), "err", Std["var"]("err")), ctx)).toBe("oops");
 
     expect(evaluate(Std["try"](123, "err", 456), ctx)).toBe(123);
   });
