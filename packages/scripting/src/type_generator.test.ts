@@ -73,7 +73,6 @@ describe("generateTypeDefinitions", () => {
     ];
 
     const defs = generateTypeDefinitions(opcodes);
-    console.log(defs);
     expect(defs).toContain(
       "function new_<Kvs extends [] | readonly (readonly [key: '' | (string & {}), value: unknown])[]>(...kvs: Kvs): { [K in keyof Kvs & `${number}` as (Kvs[K] & [string, unknown])[0]]: (Kvs[K] & [string, unknown])[1] };",
     );

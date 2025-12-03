@@ -108,10 +108,8 @@ export const OPS: Record<string, OpcodeDefinition> = {};
  * @param library - A record of opcode definitions.
  */
 export function registerLibrary(library: Record<string, OpcodeDefinition>) {
-  for (const [name, def] of Object.entries(library)) {
-    // Use the opcode name from metadata if available, otherwise fallback to export name
-    const opcodeName = def.metadata?.opcode || name;
-    OPS[opcodeName] = def;
+  for (const def of Object.values(library)) {
+    OPS[def.metadata.opcode] = def;
   }
 }
 

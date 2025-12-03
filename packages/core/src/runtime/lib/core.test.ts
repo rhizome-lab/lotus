@@ -184,7 +184,7 @@ createLibraryTester(Core, "Core Library", (test) => {
         Core["sudo"]({ id: 101 }, "get_dynamic", List["list.new"]()),
         userCtx,
       ),
-    ).toThrow("permission denied");
+    ).toThrow("Expected capability of type sys.sudo");
 
     // 2. Allow if System (ID 3)
     const systemCtx = createScriptContext({

@@ -225,12 +225,11 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
         opcodeName = null;
       }
     } else if (ts.isPropertyAccessExpression(expr)) {
-      const lhs = expr.expression;
-      const rhs = expr.name;
-      if (ts.isIdentifier(lhs)) {
-        opcodeName = `${lhs.text}.${rhs.text}`;
-        // If lhs is local, then it's a method call on a local, not an opcode namespace
-        if (scope.has(lhs.text)) {
+      opcodeName = resolveDottedName(expr);
+      if (opcodeName) {
+        // If the root of the namespace is a local variable, it's not an opcode
+        const root = opcodeName.split(".")[0];
+        if (root && scope.has(root)) {
           opcodeName = null;
         }
       }
@@ -336,4 +335,13 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
 
   console.warn(`Unsupported node kind: ${node.kind}`);
   return undefined;
+}
+
+function resolveDottedName(node: ts.Expression): string | null {
+  if (ts.isIdentifier(node)) return node.text;
+  if (ts.isPropertyAccessExpression(node)) {
+    const lhs = resolveDottedName(node.expression);
+    if (lhs) return `${lhs}.${node.name.text}`;
+  }
+  return null;
 }

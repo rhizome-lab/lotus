@@ -14,7 +14,7 @@ function checkNetCapability(
   targetDomain: string,
 ) {
   checkCapability(cap, ctx.this.id, type, (params) => {
-    const allowedDomain = params.domain as string;
+    const allowedDomain = params["domain"] as string;
     if (!allowedDomain) return false;
 
     // Simple domain suffix check
@@ -23,7 +23,7 @@ function checkNetCapability(
   });
 }
 
-export const http_get = defineOpcode<
+const http_get = defineOpcode<
   [ScriptValue<Capability>, ScriptValue<string>],
   string
 >("net.http.get", {
@@ -67,8 +67,9 @@ export const http_get = defineOpcode<
     }
   },
 });
+export { http_get as "net.http.get" };
 
-export const http_post = defineOpcode<
+const http_post = defineOpcode<
   [ScriptValue<Capability>, ScriptValue<string>, ScriptValue<string>],
   string
 >("net.http.post", {
@@ -121,3 +122,4 @@ export const http_post = defineOpcode<
     }
   },
 });
+export { http_post as "net.http.post" };

@@ -65,7 +65,7 @@ describe("System Integration Security", () => {
   });
 
   test("FS.read with capability", async () => {
-    const script = FS["read"](
+    const script = FS["fs.read"](
       Kernel["get_capability"]("fs.read"),
       "/tmp/test.txt",
     );
@@ -75,7 +75,7 @@ describe("System Integration Security", () => {
   });
 
   test("FS.read without capability", async () => {
-    const script = FS["read"](
+    const script = FS["fs.read"](
       Kernel["get_capability"]("fs.read"), // User has none, returns null
       "/tmp/test.txt",
     );
@@ -84,7 +84,7 @@ describe("System Integration Security", () => {
   });
 
   test("FS.read outside allowed path", async () => {
-    const script = FS["read"](
+    const script = FS["fs.read"](
       Kernel["get_capability"]("fs.read"),
       "/etc/passwd", // Outside /tmp
     );
@@ -93,7 +93,7 @@ describe("System Integration Security", () => {
   });
 
   test("Net.http.get with capability", async () => {
-    const script = Net["http_get"](
+    const script = Net["net.http.get"](
       Kernel["get_capability"]("net.http.read"),
       "https://api.example.com/data",
     );
@@ -103,7 +103,7 @@ describe("System Integration Security", () => {
   });
 
   test("Net.http.get domain mismatch", async () => {
-    const script = Net["http_get"](
+    const script = Net["net.http.get"](
       Kernel["get_capability"]("net.http.read"),
       "https://google.com", // Not example.com
     );

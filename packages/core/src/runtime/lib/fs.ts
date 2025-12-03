@@ -16,8 +16,10 @@ function checkFsCapability(
   targetPath: string,
 ) {
   checkCapability(cap, ctx.this.id, type, (params) => {
-    const allowedPath = params.path as string;
-    if (!allowedPath) return false;
+    const allowedPath = params["path"];
+    if (!allowedPath || typeof allowedPath !== "string") {
+      return false;
+    }
 
     const resolvedTarget = path.resolve(targetPath);
     const resolvedAllowed = path.resolve(allowedPath);
@@ -26,7 +28,7 @@ function checkFsCapability(
   });
 }
 
-export const read = defineOpcode<
+const read = defineOpcode<
   [ScriptValue<Capability>, ScriptValue<string>],
   string
 >("fs.read", {
@@ -62,8 +64,9 @@ export const read = defineOpcode<
     }
   },
 });
+export { read as "fs.read" };
 
-export const write = defineOpcode<
+const write = defineOpcode<
   [ScriptValue<Capability>, ScriptValue<string>, ScriptValue<string>],
   null
 >("fs.write", {
@@ -106,8 +109,9 @@ export const write = defineOpcode<
     }
   },
 });
+export { write as "fs.write" };
 
-export const list = defineOpcode<
+const list = defineOpcode<
   [ScriptValue<Capability>, ScriptValue<string>],
   string[]
 >("fs.list", {
@@ -123,7 +127,7 @@ export const list = defineOpcode<
       { name: "cap", type: "Capability" },
       { name: "path", type: "string" },
     ],
-    returnType: "string[]",
+    returnType: "readonly string[]",
   },
   handler: async (args, ctx) => {
     const [capExpr, pathExpr] = args;
@@ -143,3 +147,4 @@ export const list = defineOpcode<
     }
   },
 });
+export { list as "fs.list" };

@@ -48,7 +48,7 @@ export const create = defineOpcode<
     const cap = evaluate(capExpr, ctx);
     const data = evaluate(dataExpr, ctx);
 
-    checkCapability(cap, "sys.create", ctx.this.id);
+    checkCapability(cap, ctx.this.id, "sys.create");
 
     if (typeof data !== "object") {
       throw new ScriptError(
@@ -100,8 +100,8 @@ export const destroy = defineOpcode<
       );
     }
 
-    checkCapability(cap, "entity.control", ctx.this.id, (params) => {
-      return params.target_id === target.id;
+    checkCapability(cap, ctx.this.id, "entity.control", (params) => {
+      return params["target_id"] === target.id;
     });
 
     deleteEntity(target.id);
@@ -370,8 +370,8 @@ export const set_entity = defineOpcode<
     // Let's stick to: Check capability against EACH entity.
 
     for (const entity of entities) {
-      checkCapability(cap, "entity.control", ctx.this.id, (params) => {
-        return params.target_id === entity.id;
+      checkCapability(cap, ctx.this.id, "entity.control", (params) => {
+        return params["target_id"] === entity.id;
       });
     }
 
@@ -455,8 +455,8 @@ export const set_prototype = defineOpcode<
       );
     }
 
-    checkCapability(cap, "entity.control", ctx.this.id, (params) => {
-      return params.target_id === entity.id;
+    checkCapability(cap, ctx.this.id, "entity.control", (params) => {
+      return params["target_id"] === entity.id;
     });
 
     if (protoId !== null && typeof protoId !== "number") {
@@ -538,7 +538,7 @@ export const sudo = defineOpcode<
     const cap = evaluate(capExpr, ctx);
     const target = evaluate(targetExpr, ctx);
 
-    checkCapability(cap, "sys.sudo", ctx.this.id);
+    checkCapability(cap, ctx.this.id, "sys.sudo");
 
     if (
       !target ||
