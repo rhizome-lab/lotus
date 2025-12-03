@@ -1,11 +1,15 @@
 import { Component, createEffect, onCleanup, onMount } from "solid-js";
 import loader from "@monaco-editor/loader";
-import { gameStore } from "../../store/game";
 import { generateTypeDefinitions, OpcodeMetadata } from "@viwo/scripting";
 
 interface MonacoEditorProps {
   value?: string;
   onChange?: (value: string) => void;
+  opcodes?: OpcodeMetadata[];
+  onAICompletion?: (
+    code: string,
+    position: { lineNumber: number; column: number },
+  ) => Promise<string | null>;
 }
 
 export const MonacoEditor: Component<MonacoEditorProps> = (props) => {
@@ -30,7 +34,7 @@ export const MonacoEditor: Component<MonacoEditorProps> = (props) => {
 
       // Generate and add types
       createEffect(() => {
-        const opcodes = gameStore.state.opcodes as OpcodeMetadata[] | null;
+        const opcodes = props.opcodes;
         if (opcodes) {
           const typeDefs = generateTypeDefinitions(opcodes);
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
@@ -43,19 +47,18 @@ export const MonacoEditor: Component<MonacoEditorProps> = (props) => {
       // Register AI Completion Provider
       monaco.languages.registerCompletionItemProvider("javascript", {
         triggerCharacters: [" "], // Trigger on space to help with arguments
-        provideCompletionItems: async (model, position) => {
+        provideCompletionItems: async (model: any, position: any) => {
+          if (!props.onAICompletion) return { suggestions: [] };
+
           const code = model.getValue();
           const { lineNumber, column } = position;
 
           try {
-            // Call AI plugin via RPC
-            const completion = await gameStore.client.callPluginMethod(
-              "ai_completion",
-              {
-                code,
-                position: { lineNumber, column },
-              },
-            );
+            // Call AI plugin via callback
+            const completion = await props.onAICompletion(code, {
+              lineNumber,
+              column,
+            });
 
             if (!completion || typeof completion !== "string") {
               return { suggestions: [] };
@@ -83,7 +86,7 @@ export const MonacoEditor: Component<MonacoEditorProps> = (props) => {
       });
 
       editorInstance = monaco.editor.create(containerRef, {
-        value: props.value || "// Start typing your script here...\n\n",
+        value: props.value ?? "// Start typing your script here...\n\n",
         language: "javascript",
         theme: "vs-dark",
         automaticLayout: true,

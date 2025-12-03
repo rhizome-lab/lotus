@@ -7,7 +7,6 @@ export * as ObjectLib from "./lib/object";
 export * as StringLib from "./lib/string";
 export * as TimeLib from "./lib/time";
 export * as StdLib from "./lib/std";
-export * from "./lib/test-utils";
 export * from "./type_generator";
 export * from "./decompiler";
 export * from "./transpiler";

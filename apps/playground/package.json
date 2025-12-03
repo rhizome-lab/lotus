@@ -1,21 +1,17 @@
 {
-  "name": "@viwo/web",
+  "name": "@viwo/playground",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsgo --noEmit",
-    "test": "bun test"
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@monaco-editor/loader": "^1.7.0",
-    "@viwo/client": "workspace:*",
     "@viwo/web-editor": "workspace:*",
     "@viwo/scripting": "workspace:*",
     "@viwo/shared": "workspace:*",
-    "monaco-editor": "^0.55.1",
     "solid-js": "^1.8.15"
   },
   "devDependencies": {

@@ -2,8 +2,7 @@ import { createSignal, Show } from "solid-js";
 import { gameStore } from "../store/game";
 import ItemCreator from "./ItemCreator";
 import ItemEditor from "./ItemEditor";
-import { ScriptEditor } from "./ScriptEditor/ScriptEditor";
-import { MonacoEditor } from "./ScriptEditor/MonacoEditor";
+import { ScriptEditor, MonacoEditor, BlockDefinition } from "@viwo/web-editor";
 
 export default function Builder() {
   const [activeTab, setActiveTab] = createSignal<
@@ -21,6 +20,30 @@ export default function Builder() {
   const [scriptCode, setScriptCode] = createSignal(
     "// Start typing your script here...\n\n",
   );
+
+  const handleAICompletion = async (
+    code: string,
+    position: { lineNumber: number; column: number },
+  ) => {
+    try {
+      const completion = await gameStore.client.callPluginMethod(
+        "ai_completion",
+        {
+          code,
+          position,
+        },
+      );
+      if (typeof completion === "string") {
+        return completion;
+      }
+      return null;
+    } catch (e) {
+      console.error("AI Completion Failed:", e);
+      return null;
+    }
+  };
+
+  const [script, setScript] = createSignal<any>(["seq"]);
 
   return (
     <div class="builder">
@@ -95,7 +118,12 @@ export default function Builder() {
 
       <Show when={activeTab() === "script"}>
         <div class="builder__script-panel">
-          <ScriptEditor />
+          <ScriptEditor
+            value={script()}
+            onChange={setScript}
+            opcodes={(gameStore.state.opcodes || []) as BlockDefinition[]}
+            onAICompletion={handleAICompletion}
+          />
         </div>
       </Show>
 
@@ -104,6 +132,8 @@ export default function Builder() {
           <MonacoEditor
             value={scriptCode()}
             onChange={(val) => setScriptCode(val)}
+            opcodes={(gameStore.state.opcodes || []) as BlockDefinition[]}
+            onAICompletion={handleAICompletion}
           />
         </div>
       </Show>

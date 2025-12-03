@@ -5,10 +5,10 @@ import {
   registerLibrary,
   createScriptContext,
   ListLib as List,
-  createLibraryTester,
   ScriptError,
   StdLib as Std,
 } from "@viwo/scripting";
+import { createLibraryTester } from "@viwo/scripting/test-utils";
 import * as Core from "./core";
 
 const cap1 = crypto.randomUUID();

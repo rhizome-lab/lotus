@@ -24,7 +24,7 @@ createLibraryTester(Time, "Time Library", (test) => {
   });
 
   test("time.now", () => {
-    const ts = evaluate(Time["time.now"](), ctx);
+    const ts = evaluate(Time["time.now"](), ctx) as any;
     expect(typeof ts).toBe("string");
     expect(new Date(ts).getTime()).toBeLessThanOrEqual(Date.now());
   });
@@ -73,7 +73,7 @@ createLibraryTester(Time, "Time Library", (test) => {
     const base = "2023-01-01T00:00:00.000Z";
 
     // Years
-    let res = evaluate(Time["time.offset"](1, "years", base), ctx);
+    let res = evaluate(Time["time.offset"](1, "years", base), ctx) as any;
     expect(new Date(res).getFullYear()).toBe(2024);
 
     // Months

@@ -1,17 +1,23 @@
-import { Component, createSignal } from "solid-js";
+import { Component } from "solid-js";
 import { BlockPalette } from "./BlockPalette";
 import { BlockNode } from "./BlockNode";
-import { gameStore } from "../../store/game";
 import { BlockDefinition } from "./types";
 import { MonacoEditor } from "./MonacoEditor";
 import { decompile, transpile } from "@viwo/scripting";
 
-export const ScriptEditor: Component = () => {
-  // Initial script: ["seq"]
-  const [script, setScript] = createSignal<any>(["seq"]);
+interface ScriptEditorProps {
+  opcodes: BlockDefinition[];
+  value: unknown;
+  onChange: (value: any) => void;
+  onAICompletion?: (
+    code: string,
+    position: { lineNumber: number; column: number },
+  ) => Promise<string | null>;
+}
 
+export const ScriptEditor: Component<ScriptEditorProps> = (props) => {
   const updateNode = (path: number[], newNode: any) => {
-    const newScript = JSON.parse(JSON.stringify(script()));
+    const newScript = structuredClone(props.value) as any;
     let current = newScript;
 
     // Navigate to parent
@@ -21,11 +27,11 @@ export const ScriptEditor: Component = () => {
 
     // Update child
     current[path[path.length - 1]!] = newNode;
-    setScript(newScript);
+    props.onChange(newScript);
   };
 
   const deleteNode = (path: number[]) => {
-    const newScript = JSON.parse(JSON.stringify(script()));
+    const newScript = structuredClone(props.value) as any;
     let current = newScript;
 
     // Navigate to parent
@@ -49,7 +55,7 @@ export const ScriptEditor: Component = () => {
       current[index] = null;
     }
 
-    setScript(newScript);
+    props.onChange(newScript);
   };
 
   const onDrop = (e: DragEvent) => {
@@ -58,7 +64,7 @@ export const ScriptEditor: Component = () => {
     if (!data) return;
 
     const { opcode } = JSON.parse(data);
-    const opcodes = (gameStore.state.opcodes || []) as BlockDefinition[];
+    const opcodes = props.opcodes || [];
     const def = opcodes.find((d) => d.opcode === opcode);
     if (!def) return;
 
@@ -71,9 +77,9 @@ export const ScriptEditor: Component = () => {
     }
 
     // For now, just append to root seq
-    const newScript = JSON.parse(JSON.stringify(script()));
+    const newScript = structuredClone(props.value) as any;
     newScript.push(newNode);
-    setScript(newScript);
+    props.onChange(newScript);
   };
 
   const onDragOver = (e: DragEvent) => {
@@ -85,18 +91,17 @@ export const ScriptEditor: Component = () => {
       const newScript = transpile(newCode);
       // Only update if we got a valid script back
       if (newScript) {
-        setScript(newScript);
+        props.onChange(newScript);
       }
     } catch {
       // Ignore transpilation errors while typing
-      // console.warn("Transpilation error:", e);
     }
   };
 
   return (
     <div class="script-editor">
       <div class="script-editor__palette">
-        <BlockPalette />
+        <BlockPalette opcodes={props.opcodes} />
       </div>
       <div class="script-editor__workspace-container">
         <div
@@ -110,8 +115,9 @@ export const ScriptEditor: Component = () => {
             style={{ flex: 1, "border-right": "1px solid var(--border-color)" }}
           >
             <BlockNode
-              node={script()}
+              node={props.value}
               path={[]}
+              opcodes={props.opcodes}
               onUpdate={updateNode}
               onDelete={deleteNode}
             />
@@ -121,8 +127,10 @@ export const ScriptEditor: Component = () => {
             style={{ flex: 1, height: "100%", overflow: "hidden" }}
           >
             <MonacoEditor
-              value={decompile(script(), 0, true)}
+              value={decompile(props.value, 0, true)}
               onChange={handleCodeChange}
+              opcodes={props.opcodes}
+              onAICompletion={props.onAICompletion!}
             />
           </div>
         </div>

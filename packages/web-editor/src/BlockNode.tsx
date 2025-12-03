@@ -1,10 +1,10 @@
 import { Component, For, Show, createMemo } from "solid-js";
-import { gameStore } from "../../store/game";
 import { BlockDefinition } from "./types";
 
 interface BlockNodeProps {
   node: any;
   path: number[];
+  opcodes: BlockDefinition[];
   onUpdate: (path: number[], newNode: any) => void;
   onDelete: (path: number[]) => void;
 }
@@ -23,7 +23,7 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
 
     try {
       const { opcode } = JSON.parse(data);
-      const opcodes = (gameStore.state.opcodes || []) as BlockDefinition[];
+      const opcodes = props.opcodes || [];
       const def = opcodes.find((d) => d.opcode === opcode);
       if (!def) return;
 
@@ -67,8 +67,7 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
         {(() => {
           const opcode = createMemo(() => props.node[0]);
           const def = createMemo(() => {
-            const opcodes = (gameStore.state.opcodes ||
-              []) as BlockDefinition[];
+            const opcodes = props.opcodes || [];
             return opcodes.find((d) => d.opcode === opcode());
           });
           const args = createMemo(() => props.node.slice(1));
@@ -122,6 +121,7 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                           <BlockNode
                             node={args()[0]}
                             path={[...props.path, 1]}
+                            opcodes={props.opcodes}
                             onUpdate={props.onUpdate}
                             onDelete={props.onDelete}
                           />
@@ -196,6 +196,7 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                           <BlockNode
                             node={arg}
                             path={[...props.path, i() + 1]}
+                            opcodes={props.opcodes}
                             onUpdate={props.onUpdate}
                             onDelete={props.onDelete}
                           />
@@ -260,6 +261,7 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                                   <BlockNode
                                     node={args()[i()]}
                                     path={[...props.path, i() + 1]}
+                                    opcodes={props.opcodes}
                                     onUpdate={props.onUpdate}
                                     onDelete={props.onDelete}
                                   />

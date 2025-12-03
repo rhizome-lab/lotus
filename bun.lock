@@ -52,19 +52,26 @@
         "bun-types": "latest",
       },
     },
-    "apps/server": {
-      "name": "@viwo/server",
+    "apps/playground": {
+      "name": "@viwo/playground",
       "version": "0.0.0",
       "dependencies": {
-        "@viwo/core": "workspace:*",
-        "@viwo/plugin-ai": "workspace:*",
         "@viwo/scripting": "workspace:*",
+        "@viwo/shared": "workspace:*",
+        "@viwo/web-editor": "workspace:*",
+        "solid-js": "^1.8.15",
       },
       "devDependencies": {
         "@tsconfig/strictest": "^2.0.8",
-        "bun-types": "latest",
-        "typescript": "^5.0.0",
+        "@types/bun": "^1.3.3",
+        "typescript": "^6.0.0-dev.20251202",
+        "vite": "^5.1.4",
+        "vite-plugin-solid": "^2.10.1",
       },
+    },
+    "apps/server": {
+      "name": "@viwo/server",
+      "version": "0.0.0",
     },
     "apps/tui": {
       "name": "@viwo/tui",
@@ -92,6 +99,7 @@
         "@viwo/client": "workspace:*",
         "@viwo/scripting": "workspace:*",
         "@viwo/shared": "workspace:*",
+        "@viwo/web-editor": "workspace:*",
         "monaco-editor": "^0.55.1",
         "solid-js": "^1.8.15",
       },
@@ -138,10 +146,10 @@
       "version": "0.0.0",
       "dependencies": {
         "@viwo/shared": "workspace:*",
+        "typescript": "^5.0.0",
       },
       "devDependencies": {
         "bun-types": "latest",
-        "typescript": "^5.0.0",
       },
     },
     "packages/shared": {
@@ -152,6 +160,24 @@
       },
       "devDependencies": {
         "typescript": "^5.0.0",
+      },
+    },
+    "packages/web-editor": {
+      "name": "@viwo/web-editor",
+      "version": "0.0.0",
+      "dependencies": {
+        "@monaco-editor/loader": "^1.7.0",
+        "@viwo/scripting": "workspace:*",
+        "@viwo/shared": "workspace:*",
+        "monaco-editor": "^0.55.1",
+        "solid-js": "^1.8.15",
+      },
+      "devDependencies": {
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "^1.3.3",
+        "typescript": "^6.0.0-dev.20251202",
+        "vite": "^5.1.4",
+        "vite-plugin-solid": "^2.10.1",
       },
     },
     "plugins/ai": {
@@ -549,6 +575,8 @@
 
     "@viwo/discord-bot": ["@viwo/discord-bot@workspace:apps/discord-bot"],
 
+    "@viwo/playground": ["@viwo/playground@workspace:apps/playground"],
+
     "@viwo/plugin-ai": ["@viwo/plugin-ai@workspace:plugins/ai"],
 
     "@viwo/scripting": ["@viwo/scripting@workspace:packages/scripting"],
@@ -560,6 +588,8 @@
     "@viwo/tui": ["@viwo/tui@workspace:apps/tui"],
 
     "@viwo/web": ["@viwo/web@workspace:apps/web"],
+
+    "@viwo/web-editor": ["@viwo/web-editor@workspace:packages/web-editor"],
 
     "@vladfrangu/async_event_emitter": ["@vladfrangu/async_event_emitter@2.4.7", "", {}, "sha512-Xfe6rpCTxSxfbswi/W/Pz7zp1WWSNn4A0eW4mLkQUewCrXXtMj31lCg+iQyTkh/CkusZSq9eDflu7tjEDXUY6g=="],
 
@@ -894,8 +924,6 @@
     "@viwo/plugin-ai/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@viwo/scripting/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
-
-    "@viwo/server/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "@viwo/shared/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
