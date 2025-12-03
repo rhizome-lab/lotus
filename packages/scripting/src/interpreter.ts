@@ -147,27 +147,19 @@ export function executeLambda(
   // Create new context
   const newVars = { ...lambda.closure };
   // Bind arguments
-  for (let i = 0; i < lambda.args.length; i++) {
+  for (let i = 0; i < lambda.args.length; i += 1) {
     newVars[lambda.args[i]] = args[i];
   }
 
+  // TODO: This should be interpreted inside the stack machine
   return evaluate(lambda.body, {
     ...ctx,
     vars: newVars,
   });
 }
 
-// --- Explicit Stack Machine ---
-
-type ExecutionFrame = {
-  type: "call";
-  op: string;
-  args: unknown[]; // Evaluated arguments
-  remaining: ScriptValue<unknown>[]; // Arguments yet to be evaluated
-};
-
 /**
- * Evaluates a script expression using an explicit stack machine.
+ * Evaluates a script expression using an explicit stack machine with SOA (Structure of Arrays).
  *
  * @param ast - The script AST (S-expression) to evaluate.
  * @param ctx - The execution context.
@@ -183,24 +175,37 @@ export function evaluate<T>(
     return ast as T;
   }
 
-  // Stack of execution frames
-  const stack: ExecutionFrame[] = [];
+  // SOA Stack (Dynamic)
+  const stackOp: string[] = [];
+  const stackArgs: unknown[][] = [];
+  const stackAst: any[][] = [];
+  const stackIdx: number[] = [];
+  let sp = 0;
 
   // Push initial frame
-  const [op, ...args] = ast;
+  const op = ast[0];
   if (typeof op !== "string" || !OPS[op]) {
-    throw new ScriptError(`Unknown opcode: ${op}`, [...(ctx.stack ?? [])]);
+    throw new ScriptError(`Unknown opcode: ${op}`, []);
   }
 
-  stack.push({
-    type: "call",
-    op: op,
-    args: [],
-    remaining: args,
-  });
+  stackOp[0] = op;
+  stackArgs[0] = [];
+  stackAst[0] = ast;
+  stackIdx[0] = 1;
+  sp = 1;
 
-  // Iterative execution loop
-  while (stack.length > 0) {
+  return executeLoop(ctx, sp, stackOp, stackArgs, stackAst, stackIdx);
+}
+
+function executeLoop(
+  ctx: ScriptContext,
+  sp: number,
+  stackOp: string[],
+  stackArgs: unknown[][],
+  stackAst: any[][],
+  stackIdx: number[],
+): any {
+  while (sp > 0) {
     if (ctx.gas !== undefined) {
       ctx.gas -= 1;
       if (ctx.gas < 0) {
@@ -208,212 +213,107 @@ export function evaluate<T>(
       }
     }
 
-    const frame = stack[stack.length - 1];
-    if (!frame) throw new ScriptError("Stack underflow");
-
-    const def = OPS[frame.op];
-    if (!def) throw new ScriptError(`Unknown opcode: ${frame.op}`);
+    const top = sp - 1;
+    const op = stackOp[top]!;
+    const def = OPS[op];
+    if (!def) throw new ScriptError(`Unknown opcode: ${op}`);
 
     // If Lazy, pass all remaining args as is and execute immediately
-    if (def.metadata.lazy && frame.remaining.length > 0) {
-      frame.args.push(...frame.remaining);
-      frame.remaining = [];
+    if (def.metadata.lazy) {
+      const ast = stackAst[top]!;
+      let idx = stackIdx[top]!;
+      if (idx < ast.length) {
+        const args = stackArgs[top]!;
+        while (idx < ast.length) {
+          args.push(ast[idx++]);
+        }
+        stackIdx[top] = idx;
+      }
     }
 
-    if (frame.remaining.length > 0) {
+    const ast = stackAst[top]!;
+    const idx = stackIdx[top]!;
+
+    if (idx < ast.length) {
       // Process next argument (Strict mode)
-      const nextArg = frame.remaining.shift()!;
+      const nextArg = ast[idx];
+      stackIdx[top]! += 1; // Advance index
 
       if (Array.isArray(nextArg)) {
         // It's a nested call, push a new frame
-        const [nextOp, ...nextArgs] = nextArg;
+        const nextOp = nextArg[0];
         if (typeof nextOp !== "string" || !OPS[nextOp]) {
-          throw new ScriptError(`Unknown opcode: ${nextOp}`, [
-            ...(ctx.stack ?? []),
-          ]);
+          throw new ScriptError(
+            `Unknown opcode: ${nextOp}`,
+            createStackTrace(sp, stackOp, stackArgs),
+          );
         }
-        stack.push({
-          type: "call",
-          op: nextOp,
-          args: [],
-          remaining: nextArgs,
-        });
+
+        stackOp[sp] = nextOp;
+        stackArgs[sp] = [];
+        stackAst[sp] = nextArg;
+        stackIdx[sp] = 1;
+        sp += 1;
       } else {
         // It's a primitive value, push to args directly
-        frame.args.push(nextArg);
+        stackArgs[top]!.push(nextArg);
       }
     } else {
       // All arguments evaluated, execute opcode
-      stack.pop(); // Remove current frame
+      const args = stackArgs[top]!;
+      sp -= 1; // Pop frame
 
       let result: unknown;
       try {
         // Validate arguments
         if (typecheck && def.metadata.parameters) {
-          const params = def.metadata.parameters;
-          const hasRest = params.some((p) => p.name.startsWith("..."));
-          const minArgs = params.filter(
-            (p) => !p.optional && !p.name.startsWith("..."),
-          ).length;
-
-          if (frame.args.length < minArgs) {
-            throw new ScriptError(
-              `${frame.op}: expected at least ${minArgs} arguments, got ${frame.args.length}`,
-            );
-          }
-
-          if (!hasRest && frame.args.length > params.length) {
-            throw new ScriptError(
-              `${frame.op}: expected at most ${params.length} arguments, got ${frame.args.length}`,
-            );
-          }
-
-          // Type checking
-          for (let i = 0; i < frame.args.length; i++) {
-            const param =
-              i < params.length ? params[i] : params[params.length - 1];
-            if (!param) {
-              throw new ScriptError(
-                `${frame.op}: expected at least ${params.length} arguments, got ${frame.args.length}`,
-              );
-            }
-            // Handle rest param logic: if we are past the defined params, use the last one (which should be rest)
-            // If the current param is rest, use it for all subsequent args
-            const currentParam =
-              param.name.startsWith("...") || i >= params.length
-                ? params[params.length - 1]
-                : param;
-            if (!currentParam) {
-              throw new ScriptError(
-                `${frame.op}: expected at least ${params.length} arguments, got ${frame.args.length}`,
-              );
-            }
-
-            const arg = frame.args[i];
-            const type = currentParam.type.replace("[]", ""); // Simple array check handling
-
-            if (type === "any" || type === "unknown") continue;
-
-            if (currentParam.type.endsWith("[]")) {
-              // If it's a rest param like ...strings: string[], the individual arg should be string
-              // But wait, frame.args are the individual arguments passed to the function
-              // So if param is string[], does it mean the arg is an array or the rest args are strings?
-              // In defineOpcode, ...strings: string[] means variadic args of type string.
-              // But if it's a list argument like list: any[], then arg should be array.
-
-              if (currentParam.name.startsWith("...")) {
-                // Variadic: arg should be of type 'type' (stripped of [])
-                if (
-                  type !== "any" &&
-                  type !== "unknown" &&
-                  typeof arg !== type &&
-                  arg !== null
-                ) {
-                  // Special case for primitives vs objects?
-                  // For now simple typeof check
-                  if (
-                    type === "object" &&
-                    (typeof arg !== "object" || arg === null)
-                  ) {
-                    throw new ScriptError(
-                      `${frame.op}: expected ${type} for ${currentParam.name} at index ${i}`,
-                    );
-                  }
-                  if (type !== "object" && typeof arg !== type) {
-                    throw new ScriptError(
-                      `${frame.op}: expected ${type} for ${currentParam.name} at index ${i}`,
-                    );
-                  }
-                }
-              } else {
-                // Array argument: arg should be an array
-                if (!Array.isArray(arg)) {
-                  throw new ScriptError(
-                    `${frame.op}: expected array for ${currentParam.name}`,
-                  );
-                }
-              }
-            } else {
-              if (type === "object") {
-                if (typeof arg !== "object" || arg === null) {
-                  throw new ScriptError(
-                    `${frame.op}: expected object for ${currentParam.name}`,
-                  );
-                }
-              } else if (typeof arg !== type) {
-                // Allow null for optional? No, optional means undefined/missing.
-                // But some args might be nullable. Metadata doesn't specify nullable yet.
-                // Assume strict for now unless we add nullable support.
-                // But wait, Capability | null is a common type.
-                if (type.includes("|")) {
-                  // Simple union check
-                  const types = type.split("|").map((t) => t.trim());
-                  const argType = arg === null ? "null" : typeof arg;
-                  // Check for Capability brand
-                  if (
-                    types.includes("Capability") &&
-                    arg &&
-                    typeof arg === "object" &&
-                    (arg as any).__brand === "Capability"
-                  ) {
-                    continue;
-                  }
-                  if (
-                    types.includes("Entity") &&
-                    arg &&
-                    typeof arg === "object" &&
-                    typeof (arg as any).id === "number"
-                  ) {
-                    continue;
-                  }
-                  if (!types.includes(argType)) {
-                    throw new ScriptError(
-                      `${frame.op}: expected ${type} for ${currentParam.name}`,
-                    );
-                  }
-                } else {
-                  throw new ScriptError(
-                    `${frame.op}: expected ${type} for ${currentParam.name}`,
-                  );
-                }
-              }
-            }
-          }
+          validateArgs(op, args, def.metadata.parameters);
         }
 
-        result = def.handler(frame.args, ctx);
+        result = def.handler(args, ctx);
       } catch (e: any) {
         let scriptError: ScriptError;
         if (e instanceof ScriptError) {
           scriptError = e;
           if (scriptError.stackTrace.length === 0) {
-            scriptError.stackTrace = [...(ctx.stack ?? [])];
+            scriptError.stackTrace = createStackTrace(
+              sp + 1,
+              stackOp,
+              stackArgs,
+            );
           }
         } else {
-          scriptError = new ScriptError(e.message ?? String(e), [
-            ...(ctx.stack ?? []),
-          ]);
+          scriptError = new ScriptError(
+            e.message ?? String(e),
+            createStackTrace(sp + 1, stackOp, stackArgs),
+          );
         }
         if (!scriptError.context) {
-          scriptError.context = { op: frame.op, args: frame.args };
+          scriptError.context = { op: op, args: args };
         }
         throw scriptError;
       }
 
       // Handle Async Result
       if (result instanceof Promise) {
-        return handleAsyncResult(result, stack, ctx) as any;
+        return handleAsyncResult(
+          result,
+          ctx,
+          sp,
+          stackOp,
+          stackArgs,
+          stackAst,
+          stackIdx,
+        );
       }
 
       // If stack is empty, we are done
-      if (stack.length === 0) {
-        return result as T;
+      if (sp === 0) {
+        return result;
       }
 
       // Otherwise, push result to parent frame's args
-      const parent = stack[stack.length - 1];
-      if (!parent) throw new ScriptError("Stack underflow");
-      parent.args.push(result);
+      stackArgs[sp - 1]!.push(result);
     }
   }
 
@@ -423,231 +323,155 @@ export function evaluate<T>(
 
 async function handleAsyncResult(
   promise: Promise<unknown>,
-  stack: ExecutionFrame[],
   ctx: ScriptContext,
+  sp: number,
+  stackOp: string[],
+  stackArgs: unknown[][],
+  stackAst: any[][],
+  stackIdx: number[],
 ): Promise<unknown> {
   let currentResult = await promise;
 
   // Push result to parent frame and continue loop
-  if (stack.length === 0) {
+  if (sp === 0) {
     return currentResult;
   }
 
-  const parent = stack[stack.length - 1];
-  if (!parent) throw new ScriptError("Stack underflow");
-  parent.args.push(currentResult);
+  stackArgs[sp - 1]!.push(currentResult);
 
-  // Resume the loop (async version)
-  while (stack.length > 0) {
-    if (ctx.gas !== undefined) {
-      ctx.gas -= 1;
-      if (ctx.gas < 0) {
-        throw new ScriptError("Script ran out of gas!");
-      }
-    }
+  // Resume the loop
+  return executeLoop(ctx, sp, stackOp, stackArgs, stackAst, stackIdx);
+}
 
-    const frame = stack[stack.length - 1];
-    if (!frame) throw new ScriptError("Stack underflow");
+function createStackTrace(
+  sp: number,
+  stackOp: string[],
+  stackArgs: unknown[][],
+): StackFrame[] {
+  const trace: StackFrame[] = [];
+  for (let i = 0; i < sp; i += 1) {
+    trace.push({
+      name: stackOp[i]!,
+      args: stackArgs[i]!,
+    });
+  }
+  return trace;
+}
 
-    const def = OPS[frame.op];
-    if (!def) throw new ScriptError(`Unknown opcode: ${frame.op}`);
+function validateArgs(
+  op: string,
+  args: unknown[],
+  params: { name: string; type: string; optional?: boolean }[],
+) {
+  const hasRest = params.some((p) => p.name.startsWith("..."));
+  const minArgs = params.filter(
+    (p) => !p.optional && !p.name.startsWith("..."),
+  ).length;
 
-    // If Lazy, pass all remaining args as is and execute immediately
-    if (def.metadata.lazy && frame.remaining.length > 0) {
-      frame.args.push(...frame.remaining);
-      frame.remaining = [];
-    }
-
-    if (frame.remaining.length > 0) {
-      const nextArg = frame.remaining.shift()!;
-
-      if (Array.isArray(nextArg)) {
-        const [nextOp, ...nextArgs] = nextArg;
-        if (typeof nextOp !== "string" || !OPS[nextOp]) {
-          throw new ScriptError(`Unknown opcode: ${nextOp}`, [
-            ...(ctx.stack ?? []),
-          ]);
-        }
-        stack.push({
-          type: "call",
-          op: nextOp,
-          args: [],
-          remaining: nextArgs,
-        });
-      } else {
-        frame.args.push(nextArg);
-      }
-    } else {
-      stack.pop();
-
-      try {
-        // Validate arguments
-        if (typecheck && def.metadata.parameters) {
-          const params = def.metadata.parameters;
-          const hasRest = params.some((p) => p.name.startsWith("..."));
-          const minArgs = params.filter(
-            (p) => !p.optional && !p.name.startsWith("..."),
-          ).length;
-
-          if (frame.args.length < minArgs) {
-            throw new ScriptError(
-              `${frame.op}: expected at least ${minArgs} arguments, got ${frame.args.length}`,
-            );
-          }
-
-          if (!hasRest && frame.args.length > params.length) {
-            throw new ScriptError(
-              `${frame.op}: expected at most ${params.length} arguments, got ${frame.args.length}`,
-            );
-          }
-
-          // Type checking
-          for (let i = 0; i < frame.args.length; i++) {
-            const param =
-              i < params.length ? params[i] : params[params.length - 1];
-            if (!param) {
-              throw new ScriptError(
-                `${frame.op}: expected at least ${params.length} arguments, got ${frame.args.length}`,
-              );
-            }
-            // Handle rest param logic: if we are past the defined params, use the last one (which should be rest)
-            // If the current param is rest, use it for all subsequent args
-            const currentParam =
-              param.name.startsWith("...") || i >= params.length
-                ? params[params.length - 1]
-                : param;
-            if (!currentParam) {
-              throw new ScriptError(
-                `${frame.op}: expected at least ${params.length} arguments, got ${frame.args.length}`,
-              );
-            }
-
-            const arg = frame.args[i];
-            const type = currentParam.type.replace("[]", ""); // Simple array check handling
-
-            if (type === "any" || type === "unknown") continue;
-
-            if (currentParam.type.endsWith("[]")) {
-              // If it's a rest param like ...strings: string[], the individual arg should be string
-              // But wait, frame.args are the individual arguments passed to the function
-              // So if param is string[], does it mean the arg is an array or the rest args are strings?
-              // In defineOpcode, ...strings: string[] means variadic args of type string.
-              // But if it's a list argument like list: any[], then arg should be array.
-
-              if (currentParam.name.startsWith("...")) {
-                // Variadic: arg should be of type 'type' (stripped of [])
-                if (
-                  type !== "any" &&
-                  type !== "unknown" &&
-                  typeof arg !== type &&
-                  arg !== null
-                ) {
-                  // Special case for primitives vs objects?
-                  // For now simple typeof check
-                  if (
-                    type === "object" &&
-                    (typeof arg !== "object" || arg === null)
-                  ) {
-                    throw new ScriptError(
-                      `${frame.op}: expected ${type} for ${currentParam.name} at index ${i}`,
-                    );
-                  }
-                  if (type !== "object" && typeof arg !== type) {
-                    throw new ScriptError(
-                      `${frame.op}: expected ${type} for ${currentParam.name} at index ${i}`,
-                    );
-                  }
-                }
-              } else {
-                // Array argument: arg should be an array
-                if (!Array.isArray(arg)) {
-                  throw new ScriptError(
-                    `${frame.op}: expected array for ${currentParam.name}`,
-                  );
-                }
-              }
-            } else {
-              if (type === "object") {
-                if (typeof arg !== "object" || arg === null) {
-                  throw new ScriptError(
-                    `${frame.op}: expected object for ${currentParam.name}`,
-                  );
-                }
-              } else if (typeof arg !== type) {
-                // Allow null for optional? No, optional means undefined/missing.
-                // But some args might be nullable. Metadata doesn't specify nullable yet.
-                // Assume strict for now unless we add nullable support.
-                // But wait, Capability | null is a common type.
-                if (type.includes("|")) {
-                  // Simple union check
-                  const types = type.split("|").map((t) => t.trim());
-                  const argType = arg === null ? "null" : typeof arg;
-                  // Check for Capability brand
-                  if (
-                    types.includes("Capability") &&
-                    arg &&
-                    typeof arg === "object" &&
-                    (arg as any).__brand === "Capability"
-                  ) {
-                    continue;
-                  }
-                  if (
-                    types.includes("Entity") &&
-                    arg &&
-                    typeof arg === "object" &&
-                    typeof (arg as any).id === "number"
-                  ) {
-                    continue;
-                  }
-                  if (!types.includes(argType)) {
-                    throw new ScriptError(
-                      `${frame.op}: expected ${type} for ${currentParam.name}`,
-                    );
-                  }
-                } else {
-                  throw new ScriptError(
-                    `${frame.op}: expected ${type} for ${currentParam.name}`,
-                  );
-                }
-              }
-            }
-          }
-        }
-
-        currentResult = def.handler(frame.args, ctx);
-      } catch (e: any) {
-        let scriptError: ScriptError;
-        if (e instanceof ScriptError) {
-          scriptError = e;
-          if (scriptError.stackTrace.length === 0) {
-            scriptError.stackTrace = [...(ctx.stack ?? [])];
-          }
-        } else {
-          scriptError = new ScriptError(e.message ?? String(e), [
-            ...(ctx.stack ?? []),
-          ]);
-        }
-        if (!scriptError.context) {
-          scriptError.context = { op: frame.op, args: frame.args };
-        }
-        throw scriptError;
-      }
-
-      if (currentResult instanceof Promise) {
-        currentResult = await currentResult;
-      }
-
-      if (stack.length === 0) {
-        return currentResult;
-      }
-
-      const parent = stack[stack.length - 1];
-      if (!parent) throw new ScriptError("Stack underflow");
-      parent.args.push(currentResult);
-    }
+  if (args.length < minArgs) {
+    throw new ScriptError(
+      `${op}: expected at least ${minArgs} arguments, got ${args.length}`,
+    );
   }
 
-  return currentResult;
+  if (!hasRest && args.length > params.length) {
+    throw new ScriptError(
+      `${op}: expected at most ${params.length} arguments, got ${args.length}`,
+    );
+  }
+
+  // Type checking
+  for (let i = 0; i < args.length; i += 1) {
+    const param = i < params.length ? params[i] : params[params.length - 1];
+    if (!param) {
+      throw new ScriptError(
+        `${op}: expected at least ${params.length} arguments, got ${args.length}`,
+      );
+    }
+    // Handle rest param logic
+    const currentParam =
+      param.name.startsWith("...") || i >= params.length
+        ? params[params.length - 1]
+        : param;
+    if (!currentParam) {
+      throw new ScriptError(
+        `${op}: expected at least ${params.length} arguments, got ${args.length}`,
+      );
+    }
+
+    const arg = args[i];
+    const type = currentParam.type.replace("[]", "");
+
+    if (type === "any" || type === "unknown") continue;
+
+    if (currentParam.type.endsWith("[]")) {
+      if (currentParam.name.startsWith("...")) {
+        // Variadic
+        if (
+          type !== "any" &&
+          type !== "unknown" &&
+          typeof arg !== type &&
+          arg !== null
+        ) {
+          if (type === "object" && (typeof arg !== "object" || arg === null)) {
+            throw new ScriptError(
+              `${op}: expected ${type} for ${currentParam.name} at index ${i}`,
+            );
+          }
+          if (type !== "object" && typeof arg !== type) {
+            throw new ScriptError(
+              `${op}: expected ${type} for ${currentParam.name} at index ${i}`,
+            );
+          }
+        }
+      } else {
+        // Array argument
+        if (!Array.isArray(arg)) {
+          throw new ScriptError(
+            `${op}: expected array for ${currentParam.name}`,
+          );
+        }
+      }
+    } else {
+      if (type === "object") {
+        if (typeof arg !== "object" || arg === null) {
+          throw new ScriptError(
+            `${op}: expected object for ${currentParam.name}`,
+          );
+        }
+      } else if (typeof arg !== type) {
+        if (type.includes("|")) {
+          const types = type.split("|").map((t) => t.trim());
+          const argType = arg === null ? "null" : typeof arg;
+          if (
+            types.includes("Capability") &&
+            arg &&
+            typeof arg === "object" &&
+            (arg as any).__brand === "Capability"
+          ) {
+            continue;
+          }
+          if (
+            types.includes("Entity") &&
+            arg &&
+            typeof arg === "object" &&
+            typeof (arg as any).id === "number"
+          ) {
+            continue;
+          }
+          if (!types.includes(argType)) {
+            throw new ScriptError(
+              `${op}: expected ${type} for ${currentParam.name}`,
+            );
+          }
+        } else {
+          throw new ScriptError(
+            `${op}: expected ${type} for ${currentParam.name}`,
+          );
+        }
+      }
+    }
+  }
 }
 
 /**
