@@ -21,13 +21,7 @@ export type ScriptValue_<T> = Exclude<T, readonly unknown[]>;
  * Represents a value in the scripting language.
  * Can be a primitive, an object, or a nested S-expression (array).
  */
-export type ScriptValue<T> =
-  | (unknown extends T
-      ? ScriptValue_<UnknownUnion>
-      : object extends T
-      ? Extract<ScriptValue_<UnknownUnion>, object>
-      : ScriptValue_<T>)
-  | ScriptExpression<any[], T>;
+export type ScriptValue<T> = T | ScriptExpression<any[], T>;
 
 // Phantom type for return type safety
 export type ScriptExpression<

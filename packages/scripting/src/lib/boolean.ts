@@ -6,7 +6,7 @@ import { defineOpcode, ScriptValue } from "../def";
  * Checks if all arguments are equal.
  */
 const eq = defineOpcode<
-  [ScriptValue<unknown>, ScriptValue<unknown>, ...ScriptValue<unknown>[]],
+  [unknown, unknown, ...unknown[]],
   boolean
 >("==", {
   metadata: {
@@ -25,13 +25,13 @@ const eq = defineOpcode<
     ],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 2) {
       throw new ScriptError("==: expected at least 2 arguments");
     }
-    let prev = evaluate(args[0], ctx);
+    let prev = args[0];
     for (let i = 1; i < args.length; i++) {
-      const next = evaluate(args[i], ctx);
+      const next = args[i];
       if (prev !== next) {
         return false;
       }
@@ -46,7 +46,7 @@ export { eq as "==" };
  * Checks if adjacent arguments are different.
  */
 const neq = defineOpcode<
-  [ScriptValue<unknown>, ScriptValue<unknown>, ...ScriptValue<unknown>[]],
+  [unknown, unknown, ...unknown[]],
   boolean
 >("!=", {
   metadata: {
@@ -65,13 +65,13 @@ const neq = defineOpcode<
     ],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 2) {
       throw new ScriptError("!=: expected at least 2 arguments");
     }
-    let prev = evaluate(args[0], ctx);
+    let prev = args[0];
     for (let i = 1; i < args.length; i++) {
-      const next = evaluate(args[i], ctx);
+      const next = args[i];
       if (prev === next) {
         return false;
       }
@@ -86,7 +86,7 @@ export { neq as "!=" };
  * Checks if arguments are strictly increasing.
  */
 const lt = defineOpcode<
-  [ScriptValue<number>, ScriptValue<number>, ...ScriptValue<number>[]],
+  [number, number, ...number[]],
   boolean
 >("<", {
   metadata: {
@@ -105,13 +105,13 @@ const lt = defineOpcode<
     ],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 2) {
       throw new ScriptError("<: expected at least 2 arguments");
     }
-    let prev = evaluate(args[0], ctx);
+    let prev = args[0] as number;
     for (let i = 1; i < args.length; i++) {
-      const next = evaluate(args[i], ctx);
+      const next = args[i] as number;
       if (prev >= next) {
         return false;
       }
@@ -126,7 +126,7 @@ export { lt as "<" };
  * Checks if arguments are strictly decreasing.
  */
 const gt = defineOpcode<
-  [ScriptValue<number>, ScriptValue<number>, ...ScriptValue<number>[]],
+  [number, number, ...number[]],
   boolean
 >(">", {
   metadata: {
@@ -145,13 +145,13 @@ const gt = defineOpcode<
     ],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 2) {
       throw new ScriptError(">: expected at least 2 arguments");
     }
-    let prev = evaluate(args[0], ctx);
+    let prev = args[0] as number;
     for (let i = 1; i < args.length; i++) {
-      const next = evaluate(args[i], ctx);
+      const next = args[i] as number;
       if (prev <= next) {
         return false;
       }
@@ -166,7 +166,7 @@ export { gt as ">" };
  * Checks if arguments are non-decreasing.
  */
 const lte = defineOpcode<
-  [ScriptValue<number>, ScriptValue<number>, ...ScriptValue<number>[]],
+  [number, number, ...number[]],
   boolean
 >("<=", {
   metadata: {
@@ -185,13 +185,13 @@ const lte = defineOpcode<
     ],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 2) {
       throw new ScriptError("<=: expected at least 2 arguments");
     }
-    let prev = evaluate(args[0], ctx);
+    let prev = args[0] as number;
     for (let i = 1; i < args.length; i++) {
-      const next = evaluate(args[i], ctx);
+      const next = args[i] as number;
       if (prev > next) {
         return false;
       }
@@ -206,7 +206,7 @@ export { lte as "<=" };
  * Checks if arguments are non-increasing.
  */
 const gte = defineOpcode<
-  [ScriptValue<number>, ScriptValue<number>, ...ScriptValue<number>[]],
+  [number, number, ...number[]],
   boolean
 >(">=", {
   metadata: {
@@ -225,13 +225,13 @@ const gte = defineOpcode<
     ],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 2) {
       throw new ScriptError(">=: expected at least 2 arguments");
     }
-    let prev = evaluate(args[0], ctx);
+    let prev = args[0] as number;
     for (let i = 1; i < args.length; i++) {
-      const next = evaluate(args[i], ctx);
+      const next = args[i] as number;
       if (prev < next) {
         return false;
       }
@@ -265,15 +265,32 @@ export const and = defineOpcode<
       { name: "...args", type: "boolean[]" },
     ],
     returnType: "boolean",
+    lazy: true,
   },
   handler: (args, ctx) => {
     if (args.length < 2) {
       throw new ScriptError("and: expected at least 2 arguments");
     }
-    for (const arg of args) {
-      if (!evaluate(arg, ctx)) return false;
-    }
-    return true;
+    
+    let i = 0;
+    const next = (): any => {
+      if (i >= args.length) return true;
+      
+      const arg = args[i++];
+      const result = evaluate(arg, ctx);
+      
+      if (result instanceof Promise) {
+        return result.then((res) => {
+          if (!res) return false;
+          return next();
+        });
+      }
+      
+      if (!result) return false;
+      return next();
+    };
+    
+    return next();
   },
 });
 
@@ -299,22 +316,39 @@ export const or = defineOpcode<
       { name: "...args", type: "boolean[]" },
     ],
     returnType: "boolean",
+    lazy: true,
   },
   handler: (args, ctx) => {
     if (args.length < 2) {
       throw new ScriptError("or: expected at least 2 arguments");
     }
-    for (const arg of args) {
-      if (evaluate(arg, ctx)) return true;
-    }
-    return false;
+    
+    let i = 0;
+    const next = (): any => {
+      if (i >= args.length) return false;
+      
+      const arg = args[i++];
+      const result = evaluate(arg, ctx);
+      
+      if (result instanceof Promise) {
+        return result.then((res) => {
+          if (res) return true;
+          return next();
+        });
+      }
+      
+      if (result) return true;
+      return next();
+    };
+    
+    return next();
   },
 });
 
 /**
  * Logical NOT.
  */
-export const not = defineOpcode<[ScriptValue<boolean>], boolean>("not", {
+export const not = defineOpcode<[boolean], boolean>("not", {
   metadata: {
     label: "Not",
     category: "logic",
@@ -323,10 +357,10 @@ export const not = defineOpcode<[ScriptValue<boolean>], boolean>("not", {
     parameters: [{ name: "val", type: "boolean" }],
     returnType: "boolean",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length !== 1) {
       throw new ScriptError("not: expected 1 argument");
     }
-    return !evaluate(args[0], ctx);
+    return !args[0];
   },
 });

@@ -1,9 +1,8 @@
 import {
   defineOpcode,
-  ScriptValue,
   ScriptError,
   Capability,
-  evaluate,
+  ScriptValue,
 } from "@viwo/scripting";
 import {
   getCapabilities,
@@ -37,9 +36,7 @@ export const get_capability = defineOpcode<
         "get_capability: expected type and optionally filter",
       );
     }
-    const [typeExpr, filterExpr] = args;
-    const type = evaluate(typeExpr, ctx);
-    const filter = filterExpr ? evaluate(filterExpr, ctx) : {};
+    const [type, filter = {}] = args as [string, object?];
 
     if (typeof type !== "string") {
       throw new ScriptError("get_capability: type must be string");
@@ -65,7 +62,7 @@ export const get_capability = defineOpcode<
 });
 
 export const mint = defineOpcode<
-  [ScriptValue<Capability>, ScriptValue<string>, ScriptValue<object>],
+  [ScriptValue<Capability | null>, ScriptValue<string>, ScriptValue<object>],
   Capability
 >("mint", {
   metadata: {
@@ -78,7 +75,7 @@ export const mint = defineOpcode<
       { name: "Params", type: "block" },
     ],
     parameters: [
-      { name: "authority", type: "Capability" },
+      { name: "authority", type: "Capability | null" },
       { name: "type", type: "string" },
       { name: "params", type: "object" },
     ],
@@ -88,8 +85,8 @@ export const mint = defineOpcode<
     if (args.length !== 3) {
       throw new ScriptError("mint: expected authority, type, and params");
     }
-    const [authExpr, typeExpr, paramsExpr] = args;
-    const auth = evaluate(authExpr, ctx);
+    const [auth, type, params] = args as [Capability | null, string, object];
+
     if (
       !auth ||
       typeof auth !== "object" ||
@@ -97,11 +94,11 @@ export const mint = defineOpcode<
     ) {
       throw new ScriptError("mint: expected capability for authority");
     }
-    const type = evaluate(typeExpr, ctx);
+
     if (typeof type !== "string") {
       throw new ScriptError("mint: expected string for type");
     }
-    const params = evaluate(paramsExpr, ctx);
+
     if (typeof params !== "object") {
       throw new ScriptError("mint: expected object for params");
     }
@@ -135,7 +132,7 @@ export const mint = defineOpcode<
 });
 
 export const delegate = defineOpcode<
-  [ScriptValue<Capability>, ScriptValue<object>],
+  [ScriptValue<Capability | null>, ScriptValue<object>],
   Capability
 >("delegate", {
   metadata: {
@@ -147,7 +144,7 @@ export const delegate = defineOpcode<
       { name: "Restrictions", type: "block" },
     ],
     parameters: [
-      { name: "parent", type: "Capability" },
+      { name: "parent", type: "Capability | null" },
       { name: "restrictions", type: "object" },
     ],
     returnType: "Capability",
@@ -156,9 +153,7 @@ export const delegate = defineOpcode<
     if (args.length !== 2) {
       throw new ScriptError("delegate: expected parent and restrictions");
     }
-    const [parentExpr, restrictionsExpr] = args;
-    const parent = evaluate(parentExpr, ctx);
-    const restrictions = evaluate(restrictionsExpr, ctx);
+    const [parent, restrictions] = args as [Capability | null, object];
 
     if (
       !parent ||
@@ -188,7 +183,7 @@ export const delegate = defineOpcode<
 });
 
 export const give_capability = defineOpcode<
-  [ScriptValue<Capability>, ScriptValue<Entity>],
+  [ScriptValue<Capability | null>, ScriptValue<Entity>],
   null
 >("give_capability", {
   metadata: {
@@ -200,7 +195,7 @@ export const give_capability = defineOpcode<
       { name: "Target", type: "block" },
     ],
     parameters: [
-      { name: "cap", type: "Capability" },
+      { name: "cap", type: "Capability | null" },
       { name: "target", type: "Entity" },
     ],
     returnType: "null",
@@ -209,9 +204,7 @@ export const give_capability = defineOpcode<
     if (args.length !== 2) {
       throw new ScriptError("give_capability: expected capability and target");
     }
-    const [capExpr, targetExpr] = args;
-    const cap = evaluate(capExpr, ctx);
-    const target = evaluate(targetExpr, ctx);
+    const [cap, target] = args as [Capability | null, Entity];
 
     if (
       !cap ||

@@ -24,8 +24,9 @@ const objNew = defineOpcode<[...[key: ScriptValue<string>, value: ScriptValue<un
       parameters: [{ name: "...kvs", type: "Kvs" }],
       returnType:
         "{ [K in keyof Kvs & `${number}` as (Kvs[K] & [string, unknown])[0]]: (Kvs[K] & [string, unknown])[1] }",
+      lazy: true,
     },
-    handler: (args, ctx) => {
+    handler: async (args, ctx) => {
       // args: [[key1, val1], [key2, val2], ...] (variadic)
       const obj: Record<string, any> = {};
       for (let i = 0; i < args.length; i++) {
@@ -35,7 +36,8 @@ const objNew = defineOpcode<[...[key: ScriptValue<string>, value: ScriptValue<un
           );
         }
         const [keyExpr, valueExpr] = args[i];
-        const key = evaluate(keyExpr, ctx);
+        const keyRes = evaluate(keyExpr, ctx);
+        const key = keyRes instanceof Promise ? await keyRes : keyRes;
         if (typeof key !== "string") {
           throw new ScriptError(
             `obj.new: expected string key at index ${i}, got ${JSON.stringify(
@@ -43,7 +45,8 @@ const objNew = defineOpcode<[...[key: ScriptValue<string>, value: ScriptValue<un
             )}`,
           );
         }
-        const val = evaluate(valueExpr, ctx);
+        const valRes = evaluate(valueExpr, ctx);
+        const val = valRes instanceof Promise ? await valRes : valRes;
         obj[key] = val;
       }
       return obj;
@@ -66,12 +69,11 @@ const objKeys = defineOpcode<[ScriptValue<object>], string[]>(
       parameters: [{ name: "object", type: "object" }],
       returnType: "string[]",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("obj.keys: expected 1 argument");
       }
-      const [objExpr] = args;
-      const obj = evaluate(objExpr, ctx);
+      const [obj] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.keys: expected object, got ${JSON.stringify(obj)}`,
@@ -97,18 +99,17 @@ const objValues = defineOpcode<[ScriptValue<object>], any[]>(
       parameters: [{ name: "object", type: "object" }],
       returnType: "any[]",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("obj.values: expected 1 argument");
       }
-      const [objExpr] = args;
-      const obj = evaluate(objExpr, ctx);
+      const [obj] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.values: expected object, got ${JSON.stringify(obj)}`,
         );
       }
-      return Object.getOwnPropertyNames(obj).map((key) => obj[key]);
+      return Object.getOwnPropertyNames(obj).map((key) => (obj as any)[key]);
     },
   }
 );
@@ -128,18 +129,17 @@ const objEntries = defineOpcode<[ScriptValue<object>], [string, any][]>(
       parameters: [{ name: "object", type: "object" }],
       returnType: "[string, any][]",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("obj.entries: expected 1 argument");
       }
-      const [objExpr] = args;
-      const obj = evaluate(objExpr, ctx);
+      const [obj] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.entries: expected object, got ${JSON.stringify(obj)}`,
         );
       }
-      return Object.getOwnPropertyNames(obj).map((key) => [key, obj[key]]);
+      return Object.getOwnPropertyNames(obj).map((key) => [key, (obj as any)[key]]);
     },
   }
 );
@@ -167,13 +167,11 @@ const objGet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptVal
       ],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length < 2 || args.length > 3) {
         throw new ScriptError("obj.get: expected 2 or 3 arguments");
       }
-      const [objExpr, keyExpr, defExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const key = evaluate(keyExpr, ctx);
+      const [obj, key, defVal] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.get: expected object, got ${JSON.stringify(obj)}`,
@@ -186,11 +184,11 @@ const objGet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptVal
       }
       if (!Object.hasOwnProperty.call(obj, key)) {
         if (args.length === 3) {
-          return evaluate(defExpr, ctx);
+          return defVal;
         }
         throw new ScriptError(`obj.get: key '${key}' not found`);
       }
-      return obj[key];
+      return (obj as any)[key];
     },
   }
 );
@@ -218,14 +216,11 @@ const objSet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptVal
       ],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 3) {
         throw new ScriptError("obj.set: expected 3 arguments");
       }
-      const [objExpr, keyExpr, valExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const key = evaluate(keyExpr, ctx);
-      const val = evaluate(valExpr, ctx);
+      const [obj, key, val] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.set: expected object, got ${JSON.stringify(obj)}`,
@@ -239,7 +234,7 @@ const objSet = defineOpcode<[ScriptValue<object>, ScriptValue<string>, ScriptVal
       if (DISALLOWED_KEYS.has(key)) {
         throw new ScriptError(`obj.set: disallowed key '${key}'`);
       }
-      obj[key] = val;
+      (obj as any)[key] = val;
       return obj;
     },
   }
@@ -266,13 +261,11 @@ const objHas = defineOpcode<[ScriptValue<object>, ScriptValue<string>], boolean>
       ],
       returnType: "boolean",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("obj.has: expected 2 arguments");
       }
-      const [objExpr, keyExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const key = evaluate(keyExpr, ctx);
+      const [obj, key] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.has: expected object, got ${JSON.stringify(obj)}`,
@@ -309,13 +302,11 @@ const objDel = defineOpcode<[ScriptValue<object>, ScriptValue<string>], boolean>
       ],
       returnType: "boolean",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("obj.del: expected 2 arguments");
       }
-      const [objExpr, keyExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const key = evaluate(keyExpr, ctx);
+      const [obj, key] = args;
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.del: expected object, got ${JSON.stringify(obj)}`,
@@ -327,7 +318,7 @@ const objDel = defineOpcode<[ScriptValue<object>, ScriptValue<string>], boolean>
         );
       }
       if (Object.hasOwnProperty.call(obj, key)) {
-        delete obj[key];
+        delete (obj as any)[key];
         return true;
       }
       return false;
@@ -350,13 +341,13 @@ const objMerge = defineOpcode<[ScriptValue<object>, ScriptValue<object>, ...Scri
       parameters: [{ name: "...objects", type: "object[]" }],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length < 2) {
         throw new ScriptError("obj.merge: expected at least 2 arguments");
       }
       const objs = [];
       for (let i = 0; i < args.length; i++) {
-        const obj = evaluate(args[i], ctx);
+        const obj = args[i];
         if (!obj || typeof obj !== "object") {
           throw new ScriptError(
             `obj.merge: expected object at ${i}, got ${JSON.stringify(obj)}`,
@@ -390,20 +381,18 @@ const objMap = defineOpcode<[ScriptValue<object>, ScriptValue<unknown>], any>(
       ],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: async (args, ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("obj.map: expected 2 arguments");
       }
-      const [objExpr, funcExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const func = evaluate(funcExpr, ctx);
+      const [obj, func] = args;
 
       if (!obj || typeof obj !== "object") {
         throw new ScriptError(
           `obj.map: expected object, got ${JSON.stringify(obj)}`,
         );
       }
-      if (!func || func.type !== "lambda") {
+      if (!func || (func as any).type !== "lambda") {
         throw new ScriptError(
           `obj.map: expected lambda, got ${JSON.stringify(func)}`,
         );
@@ -411,7 +400,8 @@ const objMap = defineOpcode<[ScriptValue<object>, ScriptValue<unknown>], any>(
 
       const result: Record<string, any> = {};
       for (const [key, val] of Object.entries(obj)) {
-        result[key] = executeLambda(func, [val, key], ctx);
+        const res = executeLambda(func, [val, key], ctx);
+        result[key] = res instanceof Promise ? await res : res;
       }
       return result;
     },
@@ -439,21 +429,20 @@ const objFilter = defineOpcode<[ScriptValue<object>, ScriptValue<unknown>], any>
       ],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: async (args, ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("obj.filter: expected 2 arguments");
       }
-      const [objExpr, funcExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const func = evaluate(funcExpr, ctx);
+      const [obj, func] = args;
 
-      if (!obj || typeof obj !== "object" || !func || func.type !== "lambda") {
+      if (!obj || typeof obj !== "object" || !func || (func as any).type !== "lambda") {
         return {};
       }
 
       const result: Record<string, any> = {};
       for (const [key, val] of Object.entries(obj)) {
-        if (executeLambda(func, [val, key], ctx)) {
+        const res = executeLambda(func, [val, key], ctx);
+        if (res instanceof Promise ? await res : res) {
           result[key] = val;
         }
       }
@@ -485,21 +474,20 @@ const objReduce = defineOpcode<[ScriptValue<object>, ScriptValue<unknown>, Scrip
       ],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: async (args, ctx) => {
       if (args.length !== 3) {
         throw new ScriptError("obj.reduce: expected 3 arguments");
       }
-      const [objExpr, funcExpr, initExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const func = evaluate(funcExpr, ctx);
-      let acc = evaluate(initExpr, ctx);
+      const [obj, func, init] = args;
+      let acc = init;
 
-      if (!obj || typeof obj !== "object" || !func || func.type !== "lambda") {
+      if (!obj || typeof obj !== "object" || !func || (func as any).type !== "lambda") {
         return acc;
       }
 
       for (const [key, val] of Object.entries(obj)) {
-        acc = executeLambda(func, [acc, val, key], ctx);
+        const res = executeLambda(func, [acc, val, key], ctx);
+        acc = res instanceof Promise ? await res : res;
       }
       return acc;
     },
@@ -527,20 +515,19 @@ const objFlatMap = defineOpcode<[ScriptValue<object>, ScriptValue<unknown>], any
       ],
       returnType: "any",
     },
-    handler: (args, ctx) => {
+    handler: async (args, ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("obj.flatMap: expected 2 arguments");
       }
-      const [objExpr, funcExpr] = args;
-      const obj = evaluate(objExpr, ctx);
-      const func = evaluate(funcExpr, ctx);
-      if (!obj || typeof obj !== "object" || !func || func.type !== "lambda") {
+      const [obj, func] = args;
+      if (!obj || typeof obj !== "object" || !func || (func as any).type !== "lambda") {
         return {};
       }
 
       const result: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(obj)) {
-        const mapped = executeLambda(func, [val, key], ctx);
+        const res = executeLambda(func, [val, key], ctx);
+        const mapped = res instanceof Promise ? await res : res;
         if (
           typeof mapped === "object" &&
           mapped !== null &&

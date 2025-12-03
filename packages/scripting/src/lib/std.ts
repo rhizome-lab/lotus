@@ -294,12 +294,12 @@ const jsonStringify = defineOpcode<[ScriptValue<unknown>], string>(
       parameters: [{ name: "value", type: "unknown" }],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("json.stringify: expected `value`");
       }
       const [valExpr] = args;
-      const val = evaluate(valExpr, ctx);
+      const val = valExpr;
       return JSON.stringify(val);
     },
   },
@@ -318,9 +318,9 @@ const jsonParse = defineOpcode<[ScriptValue<string>], unknown>("json.parse", {
     parameters: [{ name: "string", type: "string" }],
     returnType: "unknown",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     const [strExpr] = args;
-    const str = evaluate(strExpr, ctx);
+    const str = strExpr;
     if (typeof str !== "string") return null;
     try {
       return JSON.parse(str);
@@ -343,12 +343,12 @@ export const typeof_ = defineOpcode<[ScriptValue<unknown>], "string" | "number" 
     parameters: [{ name: "value", type: "unknown" }],
     returnType: "string",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length !== 1) {
       throw new ScriptError("typeof: expected 1 argument");
     }
     const [valExpr] = args;
-    const val = evaluate(valExpr, ctx);
+    const val = valExpr;
     if (Array.isArray(val)) return "array";
     if (val === null) return "null";
     return typeof val as "string" | "number" | "boolean" | "object"| "null" | "array";
@@ -380,7 +380,7 @@ const letOp = defineOpcode<[string, ScriptValue<unknown>], any>("let", {
       throw new ScriptError("let requires 2 arguments");
     }
     const [name, val] = args;
-    const value = evaluate(val, ctx);
+    const value = val;
     ctx.vars = ctx.vars || {};
     ctx.vars[name] = value;
     return value;
@@ -434,7 +434,7 @@ const set_ = defineOpcode<[string, ScriptValue<unknown>], any>("set", {
       throw new ScriptError("set: expected 2 arguments");
     }
     const [name, val] = args;
-    const value = evaluate(val, ctx);
+    const value = val;
     if (ctx.vars && name in ctx.vars) {
       ctx.vars[name] = value;
     }
@@ -462,13 +462,13 @@ export const log = defineOpcode<
     ],
     returnType: "null",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     if (args.length < 1) {
       throw new ScriptError("log: expected at least 1 argument");
     }
     const messages = [];
     for (const arg of args) {
-      messages.push(evaluate(arg, ctx));
+      messages.push(arg);
     }
     console.log(...messages);
     return null;
@@ -526,7 +526,7 @@ export const warn = defineOpcode<[ScriptValue<unknown>], void>("warn", {
   },
   handler: (args, ctx) => {
     const [msg] = args;
-    const text = evaluate(msg, ctx);
+    const text = msg;
     ctx.warnings.push(String(text));
   },
 });
@@ -543,9 +543,9 @@ const throwOp = defineOpcode<[ScriptValue<unknown>], never>("throw", {
     parameters: [{ name: "message", type: "unknown" }],
     returnType: "never",
   },
-  handler: (args, ctx) => {
+  handler: (args, _ctx) => {
     const [msg] = args;
-    throw new ScriptError(evaluate(msg, ctx));
+    throw new ScriptError(msg as string);
   },
 });
 export { throwOp as throw };
@@ -570,6 +570,7 @@ const tryOp = defineOpcode<
       { name: "catch", type: "unknown" },
     ],
     returnType: "any",
+    lazy: true,
   },
   handler: (args, ctx) => {
     const [tryBlock, errorVar, catchBlock] = args;
@@ -606,7 +607,8 @@ export const lambda = defineOpcode<[readonly string[], ScriptValue<unknown>], an
         { name: "args", type: "string[]" },
         { name: "body", type: "unknown" },
       ],
-      returnType: "any",
+    returnType: "any",
+      lazy: true,
     },
     handler: (args, ctx) => {
       const [argNames, body] = args;
@@ -725,6 +727,7 @@ export const quote = defineOpcode<[any], any>("quote", {
     slots: [{ name: "Value", type: "block" }],
     parameters: [{ name: "value", type: "unknown" }],
     returnType: "any",
+    lazy: true,
   },
   handler: (args, _ctx) => {
     return args[0];

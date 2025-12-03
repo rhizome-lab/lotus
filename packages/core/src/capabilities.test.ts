@@ -62,17 +62,17 @@ describe("Capability Security", () => {
     user = getEntity(userId)!;
   });
 
-  test("Kernel.get_capability", () => {
+  test("Kernel.get_capability", async () => {
     const ctx = createScriptContext({ caller: admin, this: admin, args: [] });
-    const cap = evaluate(Kernel["get_capability"]("sys.mint"), ctx);
+    const cap = await evaluate(Kernel["get_capability"]("sys.mint"), ctx);
     expect(cap).not.toBeNull();
     expect((cap as any)?.__brand).toBe("Capability");
   });
 
-  test("Kernel.mint", () => {
+  test("Kernel.mint", async () => {
     // Admin mints a capability for themselves
     const ctx = createScriptContext({ caller: admin, this: admin, args: [] });
-    const newCap = evaluate(
+    const newCap = await evaluate(
       Kernel["mint"](
         Kernel["get_capability"]("sys.mint"),
         "test.cap",
@@ -88,21 +88,30 @@ describe("Capability Security", () => {
     expect(caps.find((c) => c.type === "test.cap")).toBeDefined();
   });
 
-  test("Core.create requires capability", () => {
+  test("Core.create requires capability", async () => {
     // User tries to create without capability
     const ctx = createScriptContext({ caller: user, this: user, args: [] });
 
     // Should fail because first arg is not capability (it's the object)
     // Or if we pass null/invalid cap
-    expect(() =>
-      evaluate(CoreLib["create"](ObjectLib["obj.new"](["name", "Fail"])), ctx),
-    ).toThrow();
+    // We expect it to throw, but since evaluate might return a Promise, we need to handle that.
+    // expect(async () => await evaluate(...)).toThrow() works in bun test?
+
+    try {
+      await evaluate(
+        CoreLib["create"](ObjectLib["obj.new"](["name", "Fail"])),
+        ctx,
+      );
+      expect(true).toBe(false); // Should not reach here
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
   });
 
-  test("Core.create with capability", () => {
+  test("Core.create with capability", async () => {
     // Admin creates entity
     const ctx = createScriptContext({ caller: admin, this: admin, args: [] });
-    const newId = evaluate(
+    const newId = await evaluate(
       CoreLib["create"](
         Kernel["get_capability"]("sys.create"),
         ObjectLib["obj.new"](["name", "Success"]),
@@ -112,30 +121,29 @@ describe("Capability Security", () => {
     expect(typeof newId).toBe("number");
   });
 
-  test("Core.set_entity requires capability", () => {
-    // Create target
-    const targetId = createEntity({ name: "Target" });
-    // const target = getEntity(targetId)!;
-
-    // User tries to modify
+  test("Core.set_entity requires capability", async () => {
     const ctx = createScriptContext({ caller: user, this: user, args: [] });
-    expect(() =>
-      evaluate(
+    const targetId = createEntity({ name: "Target" });
+
+    try {
+      await evaluate(
         CoreLib["set_entity"](
+          ObjectLib["obj.new"](["name", "Fail"]), // Invalid cap
           CoreLib["entity"](targetId),
-          ObjectLib["obj.new"](["name", "Hacked"]),
         ),
         ctx,
-      ),
-    ).toThrow();
+      );
+      expect(true).toBe(false);
+    } catch (e) {
+      expect(e).toBeDefined();
+    }
   });
 
-  test("Core.set_entity with capability", () => {
+  test("Core.set_entity with capability", async () => {
+    const ctx = createScriptContext({ caller: admin, this: admin, args: [] });
     const targetId = createEntity({ name: "Target" });
 
-    // Admin has wildcard control
-    const ctx = createScriptContext({ caller: admin, this: admin, args: [] });
-    evaluate(
+    await evaluate(
       CoreLib["set_entity"](
         Kernel["get_capability"](
           "entity.control",

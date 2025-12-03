@@ -1,4 +1,4 @@
-import { evaluate, ScriptError } from "../interpreter";
+import { ScriptError } from "../interpreter";
 import { defineOpcode, ScriptValue } from "../def";
 
 /**
@@ -15,12 +15,11 @@ const strLen = defineOpcode<[ScriptValue<string>], number>(
       parameters: [{ name: "string", type: "string" }],
       returnType: "number",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("str.len: expected 1 argument");
       }
-      const [strExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.len: expected string for str");
       }
@@ -44,14 +43,13 @@ const strConcat = defineOpcode<[...ScriptValue<string | number | boolean | null>
       parameters: [{ name: "...strings", type: "string[]" }],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       const strings: string[] = [];
       for (const arg of args) {
-        const str = evaluate(arg, ctx);
-        if (typeof str === "object" || typeof str === "function") {
+        if (typeof arg === "object" || typeof arg === "function") {
           throw new ScriptError("str.concat: expected primitive for arg");
         }
-        strings.push(String(str));
+        strings.push(String(arg));
       }
       return strings.join("");
     },
@@ -79,16 +77,14 @@ const strSplit = defineOpcode<[ScriptValue<string>, ScriptValue<string>], string
       ],
       returnType: "string[]",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("str.split: expected 2 arguments");
       }
-      const [strExpr, sepExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str, sep] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.split: expected string for str");
       }
-      const sep = evaluate(sepExpr, ctx);
       if (typeof sep !== "string") {
         throw new ScriptError("str.split: expected string for sep");
       }
@@ -120,20 +116,18 @@ const strSlice = defineOpcode<[ScriptValue<string>, ScriptValue<number>, ScriptV
       ],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length < 2 || args.length > 3) {
         throw new ScriptError("str.slice: expected 2 or 3 arguments");
       }
-      const [strExpr, startExpr, endExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str, start, endExpr] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.slice: expected string for str");
       }
-      const start = evaluate(startExpr, ctx);
       if (typeof start !== "number") {
         throw new ScriptError("str.slice: expected number for start");
       }
-      const end = endExpr ? evaluate(endExpr, ctx) : str.length;
+      const end = endExpr !== undefined ? endExpr : str.length;
       if (typeof end !== "number") {
         throw new ScriptError("str.slice: expected number for end");
       }
@@ -157,12 +151,11 @@ const strUpper = defineOpcode<[ScriptValue<string>], string>(
       parameters: [{ name: "string", type: "string" }],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("str.upper: expected 1 argument");
       }
-      const [strExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.upper: expected string for str");
       }
@@ -186,12 +179,11 @@ const strLower = defineOpcode<[ScriptValue<string>], string>(
       parameters: [{ name: "string", type: "string" }],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("str.lower: expected 1 argument");
       }
-      const [strExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.lower: expected string for str");
       }
@@ -215,12 +207,11 @@ const strTrim = defineOpcode<[ScriptValue<string>], string>(
       parameters: [{ name: "string", type: "string" }],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 1) {
         throw new ScriptError("str.trim: expected 1 argument");
       }
-      const [strExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.trim: expected string for str");
       }
@@ -252,20 +243,17 @@ const strReplace = defineOpcode<[ScriptValue<string>, ScriptValue<string>, Scrip
       ],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 3) {
         throw new ScriptError("str.replace: expected 3 arguments");
       }
-      const [strExpr, searchExpr, replaceExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str, search, replace] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.replace: expected string for str");
       }
-      const search = evaluate(searchExpr, ctx);
       if (typeof search !== "string") {
         throw new ScriptError("str.replace: expected string for search");
       }
-      const replace = evaluate(replaceExpr, ctx);
       if (typeof replace !== "string") {
         throw new ScriptError("str.replace: expected string for replace");
       }
@@ -295,16 +283,14 @@ const strIncludes = defineOpcode<[ScriptValue<string>, ScriptValue<string>], boo
       ],
       returnType: "boolean",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("str.includes: expected 2 arguments");
       }
-      const [strExpr, searchExpr] = args;
-      const str = evaluate(strExpr, ctx);
+      const [str, search] = args;
       if (typeof str !== "string") {
         throw new ScriptError("str.includes: expected string for str");
       }
-      const search = evaluate(searchExpr, ctx);
       if (typeof search !== "string") {
         throw new ScriptError("str.includes: expected string for search");
       }
@@ -334,12 +320,11 @@ const strJoin = defineOpcode<[ScriptValue<any[]>, ScriptValue<string>], string>(
       ],
       returnType: "string",
     },
-    handler: (args, ctx) => {
+    handler: (args, _ctx) => {
       if (args.length !== 2) {
         throw new ScriptError("str.join: expected 2 arguments");
       }
-      const [listExpr, sepExpr] = args;
-      const list = evaluate(listExpr, ctx);
+      const [list, separator] = args;
       if (!Array.isArray(list)) {
         throw new ScriptError("str.join: expected array for list");
       }
@@ -350,7 +335,6 @@ const strJoin = defineOpcode<[ScriptValue<any[]>, ScriptValue<string>], string>(
           );
         }
       }
-      const separator = evaluate(sepExpr, ctx);
       if (typeof separator !== "string") {
         throw new ScriptError("str.join: expected string for separator");
       }

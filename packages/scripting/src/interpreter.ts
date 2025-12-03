@@ -95,7 +95,10 @@ export interface OpcodeMetadata {
   lazy?: boolean;
 }
 
-export type OpcodeHandler<Ret> = (args: any[], ctx: ScriptContext) => Ret;
+export type OpcodeHandler<Ret> = (
+  args: any[],
+  ctx: ScriptContext,
+) => Ret | Promise<Ret>;
 
 export interface OpcodeDefinition {
   handler: OpcodeHandler<unknown>;
