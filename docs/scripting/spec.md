@@ -125,6 +125,25 @@ The core library provides interaction with the game world, database, and entitie
 - `["call", target, verb, ...args]`: Calls a verb on an entity.
 - `["schedule", verb, args, delay]`: Schedules a verb call on `this` entity after `delay` milliseconds.
 - `["sudo", target, verb, args]`: Executes a verb as another entity (System/Bot only).
+- `["get_capability", type, filter?]`: Retrieves a capability.
+- `["mint", authority, type, params]`: Mints a new capability.
+- `["delegate", parent, restrictions]`: Delegates a capability.
+- `["give_capability", cap, target]`: Transfers a capability.
+
+### File System Library
+
+_Defined in: `packages/core/src/runtime/lib/fs.ts`_
+
+- `["fs.read", cap, path]`: Reads a file.
+- `["fs.write", cap, path, content]`: Writes to a file.
+- `["fs.list", cap, path]`: Lists directory contents.
+
+### Network Library
+
+_Defined in: `packages/core/src/runtime/lib/net.ts`_
+
+- `["net.http.get", cap, url]`: Performs an HTTP GET request.
+- `["net.http.post", cap, url, body]`: Performs an HTTP POST request.
 
 ## List Library
 
@@ -198,12 +217,6 @@ _Defined in: `packages/scripting/src/lib/time.ts`_
 
 ## Permissions
 
-Permissions are handled via the `System` entity. To check if an actor can edit an entity, use:
+Viwo uses a **Capability-Based Security** model. See [Security](../core/security.md) for details.
 
-```json
-["call", ["entity", SYSTEM_ID], "can_edit", actor, target, type]
-```
-
-- `actor`: The entity attempting the action.
-- `target`: The entity being accessed.
-- `type`: The type of access (e.g., "read", "write", "execute", "delete").
+To check if an actor can edit an entity, the system checks for `entity.control` capability.

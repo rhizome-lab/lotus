@@ -44,6 +44,10 @@ Viwo features a custom scripting language (Lisp-like S-expressions) for dynamic 
 - **Context**: `ScriptContext` directly includes a `send` function for communication.
 - **Libraries**: Modular libraries (`core`, `list`, `object`, `string`, `time`) provide functionality, decoupled from the core interpreter.
 
+### Security
+
+Viwo uses a **Capability-Based Security** model. Permissions are handled via unforgeable tokens called Capabilities, rather than user roles. See [Security](./security.md) for details.
+
 ## AI Integration
 
 - **Text Generation**: For NPC dialogue, room descriptions, and dynamic responses.
