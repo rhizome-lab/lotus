@@ -14,7 +14,7 @@
     "format": "oxfmt"
   },
   "devDependencies": {
-    "typescript": "next"
+    "@typescript/native-preview": "latest"
   },
   "dependencies": {
     "zod": "4.1.13"

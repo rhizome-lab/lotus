@@ -20,6 +20,7 @@
         "@viwo/core": "workspace:*",
       },
       "devDependencies": {
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
       },
     },
@@ -37,6 +38,7 @@
         "@tsconfig/strictest": "^2.0.8",
         "@types/minimist": "^1.2.5",
         "@types/ws": "^8.5.13",
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
       },
     },
@@ -51,6 +53,7 @@
       },
       "devDependencies": {
         "@types/ws": "^8.5.13",
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
       },
     },
@@ -66,7 +69,7 @@
       "devDependencies": {
         "@tsconfig/strictest": "^2.0.8",
         "@types/bun": "^1.3.3",
-        "typescript": "^6.0.0-dev.20251202",
+        "@typescript/native-preview": "latest",
         "vite": "8.0.0-beta.0",
         "vite-plugin-solid": "^2.10.1",
       },
@@ -81,8 +84,8 @@
       },
       "devDependencies": {
         "@tsconfig/strictest": "^2.0.8",
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
-        "typescript": "next",
       },
     },
     "apps/tui": {
@@ -100,6 +103,7 @@
         "@tsconfig/strictest": "^2.0.8",
         "@types/react": "^18.2.0",
         "@types/ws": "^8.5.13",
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
       },
     },
@@ -118,7 +122,7 @@
       "devDependencies": {
         "@tsconfig/strictest": "^2.0.8",
         "@types/bun": "^1.3.3",
-        "typescript": "^6.0.0-dev.20251202",
+        "@typescript/native-preview": "latest",
         "vite": "8.0.0-beta.0",
         "vite-plugin-solid": "^2.10.1",
       },
@@ -131,9 +135,7 @@
       },
       "devDependencies": {
         "@types/bun": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "next",
+        "@typescript/native-preview": "latest",
       },
     },
     "packages/core": {
@@ -147,10 +149,8 @@
       "devDependencies": {
         "@tsconfig/strictest": "^2.0.8",
         "@types/ws": "^8.5.12",
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
-      },
-      "peerDependencies": {
-        "typescript": "next",
       },
     },
     "packages/scripting": {
@@ -161,6 +161,7 @@
         "typescript": "next",
       },
       "devDependencies": {
+        "@typescript/native-preview": "latest",
         "bun-types": "latest",
       },
     },
@@ -171,7 +172,7 @@
         "zod": "4.1.13",
       },
       "devDependencies": {
-        "typescript": "next",
+        "@typescript/native-preview": "latest",
       },
     },
     "packages/web-editor": {
@@ -235,8 +236,8 @@
         "zod": "^4.1.13",
       },
       "devDependencies": {
+        "@typescript/native-preview": "latest",
         "bun-types": "^1.3.3",
-        "typescript": "^5.9.3",
       },
     },
   },

@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/ws": "^8.5.13",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@typescript/native-preview": "latest"
   }
 }

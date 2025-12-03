@@ -22,9 +22,7 @@
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
     "@types/ws": "^8.5.12",
-    "bun-types": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "next"
+    "bun-types": "latest",
+    "@typescript/native-preview": "latest"
   }
 }

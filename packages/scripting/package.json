@@ -18,6 +18,7 @@
     "typescript": "next"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@typescript/native-preview": "latest"
   }
 }

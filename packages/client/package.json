@@ -15,9 +15,7 @@
     "@viwo/shared": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "next"
+    "@types/bun": "latest",
+    "@typescript/native-preview": "latest"
   }
 }

@@ -21,6 +21,7 @@
     "@tsconfig/strictest": "^2.0.8",
     "@types/minimist": "^1.2.5",
     "@types/ws": "^8.5.13",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@typescript/native-preview": "latest"
   }
 }

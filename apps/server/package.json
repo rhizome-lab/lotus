@@ -17,6 +17,6 @@
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
     "bun-types": "latest",
-    "typescript": "next"
+    "@typescript/native-preview": "latest"
   }
 }
