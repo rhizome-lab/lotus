@@ -75,5 +75,15 @@ export default withMermaid(
 
       socialLinks: [{ icon: "github", link: "https://github.com/pterror/viwo" }],
     },
+    vite: {
+      server: {
+        proxy: {
+          "/viwo/playground": {
+            target: `http://localhost:${process.env.PLAYGROUND_PORT ?? 3001}`,
+            changeOrigin: true,
+          },
+        },
+      },
+    },
   }),
 );
