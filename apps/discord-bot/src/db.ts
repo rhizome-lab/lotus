@@ -84,5 +84,3 @@ export class DatabaseManager {
       .all(entityId) as { discord_id: string; channel_id: string }[];
   }
 }
-
-export const db = new DatabaseManager();

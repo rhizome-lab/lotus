@@ -1,4 +1,4 @@
-import { db } from "./db";
+import { db } from "./instances";
 import { socketManager } from "./socket";
 
 export class SessionManager {
