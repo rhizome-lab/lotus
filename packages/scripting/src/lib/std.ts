@@ -209,81 +209,94 @@ const while_ = defineOpcode<[boolean, unknown], any>("while", {
   handler: ([cond, body], ctx) => {
     let lastResult: any = null;
 
-    const loop = (): any => {
-      const condResult = evaluate(cond, ctx);
-
-      if (condResult instanceof Promise) {
-        return condResult.then((res) => {
-          if (res) {
-            const snapshot = enterScope(ctx);
-            try {
-              const bodyResult = evaluate(body, ctx);
-              if (bodyResult instanceof Promise) {
-                return bodyResult.then(
-                  (bRes) => {
-                    exitScope(ctx, snapshot);
-                    lastResult = bRes;
-                    return loop();
-                  },
-                  (err) => {
-                    exitScope(ctx, snapshot);
-                    if (err instanceof BreakSignal) {
-                      return err.value ?? lastResult;
-                    }
-                    throw err;
-                  },
-                );
-              }
+    const runBodyAsync = () => {
+      const snapshot = enterScope(ctx);
+      try {
+        const bodyResult = evaluate(body, ctx);
+        if (bodyResult instanceof Promise) {
+          return bodyResult.then(
+            (bRes) => {
               exitScope(ctx, snapshot);
-              lastResult = bodyResult;
-              return loop();
-            } catch (e) {
+              lastResult = bRes;
+              return runLoop();
+            },
+            (err) => {
               exitScope(ctx, snapshot);
-              if (e instanceof BreakSignal) {
-                return e.value ?? lastResult;
+              if (err instanceof BreakSignal) {
+                return err.value ?? lastResult;
               }
-              throw e;
-            }
-          }
-          return lastResult;
-        });
-      }
-
-      if (condResult) {
-        const snapshot = enterScope(ctx);
-        try {
-          const bodyResult = evaluate(body, ctx);
-          if (bodyResult instanceof Promise) {
-            return bodyResult.then(
-              (bRes) => {
-                exitScope(ctx, snapshot);
-                lastResult = bRes;
-                return loop();
-              },
-              (err) => {
-                exitScope(ctx, snapshot);
-                if (err instanceof BreakSignal) {
-                  return err.value ?? lastResult;
-                }
-                throw err;
-              },
-            );
-          }
-          exitScope(ctx, snapshot);
-          lastResult = bodyResult;
-          return loop();
-        } catch (error) {
-          exitScope(ctx, snapshot);
-          if (error instanceof BreakSignal) {
-            return error.value ?? lastResult;
-          }
-          throw error;
+              throw err;
+            },
+          );
         }
+        exitScope(ctx, snapshot);
+        lastResult = bodyResult;
+        return runLoop();
+      } catch (e) {
+        exitScope(ctx, snapshot);
+        if (e instanceof BreakSignal) {
+          return e.value ?? lastResult;
+        }
+        throw e;
       }
-      return lastResult;
     };
 
-    return loop();
+    const runLoop = (): any => {
+      while (true) {
+        try {
+          const condResult = evaluate(cond, ctx);
+
+          if (condResult instanceof Promise) {
+            return condResult.then((res) => {
+              if (res) {
+                return runBodyAsync();
+              }
+              return lastResult;
+            });
+          }
+
+          if (!condResult) {
+            return lastResult;
+          }
+
+          const snapshot = enterScope(ctx);
+          try {
+            const bodyResult = evaluate(body, ctx);
+            if (bodyResult instanceof Promise) {
+              return bodyResult.then(
+                (bRes) => {
+                  exitScope(ctx, snapshot);
+                  lastResult = bRes;
+                  return runLoop();
+                },
+                (err) => {
+                  exitScope(ctx, snapshot);
+                  if (err instanceof BreakSignal) {
+                    return err.value ?? lastResult;
+                  }
+                  throw err;
+                },
+              );
+            }
+            exitScope(ctx, snapshot);
+            lastResult = bodyResult;
+          } catch (e) {
+            exitScope(ctx, snapshot);
+            if (e instanceof BreakSignal) {
+              return e.value ?? lastResult;
+            }
+            throw e;
+          }
+        } catch (e) {
+          if (e instanceof BreakSignal) {
+            return e.value ?? lastResult;
+          }
+          throw e;
+        }
+      }
+    };
+
+    return runLoop();
   },
 });
 export { while_ as while };
@@ -318,53 +331,48 @@ const for_ = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
       let lastResult: any = null;
 
       const next = (): any => {
-        if (i >= list.length) return lastResult;
+        while (i < list.length) {
+          const item = list[i++];
 
-        const item = list[i++];
-
-        // Create a new scope for the iteration
-        const snapshot = enterScope(ctx);
-        // Explicitly fork for the loop variable because enterScope sets cow=true,
-        // but we want to define the loop var in THIS new scope immediately.
-        // If we just do ctx.vars[varName] = item with cow=true, it will fork.
-        // But enterScope already set cow=true.
-        // So `let` logic (which we will implement) handles it.
-        // But here we are manually setting it.
-        // We should manually fork to ensure loop var is local.
-        if (ctx.cow) {
-          ctx.vars = Object.create(ctx.vars);
-          ctx.cow = false;
-        }
-        ctx.vars[varName] = item;
-
-        try {
-          const result = evaluate(body, ctx);
-          if (result instanceof Promise) {
-            return result.then(
-              (res) => {
-                exitScope(ctx, snapshot);
-                lastResult = res;
-                return next();
-              },
-              (err) => {
-                exitScope(ctx, snapshot);
-                if (err instanceof BreakSignal) {
-                  return err.value ?? lastResult;
-                }
-                throw err;
-              },
-            );
+          // Create a new scope for the iteration
+          const snapshot = enterScope(ctx);
+          // Explicitly fork for the loop variable because enterScope sets cow=true,
+          // but we want to define the loop var in THIS new scope immediately.
+          if (ctx.cow) {
+            ctx.vars = Object.create(ctx.vars);
+            ctx.cow = false;
           }
-          exitScope(ctx, snapshot);
-          lastResult = result;
-          return next();
-        } catch (e) {
-          exitScope(ctx, snapshot);
-          if (e instanceof BreakSignal) {
-            return e.value ?? lastResult;
+          ctx.vars[varName] = item;
+
+          try {
+            const result = evaluate(body, ctx);
+            if (result instanceof Promise) {
+              return result.then(
+                (res) => {
+                  exitScope(ctx, snapshot);
+                  lastResult = res;
+                  return next();
+                },
+                (err) => {
+                  exitScope(ctx, snapshot);
+                  if (err instanceof BreakSignal) {
+                    return err.value ?? lastResult;
+                  }
+                  throw err;
+                },
+              );
+            }
+            exitScope(ctx, snapshot);
+            lastResult = result;
+          } catch (e) {
+            exitScope(ctx, snapshot);
+            if (e instanceof BreakSignal) {
+              return e.value ?? lastResult;
+            }
+            throw e;
           }
-          throw e;
         }
+        return lastResult;
       };
 
       return next();
