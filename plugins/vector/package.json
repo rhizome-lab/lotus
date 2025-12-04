@@ -1,0 +1,24 @@
+{
+  "name": "@viwo/plugin-vector",
+  "version": "0.0.0",
+  "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsgo --noEmit",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "sqlite-vec": "^0.1.7-alpha.2",
+    "@viwo/core": "workspace:*"
+  },
+  "devDependencies": {
+    "bun-types": "latest",
+    "@typescript/native-preview": "latest",
+    "@tsconfig/strictest": "^2.0.8"
+  }
+}
