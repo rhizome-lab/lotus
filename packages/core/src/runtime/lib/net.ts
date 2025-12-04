@@ -60,7 +60,7 @@ export const netHttpFetch = defineOpcode<
 
     const method = (options?.method as string) || "GET";
     const headers = (options?.headers as Record<string, string>) || {};
-    const body = options?.body as string | undefined;
+    const body = (options?.body as string | undefined) ?? null;
 
     let url: URL;
     try {
@@ -73,11 +73,7 @@ export const netHttpFetch = defineOpcode<
 
     console.log("Calling fetch with", urlStr, method);
     try {
-      const response = await fetch(urlStr, {
-        method,
-        headers,
-        body,
-      });
+      const response = await fetch(urlStr, { method, headers, body });
 
       const responseHeaders: Record<string, string> = {};
       response.headers.forEach((value, key) => {

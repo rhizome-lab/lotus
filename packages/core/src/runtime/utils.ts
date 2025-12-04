@@ -1,6 +1,6 @@
 import { getVerbs } from "../repo";
 import { Entity } from "@viwo/shared/jsonrpc";
-import { evaluate, ScriptContext } from "@viwo/scripting";
+import { createScriptContext, evaluate, ScriptContext } from "@viwo/scripting";
 
 /**
  * Resolves dynamic properties on an entity by executing 'get_*' verbs.
@@ -24,21 +24,21 @@ export function resolveProps(entity: Entity, ctx: ScriptContext): Entity {
     if (!match?.[1]) continue;
     const propName = match[1];
     try {
-      const result = evaluate(verb.code, {
-        caller: entity, // The entity itself is the caller for its own getter?
-        this: entity,
-        args: [],
-        get gas() {
-          return ctx.gas ?? 1000;
-        },
-        set gas(value) {
-          ctx.gas = value;
-        },
-        send: ctx.send,
-        warnings: ctx.warnings,
-        vars: {},
-        stack: [],
-      });
+      const result = evaluate(
+        verb.code,
+        createScriptContext({
+          caller: entity, // The entity itself is the caller for its own getter?
+          this: entity,
+          get gas() {
+            return ctx.gas ?? 1000;
+          },
+          set gas(value) {
+            ctx.gas = value;
+          },
+          send: ctx.send,
+          warnings: ctx.warnings,
+        }),
+      );
 
       if (result !== undefined) {
         resolved[propName] = result;

@@ -205,5 +205,4 @@ declare global {
   }
 }
 
-{
-}
+export {};

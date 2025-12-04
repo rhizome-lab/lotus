@@ -10,7 +10,6 @@
         "@typescript/native-preview": "^7.0.0-dev.20251203.1",
         "oxfmt": "^0.16.0",
         "oxlint": "^1.31.0",
-        "simple-git-hooks": "^2.13.1",
         "typescript": "^6.0.0-dev.20251203",
       },
     },
@@ -1262,8 +1261,6 @@
     "shiki": ["shiki@3.19.0", "", { "dependencies": { "@shikijs/core": "3.19.0", "@shikijs/engine-javascript": "3.19.0", "@shikijs/engine-oniguruma": "3.19.0", "@shikijs/langs": "3.19.0", "@shikijs/themes": "3.19.0", "@shikijs/types": "3.19.0", "@shikijs/vscode-textmate": "^10.0.2", "@types/hast": "^3.0.4" } }, "sha512-77VJr3OR/VUZzPiStyRhADmO2jApMM0V2b1qf0RpfWya8Zr1PeZev5AEpPGAAKWdiYUtcZGBE4F5QvJml1PvWA=="],
 
     "signal-exit": ["signal-exit@3.0.7", "", {}, "sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ=="],
-
-    "simple-git-hooks": ["simple-git-hooks@2.13.1", "", { "bin": { "simple-git-hooks": "cli.js" } }, "sha512-WszCLXwT4h2k1ufIXAgsbiTOazqqevFCIncOuUBZJ91DdvWcC5+OFkluWRQPrcuSYd8fjq+o2y1QfWqYMoAToQ=="],
 
     "slice-ansi": ["slice-ansi@7.1.2", "", { "dependencies": { "ansi-styles": "^6.2.1", "is-fullwidth-code-point": "^5.0.0" } }, "sha512-iOBWFgUX7caIZiuutICxVgX1SdxwAVFFKwt1EvMYYec/NWO5meOJ6K5uQxhrYBdQJne4KxiqZc+KptFOWFSI9w=="],
 

@@ -222,5 +222,5 @@ declare global {
 ${definitions.replace(/^/gm, "  ")}
 }
 
-{};`;
+export {};`;
 }
