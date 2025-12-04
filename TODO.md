@@ -1,20 +1,43 @@
-# Viwo TODOs
+# Viwo Roadmap & TODOs
 
-- **Frontends**: Flesh out all frontends
+## 1. Deep Simulation (Sandbox)
 
-  - TUI (should have the same layout as web frontend)
-  - Discord bot
+- [ ] **Combat System**: Standardized libraries for turn-based combat math and state.
+- [ ] **Quest Engine**: State machine implementation for tracking multi-stage narrative arcs.
+- [ ] **World Gen**: Procedural generation tools for creating vast maps.
 
-- packages/scripting/src/interpreter.ts: Lambdas should be interpreted inside the stack machine, instead of a recursive `evaluate` call.
-  - **Plan**: Refactor `OpcodeHandler` to return a generator (`Iterator<CallRequest | any>`). The interpreter loop would handle `CallRequest` by pushing a new stack frame, thus avoiding recursion in the host JS engine.
-  - **Status**: Postponed. The current recursive implementation is simpler and likely performant enough for now. We should revisit this if we hit stack overflow issues or need features like pausing/resuming execution (serialization).
-- packages/core/src/runtime/lib/kernel.ts: In a real system, we'd need to ensure restrictions are actually restrictive (subset)
-- packages/core/src/index.ts: In a real system, we would check authentication here.
-- apps/tui/src/App.tsx: Fetch script content properly. For now, mock or try to find in entities if loaded.
-- apps/web/src/components/ItemEditor.tsx: Batch retrieve items.
-- apps/web/src/components/GameLog.tsx: ErrorView
-- packages/core/src/runtime/lib/core.ts: How to update multiple entities transactionally, considering `setEntity` needs a capability now? Do we:
+## 2. AI-Native Roleplay (SillyTavern)
 
-  - Accept a list of capabilities, and then keep entities as spread arguments? (This might cause performance issues since we might need to look through all capabilities to find the right one for each entity)
-  - Accept a list of [capability, entity]
-  - Something else?
+- [ ] **Memory Systems**: Integrate `sqlite-vec` for RAG-based long-term memory.
+- [ ] **Streaming**: Implement `streamText` support in `plugins/ai` for real-time typing effects.
+- [ ] **Dynamic State Context**: Implement system for mutable personality traits and ephemeral emotions that feed into LLM context.
+- [ ] **Director AI**: Meta-AI agent for pacing and environment control.
+
+## 3. Ubiquitous Access (Chatbot)
+
+- [ ] **Rich Embeds**: Map game state to platform-specific UI (Discord Embeds, Slack Blocks).
+- [ ] **Async Play**: Design mechanics suitable for slow, correspondence-style gameplay.
+- [ ] **Discord Bot**: Flesh out full feature parity with Web client.
+
+## 4. Knowledge & Productivity (Notion)
+
+- [ ] **Vector Plugin**: Core integration with `sqlite-vec` for semantic search.
+- [ ] **Graph Queries**: Standard library functions for traversing entity relationships (backlinks, children, parents).
+- [ ] **Wiki Features**: Bi-directional linking, revision history, and transclusion support.
+- [ ] **Custom Views**: Support for defining custom DB views/indexes for performance.
+
+## Architecture & Core
+
+- [ ] **Hybrid ECS Implementation**: Implement optional structured components for hot data (Position, Health) alongside flexible props.
+- [ ] **Smart Context Caching**: Optimize LLM context usage by caching static lore/bio data.
+- [ ] **TUI**: Update TUI to match Web frontend layout.
+
+## Maintenance & Fixes
+
+- [ ] **Interpreter**: Refactor `OpcodeHandler` to avoid recursion when calling lambdas. _Status: Postponed_.
+- [ ] **Security**: Ensure kernel restrictions are actually restrictive (subset) in `packages/core/src/runtime/lib/kernel.ts`.
+- [ ] **Auth**: Implement proper authentication checks in `packages/core/src/index.ts`.
+- [ ] **TUI**: Fetch script content properly in `apps/tui/src/App.tsx`.
+- [ ] **Web**: Batch retrieve items in `apps/web/src/components/ItemEditor.tsx`.
+- [ ] **Web**: Implement ErrorView in `apps/web/src/components/GameLog.tsx`.
+- [ ] **Core**: Solve transactional updates for multiple entities with capabilities in `packages/core/src/runtime/lib/core.ts`.

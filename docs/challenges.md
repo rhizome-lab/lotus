@@ -19,7 +19,10 @@ This document outlines the key technical challenges identified in the [Vision](.
 **Mitigation**: **Hybrid Storage & Future ECS**.
 
 - **Current**: SQLite's JSON extensions allow for indexing specific JSON paths (e.g., `CREATE INDEX idx_props_due_date ON entities(json_extract(props, '$.dueDate'))`).
-- **Future**: We plan to move towards an **Entity Component System (ECS)** pattern where "Components" are first-class citizens, allowing for more structured data and cache-friendly memory layout without losing the runtime flexibility.
+- **Future**: We plan to adopt a **Hybrid ECS** pattern.
+  - **Core Components**: Performance-critical data (Position, Velocity, Health) can be moved to structured tables ("Components").
+  - **Flexible Props**: The existing JSON `props` will remain as the default "Bag of Data" for ad-hoc or less frequently accessed properties.
+  - **Seamless Interop**: The system will transparently query both. ECS becomes an _optimization_ for hot paths, not a mandatory rewrite.
 
 ## 3. AI Context Costs
 
