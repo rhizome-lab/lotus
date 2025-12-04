@@ -17,17 +17,22 @@ export default function Builder() {
     setDescription("");
   };
 
-  const [scriptCode, setScriptCode] = createSignal("// Start typing your script here...\n\n");
+  const [scriptCode, setScriptCode] = createSignal(
+    "// Start typing your script here...\n\n",
+  );
 
   const handleAICompletion = async (
     code: string,
     position: { lineNumber: number; column: number },
   ) => {
     try {
-      const completion = await gameStore.client.callPluginMethod("ai_completion", {
-        code,
-        position,
-      });
+      const completion = await gameStore.client.callPluginMethod(
+        "ai_completion",
+        {
+          code,
+          position,
+        },
+      );
       if (typeof completion === "string") {
         return completion;
       }

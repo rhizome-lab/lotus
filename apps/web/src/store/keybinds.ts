@@ -1,6 +1,12 @@
 import { createStore } from "solid-js/store";
 
-export type ActionType = "north" | "south" | "east" | "west" | "look" | "inventory";
+export type ActionType =
+  | "north"
+  | "south"
+  | "east"
+  | "west"
+  | "look"
+  | "inventory";
 
 export const ACTION_LABELS: Record<ActionType, string> = {
   north: "Move North",

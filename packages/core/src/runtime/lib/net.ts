@@ -17,9 +17,6 @@ function checkNetCapability(
   });
 }
 
-// TODO: Get binary
-// TODO: Also, return a response rather than just a string
-
 export const netHttpGet = defineOpcode<
   [Capability | null, string],
   Promise<string>

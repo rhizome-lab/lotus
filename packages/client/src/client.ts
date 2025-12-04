@@ -9,9 +9,16 @@ import {
   Entity,
 } from "@viwo/shared/jsonrpc";
 
-export type CommandArgument = string | number | boolean | null | readonly CommandArgument[];
+export type CommandArgument =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly CommandArgument[];
 
-export type GameMessage = { type: "message"; text: string } | { type: "error"; text: string };
+export type GameMessage =
+  | { type: "message"; text: string }
+  | { type: "error"; text: string };
 
 export interface GameState {
   isConnected: boolean;
@@ -47,7 +54,10 @@ export class ViwoClient {
   private reconnectInterval: number;
   private url: string;
 
-  constructor(url: string = "ws://localhost:8080", reconnectInterval: number = 2000) {
+  constructor(
+    url: string = "ws://localhost:8080",
+    reconnectInterval: number = 2000,
+  ) {
     this.url = url;
     this.reconnectInterval = reconnectInterval;
   }
@@ -135,7 +145,10 @@ export class ViwoClient {
    * @param args Arguments for the command.
    * @returns A promise that resolves with the result of the command.
    */
-  public execute(command: string, args: readonly CommandArgument[]): Promise<any> {
+  public execute(
+    command: string,
+    args: readonly CommandArgument[],
+  ): Promise<any> {
     return this.sendRequest("execute", [command, ...args]);
   }
 

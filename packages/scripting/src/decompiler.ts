@@ -169,7 +169,9 @@ export function decompile(
 
       if (bodyIsSeq) {
         // Decompile seq contents as statements
-        const statements = body.slice(1).map((stmt: any) => decompile(stmt, indentLevel + 1, true));
+        const statements = body
+          .slice(1)
+          .map((stmt: any) => decompile(stmt, indentLevel + 1, true));
         // Add return to the last statement if it's not a control flow that returns?
         // In ViwoScript, last value is returned.
         // In TS, we need explicit return.
@@ -187,7 +189,12 @@ export function decompile(
         }
 
         return `(${params.join(", ")}) => {\n${statements
-          .map((s: string) => indent + "  " + (s.endsWith("}") || s.endsWith(";") ? s : s + ";"))
+          .map(
+            (s: string) =>
+              indent +
+              "  " +
+              (s.endsWith("}") || s.endsWith(";") ? s : s + ";"),
+          )
           .join("\n")}\n${indent}}`;
       } else {
         // Single expression body

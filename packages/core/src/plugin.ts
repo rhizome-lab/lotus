@@ -64,8 +64,12 @@ export interface PluginContext {
  */
 export class PluginManager {
   private plugins: Map<string, Plugin> = new Map();
-  private commands: Map<string, (ctx: CommandContext) => void | Promise<void>> = new Map();
-  private rpcMethods: Map<string, (params: any, ctx: CommandContext) => Promise<any>> = new Map();
+  private commands: Map<string, (ctx: CommandContext) => void | Promise<void>> =
+    new Map();
+  private rpcMethods: Map<
+    string,
+    (params: any, ctx: CommandContext) => Promise<any>
+  > = new Map();
 
   constructor() {}
 
@@ -114,7 +118,11 @@ export class PluginManager {
    * @param ctx - The command context (reused for RPC to provide player/core access).
    * @returns The result of the RPC call.
    */
-  async handleRpcMethod(method: string, params: any, ctx: CommandContext): Promise<any> {
+  async handleRpcMethod(
+    method: string,
+    params: any,
+    ctx: CommandContext,
+  ): Promise<any> {
     const handler = this.rpcMethods.get(method);
     if (handler) {
       return await handler(params, ctx);

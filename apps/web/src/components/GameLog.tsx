@@ -12,8 +12,6 @@ const MessageView = (props: { text: string; type: "message" | "error" }) => (
   </div>
 );
 
-// TODO: ErrorView
-
 export default function GameLog() {
   let containerRef: HTMLDivElement | undefined;
 

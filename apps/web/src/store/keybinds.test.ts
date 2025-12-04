@@ -62,7 +62,10 @@ describe("Keybinds Store", () => {
   test("loadBindings with existing data", () => {
     // Assuming `spyOn` is available globally or imported, e.g., from Jest or a similar test utility.
     // If using Bun's `mock`, it would be `const getItemSpy = mock(global.localStorage, "getItem").mockReturnValue(...)`
-    global.localStorage.setItem("viwo_keybinds", JSON.stringify({ north: "up" }));
+    global.localStorage.setItem(
+      "viwo_keybinds",
+      JSON.stringify({ north: "up" }),
+    );
 
     const bindings = loadBindings();
     expect(bindings.north).toBe("up");

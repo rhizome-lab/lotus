@@ -129,7 +129,7 @@ export const delegate = defineOpcode<[Capability | null, object], Capability>(
       }
 
       // For now, delegation just creates a new capability with same type but potentially modified params
-      // TODO: In a real system, we'd need to ensure restrictions are actually restrictive (subset)
+
       // Here we'll just merge params for simplicity of the prototype
       const newParams = { ...parentCap.params, ...(restrictions as object) };
       const newId = createCapability(ctx.this.id, parentCap.type, newParams);

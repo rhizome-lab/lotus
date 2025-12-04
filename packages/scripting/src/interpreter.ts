@@ -65,9 +65,7 @@ export class ScriptError extends Error {
         if (!frame) {
           continue;
         }
-        str += `  at ${frame.name} (${frame.args
-          .map((a) => JSON.stringify(a))
-          .join(", ")})\n`;
+        str += `  at ${frame.name} (${frame.args.map((a) => JSON.stringify(a)).join(", ")})\n`;
       }
     }
     return str;
@@ -151,7 +149,6 @@ export function executeLambda(
     newVars[lambda.args[i]] = args[i];
   }
 
-  // TODO: This should be interpreted inside the stack machine
   return evaluate(lambda.body, { ...ctx, vars: newVars });
 }
 

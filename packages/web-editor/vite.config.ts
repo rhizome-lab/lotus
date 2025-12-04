@@ -11,7 +11,12 @@ export default defineConfig({
       fileName: (format) => `index.${format}.js`,
     },
     rollupOptions: {
-      external: ["solid-js", "monaco-editor", "@viwo/scripting", "@viwo/shared"],
+      external: [
+        "solid-js",
+        "monaco-editor",
+        "@viwo/scripting",
+        "@viwo/shared",
+      ],
     },
   },
 });

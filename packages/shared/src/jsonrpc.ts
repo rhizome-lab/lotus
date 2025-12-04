@@ -64,7 +64,10 @@ export type JsonRpcResponse<T = any> = JsonRpcSuccess<T> | JsonRpcError;
 /**
  * Union type for any JSON-RPC message.
  */
-export type JsonRpcMessage = JsonRpcRequest | JsonRpcNotification | JsonRpcResponse;
+export type JsonRpcMessage =
+  | JsonRpcRequest
+  | JsonRpcNotification
+  | JsonRpcResponse;
 
 // Specific Notification Types
 

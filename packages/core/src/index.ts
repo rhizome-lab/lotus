@@ -241,7 +241,6 @@ export async function handleJsonRpcRequest(
         };
       }
 
-      // TODO: In a real system, we would check authentication here.
       // For now, we trust the entityId.
 
       // Update session

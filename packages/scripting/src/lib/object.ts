@@ -27,9 +27,7 @@ export const objNew = defineOpcode<
     for (let i = 0; i < args.length; i++) {
       if (!Array.isArray(args[i]) || args[i].length !== 2) {
         throw new ScriptError(
-          `obj.new: expected pair at index ${i}, got ${JSON.stringify(
-            args[i],
-          )}`,
+          `obj.new: expected pair at index ${i}, got ${JSON.stringify(args[i])}`,
         );
       }
       const [keyExpr, valueExpr] = args[i];
@@ -37,9 +35,7 @@ export const objNew = defineOpcode<
       const key = keyRes instanceof Promise ? await keyRes : keyRes;
       if (typeof key !== "string") {
         throw new ScriptError(
-          `obj.new: expected string key at index ${i}, got ${JSON.stringify(
-            key,
-          )}`,
+          `obj.new: expected string key at index ${i}, got ${JSON.stringify(key)}`,
         );
       }
       const valRes = evaluate(valueExpr, ctx);

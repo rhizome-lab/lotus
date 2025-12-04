@@ -335,7 +335,6 @@ describe("Hotel Seed", () => {
     // 3. Execute 'west' verb to create West Wing
     const westVerb = getVerb(floorLobbyId, "west")!;
 
-    // TODO: `move` should not support `id`
     let output = "";
     await evaluate(
       CoreLib.call(player, "move", floorLobbyId),
@@ -415,7 +414,6 @@ describe("Hotel Seed", () => {
     const eastVerb = getVerb(floorLobbyId, "east")!;
     let output = "";
 
-    // TODO: `move` should not support `id`
     await evaluate(
       CoreLib.call(player, "move", floorLobbyId),
       createScriptContext({ caller: player, this: player }),

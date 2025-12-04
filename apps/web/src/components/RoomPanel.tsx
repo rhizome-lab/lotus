@@ -14,15 +14,21 @@ const ItemView = (props: { item: Entity }) => (
       {props.item["name"] as string}
     </span>
     <Show when={props.item["location_detail"] as string | undefined}>
-      <span class="room-panel__item-detail">({props.item["location_detail"] as string})</span>
+      <span class="room-panel__item-detail">
+        ({props.item["location_detail"] as string})
+      </span>
     </Show>
-    <Show when={props.item["verbs"] && (props.item["verbs"] as string[]).length > 0}>
+    <Show
+      when={props.item["verbs"] && (props.item["verbs"] as string[]).length > 0}
+    >
       <span class="room-panel__item-verbs">
         <For each={(props.item["verbs"] as string[]) ?? []}>
           {(verb) => (
             <button
               class="room-panel__verb-btn"
-              onClick={() => gameStore.execute(verb, [props.item["name"] as string])}
+              onClick={() =>
+                gameStore.execute(verb, [props.item["name"] as string])
+              }
             >
               {verb}
             </button>
@@ -57,11 +63,16 @@ export default function RoomPanel() {
 
   return (
     <div class="room-panel">
-      <Show when={room()} fallback={<div class="room-panel__empty">No room data</div>}>
+      <Show
+        when={room()}
+        fallback={<div class="room-panel__empty">No room data</div>}
+      >
         <div class="room-panel__header">
           <h2 class="room-panel__title">{room()?.["name"] as string}</h2>
         </div>
-        <div class="room-panel__description">{room()?.["description"] as string}</div>
+        <div class="room-panel__description">
+          {room()?.["description"] as string}
+        </div>
 
         {/* Exits */}
         <div class="room-panel__section">
@@ -70,7 +81,9 @@ export default function RoomPanel() {
             <For each={exits()}>
               {(exit) => (
                 <span
-                  onClick={() => gameStore.execute("move", [exit["name"] as string])}
+                  onClick={() =>
+                    gameStore.execute("move", [exit["name"] as string])
+                  }
                   class="room-panel__exit-tag"
                 >
                   {exit["name"] as string}

@@ -45,7 +45,9 @@ export function resolveProps(entity: Entity, ctx: ScriptContext): Entity {
       }
     } catch (error) {
       // Ignore errors in getters for now, or warn
-      ctx.warnings.push(`Error resolving property ${propName} for ${entity.id}: ${error}`);
+      ctx.warnings.push(
+        `Error resolving property ${propName} for ${entity.id}: ${error}`,
+      );
     }
   }
 
@@ -61,7 +63,11 @@ export function checkCapability(
   type: string,
   paramsMatch?: (params: Record<string, unknown>) => boolean,
 ) {
-  if (!cap || typeof cap !== "object" || (cap as any).__brand !== "Capability") {
+  if (
+    !cap ||
+    typeof cap !== "object" ||
+    (cap as any).__brand !== "Capability"
+  ) {
     throw new ScriptError(`Expected capability of type ${type}`);
   }
 
@@ -75,7 +81,9 @@ export function checkCapability(
   }
 
   if (dbCap.type !== type) {
-    throw new ScriptError(`Expected capability of type ${type}, got ${dbCap.type}`);
+    throw new ScriptError(
+      `Expected capability of type ${type}, got ${dbCap.type}`,
+    );
   }
   // Allow wildcard params (superuser)
   if (dbCap.params && dbCap.params["*"] === true) {

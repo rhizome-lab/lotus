@@ -353,9 +353,7 @@ export const set_prototype = defineOpcode<
 
     if (protoId !== null && typeof protoId !== "number") {
       throw new ScriptError(
-        `set_prototype: expected number or null for prototype ID, got ${JSON.stringify(
-          protoId,
-        )}`,
+        `set_prototype: expected number or null for prototype ID, got ${JSON.stringify(protoId)}`,
       );
     }
 

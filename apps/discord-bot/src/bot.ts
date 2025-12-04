@@ -1,4 +1,10 @@
-import { Client, GatewayIntentBits, Events, ChannelType, TextChannel } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  Events,
+  ChannelType,
+  TextChannel,
+} from "discord.js";
 import { CONFIG } from "./config";
 import { db } from "./db";
 import { sessionManager } from "./session";

@@ -5,17 +5,24 @@ import { ALL_ADJECTIVES } from "@viwo/shared/constants/adjectives";
 export default function ItemEditor() {
   const [selectedItemId, setSelectedItemId] = createSignal<number | null>(null);
   const [description, setDescription] = createSignal("");
-  const [selectedAdjectives, setSelectedAdjectives] = createSignal<readonly string[]>([]);
+  const [selectedAdjectives, setSelectedAdjectives] = createSignal<
+    readonly string[]
+  >([]);
   const [adjectiveInput, setAdjectiveInput] = createSignal("");
 
-  const flattenItems = (items: readonly Entity[], prefix = ""): readonly Entity[] => {
+  const flattenItems = (
+    items: readonly Entity[],
+    prefix = "",
+  ): readonly Entity[] => {
     let result: Entity[] = [];
     for (const item of items) {
       result.push({ ...item, displayName: `${prefix}${item["name"]}` });
-      if (item["contents"] && (item["contents"] as readonly number[]).length > 0) {
+      if (
+        item["contents"] &&
+        (item["contents"] as readonly number[]).length > 0
+      ) {
         result = result.concat(
           flattenItems(
-            // TODO: Batch retrieve items.
             // @ts-expect-error
             item["contents"] as readonly number[],
             `${prefix}${item["name"]} > `,
@@ -28,10 +35,14 @@ export default function ItemEditor() {
 
   const items: () => readonly Entity[] = () => {
     const roomItems = (
-      (gameStore.state.entities.get(gameStore.state.roomId!)?.["contents"] as number[]) ?? []
+      (gameStore.state.entities.get(gameStore.state.roomId!)?.[
+        "contents"
+      ] as number[]) ?? []
     ).map((id) => gameStore.state.entities.get(id)!);
     const inventoryItems = (
-      (gameStore.state.entities.get(gameStore.state.playerId!)?.["contents"] as number[]) ?? []
+      (gameStore.state.entities.get(gameStore.state.playerId!)?.[
+        "contents"
+      ] as number[]) ?? []
     ).map((id) => gameStore.state.entities.get(id)!);
 
     // We want to distinguish between room and inventory, but also flatten.
@@ -82,10 +93,18 @@ export default function ItemEditor() {
     if (!item) return;
 
     if (description()) {
-      gameStore.execute("set", [item["name"] as string, "description", description()]);
+      gameStore.execute("set", [
+        item["name"] as string,
+        "description",
+        description(),
+      ]);
     }
 
-    gameStore.execute("set", [item["name"] as string, "adjectives", selectedAdjectives()]);
+    gameStore.execute("set", [
+      item["name"] as string,
+      "adjectives",
+      selectedAdjectives(),
+    ]);
   };
 
   return (
@@ -145,7 +164,10 @@ export default function ItemEditor() {
                   <div class="builder__autocomplete-dropdown">
                     <For each={filteredAdjectives()}>
                       {(adj) => (
-                        <div class="builder__autocomplete-item" onClick={() => addAdjective(adj)}>
+                        <div
+                          class="builder__autocomplete-item"
+                          onClick={() => addAdjective(adj)}
+                        >
                           {adj}
                         </div>
                       )}
@@ -156,7 +178,10 @@ export default function ItemEditor() {
             </div>
 
             <div class="builder__actions">
-              <button onClick={handleSave} class="builder__btn builder__btn--primary">
+              <button
+                onClick={handleSave}
+                class="builder__btn builder__btn--primary"
+              >
                 Save Changes
               </button>
             </div>

@@ -232,11 +232,7 @@ export class AiPlugin implements Plugin {
         model,
         system: `You are roleplaying as ${target["name"]}.\
 ${target["description"] ? `\nDescription: ${target["description"]}` : ""}
-${
-  target["adjectives"]
-    ? `\nAdjectives: ${(target["adjectives"] as string[]).join(", ")}`
-    : ""
-}
+${target["adjectives"] ? `\nAdjectives: ${(target["adjectives"] as string[]).join(", ")}` : ""}
 Keep your response short and in character.`,
         prompt: message,
       });
@@ -342,9 +338,7 @@ Keep your response short and in character.`,
 
       const base64Data = image.base64;
       const buffer = Buffer.from(base64Data, "base64");
-      const filename = `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(7)}.png`;
+      const filename = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
       const filepath = `apps/web/public/images/${filename}`;
       const publicUrl = `/images/${filename}`;
 

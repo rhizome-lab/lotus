@@ -162,7 +162,9 @@ export const themeStore = {
   state,
 
   get activeTheme() {
-    return state.themes.find((t) => t.id === state.activeThemeId) || defaultTheme;
+    return (
+      state.themes.find((t) => t.id === state.activeThemeId) || defaultTheme
+    );
   },
 
   setActiveTheme: (id: string) => {
@@ -202,7 +204,13 @@ export const themeStore = {
       if (confirm("Cannot edit default theme. Create a copy?")) {
         themeStore.createTheme("Copy of " + theme.manifest.name);
         // Then update the new one
-        setState("themes", (t) => t.id === state.activeThemeId, "colors", key, value);
+        setState(
+          "themes",
+          (t) => t.id === state.activeThemeId,
+          "colors",
+          key,
+          value,
+        );
       }
       return;
     }
@@ -226,7 +234,11 @@ export const themeStore = {
 
   importTheme: (theme: any) => {
     // Validate theme structure
-    if (!theme.manifest || theme.manifest.kind !== "viwo-theme" || !theme.colors) {
+    if (
+      !theme.manifest ||
+      theme.manifest.kind !== "viwo-theme" ||
+      !theme.colors
+    ) {
       alert("Invalid theme format. Must be a valid Viwo Theme.");
       return;
     }
@@ -260,7 +272,10 @@ export const themeStore = {
 createEffect(() => {
   localStorage.setItem("viwo_themes", JSON.stringify(state.themes));
   localStorage.setItem("viwo_active_theme_id", state.activeThemeId);
-  localStorage.setItem("viwo_allow_custom_css", JSON.stringify(state.allowCustomCss));
+  localStorage.setItem(
+    "viwo_allow_custom_css",
+    JSON.stringify(state.allowCustomCss),
+  );
 });
 
 // Apply theme to document root

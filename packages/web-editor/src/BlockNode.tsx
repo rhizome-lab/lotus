@@ -75,7 +75,11 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
           return (
             <Show
               when={def()}
-              fallback={<div class="block-node block-node--unknown">Unknown: {opcode()}</div>}
+              fallback={
+                <div class="block-node block-node--unknown">
+                  Unknown: {opcode()}
+                </div>
+              }
             >
               <div
                 class={`block-node block-node--${def()!.type} block-node--${
@@ -83,7 +87,11 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                 } ${def()!.layout ? `block-node--${def()!.layout}` : ""}`}
               >
                 {/* Header/Label - Hide for primitives and infix (unless we want it) */}
-                <Show when={def()!.layout !== "primitive" && def()!.layout !== "infix"}>
+                <Show
+                  when={
+                    def()!.layout !== "primitive" && def()!.layout !== "infix"
+                  }
+                >
                   <div class="block-node__header">
                     <Show when={def()!.opcode !== "seq"}>
                       <span class="block-node__label">{def()!.label}</span>
@@ -92,7 +100,9 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                     {/* Control Flow: Render first slot (Condition) in header */}
                     <Show
                       when={
-                        def()!.layout === "control-flow" && def()!.slots && def()!.slots!.length > 0
+                        def()!.layout === "control-flow" &&
+                        def()!.slots &&
+                        def()!.slots!.length > 0
                       }
                     >
                       <div class="block-node__header-slot">
@@ -156,7 +166,10 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                         class="block-node__select"
                         value={String(args()[0])}
                         onChange={(e) =>
-                          props.onUpdate([...props.path, 1], e.currentTarget.value === "true")
+                          props.onUpdate(
+                            [...props.path, 1],
+                            e.currentTarget.value === "true",
+                          )
                         }
                       >
                         <option value="true">True</option>
@@ -193,7 +206,11 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                   </Show>
 
                   <Show
-                    when={def()!.opcode !== "seq" && def()!.slots && def()!.layout !== "primitive"}
+                    when={
+                      def()!.opcode !== "seq" &&
+                      def()!.slots &&
+                      def()!.layout !== "primitive"
+                    }
                   >
                     <For each={def()!.slots}>
                       {(slot, i) => (
@@ -206,16 +223,22 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                           <>
                             {/* Infix Operator between args */}
                             <Show when={def()!.layout === "infix" && i() === 1}>
-                              <div class="block-node__infix-op">{def()!.label}</div>
+                              <div class="block-node__infix-op">
+                                {def()!.label}
+                              </div>
                             </Show>
 
                             <div
                               class={`block-node__slot ${
-                                def()!.layout === "infix" ? "block-node__slot--infix" : ""
+                                def()!.layout === "infix"
+                                  ? "block-node__slot--infix"
+                                  : ""
                               }`}
                             >
                               <Show when={def()!.layout !== "infix"}>
-                                <span class="block-node__slot-label">{slot.name}:</span>
+                                <span class="block-node__slot-label">
+                                  {slot.name}:
+                                </span>
                               </Show>
 
                               <div class="block-node__slot-content">
@@ -225,9 +248,13 @@ export const BlockNode: Component<BlockNodeProps> = (props) => {
                                     <div
                                       class="block-node__placeholder"
                                       onDragOver={(e) => e.preventDefault()}
-                                      onDrop={(e) => handleDrop(e, [...props.path, i() + 1])}
+                                      onDrop={(e) =>
+                                        handleDrop(e, [...props.path, i() + 1])
+                                      }
                                     >
-                                      {def()!.layout === "infix" ? "?" : "Drop here"}
+                                      {def()!.layout === "infix"
+                                        ? "?"
+                                        : "Drop here"}
                                     </div>
                                   }
                                 >
