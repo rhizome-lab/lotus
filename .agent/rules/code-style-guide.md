@@ -4,6 +4,7 @@ description: General Guidelines
 ---
 
 # Core Tenets
+- Use `??`, not `||`, for fallbacks
 - Deliberate slowly and thoroughly on matters that require more care/attention.
 - Avoid `any` whenever possible. It is the equivalent of `NaN` for the type system - it is infectious.
 - One thing at a time: Finish **one feature** at a time. Because you are in 'Agent Decides' mode, please **stop** once a feature is finished so the user can make a git commit.

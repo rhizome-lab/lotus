@@ -1,36 +1,26 @@
-import { describe, test, expect, beforeAll } from "bun:test";
-import { evaluate, ScriptContext, registerLibrary, ScriptError } from "./interpreter";
-import * as Std from "./lib/std";
+import { describe, test, expect } from "bun:test";
+import { evaluate, registerLibrary, ScriptError, createScriptContext } from "./interpreter";
+import * as StdLib from "./lib/std";
 import * as ObjectLib from "./lib/object";
-import * as List from "./lib/list";
+import * as ListLib from "./lib/list";
 import * as StringLib from "./lib/string";
 import * as MathLib from "./lib/math";
 import * as BooleanLib from "./lib/boolean";
 import { Entity } from "@viwo/shared/jsonrpc";
 
-describe("Interpreter", () => {
-  beforeAll(() => {
-    registerLibrary(Std);
-    registerLibrary(ObjectLib);
-    registerLibrary(List);
-    registerLibrary(StringLib);
-    registerLibrary(MathLib);
-    registerLibrary(BooleanLib);
-  });
+registerLibrary(StdLib);
+registerLibrary(ObjectLib);
+registerLibrary(ListLib);
+registerLibrary(StringLib);
+registerLibrary(MathLib);
+registerLibrary(BooleanLib);
 
+describe("Interpreter", () => {
   const caller: Entity = { id: 1 };
   const target: Entity = { id: 2 };
   target["owner"] = 1;
 
-  const ctx = {
-    caller,
-    this: target,
-    args: [],
-    gas: 1000,
-    warnings: [],
-    vars: {},
-    stack: [],
-  } satisfies ScriptContext;
+  const ctx = createScriptContext({ caller, this: target });
 
   test("literals", () => {
     expect(evaluate(1, ctx)).toBe(1);
@@ -60,21 +50,21 @@ describe("Interpreter", () => {
 
   test("variables", () => {
     const localCtx = { ...ctx, vars: {} };
-    evaluate(Std.let("x", 10), localCtx);
-    expect(evaluate(Std.var("x"), localCtx)).toBe(10);
+    evaluate(StdLib.let("x", 10), localCtx);
+    expect(evaluate(StdLib.var("x"), localCtx)).toBe(10);
   });
 
   test("control flow", () => {
-    expect(evaluate(Std.if(true, 1, 2), ctx)).toBe(1);
-    expect(evaluate(Std.if(false, 1, 2), ctx)).toBe(2);
+    expect(evaluate(StdLib.if(true, 1, 2), ctx)).toBe(1);
+    expect(evaluate(StdLib.if(false, 1, 2), ctx)).toBe(2);
 
-    expect(evaluate(Std.seq(1, 2, 3), ctx)).toBe(3);
+    expect(evaluate(StdLib.seq(1, 2, 3), ctx)).toBe(3);
   });
 
   test("gas limit", () => {
     const lowGasCtx = { ...ctx, gas: 2 };
     // seq (1) + let (1) + let (1) = 3 ops -> should fail
-    const script = Std.seq(Std.let("a", 1), Std.let("b", 2));
+    const script = StdLib.seq(StdLib.let("a", 1), StdLib.let("b", 2));
 
     // We expect it to throw
     let error;
@@ -89,47 +79,47 @@ describe("Interpreter", () => {
 
   test("loops", () => {
     // sum = 0; for x in [1, 2, 3]: sum += x
-    const script = Std.seq(
-      Std.let("sum", 0),
-      Std.for(
+    const script = StdLib.seq(
+      StdLib.let("sum", 0),
+      StdLib.for(
         "x",
-        List.listNew(1, 2, 3),
-        Std.let("sum", MathLib.add(Std.var("sum"), Std.var("x"))),
+        ListLib.listNew(1, 2, 3),
+        StdLib.set("sum", MathLib.add(StdLib.var("sum"), StdLib.var("x"))),
       ),
-      Std.var("sum"),
+      StdLib.var("sum"),
     );
     expect(evaluate(script, ctx)).toBe(6);
   });
 
   test("break in while loop", () => {
     // i = 0; while (true) { i++; if (i > 3) break; } return i;
-    const script = Std.seq(
-      Std.let("i", 0),
-      Std.while(
+    const script = StdLib.seq(
+      StdLib.let("i", 0),
+      StdLib.while(
         true,
-        Std.seq(
-          Std.set("i", MathLib.add(Std.var("i"), 1)),
-          Std.if(BooleanLib.gt(Std.var("i"), 3), Std.break()),
+        StdLib.seq(
+          StdLib.set("i", MathLib.add(StdLib.var("i"), 1)),
+          StdLib.if(BooleanLib.gt(StdLib.var("i"), 3), StdLib.break()),
         ),
       ),
-      Std.var("i"),
+      StdLib.var("i"),
     );
     expect(evaluate(script, ctx)).toBe(4);
   });
 
   test("break in for loop", () => {
     // sum = 0; for x in [1, 2, 3, 4, 5] { if (x > 3) break; sum += x; } return sum;
-    const script = Std.seq(
-      Std.let("sum", 0),
-      Std.for(
+    const script = StdLib.seq(
+      StdLib.let("sum", 0),
+      StdLib.for(
         "x",
-        List.listNew(1, 2, 3, 4, 5),
-        Std.seq(
-          Std.if(BooleanLib.gt(Std.var("x"), 3), Std.break()),
-          Std.set("sum", MathLib.add(Std.var("sum"), Std.var("x"))),
+        ListLib.listNew(1, 2, 3, 4, 5),
+        StdLib.seq(
+          StdLib.if(BooleanLib.gt(StdLib.var("x"), 3), StdLib.break()),
+          StdLib.set("sum", MathLib.add(StdLib.var("sum"), StdLib.var("x"))),
         ),
       ),
-      Std.var("sum"),
+      StdLib.var("sum"),
     );
     expect(evaluate(script, ctx)).toBe(6); // 1 + 2 + 3
   });
@@ -150,21 +140,24 @@ describe("Interpreter", () => {
     // i=3, j=1 -> sum += 3
     // i=3, j=2 -> break
     // Total sum = 6
-    const script = Std.seq(
-      Std.let("sum", 0),
-      Std.for(
+    const script = StdLib.seq(
+      StdLib.let("sum", 0),
+      StdLib.for(
         "i",
-        List.listNew(1, 2, 3),
-        Std.for(
+        ListLib.listNew(1, 2, 3),
+        StdLib.for(
           "j",
-          List.listNew(1, 2, 3),
-          Std.seq(
-            Std.if(BooleanLib.gt(Std.var("j"), 1), Std.break()),
-            Std.set("sum", MathLib.add(Std.var("sum"), MathLib.mul(Std.var("i"), Std.var("j")))),
+          ListLib.listNew(1, 2, 3),
+          StdLib.seq(
+            StdLib.if(BooleanLib.gt(StdLib.var("j"), 1), StdLib.break()),
+            StdLib.set(
+              "sum",
+              MathLib.add(StdLib.var("sum"), MathLib.mul(StdLib.var("i"), StdLib.var("j"))),
+            ),
           ),
         ),
       ),
-      Std.var("sum"),
+      StdLib.var("sum"),
     );
     expect(evaluate(script, ctx)).toBe(6);
   });
@@ -188,35 +181,23 @@ describe("Interpreter", () => {
   });
 
   test("if else", () => {
-    expect(evaluate(Std.if(false, "then", "else"), ctx)).toBe("else");
-    expect(evaluate(Std.if(false, "then"), ctx)).toBe(null); // No else branch
+    expect(evaluate(StdLib.if(false, "then", "else"), ctx)).toBe("else");
+    expect(evaluate(StdLib.if(false, "then"), ctx)).toBe(null); // No else branch
   });
 
   test("var retrieval", () => {
     const localCtx = { ...ctx, vars: { x: 10 } };
-    expect(evaluate(Std.var("x"), localCtx)).toBe(10);
-    expect(evaluate(Std.var("missing"), localCtx)).toBe(null); // Variable not found
+    expect(evaluate(StdLib.var("x"), localCtx)).toBe(10);
+    expect(evaluate(StdLib.var("missing"), localCtx)).toBe(null); // Variable not found
   });
 });
 
 describe("Interpreter Errors and Warnings", () => {
-  beforeAll(() => {
-    registerLibrary(Std);
-  });
-
-  const ctx: ScriptContext = {
-    caller: { id: 1 },
-    this: { id: 2 },
-    args: [],
-    gas: 1000,
-    warnings: [],
-    vars: {},
-    stack: [],
-  };
+  const ctx = createScriptContext({ caller: { id: 1 }, this: { id: 2 } });
 
   test("throw", () => {
     try {
-      evaluate(Std.throw("Something went wrong"), ctx);
+      evaluate(StdLib.throw("Something went wrong"), ctx);
       expect(true).toBe(false); // Should not reach here
     } catch (e: any) {
       expect(e.message).toBe("Something went wrong");
@@ -225,8 +206,8 @@ describe("Interpreter Errors and Warnings", () => {
 
   test("try/catch", () => {
     // try { throw "error" } catch { return "caught" }
-    const script = Std.try(
-      Std.throw("oops"),
+    const script = StdLib.try(
+      StdLib.throw("oops"),
       "this should be unused", // No error var
       "caught",
     );
@@ -236,71 +217,55 @@ describe("Interpreter Errors and Warnings", () => {
   test("try/catch with error variable", () => {
     // try { throw "error" } catch(e) { return e }
     const localCtx = { ...ctx, vars: {} };
-    const script = Std.try(Std.throw("oops"), "err", Std.var("err"));
+    const script = StdLib.try(StdLib.throw("oops"), "err", StdLib.var("err"));
     expect(evaluate(script, localCtx)).toBe("oops");
   });
 
   test("try/catch no error", () => {
     // try { return "ok" } catch { return "bad" }
-    const script = Std.try("ok", "this should be unused", "bad");
+    const script = StdLib.try("ok", "this should be unused", "bad");
     expect(evaluate(script, ctx)).toBe("ok");
   });
 
   test("warn", () => {
     const warnings: string[] = [];
     const localCtx = { ...ctx, warnings };
-    evaluate(Std.warn("Be careful"), localCtx);
+    evaluate(StdLib.warn("Be careful"), localCtx);
     expect(localCtx.warnings).toContain("Be careful");
   });
 
   test("nested try/catch", () => {
-    const script = Std.try(
-      Std.try(
-        Std.throw("inner"),
+    const script = StdLib.try(
+      StdLib.try(
+        StdLib.throw("inner"),
         "this should be unused", // No error var
-        Std.throw("outer"),
+        StdLib.throw("outer"),
       ),
       "e",
-      Std.var("e"),
+      StdLib.var("e"),
     );
     expect(evaluate(script, { ...ctx, vars: {} })).toBe("outer");
   });
 });
 
 describe("Interpreter Libraries", () => {
-  const ctx: ScriptContext = {
-    caller: { id: 1 },
-    this: { id: 2 },
-    args: [],
-    gas: 1000,
-    warnings: [],
-    vars: {},
-    stack: [],
-  };
-
-  beforeAll(() => {
-    registerLibrary(Std);
-    registerLibrary(StringLib);
-    registerLibrary(List);
-    registerLibrary(ObjectLib);
-    registerLibrary(MathLib);
-  });
+  const ctx = createScriptContext({ caller: { id: 1 }, this: { id: 2 } });
 
   describe("Lambda & HOF", () => {
     test("lambda & apply", () => {
       // (lambda (x) (+ x 1))
-      const inc = Std.lambda(["x"], MathLib.add(Std.var("x"), 1));
-      expect(evaluate(Std.apply(inc, 1), ctx)).toBe(2);
+      const inc = StdLib.lambda(["x"], MathLib.add(StdLib.var("x"), 1));
+      expect(evaluate(StdLib.apply(inc, 1), ctx)).toBe(2);
     });
 
     test("closure capture", () => {
       // (let x 10); (let addX (lambda (y) (+ x y))); (apply addX 5) -> 15
       expect(
         evaluate(
-          Std.seq(
-            Std.let("x", 10),
-            Std.let("addX", Std.lambda(["y"], MathLib.add(Std.var("x"), Std.var("y")))),
-            Std.apply(Std.var("addX"), 5),
+          StdLib.seq(
+            StdLib.let("x", 10),
+            StdLib.let("addX", StdLib.lambda(["y"], MathLib.add(StdLib.var("x"), StdLib.var("y")))),
+            StdLib.apply(StdLib.var("addX"), 5),
           ),
           ctx,
         ),
@@ -310,27 +275,14 @@ describe("Interpreter Libraries", () => {
 });
 
 describe("Interpreter Stack Traces", () => {
-  beforeAll(() => {
-    registerLibrary(Std);
-    registerLibrary(MathLib);
-  });
-
-  const ctx: ScriptContext = {
-    caller: { id: 1 },
-    this: { id: 2 },
-    args: [],
-    gas: 1000,
-    warnings: [],
-    vars: {},
-    stack: [],
-  };
+  const ctx = createScriptContext({ caller: { id: 1 }, this: { id: 2 } });
 
   test("stack trace in lambda", () => {
     // (let fail (lambda () (throw "boom")))
     // (apply fail)
-    const script = Std.seq(
-      Std.let("fail", Std.lambda([], Std.throw("boom"))),
-      Std.apply(Std.var("fail")),
+    const script = StdLib.seq(
+      StdLib.let("fail", StdLib.lambda([], StdLib.throw("boom"))),
+      StdLib.apply(StdLib.var("fail")),
     );
 
     try {
@@ -348,10 +300,10 @@ describe("Interpreter Stack Traces", () => {
     // (let inner (lambda () (throw "boom")))
     // (let outer (lambda () (apply inner)))
     // (apply outer)
-    const script = Std.seq(
-      Std.let("inner", Std.lambda([], Std.throw("boom"))),
-      Std.let("outer", Std.lambda([], Std.apply(Std.var("inner")))),
-      Std.apply(Std.var("outer")),
+    const script = StdLib.seq(
+      StdLib.let("inner", StdLib.lambda([], StdLib.throw("boom"))),
+      StdLib.let("outer", StdLib.lambda([], StdLib.apply(StdLib.var("inner")))),
+      StdLib.apply(StdLib.var("outer")),
     );
 
     try {

@@ -31,6 +31,8 @@ export type ScriptContext = {
   send?: (type: string, payload: unknown) => void;
   /** List of warnings generated during execution. */
   warnings: string[];
+  /** Copy-On-Write flag for scope forking. */
+  cow: boolean;
   /** Local variables in the current scope. */
   vars: Record<string, unknown>;
   /** Call stack for error reporting. */
@@ -464,6 +466,7 @@ export function createScriptContext(
     warnings: [],
     vars: {},
     stack: [],
+    cow: false,
     ...ctx,
   };
 }

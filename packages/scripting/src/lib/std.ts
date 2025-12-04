@@ -1,6 +1,39 @@
 import { evaluate, ScriptError, BreakSignal } from "../interpreter";
 import { defineOpcode, ScriptRaw } from "../def";
 import { Entity } from "@viwo/shared/jsonrpc";
+import { ScriptContext } from "../interpreter";
+
+function enterScope(ctx: ScriptContext) {
+  const snapshot = { vars: ctx.vars, cow: ctx.cow };
+  ctx.cow = true;
+  return snapshot;
+}
+
+function exitScope(ctx: ScriptContext, snapshot: { vars: Record<string, unknown>; cow: boolean }) {
+  ctx.vars = snapshot.vars;
+  ctx.cow = snapshot.cow;
+}
+
+function setVar(ctx: ScriptContext, name: string, value: any) {
+  let scope = ctx.vars;
+  while (scope) {
+    if (Object.prototype.hasOwnProperty.call(scope, name)) {
+      scope[name] = value;
+      return;
+    }
+    scope = Object.getPrototypeOf(scope);
+  }
+  // If not found, do nothing (match existing behavior of checking `in`)
+  // Or should we set on global? We don't have a global scope object separate from top-level vars.
+  // If we are at top level, `scope` becomes null.
+  // Existing behavior: `if (ctx.vars && name in ctx.vars) { ctx.vars[name] = value; }`
+  // `in` checks prototype chain.
+  // If it is in prototype chain, `ctx.vars[name] = value` would shadow it.
+  // We want to update the original.
+  // So if we didn't find it in the loop (which checks own property up the chain), it means it's not in the chain?
+  // Wait, `Object.getPrototypeOf` eventually returns null.
+  // If we fall through, it's not defined anywhere.
+}
 
 // Values
 /**
@@ -57,8 +90,10 @@ export const seq = defineOpcode<unknown[], any>("seq", {
   },
   handler: ([...args], ctx) => {
     if (args.length === 0) {
-      throw new ScriptError("seq: expected at least one argument");
+      return null;
     }
+
+    const snapshot = enterScope(ctx);
 
     let i = 0;
     let lastResult: any = null;
@@ -66,21 +101,32 @@ export const seq = defineOpcode<unknown[], any>("seq", {
     const next = (): any => {
       while (i < args.length) {
         const step = args[i++];
-        const result = evaluate(step, ctx);
+        try {
+          const result = evaluate(step, ctx);
 
-        if (result instanceof Promise) {
-          return result.then((res) => {
-            lastResult = res;
-            return next();
-          });
+          if (result instanceof Promise) {
+            return result.then((res) => {
+              lastResult = res;
+              return next();
+            });
+          }
+
+          lastResult = result;
+        } catch (e) {
+          exitScope(ctx, snapshot);
+          throw e;
         }
-
-        lastResult = result;
       }
+      exitScope(ctx, snapshot);
       return lastResult;
     };
 
-    return next();
+    try {
+      return next();
+    } catch (e) {
+      exitScope(ctx, snapshot);
+      throw e;
+    }
   },
 });
 
@@ -107,12 +153,17 @@ const if_ = defineOpcode<[boolean, unknown, unknown?], any>("if", {
   },
   handler: ([cond, thenBranch, elseBranch], ctx) => {
     const runBranch = (conditionResult: boolean) => {
-      if (conditionResult) {
-        return evaluate(thenBranch, ctx);
-      } else if (elseBranch) {
-        return evaluate(elseBranch, ctx);
+      const snapshot = enterScope(ctx);
+      try {
+        if (conditionResult) {
+          return evaluate(thenBranch, ctx);
+        } else if (elseBranch) {
+          return evaluate(elseBranch, ctx);
+        }
+        return null;
+      } finally {
+        exitScope(ctx, snapshot);
       }
-      return null;
     };
 
     const condResult = evaluate(cond, ctx);
@@ -153,15 +204,18 @@ const while_ = defineOpcode<[boolean, unknown], any>("while", {
       if (condResult instanceof Promise) {
         return condResult.then((res) => {
           if (res) {
+            const snapshot = enterScope(ctx);
             try {
               const bodyResult = evaluate(body, ctx);
               if (bodyResult instanceof Promise) {
                 return bodyResult.then(
                   (bRes) => {
+                    exitScope(ctx, snapshot);
                     lastResult = bRes;
                     return loop();
                   },
                   (err) => {
+                    exitScope(ctx, snapshot);
                     if (err instanceof BreakSignal) {
                       return err.value ?? lastResult;
                     }
@@ -169,9 +223,11 @@ const while_ = defineOpcode<[boolean, unknown], any>("while", {
                   },
                 );
               }
+              exitScope(ctx, snapshot);
               lastResult = bodyResult;
               return loop();
             } catch (e) {
+              exitScope(ctx, snapshot);
               if (e instanceof BreakSignal) {
                 return e.value ?? lastResult;
               }
@@ -183,15 +239,18 @@ const while_ = defineOpcode<[boolean, unknown], any>("while", {
       }
 
       if (condResult) {
+        const snapshot = enterScope(ctx);
         try {
           const bodyResult = evaluate(body, ctx);
           if (bodyResult instanceof Promise) {
             return bodyResult.then(
               (bRes) => {
+                exitScope(ctx, snapshot);
                 lastResult = bRes;
                 return loop();
               },
               (err) => {
+                exitScope(ctx, snapshot);
                 if (err instanceof BreakSignal) {
                   return err.value ?? lastResult;
                 }
@@ -199,9 +258,11 @@ const while_ = defineOpcode<[boolean, unknown], any>("while", {
               },
             );
           }
+          exitScope(ctx, snapshot);
           lastResult = bodyResult;
           return loop();
         } catch (e) {
+          exitScope(ctx, snapshot);
           if (e instanceof BreakSignal) {
             return e.value ?? lastResult;
           }
@@ -249,7 +310,20 @@ const for_ = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
         if (i >= list.length) return lastResult;
 
         const item = list[i++];
-        ctx.vars = ctx.vars || {};
+
+        // Create a new scope for the iteration
+        const snapshot = enterScope(ctx);
+        // Explicitly fork for the loop variable because enterScope sets cow=true,
+        // but we want to define the loop var in THIS new scope immediately.
+        // If we just do ctx.vars[varName] = item with cow=true, it will fork.
+        // But enterScope already set cow=true.
+        // So `let` logic (which we will implement) handles it.
+        // But here we are manually setting it.
+        // We should manually fork to ensure loop var is local.
+        if (ctx.cow) {
+          ctx.vars = Object.create(ctx.vars);
+          ctx.cow = false;
+        }
         ctx.vars[varName] = item;
 
         try {
@@ -257,10 +331,12 @@ const for_ = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
           if (result instanceof Promise) {
             return result.then(
               (res) => {
+                exitScope(ctx, snapshot);
                 lastResult = res;
                 return next();
               },
               (err) => {
+                exitScope(ctx, snapshot);
                 if (err instanceof BreakSignal) {
                   return err.value ?? lastResult;
                 }
@@ -268,9 +344,11 @@ const for_ = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
               },
             );
           }
+          exitScope(ctx, snapshot);
           lastResult = result;
           return next();
         } catch (e) {
+          exitScope(ctx, snapshot);
           if (e instanceof BreakSignal) {
             return e.value ?? lastResult;
           }
@@ -383,6 +461,10 @@ const let_ = defineOpcode<[string, unknown], any>("let", {
   },
   handler: ([name, value], ctx) => {
     ctx.vars = ctx.vars || {};
+    if (ctx.cow) {
+      ctx.vars = Object.create(ctx.vars);
+      ctx.cow = false;
+    }
     ctx.vars[name] = value;
     return value;
   },
@@ -425,8 +507,8 @@ const set_ = defineOpcode<[string, unknown], any>("set", {
     returnType: "any",
   },
   handler: ([name, value], ctx) => {
-    if (ctx.vars && name in ctx.vars) {
-      ctx.vars[name] = value;
+    if (ctx.vars) {
+      setVar(ctx, name, value);
     }
     return value;
   },
@@ -546,15 +628,30 @@ const tryOp = defineOpcode<[unknown, string, unknown], any>("try", {
     lazy: true,
   },
   handler: ([tryBlock, errorVar, catchBlock], ctx) => {
+    const snapshot = enterScope(ctx);
     try {
-      return evaluate(tryBlock, ctx);
+      const result = evaluate(tryBlock, ctx);
+      exitScope(ctx, snapshot);
+      return result;
     } catch (e: any) {
+      exitScope(ctx, snapshot); // Unwind try scope
       if (catchBlock) {
+        const catchSnapshot = enterScope(ctx);
         if (errorVar && typeof errorVar === "string") {
-          if (!ctx.vars) ctx.vars = {};
+          if (ctx.cow) {
+            ctx.vars = Object.create(ctx.vars);
+            ctx.cow = false;
+          }
           ctx.vars[errorVar] = e.message || String(e);
         }
-        return evaluate(catchBlock, ctx);
+        try {
+          const result = evaluate(catchBlock, ctx);
+          exitScope(ctx, catchSnapshot);
+          return result;
+        } catch (err) {
+          exitScope(ctx, catchSnapshot);
+          throw err;
+        }
       }
     }
   },
@@ -585,7 +682,7 @@ export const lambda = defineOpcode<[ScriptRaw<readonly string[]>, unknown], any>
       type: "lambda",
       args: argNames,
       body,
-      closure: { ...ctx.vars },
+      closure: ctx.vars,
     };
   },
 });
@@ -619,7 +716,7 @@ export const apply = defineOpcode<[unknown, ...unknown[]], any>("apply", {
     const lambdaFunc = func as any;
 
     // Create new context
-    const newVars = { ...lambdaFunc.closure };
+    const newVars = Object.create(lambdaFunc.closure || null);
     // Bind arguments
     for (let i = 0; i < lambdaFunc.args.length; i++) {
       newVars[lambdaFunc.args[i]] = evaluatedArgs[i];
@@ -628,6 +725,7 @@ export const apply = defineOpcode<[unknown, ...unknown[]], any>("apply", {
     const newCtx = {
       ...ctx,
       vars: newVars,
+      cow: true, // Allow reuse of this scope until modified
       stack: [...ctx.stack, { name: "<lambda>", args: evaluatedArgs }],
     };
 
