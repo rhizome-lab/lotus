@@ -3,8 +3,7 @@ import { db } from "../db";
 import * as CoreLib from "../runtime/lib/core";
 import * as KernelLib from "../runtime/lib/kernel";
 import { seed } from "../seed";
-import { seedHotel } from "../seeds/hotel";
-import { createEntity, getEntity, updateEntity, getVerb, createCapability } from "../repo";
+import { createEntity, getEntity, updateEntity, getVerb, createCapability, addVerb } from "../repo";
 import {
   evaluate,
   registerLibrary,
@@ -17,6 +16,11 @@ import {
   BooleanLib,
 } from "@viwo/scripting";
 import { Entity } from "@viwo/shared/jsonrpc";
+import { extractVerb } from "../verb_loader";
+import { transpile } from "@viwo/scripting";
+import { resolve } from "path";
+
+const verbsPath = resolve(__dirname, "../seeds/verbs.ts");
 
 registerLibrary(CoreLib);
 registerLibrary(KernelLib);
@@ -30,6 +34,7 @@ registerLibrary(TimeLib);
 describe("Hotel Scripting", () => {
   let hotelLobby: Entity;
   let caller: Entity;
+  let entityBaseId: number;
   let messages: unknown[] = [];
   let send: (type: string, payload: unknown) => void;
 
@@ -46,6 +51,7 @@ describe("Hotel Scripting", () => {
     // Setup Send
     send = (type: string, payload: unknown) => {
       if (type === "message") {
+        console.log("MSG:", payload);
         messages.push(payload);
       }
     };
@@ -60,24 +66,18 @@ describe("Hotel Scripting", () => {
         "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Lobby'",
       )
       .get()!;
-    const lobbyId = lobby.id;
-    const voidEntity = db
+
+    // Find Entity Base
+    const entityBase = db
       .query<{ id: number }, []>(
-        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'The Void'",
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Entity Base'",
       )
       .get()!;
-    const voidId = voidEntity.id;
-
-    // Seed Hotel
-    seedHotel(lobbyId, voidId);
+    entityBaseId = entityBase.id;
 
     // Find Hotel Lobby
-    const hotelLobbyData = db
-      .query<{ id: number }, []>(
-        "SELECT id, props FROM entities WHERE json_extract(props, '$.name') = 'Grand Hotel Lobby'",
-      )
-      .get()!;
-    hotelLobby = getEntity(hotelLobbyData.id)!;
+    // Find Hotel Lobby (It's just the main Lobby)
+    hotelLobby = lobby;
 
     // Setup Caller
     const playerBase = db
@@ -92,11 +92,42 @@ describe("Hotel Scripting", () => {
 
   it("should leave a room (move and destroy)", async () => {
     // 1. Manually create a room (since visit is gone)
-    const roomProto = db
-      .query("SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Hotel Room Prototype'")
-      .get() as any;
-    const roomId = createEntity({ name: "Room 101", lobby_id: hotelLobby.id }, roomProto.id);
+    // 1. Manually create a room (since visit is gone)
+    // Just create a room without prototype if it doesn't exist
+    const roomId = createEntity(
+      {
+        name: "Room 101",
+        lobby_id: hotelLobby.id,
+        room_number: 101,
+      },
+      entityBaseId,
+    );
     createCapability(roomId, "entity.control", { target_id: roomId });
+    // Create exit "out" to lobby
+    const outExitId = createEntity(
+      {
+        name: "out",
+        location: roomId,
+        direction: "out",
+        destination: hotelLobby.id,
+      },
+      entityBaseId,
+    );
+    updateEntity({ ...getEntity(roomId)!, exits: [outExitId] });
+
+    console.log("verbsPath:", verbsPath);
+    console.log("leaveCode length:", "null");
+
+    addVerb(
+      roomId,
+      "on_leave",
+      transpile(
+        extractVerb(verbsPath, "hotel_room_on_leave").replace(
+          "HOTEL_LOBBY_ID_PLACEHOLDER",
+          String(hotelLobby.id),
+        ),
+      ),
+    );
 
     // Move caller to room
     updateEntity({ ...caller, location: roomId });
@@ -105,19 +136,20 @@ describe("Hotel Scripting", () => {
     // Clear messages
     messages = [];
 
-    // 2. Leave
-    const leaveVerb = getVerb(roomId, "leave");
-    expect(leaveVerb).toBeDefined();
-
+    // 2. Move out
     await evaluate(
-      leaveVerb!.code,
-      createScriptContext({ caller, this: getEntity(roomId)!, send }),
+      CoreLib.call(caller, "move", "out"),
+      createScriptContext({ caller, this: caller, send }),
     );
 
-    expect(messages[0]).toBe("You leave the room and it fades away behind you.");
+    expect(messages[0]).toBe("Room 101 is now available.");
 
     expect(caller["location"]).toBe(hotelLobby.id); // Back in lobby
-    expect(getEntity(roomId)).toBeNull(); // Destroyed
+
+    // Room should be recycled (owner null), not destroyed
+    const room = getEntity(roomId)!;
+    expect(room).toBeDefined();
+    expect(room["owner"]).toBeNull();
   });
 
   it("should move via direction string", async () => {
@@ -152,7 +184,7 @@ describe("Hotel Scripting", () => {
     // Find Elevator (it's persistent)
     const elevatorData = db
       .query<{ id: number }, []>(
-        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Hotel Elevator'",
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Glass Elevator'",
       )
       .get()!;
     let elevator = getEntity(elevatorData.id)!;
@@ -226,15 +258,16 @@ describe("Hotel Scripting", () => {
     expect(contents.some((e) => e["name"] === "Chair")).toBe(true);
 
     // 6. Leave (back to Wing)
-    const leaveVerb = getVerb(room.id, "leave");
-    expect(leaveVerb).toBeDefined();
-    if (leaveVerb) {
-      await evaluate(leaveVerb.code, { ...ctx, this: room, args: [] });
-    }
+    // Use "move out"
+    await evaluate(
+      CoreLib.call(caller, "move", "out"),
+      createScriptContext({ caller, this: caller, send }),
+    );
 
     caller = getEntity(caller.id)!;
     expect(caller["location"]).toBe(wingId);
-    expect(getEntity(roomId as never)).toBeNull(); // Room destroyed
+    expect(getEntity(roomId as never)).not.toBeNull();
+    expect(getEntity(roomId as never)!["owner"]).toBeNull();
 
     // 7. Move "back" (back to Floor Lobby)
     await evaluate(
@@ -260,7 +293,7 @@ describe("Hotel Scripting", () => {
 
 describe("Hotel Seed", () => {
   let lobbyId: number;
-  let voidId: number;
+
   let player: any;
 
   beforeAll(() => {
@@ -271,12 +304,7 @@ describe("Hotel Seed", () => {
 
     // Create basic world
     seed();
-    const void_ = db
-      .query<{ id: number }, []>(
-        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'The Void'",
-      )
-      .get()!;
-    voidId = void_.id;
+
     const lobby = db
       .query<{ id: number }, []>(
         "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Lobby'",
@@ -284,8 +312,7 @@ describe("Hotel Seed", () => {
       .get()!;
     lobbyId = lobby.id;
 
-    // Seed Hotel
-    seedHotel(lobbyId, voidId);
+    // Find Entity Base
 
     // Create a player
     const playerBase = db
@@ -309,7 +336,7 @@ describe("Hotel Seed", () => {
     // 1. Find Elevator
     const elevatorData = db
       .query<{ id: number }, []>(
-        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Hotel Elevator'",
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Glass Elevator'",
       )
       .get()!;
     console.log("eled", elevatorData);
@@ -366,7 +393,9 @@ describe("Hotel Seed", () => {
         this: westWing,
         args: [51],
         send: (type, payload) => {
-          output = JSON.stringify({ type, payload });
+          const json = JSON.stringify({ type, payload });
+          if (output) output += "\n" + json;
+          else output = json;
         },
       }),
     );
@@ -393,7 +422,7 @@ describe("Hotel Seed", () => {
     // 1. Find Elevator
     const elevatorData = db
       .query<{ id: number }, []>(
-        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Hotel Elevator'",
+        "SELECT id FROM entities WHERE json_extract(props, '$.name') = 'Glass Elevator'",
       )
       .get()!;
     const elevator = getEntity(elevatorData.id)!;
@@ -448,7 +477,9 @@ describe("Hotel Seed", () => {
         this: eastWing,
         args: [10],
         send: (type, payload) => {
-          output = JSON.stringify({ type, payload });
+          const json = JSON.stringify({ type, payload });
+          if (output) output += "\n" + json;
+          else output = json;
         },
       }),
     );

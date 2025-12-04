@@ -288,11 +288,11 @@ describe("Recursive Move Check", () => {
     const ctx = createScriptContext({
       caller: box,
       this: box, // The verb is on Entity Base, which Box inherits
-      args: [itemId], // Move to Item
+      args: [getEntity(itemId)!], // Move to Item
       send,
     });
 
-    const moveVerb = getVerb(box.id, "move");
+    const moveVerb = getVerb(entityBase.id, "teleport");
     expect(moveVerb).toBeDefined();
 
     await evaluate(moveVerb!.code, ctx);

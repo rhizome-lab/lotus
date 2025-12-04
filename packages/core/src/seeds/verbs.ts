@@ -299,6 +299,7 @@ export function player_dig() {
       }
 
       send("message", "You dig a new room.");
+      call(caller(), "teleport", entity(newRoomId));
     } else {
       send("message", "You cannot dig here.");
     }
@@ -360,7 +361,7 @@ export function player_set() {
         controlCap = get_capability("entity.control", { "*": true });
       }
       if (controlCap) {
-        set_entity(controlCap, obj.merge(entity(targetId), { [propName]: value }));
+        set_entity(controlCap, obj.set(entity(targetId), propName, value));
         send("message", "Property set.");
       } else {
         send("message", "You do not have permission to modify this object.");
@@ -553,8 +554,8 @@ export function book_search_chapters() {
 
 declare const HOTEL_LOBBY_ID_PLACEHOLDER: number;
 
-// @verb hotel_room_leave
-export function hotel_room_leave() {
+// @verb hotel_room_on_leave
+export function hotel_room_on_leave() {
   const mover = arg<Entity>(0);
   const cap = get_capability("entity.control", { target_id: this_().id });
   if (cap) {
@@ -580,6 +581,13 @@ export function hotel_room_leave() {
   } else {
     send("message", "The room refuses to let you go.");
   }
+}
+// @endverb
+
+// @verb hotel_lobby_room_vacated
+export function hotel_lobby_room_vacated() {
+  const roomNumber = arg<number>(0);
+  send("message", str.concat("Room ", roomNumber, " is now available."));
 }
 // @endverb
 
@@ -622,8 +630,27 @@ export function elevator_push() {
 }
 // @endverb
 
-// @verb wing_enter
-export function wing_enter() {
+// @verb elevator_move
+export function elevator_move() {
+  const direction = arg<string>(0);
+  if (direction === "out") {
+    const currentFloor = obj.get(this_(), "current_floor");
+    const floors = obj.get(this_(), "floors", obj.new_());
+    const destId = obj.get(floors, str.concat(currentFloor, ""));
+    if (destId) {
+      call(caller(), "teleport", entity(destId));
+      send("message", "You step out of the elevator.");
+    } else {
+      send("message", "The doors refuse to open here.");
+    }
+  } else {
+    send("message", "You can only move 'out' of the elevator.");
+  }
+}
+// @endverb
+
+// @verb wing_on_enter
+export function wing_on_enter() {
   const mover = arg<Entity>(0);
   const cap = get_capability("entity.control", { target_id: this_().id });
   if (cap) {
@@ -633,6 +660,50 @@ export function wing_enter() {
     call(caller(), "tell", "You enter the hallway. It smells of carpet cleaner.");
   } else {
     send("message", "The wing is closed for cleaning.");
+  }
+}
+// @endverb
+
+// @verb wing_enter_room
+export function wing_enter_room() {
+  const roomNumber = arg<number>(0);
+  if (!roomNumber) {
+    send("message", "Which room?");
+    return;
+  }
+
+  // Validate range based on wing name
+  const name = obj.get(this_(), "name");
+  let min = 0;
+  let max = 0;
+  if (str.includes(name, "West")) {
+    min = 1;
+    max = 50;
+  } else if (str.includes(name, "East")) {
+    min = 51;
+    max = 99;
+  }
+
+  let wingType = "East Wing";
+  if (str.includes(name, "West")) {
+    wingType = "West Wing";
+  }
+
+  if (min > 0 && (roomNumber < min || roomNumber > max)) {
+    send("message", str.concat("Room numbers in the ", wingType, " are ", min, "-", max));
+    return;
+  }
+
+  const contents = obj.get(this_(), "contents", list.new_());
+  const roomId = list.find(contents, (id: number) => {
+    const props = resolve_props(entity(id));
+    return obj.get(props, "room_number", 0) === roomNumber;
+  });
+
+  if (roomId) {
+    call(caller(), "teleport", entity(roomId));
+  } else {
+    send("message", "Room not found.");
   }
 }
 // @endverb

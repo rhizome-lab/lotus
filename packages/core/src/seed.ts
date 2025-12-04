@@ -544,7 +544,7 @@ export function seed() {
   seedItems(voidId);
 
   // 6. Create Hotel
-  seedHotel(lobbyId, voidId);
+  seedHotel(lobbyId, voidId, entityBaseId);
 
   console.log("Database seeded successfully.");
 }
