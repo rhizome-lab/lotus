@@ -42,7 +42,7 @@ mock.module("../../scheduler", () => ({
   },
 }));
 
-createLibraryTester(Std, "Core Library", (test) => {
+createLibraryTester(Std, "Standard Library", (test) => {
   registerLibrary(Std);
   registerLibrary(List);
   registerLibrary(Math);

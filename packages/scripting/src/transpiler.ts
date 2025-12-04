@@ -301,18 +301,28 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
   }
 
   if (ts.isPropertyAccessExpression(node)) {
+    if (isChainRoot(node)) {
+      return transpileOptionalChain(node, scope);
+    }
     const obj = transpileNode(node.expression, scope);
     const key = node.name.text;
     return ObjectLib.objGet(obj, key);
   }
 
   if (ts.isElementAccessExpression(node)) {
+    if (isChainRoot(node)) {
+      return transpileOptionalChain(node, scope);
+    }
     const obj = transpileNode(node.expression, scope);
     const key = transpileNode(node.argumentExpression, scope);
     return ObjectLib.objGet(obj, key);
   }
 
   if (ts.isCallExpression(node)) {
+    if (isChainRoot(node)) {
+      return transpileOptionalChain(node, scope);
+    }
+
     const expr = node.expression;
     const args = node.arguments.map((a) => transpileNode(a, scope));
 
@@ -581,4 +591,110 @@ function isSimpleNode(node: any): boolean {
 
 function generateTempVar() {
   return "__tmp_" + Math.random().toString(36).slice(2, 8);
+}
+
+interface ChainPart {
+  kind: "prop" | "elem" | "call";
+  key?: any; // For prop/elem
+  args?: any[]; // For call
+  optional: boolean;
+}
+
+function transpileOptionalChain(node: ts.Node, scope: Set<string>): any {
+  const parts: ChainPart[] = [];
+  let current = node;
+
+  // Flatten the chain from right to left
+  while (
+    ts.isOptionalChain(current) ||
+    ts.isPropertyAccessExpression(current) ||
+    ts.isElementAccessExpression(current) ||
+    ts.isCallExpression(current)
+  ) {
+    if (ts.isPropertyAccessExpression(current)) {
+      parts.unshift({
+        kind: "prop",
+        key: current.name.text,
+        optional: !!current.questionDotToken,
+      });
+      current = current.expression;
+    } else if (ts.isElementAccessExpression(current)) {
+      parts.unshift({
+        kind: "elem",
+        key: transpileNode(current.argumentExpression, scope),
+        optional: !!current.questionDotToken,
+      });
+      current = current.expression;
+    } else if (ts.isCallExpression(current)) {
+      parts.unshift({
+        kind: "call",
+        args: current.arguments.map((a) => transpileNode(a, scope)),
+        optional: !!current.questionDotToken,
+      });
+      current = current.expression;
+    } else {
+      break;
+    }
+  }
+
+  const base = transpileNode(current, scope);
+  return buildChain(base, parts);
+}
+
+function buildChain(base: any, parts: ChainPart[]): any {
+  if (parts.length === 0) {
+    return base;
+  }
+
+  const part = parts[0]!;
+  const remaining = parts.slice(1);
+
+  // If this part is optional, we need to check if base is nullish
+  if (part.optional) {
+    // If base is complex, cache it in a temp var
+    if (!isSimpleNode(base)) {
+      const tmp = generateTempVar();
+      const tmpVar = StdLib.var(tmp);
+
+      // (let tmp = base, if (tmp != null, buildChain(apply(tmp, part), remaining), undefined))
+      const next = applyPart(tmpVar, part);
+      return StdLib.seq(
+        StdLib.let(tmp, base),
+        StdLib.if(
+          BooleanLib.neq(tmpVar, null),
+          buildChain(next, remaining),
+          null, // undefined/null
+        ),
+      );
+    } else {
+      // Base is simple, use it directly
+      const next = applyPart(base, part);
+      return StdLib.if(BooleanLib.neq(base, null), buildChain(next, remaining), null);
+    }
+  } else {
+    // Not optional, just apply and recurse
+    const next = applyPart(base, part);
+    return buildChain(next, remaining);
+  }
+}
+function isChainRoot(node: ts.Node): boolean {
+  if (!ts.isOptionalChain(node)) return false;
+  const parent = node.parent;
+  if (ts.isOptionalChain(parent)) {
+    if (ts.isPropertyAccessExpression(parent) && parent.expression === node) return false;
+    if (ts.isElementAccessExpression(parent) && parent.expression === node) return false;
+    if (ts.isCallExpression(parent) && parent.expression === node) return false;
+  }
+  return true;
+}
+
+function applyPart(base: any, part: ChainPart): any {
+  if (part.kind === "prop") {
+    return ObjectLib.objGet(base, part.key);
+  } else if (part.kind === "elem") {
+    return ObjectLib.objGet(base, part.key);
+  } else if (part.kind === "call") {
+    return StdLib.apply(base, ...(part.args || []));
+  }
+  throw new Error("Unknown chain part kind");
 }
