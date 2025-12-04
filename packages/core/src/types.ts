@@ -197,3 +197,5 @@ declare global {
     function stringify(value: unknown): string;
   }
 }
+
+export {};

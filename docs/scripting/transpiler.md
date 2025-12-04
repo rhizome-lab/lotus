@@ -33,10 +33,15 @@ The transpiler supports a subset of TypeScript that maps to ViwoScript opcodes:
 - **Access**: `x` -> `["var", "x"]`
 - **Assignment**: `x = 2;` -> `["set", "x", 2]`
 
+### Special Variables
+
+- **this**: `this` -> `["this_"]` (Accesses the current entity context)
+
 ### Literals
 
 - **Numbers**: `123`
 - **Strings**: `"hello"`
+- **Template Strings**: `` `Hello ${name}` `` -> `["str.concat", "Hello ", name]`
 - **Booleans**: `true`, `false`
 - **Null**: `null`
 
@@ -49,6 +54,8 @@ The transpiler supports a subset of TypeScript that maps to ViwoScript opcodes:
 
 - **Property**: `obj.x` -> `["obj.get", obj, "x"]`
 - **Index**: `obj['x']` -> `["obj.get", obj, "x"]`
+- **Fallback**: `obj.x || default` -> `["obj.get", obj, "x", default]`
+- **Fallback**: `obj.x ?? default` -> `["obj.get", obj, "x", default]`
 - **Assignment**: `obj.x = 1` -> `["obj.set", obj, "x", 1]`
 - **Delete**: `delete obj.x` -> `["obj.del", obj, "x"]`
 - **In**: `'x' in obj` -> `["obj.has", obj, "x"]`

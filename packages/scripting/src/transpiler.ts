@@ -1,9 +1,10 @@
-import * as ts from "typescript";
-import * as Std from "./lib/std";
+import ts from "typescript";
+import * as StdLib from "./lib/std";
 import * as MathLib from "./lib/math";
-import * as List from "./lib/list";
+import * as ListLib from "./lib/list";
 import * as ObjectLib from "./lib/object";
 import * as BooleanLib from "./lib/boolean";
+import * as StringLib from "./lib/string";
 import { RESERVED_TYPESCRIPT_KEYWORDS } from "./type_generator";
 
 const OPCODE_MAPPINGS: Record<string, string> = {
@@ -34,7 +35,7 @@ export function transpile(code: string): any {
     return statements[0];
   }
 
-  return Std.seq(...statements);
+  return StdLib.seq(...statements);
 }
 
 function transpileNode(node: ts.Node, scope: Set<string>): any {
@@ -91,7 +92,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
 
   if (ts.isIdentifier(node)) {
     // Variable reference
-    return Std.var(node.text);
+    return StdLib.var(node.text);
   }
 
   if (ts.isVariableStatement(node)) {
@@ -102,7 +103,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
         const name = decl.name.getText();
         scope.add(name);
         const value = transpileNode(decl.initializer, scope);
-        return Std.let(name, value);
+        return StdLib.let(name, value);
       }
     }
   }
@@ -111,11 +112,11 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     if (node.name && node.body) {
       const name = node.name.text;
       scope.add(name);
-      const params = node.parameters.map((p) => p.name.getText());
+      const params = node.parameters.map((p) => p.name.getText()).filter((p) => p !== "this");
       const fnScope = new Set(scope);
       params.forEach((p) => fnScope.add(p));
       const body = transpileNode(node.body, fnScope);
-      return Std.let(name, Std.lambda(params, body));
+      return StdLib.let(name, StdLib.lambda(params, body));
     }
   }
 
@@ -123,6 +124,17 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     const left = transpileNode(node.left, scope);
     const right = transpileNode(node.right, scope);
     const op = node.operatorToken.kind;
+
+    // Optimization: obj.get(k) || v -> obj.get(k, v)
+    // Optimization: obj.get(k) ?? v -> obj.get(k, v)
+    if (
+      (op === ts.SyntaxKind.BarBarToken || op === ts.SyntaxKind.QuestionQuestionToken) &&
+      Array.isArray(left) &&
+      left[0] === "obj.get" &&
+      left.length === 3
+    ) {
+      return ObjectLib.objGet(left[1], left[2], right);
+    }
 
     switch (op) {
       case ts.SyntaxKind.PlusToken:
@@ -153,6 +165,11 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
         return BooleanLib.and(left, right);
       case ts.SyntaxKind.BarBarToken:
         return BooleanLib.or(left, right);
+      case ts.SyntaxKind.QuestionQuestionToken:
+        // Fallback if not an obj.get optimization
+        // We don't have a nullish coalescing opcode yet, so we can use a conditional
+        // (left != null) ? left : right
+        return StdLib.if(BooleanLib.neq(left, null), left, right);
       case ts.SyntaxKind.InKeyword:
         return ObjectLib.objHas(right, left);
       case ts.SyntaxKind.AsteriskAsteriskToken:
@@ -160,7 +177,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
       case ts.SyntaxKind.EqualsToken:
         // Assignment
         if (Array.isArray(left) && left[0] === "var") {
-          return Std.set(left[1], right);
+          return StdLib.set(left[1], right);
         }
         // Handle object property assignment?
         if (Array.isArray(left) && left[0] === "obj.get") {
@@ -190,7 +207,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
 
   if (ts.isArrayLiteralExpression(node)) {
     const elements = node.elements.map((e) => transpileNode(e, scope));
-    return List.listNew(...elements);
+    return ListLib.listNew(...elements);
   }
 
   if (ts.isObjectLiteralExpression(node)) {
@@ -256,7 +273,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
       return [opcodeName, ...args];
     }
 
-    return Std.apply(transpileNode(expr, scope), ...args);
+    return StdLib.apply(transpileNode(expr, scope), ...args);
   }
 
   if (ts.isArrowFunction(node)) {
@@ -268,13 +285,13 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     // If body is a block, it returns a "seq".
     // Lambda body in ViwoScript can be a seq.
 
-    return Std.lambda(params, body);
+    return StdLib.lambda(params, body);
   }
 
   if (ts.isBlock(node)) {
     const blockScope = new Set(scope);
     const stmts = node.statements.map((s) => transpileNode(s, blockScope));
-    return Std.seq(...stmts);
+    return StdLib.seq(...stmts);
   }
 
   if (ts.isIfStatement(node)) {
@@ -283,15 +300,15 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     const elseStmt = node.elseStatement ? transpileNode(node.elseStatement, scope) : null;
 
     if (elseStmt) {
-      return Std.if(cond, thenStmt, elseStmt);
+      return StdLib.if(cond, thenStmt, elseStmt);
     }
-    return Std.if(cond, thenStmt);
+    return StdLib.if(cond, thenStmt);
   }
 
   if (ts.isWhileStatement(node)) {
     const cond = transpileNode(node.expression, scope);
     const body = transpileNode(node.statement, scope);
-    return Std.while(cond, body);
+    return StdLib.while(cond, body);
   }
 
   if (ts.isTryStatement(node)) {
@@ -304,14 +321,14 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
       const catchScope = new Set(scope);
       catchScope.add(errVar);
       const catchBlock = transpileNode(catchClause.block, catchScope);
-      return Std.try(tryBlock, errVar, catchBlock);
+      return StdLib.try(tryBlock, errVar, catchBlock);
     }
     // ViwoScript try expects catch
-    return Std.try(tryBlock, "err", Std.seq());
+    return StdLib.try(tryBlock, "err", StdLib.seq());
   }
 
   if (ts.isThrowStatement(node)) {
-    return Std.throw(transpileNode(node.expression, scope));
+    return StdLib.throw(transpileNode(node.expression, scope));
   }
 
   if (ts.isForOfStatement(node)) {
@@ -325,7 +342,7 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     const list = transpileNode(node.expression, scope);
     const body = transpileNode(node.statement, loopScope);
 
-    return Std.for(varName, list, body);
+    return StdLib.for(varName, list, body);
   }
 
   if (ts.isReturnStatement(node)) {
@@ -337,6 +354,24 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
       return transpileNode(node.expression, scope);
     }
     return null;
+  }
+
+  if (node.kind === ts.SyntaxKind.ThisKeyword) {
+    return StdLib.this();
+  }
+
+  if (ts.isTemplateExpression(node)) {
+    const parts: any[] = [];
+    if (node.head.text) {
+      parts.push(node.head.text);
+    }
+    node.templateSpans.forEach((span) => {
+      parts.push(transpileNode(span.expression, scope));
+      if (span.literal.text) {
+        parts.push(span.literal.text);
+      }
+    });
+    return StringLib.strConcat(...parts);
   }
 
   console.warn(`Unsupported node kind: ${node.kind}`);

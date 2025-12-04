@@ -216,5 +216,7 @@ export type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Re
   return `\
 declare global {
 ${definitions.replace(/^/gm, "  ")}
-}`;
+}
+
+export {};`;
 }

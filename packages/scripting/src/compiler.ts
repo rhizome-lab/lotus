@@ -306,6 +306,10 @@ function compileOpcodeCall(op: string, args: any[]): string {
     // Std
     case "log":
       return `console.log(${args.map((a) => compileNode(a)).join(", ")})`;
+    case "str.concat":
+      return `("" + ${args.map((a) => compileNode(a)).join(" + ")})`;
+    case "this_":
+      return "ctx.this";
   }
 
   // Generic fallback for other opcodes (including dynamically added ones)
