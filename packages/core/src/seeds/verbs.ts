@@ -156,8 +156,8 @@ export function entity_base_teleport() {
 }
 // @endverb
 
-// @verb entity_base_move
-export function entity_base_move() {
+// @verb entity_base_go
+export function entity_base_go() {
   const direction = arg<string>(0);
   if (!direction) {
     send("message", "Where do you want to go?");
@@ -630,8 +630,8 @@ export function elevator_push() {
 }
 // @endverb
 
-// @verb elevator_move
-export function elevator_move() {
+// @verb elevator_go
+export function elevator_go() {
   const direction = arg<string>(0);
   if (direction === "out") {
     const currentFloor = obj.get(this_(), "current_floor");

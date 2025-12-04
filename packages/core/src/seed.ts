@@ -73,7 +73,7 @@ export function seed() {
 
   addVerb(entityBaseId, "teleport", transpile(extractVerb(verbsPath, "entity_base_teleport")));
 
-  addVerb(entityBaseId, "move", transpile(extractVerb(verbsPath, "entity_base_move")));
+  addVerb(entityBaseId, "go", transpile(extractVerb(verbsPath, "entity_base_go")));
 
   addVerb(entityBaseId, "say", transpile(extractVerb(verbsPath, "entity_base_say")));
 

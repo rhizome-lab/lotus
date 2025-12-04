@@ -138,7 +138,7 @@ describe("Hotel Scripting", () => {
 
     // 2. Move out
     await evaluate(
-      CoreLib.call(caller, "move", "out"),
+      CoreLib.call(caller, "go", "out"),
       createScriptContext({ caller, this: caller, send }),
     );
 
@@ -171,7 +171,7 @@ describe("Hotel Scripting", () => {
 
     // Call move "out"
     await evaluate(
-      CoreLib.call(caller, "move", "out"),
+      CoreLib.call(caller, "go", "out"),
       createScriptContext({ caller, this: caller, send }),
     );
 
@@ -214,7 +214,7 @@ describe("Hotel Scripting", () => {
     expect(elevator["current_floor"]).toBe(5);
 
     // 3. Out (to Floor 5 Lobby)
-    await evaluate(CoreLib.call(elevator, "move", "out"), {
+    await evaluate(CoreLib.call(elevator, "go", "out"), {
       ...ctx,
       this: elevator,
       args: [],
@@ -229,7 +229,7 @@ describe("Hotel Scripting", () => {
     // 4. Move "west" (to West Wing)
     // Note: The 'out' verb created the exits.
     await evaluate(
-      CoreLib.call(caller, "move", "west"),
+      CoreLib.call(caller, "go", "west"),
       createScriptContext({ caller, this: caller, send }),
     );
 
@@ -258,9 +258,9 @@ describe("Hotel Scripting", () => {
     expect(contents.some((e) => e["name"] === "Chair")).toBe(true);
 
     // 6. Leave (back to Wing)
-    // Use "move out"
+    // Use "go out"
     await evaluate(
-      CoreLib.call(caller, "move", "out"),
+      CoreLib.call(caller, "go", "out"),
       createScriptContext({ caller, this: caller, send }),
     );
 
@@ -271,7 +271,7 @@ describe("Hotel Scripting", () => {
 
     // 7. Move "back" (back to Floor Lobby)
     await evaluate(
-      CoreLib.call(caller, "move", "back"),
+      CoreLib.call(caller, "go", "back"),
       createScriptContext({ caller, this: caller, send }),
     );
 
@@ -282,7 +282,7 @@ describe("Hotel Scripting", () => {
 
     // 8. Move "elevator" (back to Elevator)
     await evaluate(
-      CoreLib.call(caller, "move", "elevator"),
+      CoreLib.call(caller, "go", "elevator"),
       createScriptContext({ caller, this: caller, send }),
     );
 
@@ -358,7 +358,7 @@ describe("Hotel Seed", () => {
     // 4. Out -> Creates Floor 1 Lobby + Wings
     let output = "";
     await evaluate(
-      CoreLib.call(elevator, "move", "out"),
+      CoreLib.call(elevator, "go", "out"),
       createScriptContext({
         caller: player,
         this: elevator,
@@ -373,7 +373,7 @@ describe("Hotel Seed", () => {
 
     // 5. Move "west"
     await evaluate(
-      CoreLib.call(player, "move", "west"),
+      CoreLib.call(player, "go", "west"),
       createScriptContext({ caller: player, this: player }),
     );
 
@@ -443,7 +443,7 @@ describe("Hotel Seed", () => {
     // 4. Out -> Creates Floor 2 Lobby + Wings
     let output = "";
     await evaluate(
-      CoreLib.call(elevator, "move", "out"),
+      CoreLib.call(elevator, "go", "out"),
       createScriptContext({
         caller: player,
         this: elevator,
@@ -458,7 +458,7 @@ describe("Hotel Seed", () => {
 
     // 5. Move "east"
     await evaluate(
-      CoreLib.call(player, "move", "east"),
+      CoreLib.call(player, "go", "east"),
       createScriptContext({ caller: player, this: player }),
     );
 

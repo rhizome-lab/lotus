@@ -52,7 +52,7 @@ export default function CustomExits() {
           {(exit) => (
             <div
               class="custom-exits__item"
-              onClick={() => gameStore.execute("move", [exit["name"] as string])}
+              onClick={() => gameStore.execute("go", [exit["name"] as string])}
             >
               <span class="custom-exits__name">{exit["name"] as string}</span>
               <Show when={exit["destination_name"] as string}>

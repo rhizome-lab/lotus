@@ -38,16 +38,16 @@ function App() {
       e.preventDefault();
       switch (action) {
         case "north":
-          gameStore.execute("move", ["north"]);
+          gameStore.execute("go", ["north"]);
           break;
         case "south":
-          gameStore.execute("move", ["south"]);
+          gameStore.execute("go", ["south"]);
           break;
         case "east":
-          gameStore.execute("move", ["east"]);
+          gameStore.execute("go", ["east"]);
           break;
         case "west":
-          gameStore.execute("move", ["west"]);
+          gameStore.execute("go", ["west"]);
           break;
         case "look":
           gameStore.execute("look", []);

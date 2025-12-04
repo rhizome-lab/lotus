@@ -4,8 +4,8 @@ import { parseCommand } from "./parser";
 describe("CLI Parser", () => {
   test("Basic command", () => {
     expect(parseCommand("look")).toEqual({ command: "look", args: [] });
-    expect(parseCommand("move north")).toEqual({
-      command: "move",
+    expect(parseCommand("go north")).toEqual({
+      command: "go",
       args: ["north"],
     });
   });

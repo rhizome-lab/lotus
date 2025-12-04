@@ -70,7 +70,7 @@ export default function RoomPanel() {
             <For each={exits()}>
               {(exit) => (
                 <span
-                  onClick={() => gameStore.execute("move", [exit["name"] as string])}
+                  onClick={() => gameStore.execute("go", [exit["name"] as string])}
                   class="room-panel__exit-tag"
                 >
                   {exit["name"] as string}

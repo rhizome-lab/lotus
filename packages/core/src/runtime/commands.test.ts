@@ -161,7 +161,7 @@ describe("Player Commands", () => {
     // Update start room with exit
     updateEntity({ ...room, exits: [exitId] });
 
-    await runCommand("move", ["north"]);
+    await runCommand("go", ["north"]);
 
     const updatedPlayer = getEntity(player.id)!;
     expect(updatedPlayer["location"]).toBe(otherRoomId);

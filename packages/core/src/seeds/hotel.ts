@@ -23,7 +23,7 @@ export function seedHotel(lobbyId: number, voidId: number, entityBaseId: number)
   createCapability(elevatorId, "entity.control", { target_id: elevatorId });
 
   addVerb(elevatorId, "push", transpile(extractVerb(verbsPath, "elevator_push")));
-  addVerb(elevatorId, "move", transpile(extractVerb(verbsPath, "elevator_move")));
+  addVerb(elevatorId, "go", transpile(extractVerb(verbsPath, "elevator_go")));
 
   // 3. Floors and Rooms
   const floors = 5;
@@ -224,7 +224,7 @@ export function seedHotel(lobbyId: number, voidId: number, entityBaseId: number)
     // Link Floor Lobby -> Elevator (enter)
     // Actually, elevator is "in" main lobby.
     // But we can have an "elevator" exit in Floor Lobby that teleports to Elevator?
-    // The test does: CoreLib.call(caller, "move", "elevator")
+    // The test does: CoreLib.call(caller, "go", "elevator")
     // So we need an exit named "elevator".
     const elevatorExitId = createEntity(
       {
