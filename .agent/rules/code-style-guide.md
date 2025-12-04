@@ -13,6 +13,12 @@ description: General Guidelines
 - Always clean up long comments. Use `rg` with `//.+\n *//.+\n *//`.
 - Try to avoid `ts-expect-error`, but even that is preferable to `ts-ignore`.
 
+# Stack
+- bun (`bun test`; `bun install <package>` etc)
+- bun:sqlite for DB
+- vitepress for docs (`docs/`)
+- vite for web (`apps/web/` and `apps/playground/`)
+
 ## Advice
 - When starting a conversation, check `docs/` for design documents. After every action, update the files in `docs/` if there are any relevant updates.
 - Add one-shot scripts in `scratch/` subdirectories if possible.

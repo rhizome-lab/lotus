@@ -96,3 +96,26 @@ TypeScript reserved keywords (like `if`, `while`, `try`) cannot be used as funct
 declare function myOpcode(x: number): void;
 myOpcode(1); // Transpiles to ["myOpcode", 1]
 ```
+
+## Usage in Seeds
+
+The transpiler is heavily used in the seeding process to allow writing verbs in TypeScript.
+
+1.  **Define Verbs**: Verbs are defined as exported functions in `packages/core/src/seeds/verbs.ts`.
+2.  **Extract Body**: The `extractVerb` helper reads the function body from the source file.
+3.  **Transpile**: The body string is passed to `transpile()` to generate the ViwoScript AST.
+
+```typescript
+// In seeds/verbs.ts
+// @verb look
+export function look() {
+  // ... code ...
+}
+// @endverb
+
+// In seed.ts
+import { transpile } from "@viwo/scripting";
+import { extractVerb } from "./verb_loader";
+
+addVerb(id, "look", transpile(extractVerb(verbsPath, "look")));
+```
