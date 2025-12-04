@@ -9,10 +9,11 @@
 
   - packages/scripting/src/transpiler.ts
   - docs/scripting/transpiler.md
-  - Consider `for (... in ...)`
   - (low priority) Add block scoping
 
-- packages/scripting/src/interpreter.ts: Lambdas should be interpreted inside the stack machine, instead of a recursive `evaluate` call
+- packages/scripting/src/interpreter.ts: Lambdas should be interpreted inside the stack machine, instead of a recursive `evaluate` call.
+  - **Plan**: Refactor `OpcodeHandler` to return a generator (`Iterator<CallRequest | any>`). The interpreter loop would handle `CallRequest` by pushing a new stack frame, thus avoiding recursion in the host JS engine.
+  - **Status**: Postponed. The current recursive implementation is simpler and likely performant enough for now. We should revisit this if we hit stack overflow issues or need features like pausing/resuming execution (serialization).
 - packages/core/src/runtime/lib/kernel.ts: In a real system, we'd need to ensure restrictions are actually restrictive (subset)
 - packages/core/src/index.ts: In a real system, we would check authentication here.
 - apps/tui/src/App.tsx: Fetch script content properly. For now, mock or try to find in entities if loaded.
