@@ -12,6 +12,9 @@ hero:
     - theme: alt
       text: Scripting Guide
       link: /scripting/spec
+    - theme: alt
+      text: Project Vision
+      link: /vision
 
 features:
   - title: Multiplayer

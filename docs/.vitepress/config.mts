@@ -37,6 +37,13 @@ export default withMermaid(
 
       sidebar: [
         {
+          text: "Introduction",
+          items: [
+            { text: "Vision", link: "/vision" },
+            { text: "Challenges", link: "/challenges" },
+          ],
+        },
+        {
           text: "Core",
           items: getSidebarItems("core"),
         },

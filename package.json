@@ -31,7 +31,7 @@
     "build:docs": "bun --filter @viwo/docs build && bun --filter @viwo/playground build && cp -r apps/playground/dist docs/.vitepress/dist/playground",
     "preview:docs": "bun --filter @viwo/docs preview",
     "prepare": "bun simple-git-hooks",
-    "commit:amend": "bun format && git add -A && git commit --amend"
+    "commit": "bun format && git add -A && git commit"
   },
   "simple-git-hooks": {
     "pre-commit": "bun --filter '*' generate:types && bun format && git add packages/scripting/src/types.ts packages/core/src/types.ts"
