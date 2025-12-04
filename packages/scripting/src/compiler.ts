@@ -1,5 +1,5 @@
 import { ScriptValue } from "./def";
-import { ScriptContext, OPS, ScriptError } from "./interpreter";
+import { ScriptContext, OPS, ScriptError, BreakSignal } from "./interpreter";
 
 /**
  * Compiles a ViwoScript AST into a JavaScript function.
@@ -10,7 +10,7 @@ import { ScriptContext, OPS, ScriptError } from "./interpreter";
 export function compile(script: ScriptValue<any>): (ctx: ScriptContext) => any {
   const code = compileNode(script);
   // We wrap the code in a function that takes 'ctx' and 'OPS' as arguments.
-  // We also need 'ScriptError' available for throwing.
+  // We also need 'ScriptError' and 'BreakSignal' available for throwing/catching.
   const body = `
     return function(ctx) {
       try {
@@ -23,10 +23,10 @@ export function compile(script: ScriptValue<any>): (ctx: ScriptContext) => any {
   `;
 
   // Create the factory function
-  const factory = new Function("OPS", "ScriptError", body);
+  const factory = new Function("OPS", "ScriptError", "BreakSignal", body);
 
   // Return the executable function, injecting dependencies
-  return factory(OPS, ScriptError);
+  return factory(OPS, ScriptError, BreakSignal);
 }
 
 function compileNode(node: any): string {
@@ -71,6 +71,8 @@ function compileNode(node: any): string {
         return compileTry(args);
       case "throw":
         return compileThrow(args);
+      case "break":
+        return compileBreak(args);
       case "list.new":
         return `[${args.map(compileNode).join(", ")}]`;
       case "obj.new":
@@ -120,7 +122,14 @@ function compileWhile(args: any[]): string {
   return `(() => {
     let result = null;
     while (${compileNode(cond)}) {
-      result = ${compileNode(body)};
+      try {
+        result = ${compileNode(body)};
+      } catch (e) {
+        if (e instanceof BreakSignal) {
+          return e.value ?? result;
+        }
+        throw e;
+      }
     }
     return result;
   })()`;
@@ -135,7 +144,14 @@ function compileFor(args: any[]): string {
       for (const item of list) {
         ctx.vars = ctx.vars || {};
         ctx.vars[${JSON.stringify(varName)}] = item;
-        result = ${compileNode(body)};
+        try {
+          result = ${compileNode(body)};
+        } catch (e) {
+          if (e instanceof BreakSignal) {
+            return e.value ?? result;
+          }
+          throw e;
+        }
       }
     }
     return result;
@@ -244,6 +260,11 @@ function compileTry(args: any[]): string {
 function compileThrow(args: any[]): string {
   const [msg] = args;
   return `(() => { throw new ScriptError(${compileNode(msg)}); })()`;
+}
+
+function compileBreak(args: any[]): string {
+  const [val] = args;
+  return `(() => { throw new BreakSignal(${val ? compileNode(val) : "null"}); })()`;
 }
 
 function compileObjNew(args: any[]): string {

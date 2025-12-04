@@ -101,6 +101,74 @@ describe("Interpreter", () => {
     expect(evaluate(script, ctx)).toBe(6);
   });
 
+  test("break in while loop", () => {
+    // i = 0; while (true) { i++; if (i > 3) break; } return i;
+    const script = Std.seq(
+      Std.let("i", 0),
+      Std.while(
+        true,
+        Std.seq(
+          Std.set("i", MathLib.add(Std.var("i"), 1)),
+          Std.if(BooleanLib.gt(Std.var("i"), 3), Std.break()),
+        ),
+      ),
+      Std.var("i"),
+    );
+    expect(evaluate(script, ctx)).toBe(4);
+  });
+
+  test("break in for loop", () => {
+    // sum = 0; for x in [1, 2, 3, 4, 5] { if (x > 3) break; sum += x; } return sum;
+    const script = Std.seq(
+      Std.let("sum", 0),
+      Std.for(
+        "x",
+        List.listNew(1, 2, 3, 4, 5),
+        Std.seq(
+          Std.if(BooleanLib.gt(Std.var("x"), 3), Std.break()),
+          Std.set("sum", MathLib.add(Std.var("sum"), Std.var("x"))),
+        ),
+      ),
+      Std.var("sum"),
+    );
+    expect(evaluate(script, ctx)).toBe(6); // 1 + 2 + 3
+  });
+
+  test("nested loops break", () => {
+    // sum = 0;
+    // for i in [1, 2, 3] {
+    //   for j in [1, 2, 3] {
+    //     if (j > 1) break;
+    //     sum += i * j;
+    //   }
+    // }
+    // return sum;
+    // i=1, j=1 -> sum += 1
+    // i=1, j=2 -> break
+    // i=2, j=1 -> sum += 2
+    // i=2, j=2 -> break
+    // i=3, j=1 -> sum += 3
+    // i=3, j=2 -> break
+    // Total sum = 6
+    const script = Std.seq(
+      Std.let("sum", 0),
+      Std.for(
+        "i",
+        List.listNew(1, 2, 3),
+        Std.for(
+          "j",
+          List.listNew(1, 2, 3),
+          Std.seq(
+            Std.if(BooleanLib.gt(Std.var("j"), 1), Std.break()),
+            Std.set("sum", MathLib.add(Std.var("sum"), MathLib.mul(Std.var("i"), Std.var("j")))),
+          ),
+        ),
+      ),
+      Std.var("sum"),
+    );
+    expect(evaluate(script, ctx)).toBe(6);
+  });
+
   test("errors", () => {
     // Unknown opcode
     try {

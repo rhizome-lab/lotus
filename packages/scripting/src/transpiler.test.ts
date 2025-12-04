@@ -163,6 +163,10 @@ describe("transpiler", () => {
       ),
     );
     expect(transpile("try { 1; } catch (e) { 2; }")).toEqual(Std.try(Std.seq(1), "e", Std.seq(2)));
+    expect(transpile("while (true) { break; }")).toEqual(Std.while(true, Std.seq(Std.break())));
+    expect(transpile("for (const x of list) { if (x) break; }")).toEqual(
+      Std.for("x", Std.var("list"), Std.seq(Std.if(Std.var("x"), Std.break()))),
+    );
   });
 
   test("sequence", () => {

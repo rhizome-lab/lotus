@@ -1,4 +1,4 @@
-import { evaluate, ScriptError } from "../interpreter";
+import { evaluate, ScriptError, BreakSignal } from "../interpreter";
 import { defineOpcode, ScriptRaw } from "../def";
 import { Entity } from "@viwo/shared/jsonrpc";
 
@@ -153,30 +153,60 @@ const while_ = defineOpcode<[boolean, unknown], any>("while", {
       if (condResult instanceof Promise) {
         return condResult.then((res) => {
           if (res) {
-            const bodyResult = evaluate(body, ctx);
-            if (bodyResult instanceof Promise) {
-              return bodyResult.then((bRes) => {
-                lastResult = bRes;
-                return loop();
-              });
+            try {
+              const bodyResult = evaluate(body, ctx);
+              if (bodyResult instanceof Promise) {
+                return bodyResult.then(
+                  (bRes) => {
+                    lastResult = bRes;
+                    return loop();
+                  },
+                  (err) => {
+                    if (err instanceof BreakSignal) {
+                      return err.value ?? lastResult;
+                    }
+                    throw err;
+                  },
+                );
+              }
+              lastResult = bodyResult;
+              return loop();
+            } catch (e) {
+              if (e instanceof BreakSignal) {
+                return e.value ?? lastResult;
+              }
+              throw e;
             }
-            lastResult = bodyResult;
-            return loop();
           }
           return lastResult;
         });
       }
 
       if (condResult) {
-        const bodyResult = evaluate(body, ctx);
-        if (bodyResult instanceof Promise) {
-          return bodyResult.then((bRes) => {
-            lastResult = bRes;
-            return loop();
-          });
+        try {
+          const bodyResult = evaluate(body, ctx);
+          if (bodyResult instanceof Promise) {
+            return bodyResult.then(
+              (bRes) => {
+                lastResult = bRes;
+                return loop();
+              },
+              (err) => {
+                if (err instanceof BreakSignal) {
+                  return err.value ?? lastResult;
+                }
+                throw err;
+              },
+            );
+          }
+          lastResult = bodyResult;
+          return loop();
+        } catch (e) {
+          if (e instanceof BreakSignal) {
+            return e.value ?? lastResult;
+          }
+          throw e;
         }
-        lastResult = bodyResult;
-        return loop();
       }
       return lastResult;
     };
@@ -222,15 +252,30 @@ const for_ = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
         ctx.vars = ctx.vars || {};
         ctx.vars[varName] = item;
 
-        const result = evaluate(body, ctx);
-        if (result instanceof Promise) {
-          return result.then((res) => {
-            lastResult = res;
-            return next();
-          });
+        try {
+          const result = evaluate(body, ctx);
+          if (result instanceof Promise) {
+            return result.then(
+              (res) => {
+                lastResult = res;
+                return next();
+              },
+              (err) => {
+                if (err instanceof BreakSignal) {
+                  return err.value ?? lastResult;
+                }
+                throw err;
+              },
+            );
+          }
+          lastResult = result;
+          return next();
+        } catch (e) {
+          if (e instanceof BreakSignal) {
+            return e.value ?? lastResult;
+          }
+          throw e;
         }
-        lastResult = result;
-        return next();
       };
 
       return next();
@@ -244,6 +289,24 @@ const for_ = defineOpcode<[string, readonly unknown[], unknown], any>("for", {
   },
 });
 export { for_ as for };
+
+/**
+ * Breaks out of the current loop.
+ */
+const break_ = defineOpcode<[unknown?], never>("break", {
+  metadata: {
+    label: "Break",
+    category: "control-flow",
+    description: "Break out of loop",
+    slots: [{ name: "Value", type: "block" }],
+    parameters: [{ name: "value", type: "any", optional: true }],
+    returnType: "never",
+  },
+  handler: ([value], _ctx) => {
+    throw new BreakSignal(value);
+  },
+});
+export { break_ as break };
 
 // Data Structures
 /** Converts a value to a JSON string. */

@@ -12,7 +12,6 @@
   - docs/scripting/transpiler.md
   - docs/scripting/compiler.md
   - Consider `for (... in ...)`
-  - Consider `break`
   - Consider `?.`, `?.()`, etc.
   - Add tests to make sure type assertions (`as T`), non-null assertions (`foo!`), generic parameters, etc. are ignored as expected
   - (low priority) Add block scoping

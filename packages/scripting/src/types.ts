@@ -84,6 +84,7 @@ declare global {
   function apply(func: unknown, ...args: any[]): any;
   function arg<T>(index: number): T;
   function args(): readonly any[];
+  function break_(value?: any): never;
   function caller(): Entity;
   function for_(variableName: string, list: any, body: any): any;
   function if_<T>(condition: unknown, then: T, else_?: T): T;

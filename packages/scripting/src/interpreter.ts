@@ -148,6 +148,13 @@ export function executeLambda(lambda: any, args: unknown[], ctx: ScriptContext):
 }
 
 /**
+ * Signal thrown to break out of a loop.
+ */
+export class BreakSignal {
+  constructor(public value: any = null) {}
+}
+
+/**
  * Evaluates a script expression using an explicit stack machine with SOA (Structure of Arrays).
  *
  * @param ast - The script AST (S-expression) to evaluate.
@@ -258,6 +265,9 @@ function executeLoop(
 
         result = def.handler(args, ctx);
       } catch (e: any) {
+        if (e instanceof BreakSignal) {
+          throw e;
+        }
         let scriptError: ScriptError;
         if (e instanceof ScriptError) {
           scriptError = e;

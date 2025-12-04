@@ -446,6 +446,10 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     return null;
   }
 
+  if (ts.isBreakStatement(node)) {
+    return StdLib.break();
+  }
+
   if (node.kind === ts.SyntaxKind.ThisKeyword) {
     return StdLib.this();
   }
