@@ -53,8 +53,9 @@ export const objKeys = defineOpcode<[object], string[]>("obj.keys", {
     category: "object",
     description: "Get object keys",
     slots: [{ name: "Object", type: "block" }],
-    parameters: [{ name: "object", type: "object" }],
-    returnType: "string[]",
+    genericParameters: ["T"],
+    parameters: [{ name: "object", type: "T" }],
+    returnType: "readonly (keyof T)[]",
   },
   handler: ([obj], _ctx) => {
     return Object.getOwnPropertyNames(obj);
@@ -68,8 +69,9 @@ export const objValues = defineOpcode<[object], any[]>("obj.values", {
     category: "object",
     description: "Get object values",
     slots: [{ name: "Object", type: "block" }],
-    parameters: [{ name: "object", type: "object" }],
-    returnType: "any[]",
+    genericParameters: ["T"],
+    parameters: [{ name: "object", type: "T" }],
+    returnType: "readonly (T[keyof T])[]",
   },
   handler: ([obj], _ctx) => {
     return Object.getOwnPropertyNames(obj).map((key) => (obj as any)[key]);
@@ -83,8 +85,9 @@ export const objEntries = defineOpcode<[object], [string, any][]>("obj.entries",
     category: "object",
     description: "Get object entries",
     slots: [{ name: "Object", type: "block" }],
-    parameters: [{ name: "object", type: "object" }],
-    returnType: "[string, any][]",
+    genericParameters: ["T"],
+    parameters: [{ name: "object", type: "T" }],
+    returnType: "readonly [keyof T, T[keyof T]][]",
   },
   handler: ([obj], _ctx) => {
     return Object.getOwnPropertyNames(obj).map((key) => [key, (obj as any)[key]]);
@@ -102,12 +105,13 @@ export const objGet = defineOpcode<[object, string, unknown?], any>("obj.get", {
       { name: "Key", type: "string" },
       { name: "Default", type: "block", default: null },
     ],
+    genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "key", type: "string" },
-      { name: "default", type: "any", optional: true },
+      { name: "object", type: "T" },
+      { name: "key", type: "K" },
+      { name: "default", type: "T[K]", optional: true },
     ],
-    returnType: "any",
+    returnType: "T[K]",
   },
   handler: ([obj, key, defVal], _ctx) => {
     if (!Object.hasOwnProperty.call(obj, key)) {
@@ -131,12 +135,13 @@ export const objSet = defineOpcode<[object, string, unknown], any>("obj.set", {
       { name: "Key", type: "string" },
       { name: "Value", type: "block" },
     ],
+    genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "key", type: "string" },
-      { name: "value", type: "any" },
+      { name: "object", type: "T" },
+      { name: "key", type: "K" },
+      { name: "value", type: "T[K]" },
     ],
-    returnType: "any",
+    returnType: "T",
   },
   handler: ([obj, key, val], _ctx) => {
     if (DISALLOWED_KEYS.has(key)) {
@@ -157,9 +162,10 @@ export const objHas = defineOpcode<[object, string], boolean>("obj.has", {
       { name: "Object", type: "block" },
       { name: "Key", type: "string" },
     ],
+    genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "key", type: "string" },
+      { name: "object", type: "T" },
+      { name: "key", type: "K" },
     ],
     returnType: "boolean",
   },
@@ -178,9 +184,10 @@ export const objDel = defineOpcode<[object, string], boolean>("obj.del", {
       { name: "Object", type: "block" },
       { name: "Key", type: "string" },
     ],
+    genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "key", type: "string" },
+      { name: "object", type: "T" },
+      { name: "key", type: "K" },
     ],
     returnType: "boolean",
   },
@@ -200,8 +207,9 @@ export const objMerge = defineOpcode<[object, object, ...object[]], any>("obj.me
     category: "object",
     description: "Merge objects",
     slots: [{ name: "Objects", type: "block" }], // Variadic
-    parameters: [{ name: "...objects", type: "object[]" }],
-    returnType: "any",
+    genericParameters: ["Ts extends object[]"],
+    parameters: [{ name: "...objects", type: "Ts" }],
+    returnType: "UnionToIntersection<Ts[number]>",
   },
   handler: ([...objs], _ctx) => {
     return Object.assign({}, ...objs);
@@ -248,11 +256,12 @@ export const objFilter = defineOpcode<[object, unknown], any>("obj.filter", {
       { name: "Object", type: "block" },
       { name: "Lambda", type: "block" },
     ],
+    genericParameters: ["T"],
     parameters: [
-      { name: "object", type: "object" },
+      { name: "object", type: "T" },
       { name: "lambda", type: "object" },
     ],
-    returnType: "any",
+    returnType: "Partial<T>",
   },
   handler: async ([obj, func], ctx) => {
     if (!func || (func as any).type !== "lambda") {
@@ -281,12 +290,13 @@ export const objReduce = defineOpcode<[object, unknown, unknown], any>("obj.redu
       { name: "Lambda", type: "block" },
       { name: "Init", type: "block" },
     ],
+    genericParameters: ["Acc"],
     parameters: [
       { name: "object", type: "object" },
-      { name: "lambda", type: "object" },
-      { name: "init", type: "any" },
+      { name: "lambda", type: "unknown" },
+      { name: "init", type: "Acc" },
     ],
-    returnType: "any",
+    returnType: "Acc",
   },
   handler: async ([obj, func, init], ctx) => {
     let acc = init;

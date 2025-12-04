@@ -53,7 +53,7 @@ const OPERATOR_MAP: Record<string, string> = {
 
 export function generateTypeDefinitions(opcodes: OpcodeMetadata[]): string {
   let definitions = `\
-export interface Entity {
+interface Entity {
   /** Unique ID of the entity */
   id: number;
   /**
@@ -66,7 +66,7 @@ export interface Entity {
 /**
  * Represents a scriptable action (verb) attached to an entity.
  */
-export interface Verb {
+interface Verb {
   id: number;
   entity_id: number;
   /** The name of the verb (command) */
@@ -77,10 +77,14 @@ export interface Verb {
   permissions: Record<string, unknown>;
 }
 
-export interface Capability {
+interface Capability {
   readonly __brand: "Capability";
   readonly id: string;
 }
+
+type UnionToIntersection<T> = (
+  T extends T ? (t: T) => 0 : never
+) extends (i: infer I) => 0 ? Extract<I, T> : never;
 
 type UnknownUnion =
   | string
@@ -92,13 +96,13 @@ type UnknownUnion =
   | (Record<string, unknown> & { readonly length?: never })
   | (Record<string, unknown> & { readonly slice?: never });
 
-export type ScriptValue_<T> = Exclude<T, readonly unknown[]>;
+type ScriptValue_<T> = Exclude<T, readonly unknown[]>;
 
 /**
  * Represents a value in the scripting language.
  * Can be a primitive, an object, or a nested S-expression (array).
  */
-export type ScriptValue<T> =
+type ScriptValue<T> =
   | (unknown extends T
       ? ScriptValue_<UnknownUnion>
       : object extends T
@@ -107,7 +111,7 @@ export type ScriptValue<T> =
   | ScriptExpression<any[], T>;
 
 // Phantom type for return type safety
-export type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Ret> = [
+type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Ret> = [
   string,
   ...Args,
 ] & {
@@ -218,5 +222,5 @@ declare global {
 ${definitions.replace(/^/gm, "  ")}
 }
 
-export {};`;
+{};`;
 }

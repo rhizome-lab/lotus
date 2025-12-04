@@ -1,5 +1,5 @@
 declare global {
-  export interface Entity {
+  interface Entity {
     /** Unique ID of the entity */
     id: number;
     /**
@@ -12,7 +12,7 @@ declare global {
   /**
    * Represents a scriptable action (verb) attached to an entity.
    */
-  export interface Verb {
+  interface Verb {
     id: number;
     entity_id: number;
     /** The name of the verb (command) */
@@ -23,10 +23,14 @@ declare global {
     permissions: Record<string, unknown>;
   }
 
-  export interface Capability {
+  interface Capability {
     readonly __brand: "Capability";
     readonly id: string;
   }
+
+  type UnionToIntersection<T> = (T extends T ? (t: T) => 0 : never) extends (i: infer I) => 0
+    ? Extract<I, T>
+    : never;
 
   type UnknownUnion =
     | string
@@ -38,13 +42,13 @@ declare global {
     | (Record<string, unknown> & { readonly length?: never })
     | (Record<string, unknown> & { readonly slice?: never });
 
-  export type ScriptValue_<T> = Exclude<T, readonly unknown[]>;
+  type ScriptValue_<T> = Exclude<T, readonly unknown[]>;
 
   /**
    * Represents a value in the scripting language.
    * Can be a primitive, an object, or a nested S-expression (array).
    */
-  export type ScriptValue<T> =
+  type ScriptValue<T> =
     | (unknown extends T
         ? ScriptValue_<UnknownUnion>
         : object extends T
@@ -53,7 +57,7 @@ declare global {
     | ScriptExpression<any[], T>;
 
   // Phantom type for return type safety
-  export type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Ret> = [
+  type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Ret> = [
     string,
     ...Args,
   ] & {
@@ -61,18 +65,18 @@ declare global {
   };
 
   // Standard library functions
-  function call(target: object, verb: string, ...args: any[]): any;
-  function create(cap: object, data: object): number;
-  function destroy(cap: object, target: object): null;
+  function call(target: Entity, verb: string, ...args: any[]): any;
+  function create(cap: Capability | null, data: object): number;
+  function destroy(cap: Capability | null, target: Entity): null;
   function entity(id: number): Entity;
-  function get_prototype(target: object): number | null;
-  function get_verb(target: object, name: string): Verb | null;
-  function resolve_props(target: object): Entity;
+  function get_prototype(target: Entity): number | null;
+  function get_verb(target: Entity, name: string): Verb | null;
+  function resolve_props(target: Entity): Entity;
   function schedule(verb: string, args: any[], delay: number): null;
-  function set_entity(cap: object, ...entities: object[]): void;
-  function set_prototype(cap: object, target: object, prototype: any): null;
-  function sudo(cap: object, target: object, verb: string, args: any[]): any;
-  function verbs(target: object): Verb[];
+  function set_entity(cap: Capability | null, ...entities: object[]): void;
+  function set_prototype(cap: Capability | null, target: Entity, prototypeId: number): null;
+  function sudo(cap: Capability | null, target: Entity, verb: string, args: any[]): any;
+  function verbs(target: Entity): Verb[];
   function delegate(parent: object, restrictions: object): Capability;
   function get_capability(type_: string, filter?: object): Capability | null;
   function give_capability(cap: object, target: object): null;
@@ -153,24 +157,24 @@ declare global {
     function unshift(list: readonly unknown[], value: any): number;
   }
   namespace obj {
-    function del(object: object, key: string): boolean;
-    function entries(object: object): [string, any][];
-    function filter(object: object, lambda: object): any;
+    function del<T, K extends keyof T = keyof T>(object: T, key: K): boolean;
+    function entries<T>(object: T): readonly [keyof T, T[keyof T]][];
+    function filter<T>(object: T, lambda: object): Partial<T>;
     function flatMap(object: object, lambda: object): any;
-    function get(object: object, key: string, default_?: any): any;
-    function has(object: object, key: string): boolean;
-    function keys(object: object): string[];
+    function get<T, K extends keyof T = keyof T>(object: T, key: K, default_?: T[K]): T[K];
+    function has<T, K extends keyof T = keyof T>(object: T, key: K): boolean;
+    function keys<T>(object: T): readonly (keyof T)[];
     function map(object: object, lambda: object): any;
-    function merge(...objects: object[]): any;
+    function merge<Ts extends object[]>(...objects: Ts): UnionToIntersection<Ts[number]>;
     function new_<Kvs extends [] | readonly (readonly [key: "" | (string & {}), value: unknown])[]>(
       ...kvs: any[]
     ): {
       [K in keyof Kvs & `${number}` as (Kvs[K] & [string, unknown])[0]]: (Kvs[K] &
         [string, unknown])[1];
     };
-    function reduce(object: object, lambda: object, init: any): any;
-    function set(object: object, key: string, value: any): any;
-    function values(object: object): any[];
+    function reduce<Acc>(object: object, lambda: unknown, init: Acc): Acc;
+    function set<T, K extends keyof T = keyof T>(object: T, key: K, value: T[K]): T;
+    function values<T>(object: T): readonly T[keyof T][];
   }
   namespace str {
     function concat(...strings: any[]): string;
@@ -198,4 +202,5 @@ declare global {
   }
 }
 
-export {};
+{
+}
