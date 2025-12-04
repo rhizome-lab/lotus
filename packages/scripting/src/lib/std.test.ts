@@ -100,6 +100,19 @@ createLibraryTester(Std, "Standard Library", (test) => {
     expect(evaluate(Std.var("sum"), localCtx)).toBe(6);
   });
 
+  test("break", () => {
+    const localCtx = { ...ctx, locals: {} };
+    evaluate(Std.let("i", 0), localCtx);
+    evaluate(
+      Std.while(
+        Boolean.lt(Std.var("i"), 10),
+        Std.seq(Std.set("i", Math.add(Std.var("i"), 1)), Std.break()),
+      ),
+      localCtx,
+    );
+    expect(evaluate(Std.var("i"), localCtx)).toBe(1);
+  });
+
   // Data Structures
   test("json.stringify", () => {
     expect(evaluate(Std.jsonStringify({ a: 1 }), ctx)).toBe('{"a":1}');

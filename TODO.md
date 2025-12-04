@@ -5,14 +5,11 @@
   - TUI (should have the same layout as web frontend)
   - Discord bot
 
-- Flesh out transpiler and compiler:
+- Flesh out transpiler:
 
   - packages/scripting/src/transpiler.ts
-  - packages/scripting/src/compiler.ts
   - docs/scripting/transpiler.md
-  - docs/scripting/compiler.md
   - Consider `for (... in ...)`
-  - Consider `?.`, `?.()`, etc.
   - Add tests to make sure type assertions (`as T`), non-null assertions (`foo!`), generic parameters, etc. are ignored as expected
   - (low priority) Add block scoping
 

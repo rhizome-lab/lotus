@@ -65,6 +65,8 @@ describe("transpiler", () => {
   test("property access", () => {
     expect(transpile("obj.x")).toEqual(ObjectLib.objGet(Std.var("obj"), "x"));
     expect(transpile("obj['x']")).toEqual(ObjectLib.objGet(Std.var("obj"), "x"));
+    expect(transpile("arr[0]")).toEqual(List.listGet(Std.var("arr"), 0));
+    expect(transpile("arr[1]")).toEqual(List.listGet(Std.var("arr"), 1));
   });
 
   test("property assignment", () => {

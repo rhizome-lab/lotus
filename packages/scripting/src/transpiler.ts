@@ -315,6 +315,9 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     }
     const obj = transpileNode(node.expression, scope);
     const key = transpileNode(node.argumentExpression, scope);
+    if (typeof key === "number") {
+      return ListLib.listGet(obj, key);
+    }
     return ObjectLib.objGet(obj, key);
   }
 
@@ -692,6 +695,9 @@ function applyPart(base: any, part: ChainPart): any {
   if (part.kind === "prop") {
     return ObjectLib.objGet(base, part.key);
   } else if (part.kind === "elem") {
+    if (typeof part.key === "number") {
+      return ListLib.listGet(base, part.key);
+    }
     return ObjectLib.objGet(base, part.key);
   } else if (part.kind === "call") {
     return StdLib.apply(base, ...(part.args || []));
