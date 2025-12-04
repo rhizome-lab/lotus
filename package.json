@@ -30,7 +30,8 @@
     "build:docs": "bun --filter @viwo/docs build && bun --filter @viwo/playground build && cp -r apps/playground/dist docs/.vitepress/dist/playground",
     "dev:docs": "bun scripts/dev-docs.ts",
     "preview:docs": "bun --filter @viwo/docs preview",
-    "commit": "bun format && git add -A && git commit"
+    "generate:types": "bun --filter '*' generate:types",
+    "commit": "bun generate:types && bun format && git add -A && git commit"
   },
   "workspaces": [
     "apps/*",

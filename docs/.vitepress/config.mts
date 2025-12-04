@@ -41,6 +41,7 @@ export default withMermaid(
           items: [
             { text: "Vision", link: "/vision" },
             { text: "Challenges", link: "/challenges" },
+            { text: "Automation", link: "/automation" },
           ],
         },
         {
@@ -69,7 +70,10 @@ export default withMermaid(
         },
         {
           text: "Development",
-          items: [{ text: "Building Docs", link: "/development" }],
+          items: [
+            { text: "Building Docs", link: "/development" },
+            { text: "Type Generation", link: "/codegen" },
+          ],
         },
       ],
 
