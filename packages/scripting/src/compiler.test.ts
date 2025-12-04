@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "bun:test";
-import { ScriptContext, registerLibrary } from "./interpreter";
+import { ScriptContext, createScriptContext, registerLibrary } from "./interpreter";
 import { compile } from "./compiler";
 import * as Std from "./lib/std";
 import * as ObjectLib from "./lib/object";
@@ -23,15 +23,7 @@ describe("Compiler", () => {
   const target: Entity = { id: 2 };
   target["owner"] = 1;
 
-  const ctx = {
-    caller,
-    this: target,
-    args: [],
-    gas: 1000,
-    warnings: [],
-    vars: {},
-    stack: [],
-  } satisfies ScriptContext;
+  const ctx = createScriptContext({ caller, this: target });
 
   function run(script: any, context: ScriptContext = ctx) {
     return compile(script)(context);
@@ -83,7 +75,7 @@ describe("Compiler", () => {
       Std.for(
         "x",
         List.listNew(1, 2, 3),
-        Std.let("sum", MathLib.add(Std.var("sum"), Std.var("x"))),
+        Std.set("sum", MathLib.add(Std.var("sum"), Std.var("x"))),
       ),
       Std.var("sum"),
     );
