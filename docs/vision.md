@@ -4,6 +4,27 @@ Viwo is designed as a **Scriptable Object Server**. While its roots are in MUDs,
 
 Our vision is built on four converging pillars:
 
+```mermaid
+mindmap
+  root((Viwo))
+    Simulation
+      Entity System
+      Scripting
+      Persistence
+    AI Roleplay
+      Context Injection
+      NPC Agency
+      Memory Systems
+    Ubiquitous Access
+      Headless Core
+      Event Driven
+      Multi Platform
+    Knowledge
+      Graph Structure
+      Vector Search
+      Workflows
+```
+
 ## 1. Deep Simulation (The "Sandbox" Pillar)
 
 _Inspired by: ChatMUD, LambdaMOO, Corruption of Champions, Lilith's Throne, Dwarf Fortress, Paradise, Universe_

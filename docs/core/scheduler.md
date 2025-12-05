@@ -65,3 +65,31 @@ The scheduler relies on the `scheduled_tasks` table:
 ## Error Handling
 
 If a task fails to execute (e.g., entity not found, script error), the error is caught and logged to `console.error`. The task remains deleted from the database to prevent a crash loop.
+
+### Scheduler Logic
+
+```mermaid
+flowchart TD
+    Start((Start)) --> Init[Initialize Scheduler]
+    Init --> Loop{Loop Interval?}
+    Loop -- Yes --> Query[Query DB for Tasks<br>execute_at <= now]
+    Loop -- No --> Wait[Wait] --> Loop
+
+    Query --> HasTasks{Tasks Found?}
+    HasTasks -- No --> Wait
+    HasTasks -- Yes --> Process[Process Task]
+
+    Process --> Delete[Delete from DB]
+    Delete --> Resolve[Resolve Entity & Verb]
+    Resolve --> Execute[Execute Script]
+
+    Execute --> Success{Success?}
+    Success -- Yes --> LogSuccess[Log Success]
+    Success -- No --> LogError[Log Error]
+
+    LogSuccess --> More{More Tasks?}
+    LogError --> More
+
+    More -- Yes --> Process
+    More -- No --> Wait
+```

@@ -13,6 +13,54 @@ Viwo is inspired by ChatMUD and LambdaMOO, focusing on a semantic world state, r
 - **Frontend**: SolidJS (Web), React + Ink (TUI)
 - **AI**: Vercel AI SDK / OpenAI
 
+## System Architecture
+
+```mermaid
+graph TD
+    User((User))
+
+    subgraph Clients
+        Web[Web Client<br>SolidJS]
+        TUI[TUI Client<br>Ink + React]
+        Discord[Discord Bot<br>discord.js]
+        CLI[CLI Tool]
+    end
+
+    subgraph Core Server
+        Server[Viwo Server<br>Bun]
+        ScriptEngine[Script Engine<br>Interpreter]
+        Repo[Repository Layer]
+        Scheduler[Task Scheduler]
+    end
+
+    subgraph Data
+        DB[(SQLite DB)]
+    end
+
+    subgraph External
+        AI[AI Service<br>OpenAI / Vercel]
+    end
+
+    User --> Web
+    User --> TUI
+    User --> Discord
+    User --> CLI
+
+    Web -- WebSocket/JSON-RPC --> Server
+    TUI -- WebSocket/JSON-RPC --> Server
+    Discord -- WebSocket/JSON-RPC --> Server
+    CLI -- WebSocket/JSON-RPC --> Server
+
+    Server --> ScriptEngine
+    Server --> Repo
+    Server --> Scheduler
+
+    Repo --> DB
+    Scheduler --> DB
+
+    ScriptEngine -- HTTP --> AI
+```
+
 ## High-Level Overview
 
 The system consists of several main parts:
@@ -65,7 +113,36 @@ Communication between Client and Server uses the JSON-RPC 2.0 protocol.
 3.  **Notifications**: Server sends JSON-RPC notifications to clients:
     - `message`: Text output (info/error).
     - `update`: Entity state updates (normalized list of entities).
+    - `update`: Entity state updates (normalized list of entities).
     - `player_id` / `room_id`: Context updates.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Server
+    participant Core
+    participant Script
+
+    Client->>Server: JSON-RPC Request<br>{"method": "execute", "params": ...}
+    Server->>Core: Validate & Route
+
+    Core->>Core: Find Verb (on Player/Room/Target)
+
+    alt Verb Found
+        Core->>Script: Execute Script
+        Script-->>Core: Side Effects (DB/Log)
+        Core-->>Server: Result
+        Server-->>Client: JSON-RPC Response<br>{"result": ...}
+
+        opt Notifications
+            Core-->>Server: State Update
+            Server-->>Client: JSON-RPC Notification<br>{"method": "update", ...}
+        end
+    else Verb Not Found
+        Core-->>Server: Error
+        Server-->>Client: JSON-RPC Error
+    end
+```
 
 ## Directory Structure
 

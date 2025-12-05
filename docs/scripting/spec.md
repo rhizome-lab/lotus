@@ -28,6 +28,29 @@ Example:
 - **Arrays**: The first element is treated as the opcode. If the opcode is registered, the function is executed with the evaluated arguments (unless the opcode is a special form like `if` or `let` which might handle evaluation differently).
 - **Unknown Opcodes**: If an array starts with a string that is not a known opcode, a `ScriptError` is thrown.
 
+### Execution Flow
+
+```mermaid
+sequenceDiagram
+    participant Source as Script Source (JSON)
+    participant Parser as JSON Parser
+    participant Eval as Evaluator
+    participant Lib as StdLib / Core
+    participant Side as Side Effects
+
+    Source->>Parser: Parse JSON
+    Parser->>Eval: AST (Arrays)
+
+    loop Recursion
+        Eval->>Eval: Evaluate Arguments
+        Eval->>Lib: Execute Opcode
+        Lib-->>Side: Log / DB / Net
+        Lib-->>Eval: Return Value
+    end
+
+    Eval-->>Source: Final Result
+```
+
 ## Std Library
 
 _Defined in: `packages/scripting/src/lib/std.ts`_
