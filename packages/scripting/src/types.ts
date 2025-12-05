@@ -72,6 +72,10 @@ interface OpcodeParameter {
   description?: string;
 }
 
+interface FullOpcodeParameter extends OpcodeParameter {
+  description: string;
+}
+
 /** Metadata describing an opcode for documentation and UI generation. */
 export interface OpcodeMetadata<Lazy extends boolean = boolean, Full extends boolean = false> {
   /** Human-readable label. */
@@ -90,16 +94,19 @@ export interface OpcodeMetadata<Lazy extends boolean = boolean, Full extends boo
     default?: any;
   }[];
   // For Monaco/TS
-  parameters?: readonly (Full extends true ? Required<OpcodeParameter> : OpcodeParameter)[];
+  parameters?: readonly (Full extends true ? FullOpcodeParameter : OpcodeParameter)[];
   genericParameters?: string[];
   returnType?: string;
   /** If true, arguments are NOT evaluated before being passed to the handler. Default: false (Strict). */
   lazy?: Lazy;
 }
 
-export type FullOpcodeMetadata<Lazy extends boolean = boolean> = Required<
-  OpcodeMetadata<Lazy, true>
->;
+export interface FullOpcodeMetadata<Lazy extends boolean = boolean>
+  extends
+    Omit<OpcodeMetadata<Lazy, true>, "slots" | "description" | "parameters" | "returnType">,
+    Required<
+      Pick<OpcodeMetadata<Lazy, true>, "slots" | "description" | "parameters" | "returnType">
+    > {}
 
 export type OpcodeHandler<Args extends readonly unknown[], Ret, Lazy extends boolean = boolean> = (
   args: {
@@ -187,7 +194,7 @@ export function defineOpcode<
 >(
   opcode: string,
   def: {
-    metadata: Omit<OpcodeMetadata<Lazy, Full>, "opcode">;
+    metadata: Omit<Full extends true ? FullOpcodeMetadata<Lazy> : OpcodeMetadata<Lazy>, "opcode">;
     handler: OpcodeHandler<Args, Ret, Lazy>;
   },
 ): OpcodeBuilder<Args, Ret, Lazy> {
@@ -198,7 +205,7 @@ export function defineOpcode<
 
   builder.opcode = opcode;
   builder.handler = def.handler;
-  builder.metadata = { ...def.metadata, opcode };
+  builder.metadata = { ...def.metadata, opcode } as OpcodeMetadata<Lazy, false>;
 
   return builder;
 }
@@ -210,7 +217,7 @@ export function defineFullOpcode<
 >(
   opcode: string,
   def: {
-    metadata: Omit<OpcodeMetadata<Lazy, true>, "opcode">;
+    metadata: Omit<FullOpcodeMetadata<Lazy>, "opcode">;
     handler: OpcodeHandler<Args, Ret, Lazy>;
   },
 ): OpcodeBuilder<Args, Ret, Lazy> {

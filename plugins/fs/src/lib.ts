@@ -27,8 +27,8 @@ export const fsRead = defineOpcode<[Capability | null, string], Promise<string>>
       { name: "Path", type: "string" },
     ],
     parameters: [
-      { name: "cap", type: "Capability | null" },
-      { name: "path", type: "string" },
+      { name: "cap", type: "Capability | null", description: "The capability to use." },
+      { name: "path", type: "string", description: "The path to read." },
     ],
     returnType: "Promise<string>",
   },
@@ -64,9 +64,9 @@ export const fsWrite = defineOpcode<[Capability | null, string, string], Promise
         { name: "Content", type: "string" },
       ],
       parameters: [
-        { name: "cap", type: "Capability | null" },
-        { name: "path", type: "string" },
-        { name: "content", type: "string" },
+        { name: "cap", type: "Capability | null", description: "The capability to use." },
+        { name: "path", type: "string", description: "The path to write to." },
+        { name: "content", type: "string", description: "The content to write." },
       ],
       returnType: "Promise<null>",
     },

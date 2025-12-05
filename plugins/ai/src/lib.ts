@@ -20,10 +20,15 @@ export const aiText = defineFullOpcode<[string, string, string?], string>("ai.te
   metadata: {
     label: "Generate Text Response",
     category: "AI",
+    slots: [
+      { name: "Model", type: "string" },
+      { name: "Prompt", type: "string" },
+      { name: "System", type: "string" },
+    ],
     parameters: [
-      { name: "model", type: "string" },
-      { name: "prompt", type: "string" },
-      { name: "system", type: "string", optional: true },
+      { name: "model", type: "string", description: "The model to use." },
+      { name: "prompt", type: "string", description: "The prompt to generate text from." },
+      { name: "system", type: "string", optional: true, description: "The system prompt." },
     ],
     returnType: "string",
     description: "Generates text.",
@@ -43,11 +48,16 @@ export const aiJson = defineFullOpcode<[string, string, object?], any>("ai.json"
   metadata: {
     label: "Generate JSON Response",
     category: "AI",
+    slots: [
+      { name: "Model", type: "string" },
+      { name: "Prompt", type: "string" },
+      { name: "Schema", type: "block" },
+    ],
     parameters: [
-      { name: "model", type: "string" },
-      { name: "prompt", type: "string" },
+      { name: "model", type: "string", description: "The model to use." },
+      { name: "prompt", type: "string", description: "The prompt to generate JSON from." },
       // TODO: Opcodes to construct JSON schemas.
-      { name: "schema", type: "object", optional: true },
+      { name: "schema", type: "object", optional: true, description: "The JSON schema." },
     ],
     returnType: "object",
     description: "Generates a JSON object.",
@@ -65,9 +75,13 @@ export const aiEmbeddingText = defineFullOpcode<[string, string], number[]>("ai.
   metadata: {
     label: "Generate Text Embedding",
     category: "AI",
+    slots: [
+      { name: "Model", type: "string" },
+      { name: "Text", type: "string" },
+    ],
     parameters: [
-      { name: "model", type: "string" },
-      { name: "text", type: "string" },
+      { name: "model", type: "string", description: "The model to use." },
+      { name: "text", type: "string", description: "The text to embed." },
     ],
     returnType: "number[]",
     description: "Generates an embedding for the given text.",
@@ -83,9 +97,13 @@ export const aiImage = defineFullOpcode<[string, string], object>("ai.image", {
   metadata: {
     label: "Generate Image",
     category: "AI",
+    slots: [
+      { name: "Model", type: "string" },
+      { name: "Prompt", type: "string" },
+    ],
     parameters: [
-      { name: "model", type: "string" },
-      { name: "prompt", type: "string" },
+      { name: "model", type: "string", description: "The model to use." },
+      { name: "prompt", type: "string", description: "The prompt to generate image from." },
     ],
     returnType: "object",
     description: "Generates an image.",
@@ -103,9 +121,13 @@ export const aiGenerateSpeech = defineFullOpcode<[string, string], object>("ai.g
   metadata: {
     label: "Generate Speech",
     category: "AI",
+    slots: [
+      { name: "Model", type: "string" },
+      { name: "Text", type: "string" },
+    ],
     parameters: [
-      { name: "model", type: "string" },
-      { name: "text", type: "string" },
+      { name: "model", type: "string", description: "The model to use." },
+      { name: "text", type: "string", description: "The text to generate speech from." },
     ],
     returnType: "object",
     description: "Generates speech from text.",
@@ -122,9 +144,13 @@ export const aiTranscribe = defineFullOpcode<[string, string], object>("ai.trans
   metadata: {
     label: "Transcribe Audio",
     category: "AI",
+    slots: [
+      { name: "Model", type: "string" },
+      { name: "Audio", type: "block" },
+    ],
     parameters: [
-      { name: "model", type: "string" },
-      { name: "audio", type: "object" },
+      { name: "model", type: "string", description: "The model to use." },
+      { name: "audio", type: "object", description: "The audio to transcribe." },
     ],
     returnType: "string",
     description: "Transcribes audio to text.",

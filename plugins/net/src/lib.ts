@@ -52,9 +52,9 @@ export const netHttpFetch = defineFullOpcode<
       { name: "Options", type: "block" },
     ],
     parameters: [
-      { name: "cap", type: "Capability | null" },
-      { name: "url", type: "string" },
-      { name: "options", type: "object", optional: true },
+      { name: "cap", type: "Capability | null", description: "The capability to use." },
+      { name: "url", type: "string", description: "The URL to fetch." },
+      { name: "options", type: "object", optional: true, description: "The fetch options." },
     ],
     returnType: "Promise<object>",
   },
@@ -110,7 +110,7 @@ export const netHttpResponseText = defineFullOpcode<[HttpResponse], string>(
       category: "net",
       description: "Get response body as text",
       slots: [{ name: "Response", type: "block" }],
-      parameters: [{ name: "response", type: "object" }],
+      parameters: [{ name: "response", type: "object", description: "The response object." }],
       returnType: "string",
     },
     handler: async ([response], _ctx) => {
@@ -128,7 +128,7 @@ export const netHttpResponseJson = defineFullOpcode<[HttpResponse], any>("net.ht
     category: "net",
     description: "Get response body as JSON",
     slots: [{ name: "Response", type: "block" }],
-    parameters: [{ name: "response", type: "object" }],
+    parameters: [{ name: "response", type: "object", description: "The response object." }],
     returnType: "any",
   },
   handler: async ([response], _ctx) => {
@@ -151,7 +151,7 @@ export const netHttpResponseBytes = defineFullOpcode<[HttpResponse], number[]>(
       category: "net",
       description: "Get response body as bytes",
       slots: [{ name: "Response", type: "block" }],
-      parameters: [{ name: "response", type: "object" }],
+      parameters: [{ name: "response", type: "object", description: "The response object." }],
       returnType: "number[]",
     },
     handler: async ([response], _ctx) => {

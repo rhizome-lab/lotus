@@ -14,7 +14,8 @@
   },
   "dependencies": {
     "@viwo/core": "workspace:*",
-    "@viwo/scripting": "workspace:*"
+    "@viwo/scripting": "workspace:*",
+    "@viwo/shared": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",

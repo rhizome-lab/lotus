@@ -7,6 +7,15 @@ import {
   StackFrame,
 } from "./types";
 
+export {
+  type OpcodeDefinition,
+  type OpcodeMetadata,
+  type ScriptContext,
+  ScriptError,
+  type ScriptValue,
+  type StackFrame,
+};
+
 let typecheck = true;
 
 const WHITELISTED_TYPES = new Set<string>(["any", "unknown", "Entity", "Capability"]);

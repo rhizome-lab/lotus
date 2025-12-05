@@ -5,7 +5,7 @@ export const timeNow = defineFullOpcode<[], string>("time.now", {
   metadata: {
     label: "Now",
     category: "time",
-    description: "Get current time (ISO)",
+    description: "Returns the current time as an ISO 8601 string.",
     slots: [],
     parameters: [],
     returnType: "string",
@@ -20,14 +20,19 @@ export const timeFormat = defineFullOpcode<[string, string?], string>("time.form
   metadata: {
     label: "Format Time",
     category: "time",
-    description: "Format timestamp",
+    description: "Formats a timestamp string.",
     slots: [
       { name: "Time", type: "string" },
       { name: "Format", type: "string", default: null }, // Format string not really used yet?
     ],
     parameters: [
-      { name: "time", type: "string" },
-      { name: "format", type: "string", optional: true },
+      { name: "time", type: "string", description: "The timestamp to format." },
+      {
+        name: "format",
+        type: "string",
+        optional: true,
+        description: "The format string (currently unused).",
+      },
     ],
     returnType: "string",
   },
@@ -39,11 +44,18 @@ export const timeFormat = defineFullOpcode<[string, string?], string>("time.form
 /** Parses a datetime string and returns it in ISO 8601 format. */
 export const timeParse = defineFullOpcode<[string], string>("time.parse", {
   metadata: {
-    label: "Parse Time",
+    label: "Add Time",
     category: "time",
-    description: "Parse datetime string",
+    description: "Parses a datetime string and returns it in ISO 8601 format.",
     slots: [{ name: "Time", type: "string" }],
-    parameters: [{ name: "time", type: "string" }],
+    parameters: [
+      {
+        name: "time",
+        type: "string",
+        optional: false,
+        description: "The datetime string to parse.",
+      },
+    ],
     returnType: "string",
   },
   handler: ([datetime], _ctx) => {
@@ -56,9 +68,16 @@ export const timeFromTimestamp = defineFullOpcode<[number], string>("time.from_t
   metadata: {
     label: "From Timestamp",
     category: "time",
-    description: "Convert number to ISO",
+    description: "Converts a numeric timestamp (ms since epoch) to an ISO 8601 string.",
     slots: [{ name: "Timestamp", type: "number" }],
-    parameters: [{ name: "timestamp", type: "number" }],
+    parameters: [
+      {
+        name: "timestamp",
+        type: "number",
+        optional: false,
+        description: "The timestamp in milliseconds.",
+      },
+    ],
     returnType: "string",
   },
   handler: ([timestamp], _ctx) => {
@@ -69,11 +88,11 @@ export const timeFromTimestamp = defineFullOpcode<[number], string>("time.from_t
 /** Converts an ISO 8601 string to a numeric timestamp (ms since epoch). */
 export const timeToTimestamp = defineFullOpcode<[string], number>("time.to_timestamp", {
   metadata: {
-    label: "To Timestamp",
+    label: "Time Difference",
     category: "time",
-    description: "Convert ISO to number",
+    description: "Converts an ISO 8601 string to a numeric timestamp (ms since epoch).",
     slots: [{ name: "Time", type: "string" }],
-    parameters: [{ name: "time", type: "string" }],
+    parameters: [{ name: "time", type: "string", description: "The ISO 8601 string." }],
     returnType: "number",
   },
   handler: ([datetime], _ctx) => {
@@ -106,16 +125,26 @@ export const timeOffset = defineFullOpcode<
   metadata: {
     label: "Offset Time",
     category: "time",
-    description: "Add offset to time",
+    description: "Adds an offset to a timestamp.",
     slots: [
       { name: "Amount", type: "number" },
       { name: "Unit", type: "string" },
       { name: "Base", type: "string", default: null },
     ],
     parameters: [
-      { name: "amount", type: "number" },
-      { name: "unit", type: "string" },
-      { name: "base", type: "string", optional: true },
+      { name: "amount", type: "number", description: "The amount to add." },
+      {
+        name: "unit",
+        type: "string",
+        optional: false,
+        description: "The unit of time (e.g., 'days', 'hours').",
+      },
+      {
+        name: "base",
+        type: "string",
+        optional: true,
+        description: "The base timestamp (defaults to now).",
+      },
     ],
     returnType: "string",
   },

@@ -3,11 +3,6 @@ import { AiPlugin } from "./index";
 import { PluginContext, CommandContext } from "@viwo/core";
 
 // Mock dependencies
-const mockCore = {
-  getEntity: mock(() => ({ id: 1, location: 2 })),
-  resolveProps: mock((e: any) => e),
-  getOpcodeMetadata: mock(() => []),
-} as any;
 
 const mockMemoryManager = {
   search: mock(async () => [
@@ -22,13 +17,17 @@ const mockMemoryPlugin = {
 };
 
 const mockContext = {
-  registerCommand: mock(() => {}),
-  registerRpcMethod: mock(() => {}),
-  getPlugin: mock((name: string) => {
+  registerCommand: () => {},
+  registerRpcMethod: () => {},
+  getPlugin: (name: string) => {
     if (name === "memory") return mockMemoryPlugin;
     return undefined;
-  }),
-} as unknown as PluginContext;
+  },
+  core: {
+    registerLibrary: () => {},
+    getEntity: () => ({ id: 1, location: 2 }),
+  } as never,
+} as PluginContext;
 
 // Mock 'ai' module
 mock.module("ai", () => ({
@@ -48,13 +47,12 @@ describe("AiPlugin", () => {
   });
 
   it("should inject memories into system prompt", async () => {
-    const send = mock(() => {});
-    const ctx = {
-      player: { id: 1 },
+    const ctx: CommandContext = {
+      player: { id: 1, ws: null! },
+      command: "talk",
       args: ["NPC", "Hello"],
-      core: mockCore,
-      send,
-    } as unknown as CommandContext;
+      send: () => {},
+    };
 
     // Mock room resolution
     spyOn(aiPlugin, "getResolvedRoom").mockReturnValue({
@@ -87,12 +85,12 @@ describe("AiPlugin", () => {
 
   it("should stream response using stream_talk", async () => {
     const send = mock(() => {});
-    const ctx = {
-      player: { id: 1 },
+    const ctx: CommandContext = {
+      player: { id: 1, ws: null! },
+      command: "talk",
       args: [],
-      core: mockCore,
       send,
-    } as unknown as CommandContext;
+    };
 
     // Mock room resolution
     spyOn(aiPlugin, "getResolvedRoom").mockReturnValue({

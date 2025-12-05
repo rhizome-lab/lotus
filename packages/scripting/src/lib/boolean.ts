@@ -5,18 +5,23 @@ import { defineFullOpcode } from "../types";
 /** Checks if all arguments are equal. */
 export const eq = defineFullOpcode<[unknown, unknown, ...unknown[]], boolean>("==", {
   metadata: {
-    label: "==",
+    label: "Equals",
     category: "logic",
-    description: "Equality check",
     layout: "infix",
+    description: "Checks if all arguments are equal.",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "unknown" },
-      { name: "b", type: "unknown" },
-      { name: "...args", type: "unknown[]" },
+      { name: "a", type: "unknown", description: "The first value to compare." },
+      { name: "b", type: "unknown", description: "The second value to compare." },
+      {
+        name: "...args",
+        type: "unknown[]",
+        optional: false,
+        description: "Additional values to compare.",
+      },
     ],
     returnType: "boolean",
   },
@@ -37,16 +42,21 @@ export const neq = defineFullOpcode<[unknown, unknown, ...unknown[]], boolean>("
   metadata: {
     label: "!=",
     category: "logic",
-    description: "Inequality check",
+    description: "Checks if adjacent arguments are different.",
     layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "unknown" },
-      { name: "b", type: "unknown" },
-      { name: "...args", type: "unknown[]" },
+      { name: "a", type: "unknown", description: "The first value to compare." },
+      { name: "b", type: "unknown", description: "The second value to compare." },
+      {
+        name: "...args",
+        type: "unknown[]",
+        optional: false,
+        description: "Additional values to compare.",
+      },
     ],
     returnType: "boolean",
   },
@@ -67,16 +77,16 @@ export const lt = defineFullOpcode<[number, number, ...number[]], boolean>("<", 
   metadata: {
     label: "<",
     category: "logic",
-    description: "Less than",
+    description: "Checks if arguments are strictly increasing.",
     layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "number" },
-      { name: "b", type: "number" },
-      { name: "...args", type: "number[]" },
+      { name: "a", type: "number", description: "The first number." },
+      { name: "b", type: "number", description: "The second number." },
+      { name: "...args", type: "number[]", description: "Additional numbers." },
     ],
     returnType: "boolean",
   },
@@ -97,16 +107,16 @@ export const gt = defineFullOpcode<[number, number, ...number[]], boolean>(">", 
   metadata: {
     label: ">",
     category: "logic",
-    description: "Greater than",
+    description: "Checks if arguments are strictly decreasing.",
     layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "number" },
-      { name: "b", type: "number" },
-      { name: "...args", type: "number[]" },
+      { name: "a", type: "number", description: "The first number." },
+      { name: "b", type: "number", description: "The second number." },
+      { name: "...args", type: "number[]", description: "Additional numbers." },
     ],
     returnType: "boolean",
   },
@@ -127,16 +137,16 @@ export const lte = defineFullOpcode<[number, number, ...number[]], boolean>("<="
   metadata: {
     label: "<=",
     category: "logic",
-    description: "Less than or equal",
+    description: "Checks if arguments are non-decreasing.",
     layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "number" },
-      { name: "b", type: "number" },
-      { name: "...args", type: "number[]" },
+      { name: "a", type: "number", description: "The first number." },
+      { name: "b", type: "number", description: "The second number." },
+      { name: "...args", type: "number[]", description: "Additional numbers." },
     ],
     returnType: "boolean",
   },
@@ -157,16 +167,16 @@ export const gte = defineFullOpcode<[number, number, ...number[]], boolean>(">="
   metadata: {
     label: ">=",
     category: "logic",
-    description: "Greater than or equal",
+    description: "Checks if arguments are non-increasing.",
     layout: "infix",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "number" },
-      { name: "b", type: "number" },
-      { name: "...args", type: "number[]" },
+      { name: "a", type: "number", description: "The first number." },
+      { name: "b", type: "number", description: "The second number." },
+      { name: "...args", type: "number[]", description: "Additional numbers." },
     ],
     returnType: "boolean",
   },
@@ -188,16 +198,16 @@ export const and = defineFullOpcode<[boolean, boolean, ...boolean[]], boolean, t
   metadata: {
     label: "And",
     category: "logic",
-    description: "Logical AND",
     layout: "infix",
+    description: "Logical AND. Returns true if all arguments are true.",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "unknown" },
-      { name: "b", type: "unknown" },
-      { name: "...args", type: "unknown[]" },
+      { name: "a", type: "unknown", description: "The first value." },
+      { name: "b", type: "unknown", description: "The second value." },
+      { name: "...args", type: "unknown[]", description: "Additional values." },
     ],
     returnType: "boolean",
     lazy: true,
@@ -229,18 +239,18 @@ export const and = defineFullOpcode<[boolean, boolean, ...boolean[]], boolean, t
 /** Logical OR. */
 export const or = defineFullOpcode<[boolean, boolean, ...boolean[]], boolean, true>("or", {
   metadata: {
-    label: "Or",
+    label: "Greater Than",
     category: "logic",
-    description: "Logical OR",
     layout: "infix",
+    description: "Logical OR. Returns true if at least one argument is true.",
     slots: [
       { name: "A", type: "block" },
       { name: "B", type: "block" },
     ],
     parameters: [
-      { name: "a", type: "unknown" },
-      { name: "b", type: "unknown" },
-      { name: "...args", type: "unknown[]" },
+      { name: "a", type: "unknown", description: "The first value." },
+      { name: "b", type: "unknown", description: "The second value." },
+      { name: "...args", type: "unknown[]", description: "Additional values." },
     ],
     returnType: "boolean",
     lazy: true,
@@ -276,9 +286,16 @@ export const not = defineFullOpcode<[boolean], boolean>("not", {
   metadata: {
     label: "Not",
     category: "logic",
-    description: "Logical NOT",
+    description: "Logical NOT. Returns the opposite boolean value.",
     slots: [{ name: "Val", type: "block" }],
-    parameters: [{ name: "val", type: "any" }],
+    parameters: [
+      {
+        name: "value",
+        type: "unknown",
+        optional: false,
+        description: "The boolean value to negate.",
+      },
+    ],
     returnType: "boolean",
   },
   handler: ([val], _ctx) => {

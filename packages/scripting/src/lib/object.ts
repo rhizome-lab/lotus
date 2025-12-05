@@ -12,12 +12,12 @@ export const objNew = defineFullOpcode<
   metadata: {
     label: "New Object",
     category: "data",
-    description: "Create a new object",
+    description: "Creates a new object from key-value pairs.",
     slots: [],
     genericParameters: [
       "Kvs extends [] | readonly (readonly [key: '' | (string & {}), value: unknown])[]",
     ],
-    parameters: [{ name: "...kvs", type: "any[]" }],
+    parameters: [{ name: "...kvs", type: "any[]", description: "Key-value pairs." }],
     returnType:
       "{ [K in keyof Kvs & `${number}` as (Kvs[K] & [string, unknown])[0]]: (Kvs[K] & [string, unknown])[1] }",
     lazy: true,
@@ -52,10 +52,10 @@ export const objKeys = defineFullOpcode<[object], string[]>("obj.keys", {
   metadata: {
     label: "Keys",
     category: "object",
-    description: "Get object keys",
+    description: "Returns an array of a given object's own enumerable property names.",
     slots: [{ name: "Object", type: "block" }],
     genericParameters: ["T"],
-    parameters: [{ name: "object", type: "T" }],
+    parameters: [{ name: "object", type: "T", description: "The object to get keys from." }],
     returnType: "readonly (keyof T)[]",
   },
   handler: ([obj], _ctx) => {
@@ -68,10 +68,10 @@ export const objValues = defineFullOpcode<[object], any[]>("obj.values", {
   metadata: {
     label: "Values",
     category: "object",
-    description: "Get object values",
+    description: "Returns an array of a given object's own enumerable property values.",
     slots: [{ name: "Object", type: "block" }],
     genericParameters: ["T"],
-    parameters: [{ name: "object", type: "T" }],
+    parameters: [{ name: "object", type: "T", description: "The object to get values from." }],
     returnType: "readonly (T[keyof T])[]",
   },
   handler: ([obj], _ctx) => {
@@ -84,10 +84,18 @@ export const objEntries = defineFullOpcode<[object], [string, any][]>("obj.entri
   metadata: {
     label: "Entries",
     category: "object",
-    description: "Get object entries",
+    description:
+      "Returns an array of a given object's own enumerable string-keyed property [key, value] pairs.",
     slots: [{ name: "Object", type: "block" }],
     genericParameters: ["T"],
-    parameters: [{ name: "object", type: "T" }],
+    parameters: [
+      {
+        name: "object",
+        type: "T",
+        optional: false,
+        description: "The object to get entries from.",
+      },
+    ],
     returnType: "readonly [keyof T, T[keyof T]][]",
   },
   handler: ([obj], _ctx) => {
@@ -100,7 +108,7 @@ export const objGet = defineFullOpcode<[object, string, unknown?], any>("obj.get
   metadata: {
     label: "Get",
     category: "object",
-    description: "Get object property",
+    description: "Retrieves a property from an object.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Key", type: "string" },
@@ -108,9 +116,14 @@ export const objGet = defineFullOpcode<[object, string, unknown?], any>("obj.get
     ],
     genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "T" },
-      { name: "key", type: "K" },
-      { name: "default", type: "T[K]", optional: true },
+      { name: "object", type: "T", description: "The object to query." },
+      { name: "key", type: "K", description: "The property key." },
+      {
+        name: "default",
+        type: "T[K]",
+        optional: true,
+        description: "The default value if the key is missing.",
+      },
     ],
     returnType: "T[K]",
   },
@@ -130,7 +143,7 @@ export const objSet = defineFullOpcode<[object, string, unknown], any>("obj.set"
   metadata: {
     label: "Set",
     category: "object",
-    description: "Set object property",
+    description: "Sets a property on an object. Returns the entire object.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Key", type: "string" },
@@ -138,9 +151,9 @@ export const objSet = defineFullOpcode<[object, string, unknown], any>("obj.set"
     ],
     genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "T" },
-      { name: "key", type: "K" },
-      { name: "value", type: "T[K]" },
+      { name: "object", type: "T", description: "The object to modify." },
+      { name: "key", type: "K", description: "The property key." },
+      { name: "value", type: "T[K]", description: "The new value." },
     ],
     returnType: "T",
   },
@@ -158,15 +171,15 @@ export const objHas = defineFullOpcode<[object, string], boolean>("obj.has", {
   metadata: {
     label: "Has Key",
     category: "object",
-    description: "Check if object has key",
+    description: "Checks if an object has a specific property.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Key", type: "string" },
     ],
     genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "T" },
-      { name: "key", type: "K" },
+      { name: "object", type: "T", description: "The object to check." },
+      { name: "key", type: "K", description: "The property key." },
     ],
     returnType: "boolean",
   },
@@ -180,15 +193,15 @@ export const objDel = defineFullOpcode<[object, string], boolean>("obj.del", {
   metadata: {
     label: "Delete Key",
     category: "object",
-    description: "Delete object property",
+    description: "Deletes a property from an object.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Key", type: "string" },
     ],
     genericParameters: ["T", "K extends keyof T = keyof T"],
     parameters: [
-      { name: "object", type: "T" },
-      { name: "key", type: "K" },
+      { name: "object", type: "T", description: "The object to modify." },
+      { name: "key", type: "K", description: "The property key." },
     ],
     returnType: "boolean",
   },
@@ -206,10 +219,10 @@ export const objMerge = defineFullOpcode<[object, object, ...object[]], any>("ob
   metadata: {
     label: "Merge",
     category: "object",
-    description: "Merge objects",
+    description: "Merges multiple objects into a new object.",
     slots: [{ name: "Objects", type: "block" }], // Variadic
     genericParameters: ["Ts extends object[]"],
-    parameters: [{ name: "...objects", type: "Ts" }],
+    parameters: [{ name: "...objects", type: "Ts", description: "The objects to merge." }],
     returnType: "UnionToIntersection<Ts[number]>",
   },
   handler: ([...objs], _ctx) => {
@@ -222,14 +235,15 @@ export const objMap = defineFullOpcode<[object, unknown], any>("obj.map", {
   metadata: {
     label: "Map Object",
     category: "object",
-    description: "Map object values",
+    description:
+      "Creates a new object with the same keys as the original, but with values transformed by a function.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Lambda", type: "block" },
     ],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "lambda", type: "object" },
+      { name: "object", type: "object", description: "The object to map." },
+      { name: "lambda", type: "object", description: "The mapping function." },
     ],
     returnType: "any",
   },
@@ -252,15 +266,16 @@ export const objFilter = defineFullOpcode<[object, unknown], any>("obj.filter", 
   metadata: {
     label: "Filter Object",
     category: "object",
-    description: "Filter object entries",
+    description:
+      "Creates a new object with a subset of properties that pass the test implemented by the provided function.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Lambda", type: "block" },
     ],
     genericParameters: ["T"],
     parameters: [
-      { name: "object", type: "T" },
-      { name: "lambda", type: "object" },
+      { name: "object", type: "T", description: "The object to filter." },
+      { name: "lambda", type: "object", description: "The testing function." },
     ],
     returnType: "Partial<T>",
   },
@@ -285,7 +300,8 @@ export const objReduce = defineFullOpcode<[object, unknown, unknown], any>("obj.
   metadata: {
     label: "Reduce Object",
     category: "object",
-    description: "Reduce object entries",
+    description:
+      "Executes a user-supplied 'reducer' callback function on each entry of the object.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Lambda", type: "block" },
@@ -293,9 +309,9 @@ export const objReduce = defineFullOpcode<[object, unknown, unknown], any>("obj.
     ],
     genericParameters: ["Acc"],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "lambda", type: "unknown" },
-      { name: "init", type: "Acc" },
+      { name: "object", type: "object", description: "The object to reduce." },
+      { name: "lambda", type: "unknown", description: "The reducer function." },
+      { name: "init", type: "Acc", description: "The initial value." },
     ],
     returnType: "Acc",
   },
@@ -319,14 +335,15 @@ export const objFlatMap = defineFullOpcode<[object, unknown], any>("obj.flatMap"
   metadata: {
     label: "FlatMap Object",
     category: "object",
-    description: "FlatMap object entries",
+    description:
+      "Creates a new object by applying a given callback function to each entry of the object, and then flattening the result.",
     slots: [
       { name: "Object", type: "block" },
       { name: "Lambda", type: "block" },
     ],
     parameters: [
-      { name: "object", type: "object" },
-      { name: "lambda", type: "object" },
+      { name: "object", type: "object", description: "The object to map." },
+      { name: "lambda", type: "object", description: "The mapping function." },
     ],
     returnType: "any",
   },

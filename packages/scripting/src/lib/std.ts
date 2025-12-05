@@ -1,6 +1,6 @@
 import { evaluate, BreakSignal } from "../interpreter";
 import { Entity } from "@viwo/shared/jsonrpc";
-import { defineFullOpcode, ScriptContext } from "../types";
+import { defineFullOpcode, ScriptContext, ScriptError, ScriptRaw } from "../types";
 
 function enterScope(ctx: ScriptContext) {
   const snapshot = { vars: ctx.vars, cow: ctx.cow };
@@ -38,10 +38,9 @@ function setVar(ctx: ScriptContext, name: string, value: any) {
 /** Returns the current entity (this). */
 const this_ = defineFullOpcode<[], Entity>("this", {
   metadata: {
-    label: "This",
+    label: "To String",
     category: "data",
     description: "Current entity",
-    layout: "standard",
     slots: [],
     parameters: [],
     returnType: "Entity",
@@ -55,10 +54,9 @@ export { this_ as this };
 /** Returns the entity that called the current script. */
 export const caller = defineFullOpcode<[], Entity>("caller", {
   metadata: {
-    label: "Caller",
+    label: "To Number",
     category: "data",
     description: "Current caller",
-    layout: "standard",
     slots: [],
     parameters: [],
     returnType: "Entity",
@@ -76,10 +74,12 @@ export const seq = defineFullOpcode<unknown[], any, true>("seq", {
   metadata: {
     label: "Sequence",
     category: "logic",
-    description: "Execute a sequence of steps",
+    description: "Executes a sequence of steps and returns the result of the last step.",
     layout: "control-flow",
     slots: [],
-    parameters: [{ name: "...args", type: "any[]" }],
+    parameters: [
+      { name: "...args", type: "any[]", description: "The sequence of steps to execute." },
+    ],
     returnType: "any",
     lazy: true,
   },
@@ -129,9 +129,9 @@ export const seq = defineFullOpcode<unknown[], any, true>("seq", {
 const if_ = defineFullOpcode<[boolean, unknown, unknown?], any, true>("if", {
   metadata: {
     label: "If",
-    category: "logic",
-    description: "Conditional execution",
+    category: "control",
     layout: "control-flow",
+    description: "Conditionally executes a branch based on a boolean condition.",
     genericParameters: ["T"],
     slots: [
       { name: "Condition", type: "block" },
@@ -139,9 +139,24 @@ const if_ = defineFullOpcode<[boolean, unknown, unknown?], any, true>("if", {
       { name: "Else", type: "block" },
     ],
     parameters: [
-      { name: "condition", type: "unknown" },
-      { name: "then", type: "T" },
-      { name: "else", type: "T", optional: true },
+      {
+        name: "condition",
+        type: "unknown",
+        optional: false,
+        description: "The condition to check.",
+      },
+      {
+        name: "then",
+        type: "unknown",
+        optional: false,
+        description: "The code to execute if true.",
+      },
+      {
+        name: "else",
+        type: "unknown",
+        optional: true,
+        description: "The code to execute if false.",
+      },
     ],
     returnType: "T",
     lazy: true,
@@ -187,16 +202,20 @@ export { if_ as if };
 const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
   metadata: {
     label: "While",
-    category: "logic",
-    description: "Loop while condition is true",
+    category: "control",
     layout: "control-flow",
+    description: "Repeats a body while a condition is true.",
     slots: [
       { name: "Condition", type: "block" },
       { name: "Body", type: "block" },
     ],
     parameters: [
-      { name: "condition", type: "any" },
-      { name: "body", type: "any" },
+      {
+        name: "condition",
+        type: "any",
+        description: "The condition to check before each iteration.",
+      },
+      { name: "body", type: "any", description: "The code to execute in each iteration." },
     ],
     returnType: "any",
     lazy: true,
@@ -303,7 +322,7 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
   metadata: {
     label: "For Loop",
     category: "logic",
-    description: "Iterate over a list",
+    description: "Iterates over a list, executing the body for each item.",
     layout: "control-flow",
     slots: [
       { name: "Var", type: "string" },
@@ -311,9 +330,14 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
       { name: "Do", type: "block" },
     ],
     parameters: [
-      { name: "variableName", type: "string" },
-      { name: "list", type: "any" },
-      { name: "body", type: "any" },
+      { name: "var", type: "string", description: "The variable name." },
+      { name: "list", type: "any[]", description: "The list to iterate over." },
+      {
+        name: "block",
+        type: "unknown",
+        optional: false,
+        description: "The code block to execute.",
+      },
     ],
     returnType: "any",
     lazy: true,
@@ -387,11 +411,19 @@ export { for_ as for };
  */
 const break_ = defineFullOpcode<[unknown?], never>("break", {
   metadata: {
-    label: "Break",
-    category: "control-flow",
-    description: "Break out of loop",
+    label: "Unless",
+    category: "control",
+    layout: "control-flow",
+    description: "Breaks out of the current loop, optionally returning a value.",
     slots: [{ name: "Value", type: "block" }],
-    parameters: [{ name: "value", type: "any", optional: true }],
+    parameters: [
+      {
+        name: "value",
+        type: "any",
+        optional: true,
+        description: "The value to return from the loop.",
+      },
+    ],
     returnType: "never",
   },
   handler: ([value], _ctx) => {
@@ -406,9 +438,9 @@ export const jsonStringify = defineFullOpcode<[unknown], string>("json.stringify
   metadata: {
     label: "JSON Stringify",
     category: "data",
-    description: "Convert to JSON string",
+    description: "Converts a value to a JSON string.",
     slots: [{ name: "Value", type: "block" }],
-    parameters: [{ name: "value", type: "unknown" }],
+    parameters: [{ name: "value", type: "unknown", description: "The value to stringify." }],
     returnType: "string",
   },
   handler: ([val], _ctx) => {
@@ -419,11 +451,11 @@ export const jsonStringify = defineFullOpcode<[unknown], string>("json.stringify
 /** Parses a JSON string into a value. */
 export const jsonParse = defineFullOpcode<[string], unknown>("json.parse", {
   metadata: {
-    label: "JSON Parse",
+    label: "Assign Variable",
     category: "data",
-    description: "Parse JSON string",
+    description: "Parses a JSON string into a value.",
     slots: [{ name: "String", type: "string" }],
-    parameters: [{ name: "string", type: "string" }],
+    parameters: [{ name: "string", type: "string", description: "The JSON string to parse." }],
     returnType: "unknown",
   },
   handler: ([str], _ctx) => {
@@ -443,9 +475,16 @@ const typeof_ = defineFullOpcode<
   metadata: {
     label: "Type Of",
     category: "logic",
-    description: "Get value type",
+    description: "Returns the type of a value as a string.",
     slots: [{ name: "Value", type: "block" }],
-    parameters: [{ name: "value", type: "unknown" }],
+    parameters: [
+      {
+        name: "block",
+        type: "unknown",
+        optional: false,
+        description: "The code block to execute.",
+      },
+    ],
     returnType: "string",
   },
   handler: ([val], _ctx) => {
@@ -462,14 +501,14 @@ const let_ = defineFullOpcode<[string, unknown], any>("let", {
   metadata: {
     label: "Let",
     category: "logic",
-    description: "Define a local variable",
+    description: "Defines a local variable in the current scope.",
     slots: [
       { name: "Name", type: "string" },
       { name: "Value", type: "block" },
     ],
     parameters: [
-      { name: "name", type: "string" },
-      { name: "value", type: "unknown" },
+      { name: "name", type: "string", description: "The name of the variable." },
+      { name: "value", type: "unknown", description: "The initial value." },
     ],
     returnType: "any",
   },
@@ -488,11 +527,11 @@ export { let_ as let };
 /** Retrieves a local variable from the current scope. */
 const var_ = defineFullOpcode<[string], any>("var", {
   metadata: {
-    label: "Get Variable",
-    category: "logic",
-    description: "Get local variable",
+    label: "Define Variable",
+    category: "data",
+    description: "Retrieves a local variable from the current scope.",
     slots: [{ name: "Name", type: "string" }],
-    parameters: [{ name: "name", type: "string" }],
+    parameters: [{ name: "name", type: "string", description: "The variable name." }],
     returnType: "any",
   },
   handler: ([name], ctx) => {
@@ -508,14 +547,14 @@ const set_ = defineFullOpcode<[string, unknown], any>("set", {
   metadata: {
     label: "Set",
     category: "action",
-    description: "Set variable value",
+    description: "Updates the value of an existing variable.",
     slots: [
       { name: "Name", type: "string" },
       { name: "Value", type: "block" },
     ],
     parameters: [
-      { name: "name", type: "string" },
-      { name: "value", type: "unknown" },
+      { name: "name", type: "string", description: "The variable name." },
+      { name: "value", type: "unknown", description: "The value to set." },
     ],
     returnType: "any",
   },
@@ -533,12 +572,12 @@ export { set_ as set };
 export const log = defineFullOpcode<[unknown, ...unknown[]], null>("log", {
   metadata: {
     label: "Log",
-    category: "action",
-    description: "Log to server console",
+    category: "io",
+    description: "Logs a message to the console/client.",
     slots: [{ name: "Message", type: "block" }],
     parameters: [
-      { name: "message", type: "unknown" },
-      { name: "...args", type: "unknown[]" },
+      { name: "message", type: "unknown", description: "The message to log." },
+      { name: "...args", type: "unknown[]", description: "Additional arguments to log." },
     ],
     returnType: "null",
   },
@@ -551,13 +590,13 @@ export const log = defineFullOpcode<[unknown, ...unknown[]], null>("log", {
 /** Retrieves a specific argument passed to the script. */
 export const arg = defineFullOpcode<[number], any>("arg", {
   metadata: {
-    label: "Get Arg",
+    label: "Get Argument",
     category: "data",
-    description: "Get argument by index",
     layout: "primitive",
+    description: "Retrieves a specific argument passed to the script.",
     slots: [{ name: "Index", type: "number" }],
     genericParameters: ["T"],
-    parameters: [{ name: "index", type: "number" }],
+    parameters: [{ name: "index", type: "number", description: "The index of the argument." }],
     returnType: "T",
   },
   handler: ([index], ctx) => {
@@ -568,7 +607,7 @@ export const arg = defineFullOpcode<[number], any>("arg", {
 /** Retrieves all arguments passed to the script. */
 export const args = defineFullOpcode<[], readonly any[]>("args", {
   metadata: {
-    label: "Get Args",
+    label: "Define Constant",
     category: "data",
     description: "Get all arguments",
     slots: [],
@@ -584,10 +623,10 @@ export const args = defineFullOpcode<[], readonly any[]>("args", {
 export const warn = defineFullOpcode<[unknown], void>("warn", {
   metadata: {
     label: "Warn",
-    category: "action",
-    description: "Send warning to client",
+    category: "io",
+    description: "Sends a warning message to the client.",
     slots: [{ name: "Message", type: "block" }],
-    parameters: [{ name: "message", type: "unknown" }],
+    parameters: [{ name: "message", type: "string", description: "The warning message." }],
     returnType: "void",
   },
   handler: ([msg], ctx) => {
@@ -600,9 +639,9 @@ const throw_ = defineFullOpcode<[unknown], never>("throw", {
   metadata: {
     label: "Throw",
     category: "action",
-    description: "Throw an error",
+    description: "Throws an error, stopping script execution.",
     slots: [{ name: "Message", type: "block" }],
-    parameters: [{ name: "message", type: "unknown" }],
+    parameters: [{ name: "message", type: "string", description: "The error message." }],
     returnType: "never",
   },
   handler: ([msg], _ctx) => {
@@ -614,18 +653,22 @@ export { throw_ as throw };
 const try_ = defineFullOpcode<[unknown, string, unknown], any, true>("try", {
   metadata: {
     label: "Try/Catch",
-    category: "logic",
-    description: "Try/Catch block",
+    category: "control",
     layout: "control-flow",
+    description: "Executes a block of code and catches any errors.",
     slots: [
       { name: "Try", type: "block" },
       { name: "ErrorVar", type: "string" },
       { name: "Catch", type: "block" },
     ],
     parameters: [
-      { name: "try", type: "any" },
-      { name: "errorVar", type: "string" },
-      { name: "catch", type: "any" },
+      { name: "try", type: "any", description: "The code to try executing." },
+      {
+        name: "errorVar",
+        type: "string",
+        description: "The name of the variable to store the error message.",
+      },
+      { name: "catch", type: "any", description: "The code to execute if an error occurs." },
     ],
     returnType: "any",
     lazy: true,
@@ -669,14 +712,14 @@ export const lambda = defineFullOpcode<[ScriptRaw<readonly string[]>, unknown], 
     metadata: {
       label: "Lambda",
       category: "func",
-      description: "Create a lambda function",
+      description: "Creates a lambda (anonymous function).",
       slots: [
         { name: "Args", type: "block" },
         { name: "Body", type: "block" },
       ],
       parameters: [
-        { name: "args", type: "string[]" },
-        { name: "body", type: "any" },
+        { name: "args", type: "unknown[]", description: "The arguments." },
+        { name: "body", type: "unknown", description: "The function body." },
       ],
       returnType: "any",
       lazy: true,
@@ -697,14 +740,14 @@ export const apply = defineFullOpcode<[unknown, ...unknown[]], any>("apply", {
   metadata: {
     label: "Apply",
     category: "func",
-    description: "Apply a lambda function",
+    description: "Calls a lambda function with the provided arguments.",
     slots: [
       { name: "Func", type: "block" },
       { name: "Args...", type: "block" },
     ],
     parameters: [
-      { name: "func", type: "unknown" },
-      { name: "...args", type: "any[]" },
+      { name: "lambda", type: "unknown", description: "The lambda to execute." },
+      { name: "...args", type: "unknown[]", description: "The arguments." },
     ],
     returnType: "any",
   },
@@ -745,14 +788,14 @@ export const send = defineFullOpcode<[string, unknown], null>("send", {
   metadata: {
     label: "System Send",
     category: "system",
-    description: "Send a system message",
+    description: "Sends a system message to the client.",
     slots: [
       { name: "Type", type: "string" },
       { name: "Payload", type: "block" },
     ],
     parameters: [
-      { name: "type", type: "string" },
-      { name: "payload", type: "unknown" },
+      { name: "type", type: "string", description: "The message type." },
+      { name: "payload", type: "unknown", description: "The message payload." },
     ],
     returnType: "null",
   },
@@ -770,9 +813,10 @@ export const quote = defineFullOpcode<[ScriptRaw<unknown>], any, true>("quote", 
   metadata: {
     label: "Quote",
     category: "data",
-    description: "Return value unevaluated",
+    description:
+      "Returns the argument as is, without evaluation. Used for passing arrays as values to opcodes.",
     slots: [{ name: "Value", type: "block" }],
-    parameters: [{ name: "value", type: "any" }],
+    parameters: [{ name: "value", type: "any", description: "The value to quote." }],
     returnType: "any",
     lazy: true,
   },

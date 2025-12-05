@@ -1,4 +1,4 @@
-import { OpcodeMetadata } from "./interpreter";
+import { OpcodeMetadata } from "./types";
 
 export const RESERVED_TYPESCRIPT_KEYWORDS = new Set([
   "if",
@@ -131,7 +131,7 @@ type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Ret> = [
       if (op.description) jsdoc += " *\n";
       for (const param of op.parameters) {
         if (param.description) {
-          jsdoc += ` * @param ${param.name} - ${param.description}\n`;
+          jsdoc += ` * @param ${param.name.replace(/^[.][.][.]/, "")} ${param.description}\n`;
         }
       }
     }

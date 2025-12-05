@@ -37,8 +37,8 @@ createLibraryTester(StringLib, "String Library", (test) => {
         try {
           // @ts-expect-error
           return evaluate(StringLib.strLen(123), ctx);
-        } catch (e) {
-          return e;
+        } catch (error) {
+          return error;
         }
       })(),
     ).toBeInstanceOf(ScriptError);

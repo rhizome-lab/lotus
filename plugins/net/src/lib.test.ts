@@ -1,22 +1,45 @@
 import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import { createScriptContext, evaluate, registerLibrary, ScriptError } from "@viwo/scripting";
-import { createCapability, KernelLib } from "@viwo/core";
+import {
+  createScriptContext,
+  evaluate,
+  registerLibrary,
+  ScriptError,
+  StdLib,
+  ObjectLib,
+  ListLib,
+} from "@viwo/scripting";
+import { createCapability, KernelLib, createEntity, getEntity, db } from "@viwo/core";
 import * as NetLib from "./lib";
 
 // Mock fetch
 const originalFetch = global.fetch;
 const mockFetch = mock();
 
+registerLibrary(StdLib);
+registerLibrary(ObjectLib);
+registerLibrary(ListLib);
 registerLibrary(KernelLib);
 registerLibrary(NetLib);
 
 describe("net.http", () => {
-  const ctx = createScriptContext({ this: { id: 1 }, caller: { id: 1 } });
-  const ctxWithoutMethod = createScriptContext({ this: { id: 2 }, caller: { id: 2 } });
+  let admin: { id: number };
+  let user: { id: number };
 
   beforeEach(() => {
-    createCapability(1, "net.http", { domain: "example.com", method: ["GET"] });
-    createCapability(2, "net.http", { domain: "example.com" });
+    // Reset DB state
+    db.query("DELETE FROM entities").run();
+    db.query("DELETE FROM capabilities").run();
+    db.query("DELETE FROM sqlite_sequence").run();
+
+    // Create Admin (with full access)
+    const adminId = createEntity({ name: "Admin" });
+    admin = getEntity(adminId)!;
+    createCapability(adminId, "net.http", { domain: "example.com", method: ["GET"] });
+
+    // Create User (no rights)
+    const userId = createEntity({ name: "User" });
+    user = getEntity(userId)!;
+
     mockFetch.mockReset();
     // @ts-expect-error
     global.fetch = mockFetch;
@@ -28,6 +51,7 @@ describe("net.http", () => {
 
   describe("net.http.fetch", () => {
     it("should fetch with valid capability", async () => {
+      const ctx = createScriptContext({ caller: admin, this: admin });
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -56,12 +80,14 @@ describe("net.http", () => {
     });
 
     it("should fail if capability is missing", async () => {
+      const ctx = createScriptContext({ caller: user, this: user });
       expect(evaluate(NetLib.netHttpFetch(null, "https://example.com", {}), ctx)).rejects.toThrow(
         ScriptError,
       );
     });
 
     it("should fail if domain does not match", async () => {
+      const ctx = createScriptContext({ caller: admin, this: admin });
       expect(
         evaluate(
           NetLib.netHttpFetch(KernelLib.getCapability("net.http"), "https://google.com", {}),
@@ -71,8 +97,8 @@ describe("net.http", () => {
     });
 
     it("should fail if method is not allowed", async () => {
-      createCapability(1, "net.http", { domain: "example.com", methods: ["GET"] });
-
+      const ctx = createScriptContext({ caller: admin, this: admin });
+      // Admin only has GET
       expect(
         evaluate(
           NetLib.netHttpFetch(KernelLib.getCapability("net.http"), "https://example.com", {
@@ -84,6 +110,13 @@ describe("net.http", () => {
     });
 
     it("should allow method if methods param is missing", async () => {
+      // Create a user with no method restriction
+      const unrestrictedId = createEntity({ name: "Unrestricted" });
+      const unrestricted = getEntity(unrestrictedId)!;
+      createCapability(unrestrictedId, "net.http", { domain: "example.com" });
+
+      const ctx = createScriptContext({ caller: unrestricted, this: unrestricted });
+
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -97,7 +130,7 @@ describe("net.http", () => {
         NetLib.netHttpFetch(KernelLib.getCapability("net.http"), "https://example.com", {
           method: "POST",
         }),
-        ctxWithoutMethod,
+        ctx,
       );
       expect(mockFetch).toHaveBeenCalledWith(
         "https://example.com",
@@ -120,16 +153,19 @@ describe("net.http", () => {
     };
 
     it("should parse text", async () => {
+      const ctx = createScriptContext({ caller: admin, this: admin });
       const text = await evaluate(NetLib.netHttpResponseText(mockResponse), ctx);
       expect(text).toBe('{"foo":"bar"}');
     });
 
     it("should parse json", async () => {
+      const ctx = createScriptContext({ caller: admin, this: admin });
       const json = await evaluate(NetLib.netHttpResponseJson(mockResponse), ctx);
       expect(json).toEqual({ foo: "bar" });
     });
 
     it("should parse bytes", async () => {
+      const ctx = createScriptContext({ caller: admin, this: admin });
       const bytes = await evaluate(NetLib.netHttpResponseBytes(mockResponse), ctx);
       expect(bytes).toEqual(Array.from(new TextEncoder().encode('{"foo":"bar"}')));
     });
