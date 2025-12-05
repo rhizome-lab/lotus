@@ -1,0 +1,32 @@
+# Web Editor
+
+The Web Editor package (`@viwo/web-editor`) provides React/SolidJS components for editing ViwoScript code. It wraps the Monaco Editor and provides custom language support.
+
+## Components
+
+### `ScriptEditor`
+
+The main component for editing scripts. It handles:
+
+- Syntax highlighting for ViwoScript.
+- Autocompletion.
+- Error reporting.
+
+### `MonacoEditor`
+
+A lower-level wrapper around the Monaco Editor instance.
+
+## Usage
+
+```tsx
+import { ScriptEditor } from "@viwo/web-editor";
+
+function MyEditor() {
+  return (
+    <ScriptEditor
+      value="if (true) { print('Hello'); }"
+      onChange={(newValue) => console.log(newValue)}
+    />
+  );
+}
+```

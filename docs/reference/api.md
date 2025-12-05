@@ -135,6 +135,28 @@ Updates the current room ID (where the player is located).
 - **Params**:
   - `roomId`: The ID of the room entity.
 
+### `stream_start`
+
+Indicates the start of a streamed response (e.g., from an AI agent).
+
+- **Params**:
+  - `streamId`: Unique ID for the stream.
+
+### `stream_chunk`
+
+Contains a chunk of text for an active stream.
+
+- **Params**:
+  - `streamId`: The ID of the stream.
+  - `chunk`: The text content.
+
+### `stream_end`
+
+Indicates the end of a stream.
+
+- **Params**:
+  - `streamId`: The ID of the stream.
+
 ## Types
 
 ### Entity

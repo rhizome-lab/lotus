@@ -1,5 +1,59 @@
 # Development Guide
 
+Welcome to the Viwo development guide! This document will help you get set up and contributing to the project.
+
+## Getting Started
+
+### Prerequisites
+
+- **[Bun](https://bun.sh/)**: Viwo is built on the Bun runtime. Ensure you have the latest version installed.
+
+### Installation
+
+1.  Clone the repository:
+
+    ```bash
+    git clone https://github.com/pterror/viwo.git
+    cd viwo
+    ```
+
+2.  Install dependencies:
+    ```bash
+    bun install
+    ```
+
+### Project Structure
+
+Viwo is a monorepo managed by Bun workspaces.
+
+- **`apps/`**: Deployable applications.
+  - `server`: The core game server.
+  - `web`: The web frontend.
+  - `cli`: The terminal client.
+  - `discord-bot`: The Discord integration.
+- **`packages/`**: Shared libraries.
+  - `core`: The game engine logic.
+  - `scripting`: The ViwoScript compiler and interpreter.
+  - `client`: The TypeScript SDK.
+  - `shared`: Shared types and utilities.
+- **`plugins/`**: Optional game features.
+  - `ai`: LLM integration.
+  - `memory`: Vector memory system.
+
+### Running Tests
+
+To run tests across the entire workspace:
+
+```bash
+bun test
+```
+
+To run tests for a specific package:
+
+```bash
+bun test --filter @viwo/core
+```
+
 ## Building the Documentation
 
 The documentation site is built using [VitePress](https://vitepress.dev/).
