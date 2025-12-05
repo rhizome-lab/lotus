@@ -75,6 +75,11 @@ createLibraryTester(StdLib, "Standard Library", (test) => {
     expect(evaluate(StdLib.var("i"), localCtx)).toBe(1);
   });
 
+  test("return", () => {
+    const localCtx = { ...ctx, locals: {} };
+    expect(evaluate(StdLib.return("val"), localCtx) as any).toBe("val");
+  });
+
   // Data Structures
   test("json.stringify", () => {
     expect(evaluate(StdLib.jsonStringify({ a: 1 }), ctx)).toBe('{"a":1}');

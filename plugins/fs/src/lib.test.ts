@@ -20,8 +20,8 @@ registerLibrary(FsLib);
 
 describe("FS Library", () => {
   const testDir = path.resolve(`./tmp_test_fs_${Math.random()}`);
-  let admin: any;
-  let user: any;
+  let admin: { id: number };
+  let user: { id: number };
 
   beforeAll(async () => {
     await fs.mkdir(testDir, { recursive: true });

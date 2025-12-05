@@ -134,4 +134,24 @@ describe("Parity: Interpreter vs Compiler", () => {
     checkParity("obj.new", ["obj.new", ["a", 1], ["b", 2]]);
     checkParity("obj.get", ["obj.get", ["obj.new", ["a", 1]], "a"]);
   });
+  describe("Chained Expressions", () => {
+    checkParity("chained add", ["+", 1, 2, 3, 4]);
+    checkParity("chained sub", ["-", 10, 1, 2, 3]);
+    checkParity("chained mul", ["*", 1, 2, 3, 4]);
+    checkParity("chained div", ["/", 24, 2, 3, 2]);
+    checkParity("chained pow", ["^", 2, 3, 2]); // 2^3^2 = 64 (left associative)
+
+    checkParity("chained and", ["and", true, true, true]);
+    checkParity("chained and false", ["and", true, false, true]);
+    checkParity("chained or", ["or", false, false, true]);
+    checkParity("chained or false", ["or", false, false, false]);
+
+    checkParity("chained lt", ["<", 1, 2, 3]);
+    checkParity("chained gt", [">", 3, 2, 1]);
+    checkParity("chained lte", ["<=", 1, 2, 2, 3]);
+    checkParity("chained gte", [">=", 3, 2, 2, 1]);
+
+    // Fail cases
+    checkParity("chained lt fail", ["<", 1, 3, 2]);
+  });
 });

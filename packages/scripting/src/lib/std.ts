@@ -1,4 +1,4 @@
-import { evaluate, BreakSignal } from "../interpreter";
+import { evaluate, BreakSignal, ReturnSignal } from "../interpreter";
 import { Entity } from "@viwo/shared/jsonrpc";
 import { defineFullOpcode, ScriptContext, ScriptError, ScriptRaw } from "../types";
 
@@ -431,6 +431,32 @@ const break_ = defineFullOpcode<[unknown?], never>("break", {
   },
 });
 export { break_ as break };
+
+/**
+ * Returns from the current function.
+ */
+const return_ = defineFullOpcode<[unknown?], never>("return", {
+  metadata: {
+    label: "Return",
+    category: "control",
+    layout: "control-flow",
+    description: "Returns from the current function, optionally returning a value.",
+    slots: [{ name: "Value", type: "block" }],
+    parameters: [
+      {
+        name: "value",
+        type: "any",
+        optional: true,
+        description: "The value to return.",
+      },
+    ],
+    returnType: "never",
+  },
+  handler: ([value], _ctx) => {
+    throw new ReturnSignal(value);
+  },
+});
+export { return_ as return };
 
 // Data Structures
 /** Converts a value to a JSON string. */

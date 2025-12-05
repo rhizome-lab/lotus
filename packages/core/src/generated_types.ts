@@ -380,6 +380,12 @@ declare global {
    */
   function quote(value: any): any;
   /**
+   * Returns from the current function, optionally returning a value.
+   *
+   * @param value The value to return.
+   */
+  function return_(value?: any): never;
+  /**
    * Sends a system message to the client.
    *
    * @param type The message type.

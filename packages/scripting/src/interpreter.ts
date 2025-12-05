@@ -63,10 +63,13 @@ export function executeLambda(lambda: any, args: unknown[], ctx: ScriptContext):
   return evaluate(lambda.body, { ...ctx, vars: newVars });
 }
 
-/**
- * Signal thrown to break out of a loop.
- */
+/** Signal thrown to break out of a loop. */
 export class BreakSignal {
+  constructor(public value: any = null) {}
+}
+
+/** Signal thrown to return from a function. */
+export class ReturnSignal {
   constructor(public value: any = null) {}
 }
 
@@ -183,6 +186,9 @@ function executeLoop(
       } catch (e: any) {
         if (e instanceof BreakSignal) {
           throw e;
+        }
+        if (e instanceof ReturnSignal) {
+          return e.value;
         }
         let scriptError: ScriptError;
         if (e instanceof ScriptError) {

@@ -170,4 +170,66 @@ describe("Compiler", () => {
     expect(res[1]).toBe(true);
     expect(res[2]).toBe(false);
   });
+
+  test("break in loop", () => {
+    // sum = 0; for x in [1, 2, 3, 4, 5]: if (x > 3) break; sum += x
+    const script = Std.seq(
+      Std.let("sum", 0),
+      Std.for(
+        "x",
+        List.listNew(1, 2, 3, 4, 5),
+        Std.seq(
+          Std.if(BooleanLib.gt(Std.var("x"), 3), Std.break()),
+          Std.set("sum", MathLib.add(Std.var("sum"), Std.var("x"))),
+        ),
+      ),
+      Std.var("sum"),
+    );
+    expect(run(script)).toBe(6);
+  });
+
+  test("break with value", () => {
+    // for x in [1, 2, 3]: if (x == 2) break "found";
+    const script = Std.for(
+      "x",
+      List.listNew(1, 2, 3),
+      Std.if(BooleanLib.eq(Std.var("x"), 2), Std.break("found")),
+    );
+    expect(run(script)).toBe("found");
+  });
+
+  test("return from lambda", () => {
+    // (let f (lambda [] (return "early") "late")) (apply f) -> "early"
+    const script = Std.seq(
+      Std.let("f", Std.lambda([], Std.seq(Std.return("early"), "late"))),
+      Std.apply(Std.var("f")),
+    );
+    expect(run(script)).toBe("early");
+  });
+
+  test("nested loops break", () => {
+    // outer loop breaks inner loop? No, break only breaks innermost loop.
+    // We don't have labeled break yet.
+    // for i in [1, 2]: for j in [1, 2]: if j==2 break; sum += j
+    // i=1: j=1 (sum+=1), j=2 (break)
+    // i=2: j=1 (sum+=1), j=2 (break)
+    // sum = 2
+    const script = Std.seq(
+      Std.let("sum", 0),
+      Std.for(
+        "i",
+        List.listNew(1, 2),
+        Std.for(
+          "j",
+          List.listNew(1, 2),
+          Std.seq(
+            Std.if(BooleanLib.eq(Std.var("j"), 2), Std.break()),
+            Std.set("sum", MathLib.add(Std.var("sum"), Std.var("j"))),
+          ),
+        ),
+      ),
+      Std.var("sum"),
+    );
+    expect(run(script)).toBe(2);
+  });
 });
