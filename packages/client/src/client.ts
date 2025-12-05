@@ -6,9 +6,7 @@ import {
   UpdateNotification,
   RoomIdNotification,
   PlayerIdNotification,
-  StreamStartNotification,
   StreamChunkNotification,
-  StreamEndNotification,
   Entity,
 } from "@viwo/shared/jsonrpc";
 
@@ -314,11 +312,8 @@ export class ViwoClient {
         const messages = [...this.state.messages];
         if (messages.length > 0) {
           const lastMsg = messages[messages.length - 1];
-          if (lastMsg.type === "message") {
-            messages[messages.length - 1] = {
-              ...lastMsg,
-              text: lastMsg.text + params.chunk,
-            };
+          if (lastMsg?.type === "message") {
+            messages[messages.length - 1] = { ...lastMsg, text: lastMsg.text + params.chunk };
             this.updateState({ messages });
           }
         }

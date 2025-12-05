@@ -12,6 +12,7 @@
   "dependencies": {
     "@viwo/core": "workspace:*",
     "@viwo/plugin-ai": "workspace:*",
+    "@viwo/plugin-memory": "workspace:*",
     "@viwo/scripting": "workspace:*"
   },
   "devDependencies": {
