@@ -6,6 +6,9 @@ import {
   UpdateNotification,
   RoomIdNotification,
   PlayerIdNotification,
+  StreamStartNotification,
+  StreamChunkNotification,
+  StreamEndNotification,
   Entity,
 } from "@viwo/shared/jsonrpc";
 
@@ -292,6 +295,37 @@ export class ViwoClient {
       case "player_id": {
         const params = (notification as PlayerIdNotification).params;
         this.updateState({ playerId: params.playerId });
+        break;
+      }
+      case "stream_start": {
+        // Start a new empty message
+        this.addMessage({
+          type: "message",
+          text: "",
+        });
+        break;
+      }
+      case "stream_chunk": {
+        const params = (notification as StreamChunkNotification).params;
+        // Append to the last message
+        // We need to be careful not to mutate the state directly in a way that SolidJS doesn't pick up,
+        // but here we are replacing the messages array.
+        // However, we want to modify the *last* message.
+        const messages = [...this.state.messages];
+        if (messages.length > 0) {
+          const lastMsg = messages[messages.length - 1];
+          if (lastMsg.type === "message") {
+            messages[messages.length - 1] = {
+              ...lastMsg,
+              text: lastMsg.text + params.chunk,
+            };
+            this.updateState({ messages });
+          }
+        }
+        break;
+      }
+      case "stream_end": {
+        // Nothing to do for now
         break;
       }
       default:

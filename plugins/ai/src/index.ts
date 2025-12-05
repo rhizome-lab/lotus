@@ -1,5 +1,5 @@
 import { Plugin, PluginContext, CommandContext } from "@viwo/core";
-import { generateText, generateObject, embed } from "ai";
+import { generateText, generateObject, embed, streamText } from "ai";
 import { z } from "zod";
 
 export interface GenerationTemplate<T = any> {
@@ -140,6 +140,7 @@ export class AiPlugin implements Plugin {
       `,
     });
     ctx.registerRpcMethod("ai_completion", this.handleCompletion.bind(this));
+    ctx.registerRpcMethod("stream_talk", this.handleStreamTalk.bind(this));
   }
 
   registerTemplate(template: GenerationTemplate) {
@@ -222,39 +223,7 @@ export class AiPlugin implements Plugin {
     }
 
     try {
-      let systemPrompt = `You are roleplaying as ${target["name"]}.\
-${target["description"] ? `\nDescription: ${target["description"]}` : ""}
-${target["adjectives"] ? `\nAdjectives: ${(target["adjectives"] as string[]).join(", ")}` : ""}
-Keep your response short and in character.`;
-
-      // RAG: Fetch memories
-      if (this.context) {
-        const memoryPlugin = this.context.getPlugin("memory") as any;
-        if (memoryPlugin && memoryPlugin.memoryManager) {
-          try {
-            // We could filter by agent here if we enforced a convention, e.g.:
-            // const memories = await memoryPlugin.memoryManager.search(message, {
-            //   limit: 3,
-            //   filter: { agent: target["name"] }
-            // });
-            // For now, we do a broad search or maybe just search without filter.
-            // Let's assume global memories for now as per plan, or maybe we can try to be smart.
-            // Given the user's request for namespacing, let's try to filter by agent if possible?
-            // But we don't know if memories were saved with 'agent' metadata.
-            // So let's stick to global search for now, but comment that this is where we'd add it.
-            const memories = await memoryPlugin.memoryManager.search(message, {
-              limit: 3,
-            });
-            if (memories.length > 0) {
-              systemPrompt += `\n\nRelevant Memories:\n${memories
-                .map((m: any) => `- ${m.content}`)
-                .join("\n")}`;
-            }
-          } catch (e) {
-            console.warn("Failed to fetch memories:", e);
-          }
-        }
-      }
+      const systemPrompt = await this.buildSystemPrompt(target, message);
 
       const model = await getModel();
       const { text } = await generateText({
@@ -268,6 +237,81 @@ Keep your response short and in character.`;
       console.error("AI Error:", error);
       ctx.send("error", `AI Error: ${error.message}`);
     }
+  }
+
+  async handleStreamTalk(params: any, ctx: CommandContext) {
+    const { targetName, message } = params;
+
+    if (!targetName || !message) {
+      throw new Error("Usage: stream_talk { targetName, message }");
+    }
+
+    const playerEntity = ctx.core.getEntity(ctx.player.id);
+    if (!playerEntity || !playerEntity["location"]) {
+      throw new Error("You are nowhere.");
+    }
+
+    const roomItems = this.getResolvedRoom(ctx, playerEntity["location"] as number)?.contents;
+    const target = roomItems?.find((e: any) => e.name.toLowerCase() === targetName.toLowerCase());
+
+    if (!target) {
+      throw new Error(`You don't see '${targetName}' here.`);
+    }
+
+    try {
+      const systemPrompt = await this.buildSystemPrompt(target, message);
+
+      const model = await getModel();
+      const { textStream } = await streamText({
+        model,
+        system: systemPrompt,
+        prompt: message,
+      });
+
+      const streamId = `stream-${Date.now()}`;
+      ctx.send("stream_start", { streamId });
+      ctx.send("stream_chunk", {
+        streamId,
+        chunk: `${target["name"]} says: "`,
+      });
+
+      for await (const textPart of textStream) {
+        ctx.send("stream_chunk", { streamId, chunk: textPart });
+      }
+
+      ctx.send("stream_chunk", { streamId, chunk: `"` });
+      ctx.send("stream_end", { streamId });
+    } catch (error: any) {
+      console.error("AI Stream Error:", error);
+      ctx.send("error", `AI Stream Error: ${error.message}`);
+    }
+  }
+
+  private async buildSystemPrompt(target: any, message: string): Promise<string> {
+    let systemPrompt = `You are roleplaying as ${target["name"]}.\
+${target["description"] ? `\nDescription: ${target["description"]}` : ""}
+${target["adjectives"] ? `\nAdjectives: ${(target["adjectives"] as string[]).join(", ")}` : ""}
+Keep your response short and in character.`;
+
+    // RAG: Fetch memories
+    if (this.context) {
+      const memoryPlugin = this.context.getPlugin("memory") as any;
+      if (memoryPlugin && memoryPlugin.memoryManager) {
+        try {
+          const memories = await memoryPlugin.memoryManager.search(message, {
+            limit: 3,
+          });
+          if (memories.length > 0) {
+            systemPrompt += `\n\nRelevant Memories:\n${memories
+              .map((m: any) => `- ${m.content}`)
+              .join("\n")}`;
+          }
+        } catch (e) {
+          console.warn("Failed to fetch memories:", e);
+        }
+      }
+    }
+    return systemPrompt;
   }
 
   async handleGen(ctx: CommandContext) {

@@ -62,6 +62,56 @@ export interface JsonRpcError {
 export type JsonRpcResponse<T = any> = JsonRpcSuccess<T> | JsonRpcError;
 
 /**
+ * Parameters for a 'stream_start' notification.
+ */
+export interface StreamStartNotificationParams {
+  /** The ID of the stream (usually correlates to a request ID or unique stream ID). */
+  streamId: string;
+}
+
+/**
+ * A notification sent by the server to indicate the start of a stream.
+ */
+export interface StreamStartNotification extends JsonRpcNotification {
+  method: "stream_start";
+  params: StreamStartNotificationParams;
+}
+
+/**
+ * Parameters for a 'stream_chunk' notification.
+ */
+export interface StreamChunkNotificationParams {
+  /** The ID of the stream. */
+  streamId: string;
+  /** The chunk of text. */
+  chunk: string;
+}
+
+/**
+ * A notification sent by the server containing a chunk of streamed text.
+ */
+export interface StreamChunkNotification extends JsonRpcNotification {
+  method: "stream_chunk";
+  params: StreamChunkNotificationParams;
+}
+
+/**
+ * Parameters for a 'stream_end' notification.
+ */
+export interface StreamEndNotificationParams {
+  /** The ID of the stream. */
+  streamId: string;
+}
+
+/**
+ * A notification sent by the server to indicate the end of a stream.
+ */
+export interface StreamEndNotification extends JsonRpcNotification {
+  method: "stream_end";
+  params: StreamEndNotificationParams;
+}
+
+/**
  * Union type for any JSON-RPC message.
  */
 export type JsonRpcMessage = JsonRpcRequest | JsonRpcNotification | JsonRpcResponse;

@@ -84,4 +84,57 @@ describe("AiPlugin", () => {
     expect(callArgs.system).toContain("- Memory 1");
     expect(callArgs.system).toContain("- Memory 2");
   });
+
+  it("should stream response using stream_talk", async () => {
+    const send = mock(() => {});
+    const ctx = {
+      player: { id: 1 },
+      args: [],
+      core: mockCore,
+      send,
+    } as unknown as CommandContext;
+
+    // Mock room resolution
+    spyOn(aiPlugin, "getResolvedRoom").mockReturnValue({
+      id: 2,
+      contents: [
+        {
+          id: 3,
+          name: "NPC",
+          description: "A friendly NPC",
+          adjectives: ["friendly"],
+        },
+      ],
+    } as any);
+
+    // Mock streamText
+    const mockStreamText = mock(async () => ({
+      textStream: (async function* () {
+        yield "Hello";
+        yield " world";
+      })(),
+    }));
+    mock.module("ai", () => ({
+      generateText: mock(async () => ({ text: "mock" })),
+      generateObject: mock(async () => ({ object: { completion: "mock" } })),
+      embed: mock(async () => ({ embedding: [] })),
+      streamText: mockStreamText,
+    }));
+
+    await aiPlugin.handleStreamTalk({ targetName: "NPC", message: "Hi" }, ctx);
+
+    // Verify streamText was called
+    expect(mockStreamText).toHaveBeenCalled();
+
+    // Verify notifications
+    expect(send).toHaveBeenCalledWith("stream_start", expect.any(Object));
+    expect(send).toHaveBeenCalledWith(
+      "stream_chunk",
+      expect.objectContaining({ chunk: 'NPC says: "' }),
+    );
+    expect(send).toHaveBeenCalledWith("stream_chunk", expect.objectContaining({ chunk: "Hello" }));
+    expect(send).toHaveBeenCalledWith("stream_chunk", expect.objectContaining({ chunk: " world" }));
+    expect(send).toHaveBeenCalledWith("stream_chunk", expect.objectContaining({ chunk: '"' }));
+    expect(send).toHaveBeenCalledWith("stream_end", expect.any(Object));
+  });
 });
