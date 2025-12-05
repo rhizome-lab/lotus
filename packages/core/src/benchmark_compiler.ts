@@ -36,7 +36,7 @@ const script = StdLib.seq(
       StdLib.set("i", MathLib.add(StdLib.var("i"), 1)),
     ),
   ),
-  StdLib.var("sum"),
+  StdLib.return(StdLib.var("sum")),
 );
 
 const ctx2 = createScriptContext({
