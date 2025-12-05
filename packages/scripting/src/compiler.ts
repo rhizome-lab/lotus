@@ -342,14 +342,12 @@ function compileIf(
     : { code: targetVar ? `${targetVar} = null;` : "" };
 
   return {
-    code: `
-      ${condExpr.pre}
-      if (${condExpr.expr}) {
-        ${thenCode.code}
-      } else {
-        ${elseCode.code}
-      }
-    `,
+    code: `\
+${condExpr.pre}if (${condExpr.expr}) {
+  ${thenCode.code}
+} else {
+  ${elseCode.code}
+}`,
   };
 }
 
@@ -372,29 +370,26 @@ function compileWhile(args: any[], targetVar: string | null, state: CtxState): {
 
   let loopCode = "";
   if (isComplexCond) {
-    loopCode = `
-      while (true) {
-        ${condExpr.pre}
-        if (!${condExpr.expr}) break;
-        ${decls}
-        ${bodyCode.code}
-      }
-    `;
+    loopCode = `\
+while (true) {
+  ${condExpr.pre}
+  if (!${condExpr.expr}) break;
+  ${decls}
+  ${bodyCode.code}
+}`;
   } else {
-    loopCode = `
-      while (${condExpr.expr}) {
-        ${decls}
-        ${bodyCode.code}
-      }
-    `;
+    loopCode = `\
+while (${condExpr.expr}) {
+  ${decls}
+  ${bodyCode.code}
+}`;
   }
 
   return {
-    code: `
-      let ${loopResult} = null;
-      ${loopCode}
-      ${targetVar ? `${targetVar} = ${loopResult};` : ""}
-    `,
+    code: `\
+${targetVar ? `let ${loopResult} = null;\n` : ""}${loopCode}${
+      targetVar ? `\n${targetVar} = ${loopResult};` : ""
+    }`,
   };
 }
 
@@ -413,17 +408,13 @@ function compileFor(args: any[], targetVar: string | null, state: CtxState): { c
   const bodyCode = compileStatements(body, loopResult, loopResult, state);
 
   return {
-    code: `
-      ${listExprRes.pre}
-      let ${loopResult} = null;
-      const _list = ${listExprRes.expr};
-      if (Array.isArray(_list)) {
-        for (const ${loopVar} of _list) {
-          ${declsStr}
-          ${bodyCode.code}
-        }
-      }
-      ${targetVar ? `${targetVar} = ${loopResult};` : ""}
+    code: `\
+${listExprRes.pre}let ${loopResult} = null;
+for (const ${loopVar} of ${listExprRes.expr}) {
+  ${declsStr}
+  ${bodyCode.code}
+}
+${targetVar ? `${targetVar} = ${loopResult};` : ""}
     `,
   };
 }
@@ -438,11 +429,9 @@ function compileLet(
   const jsName = toJSName(name);
   const valExpr = compileExpression(val, loopResultVar, state);
   return {
-    code: `
-      ${valExpr.pre}
-      ${jsName} = ${valExpr.expr};
-      ${targetVar ? `${targetVar} = ${jsName};` : ""}
-    `,
+    code: `\
+${valExpr.pre}${jsName} = ${valExpr.expr};
+${targetVar ? `${targetVar} = ${jsName};` : ""}`,
   };
 }
 
@@ -456,11 +445,9 @@ function compileSet(
   const jsName = toJSName(name);
   const valExpr = compileExpression(val, loopResultVar, state);
   return {
-    code: `
-      ${valExpr.pre}
-      ${jsName} = ${valExpr.expr};
-      ${targetVar ? `${targetVar} = ${jsName};` : ""}
-    `,
+    code: `\
+${valExpr.pre}${jsName} = ${valExpr.expr};
+${targetVar ? `${targetVar} = ${jsName};` : ""}`,
   };
 }
 
@@ -473,11 +460,9 @@ function compileBreak(
   if (val) {
     const valExpr = compileExpression(val, loopResultVar, state);
     return {
-      code: `
-        ${valExpr.pre}
-        ${loopResultVar ? `${loopResultVar} = ${valExpr.expr};` : ""}
-        break;
-      `,
+      code: `\
+${valExpr.pre}${loopResultVar ? `${loopResultVar} = ${valExpr.expr};` : ""}
+break;`,
     };
   }
   return { code: "break;" };
@@ -489,10 +474,7 @@ function compileReturn(args: any[], state: CtxState): { code: string } {
     // Note: return doesn't care about loopResultVar
     const valExpr = compileExpression(val, null, state);
     return {
-      code: `
-        ${valExpr.pre}
-        return ${valExpr.expr};
-      `,
+      code: `${valExpr.pre}return ${valExpr.expr};`,
     };
   }
   return { code: "return null;" };
@@ -502,10 +484,7 @@ function compileThrow(args: any[], state: CtxState): { code: string } {
   const [msg] = args;
   const msgExpr = compileExpression(msg, null, state);
   return {
-    code: `
-      ${msgExpr.pre}
-      throw new ScriptError(${msgExpr.expr});
-    `,
+    code: `${msgExpr.pre}throw new ScriptError(${msgExpr.expr});`,
   };
 }
 
@@ -522,14 +501,13 @@ function compileTry(
   const errDecl = errorVar ? `let ${toJSName(errorVar)} = e.message || String(e);` : "";
 
   return {
-    code: `
-      try {
-        ${tryCode.code}
-      } catch (e) {
-        ${errDecl}
-        ${catchCode.code}
-      }
-    `,
+    code: `\
+try {
+  ${tryCode.code}
+} catch (e) {
+  ${errDecl}
+  ${catchCode.code}
+}`,
   };
 }
 

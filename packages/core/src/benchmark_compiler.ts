@@ -39,6 +39,17 @@ const script = StdLib.seq(
   StdLib.var("sum"),
 );
 
+const ctx2 = createScriptContext({
+  this: null!,
+  caller: null!,
+  args: [],
+  gas: ITERATIONS * 100,
+});
+const startCompile = performance.now();
+const compiledFn = compile(script);
+console.log(compiledFn + "");
+const endCompile = performance.now();
+
 console.log(`Benchmarking loop with ${ITERATIONS} iterations...`);
 
 setTypechecking(false);
@@ -57,15 +68,7 @@ console.log(`Interpreter: ${timeInterp.toFixed(2)}ms`);
 console.log(`Result: ${result}`);
 
 // 2. Compiler
-const ctx2 = createScriptContext({
-  this: null!,
-  caller: null!,
-  args: [],
-  gas: ITERATIONS * 100,
-});
-const startCompile = performance.now();
-const compiledFn = compile(script);
-const endCompile = performance.now();
+
 const compileTime = endCompile - startCompile;
 console.log(`Compilation time: ${compileTime.toFixed(2)}ms`);
 
@@ -76,5 +79,18 @@ const timeExec = endExec - startExec;
 console.log(`Compiled Execution: ${timeExec.toFixed(2)}ms`);
 console.log(`Result: ${result2}`);
 
+const startJs = performance.now();
+let resultJs = 0;
+let i = 0;
+while (i < ITERATIONS) {
+  resultJs += i;
+  i += 1;
+}
+const endJs = performance.now();
+const timeJs = endJs - startJs;
+console.log(`JS Execution: ${timeJs.toFixed(2)}ms`);
+console.log(`Result: ${resultJs}`);
+
 console.log(`Speedup (Exec only): ${(timeInterp / timeExec).toFixed(2)}x`);
 console.log(`Speedup (Total): ${(timeInterp / (compileTime + timeExec)).toFixed(2)}x`);
+console.log(`Slowdown vs native JS: ${(timeExec / timeJs).toFixed(2)}x`);
