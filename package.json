@@ -31,7 +31,9 @@
     "dev:docs": "bun scripts/dev-docs.ts",
     "preview:docs": "bun --filter @viwo/docs preview",
     "generate:types": "bun --filter '*' generate:types",
-    "commit": "bun generate:types && bun format && git add -A && git commit"
+    "check:readmes": "bun scripts/check-readmes.ts",
+    "commit": "bun generate:types && bun format && git add -A && git commit",
+    "ci:check": "bun run check:readmes && bun format --check && bun lint && bun typecheck && bun test"
   },
   "workspaces": [
     "apps/*",
