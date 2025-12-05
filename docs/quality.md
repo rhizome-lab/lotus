@@ -11,6 +11,15 @@ These checks are run automatically in CI (`bun run ci:check`). You should run th
 - **Type Checking**: `bun run typecheck` - Ensures TypeScript type safety across all workspaces.
 - **Tests**: `bun test` - Runs unit and integration tests.
 - **Documentation**: `bun run check:readmes` - Ensures every package has a README and corresponding documentation.
+- **Unused Code**: `bun run check:unused` (using `knip`) - Finds unused files, dependencies, and exports.
+- **Circular Dependencies**: `bun run check:circular` (using `madge`) - Detects circular dependencies between files.
+
+### Design Decisions: Tooling
+
+We explicitly **do not** use the following tools to avoid friction and false positives:
+
+- **Husky/Pre-commit hooks**: Can be intrusive and slow down the development loop. We rely on CI to catch issues.
+- **Spellcheckers (CSpell)**: Often flag variable names or technical terms, requiring constant maintenance of ignore lists.
 
 ## Manual Code Review Checklist
 
