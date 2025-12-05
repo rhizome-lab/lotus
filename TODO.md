@@ -11,7 +11,7 @@
 - [x] **Memory Systems**: Integrate `sqlite-vec` for RAG-based long-term memory.
 - [x] **Streaming**: Implement `streamText` support in `plugins/ai` for real-time typing effects.
 - [x] **Dynamic State Context**: Implement system for mutable personality traits and ephemeral emotions that feed into LLM context.
-- [ ] **Director AI**: Meta-AI agent for pacing and environment control.
+- [x] **Director AI**: Meta-AI agent for pacing and environment control.
 
 ## 3. Ubiquitous Access (Chatbot)
 
@@ -45,3 +45,4 @@
 - [ ] **Core**: Consider splitting permissions for net.http into multiple capabilities
 - [ ] **Core**: Move net and fs into standalone libraries, or move to `packages/scripting/`
 - [ ] **Plugins**: Add capabilities to plugins
+- [ ] **Codegen**: Require and generate JSDocs for opcodes

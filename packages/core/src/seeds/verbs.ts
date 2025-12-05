@@ -903,17 +903,12 @@ export function director_tick(this: Entity) {
   const room = resolve_props(entity(lobbyId));
 
   // 4. Generate ambient event
-  const prompt = `You are a Director AI for a text-based RPG.
-The player is in a room: "${room["name"]}".
-Description: "${room["description"]}".
+  const prompt = `Location: "${room["name"]}"
+Description: "${room["description"]}"
 
-Generate a short, atmospheric event or flavor text that happens in this room.
-It should be subtle and immersive.
-Do not mention "Director AI" or "Game Master".
-Just describe the event.
-Max 1 sentence.`;
+Generate a single sentence of atmospheric prose describing a subtle event in this location.`;
 
-  const eventText = ai.text(prompt);
+  const eventText = ai.text("openai:gpt-3.5-turbo", prompt);
 
   // 5. Send to all players in the room
   const roomContents = (room["contents"] as number[]) ?? [];
