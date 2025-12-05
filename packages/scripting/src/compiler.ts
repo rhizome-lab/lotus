@@ -20,7 +20,7 @@ export function compile<T>(script: ScriptValue<T>): (ctx: ScriptContext) => T {
       : "";
 
   const ctxState = { tempIdx: 0 };
-  const { code } = compileStatements(script, "result", null, ctxState);
+  const { code, result } = compileStatements(script, ctxState);
 
   const body = `\
 return function compiled(ctx) {
@@ -28,6 +28,7 @@ return function compiled(ctx) {
   let result = null;
   try {
     ${code}
+    result = ${result};
   } catch (e) {
     if (e instanceof ScriptError) throw e;
     throw new ScriptError(e.message || String(e));
@@ -195,11 +196,7 @@ interface CompiledExpression {
   expr: string;
 }
 
-function compileExpression(
-  node: any,
-  loopResultVar: string | null,
-  state: CtxState,
-): CompiledExpression {
+function compileExpression(node: any, state: CtxState): CompiledExpression {
   if (node === null || node === undefined) {
     return { pre: "", expr: "null" };
   }
@@ -222,8 +219,8 @@ function compileExpression(
       ["seq", "if", "while", "for", "let", "set", "try", "break", "return", "throw"].includes(op)
     ) {
       const temp = genTemp(state);
-      const { code } = compileStatements(node, temp, loopResultVar, state);
-      return { pre: `let ${temp} = null;\n${code}`, expr: temp };
+      const { code, result } = compileStatements(node, state);
+      return { pre: `let ${temp} = null;\n${code}\n${temp} = ${result};`, expr: temp };
     }
 
     if (op === "var") {
@@ -235,18 +232,18 @@ function compileExpression(
     }
 
     if (op === "list.new") {
-      const compiledArgs = args.map((a) => compileExpression(a, loopResultVar, state));
+      const compiledArgs = args.map((a) => compileExpression(a, state));
       const pre = compiledArgs.map((a) => a.pre).join("\n");
       const expr = `[${compiledArgs.map((a) => a.expr).join(", ")}]`;
       return { pre, expr };
     }
 
     if (op === "obj.new") {
-      return compileObjNew(args, loopResultVar, state);
+      return compileObjNew(args, state);
     }
 
     if (typeof op === "string" && OPS[op]) {
-      return compileOpcodeCall(op, args, loopResultVar, state);
+      return compileOpcodeCall(op, args, state);
     }
 
     throw new Error(`Unknown opcode: ${op}`);
@@ -255,50 +252,41 @@ function compileExpression(
   throw new Error(`Unknown node type: ${typeof node}`);
 }
 
-function compileStatements(
-  node: any,
-  targetVar: string | null,
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
+function compileStatements(node: any, state: CtxState): { code: string; result: string } {
   if (Array.isArray(node)) {
     const [op, ...args] = node;
     switch (op) {
       case "seq":
-        return compileSeq(args, targetVar, loopResultVar, state);
+        return compileSeq(args, state);
       case "if":
-        return compileIf(args, targetVar, loopResultVar, state);
+        return compileIf(args, state);
       case "while":
-        return compileWhile(args, targetVar, state);
+        return compileWhile(args, state);
       case "for":
-        return compileFor(args, targetVar, state);
+        return compileFor(args, state);
       case "let":
-        return compileLet(args, targetVar, loopResultVar, state);
+        return compileLet(args, state);
       case "set":
-        return compileSet(args, targetVar, loopResultVar, state);
+        return compileSet(args, state);
       case "break":
-        return compileBreak(args, loopResultVar, state);
+        return compileBreak(args, state);
       case "return":
         return compileReturn(args, state);
       case "throw":
         return compileThrow(args, state);
       case "try":
-        return compileTry(args, targetVar, loopResultVar, state);
+        return compileTry(args, state);
     }
   }
 
-  // Default: compile as expression and assign
-  const { pre, expr } = compileExpression(node, loopResultVar, state);
-  return { code: `${pre}\n${targetVar ? `${targetVar} = ${expr};` : `${expr};`}` };
+  // Default: compile as expression
+  const { pre, expr } = compileExpression(node, state);
+  const temp = genTemp(state);
+  return { code: `${pre}\nlet ${temp} = ${expr};`, result: temp };
 }
 
-function compileSeq(
-  args: any[],
-  targetVar: string | null,
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
-  if (args.length === 0) return { code: targetVar ? `${targetVar} = null;` : "" };
+function compileSeq(args: any[], state: CtxState): { code: string; result: string } {
+  if (args.length === 0) return { code: "", result: "null" };
 
   const vars = new Set<string>();
   for (const arg of args) {
@@ -314,59 +302,55 @@ function compileSeq(
       : "";
 
   let code = decls + "\n";
+  let lastResult = "null";
+
   for (let i = 0; i < args.length; i++) {
-    const isLast = i === args.length - 1;
-    const { code: stepCode } = compileStatements(
-      args[i],
-      isLast ? targetVar : null,
-      loopResultVar,
-      state,
-    );
+    const { code: stepCode, result } = compileStatements(args[i], state);
     code += stepCode + "\n";
+    lastResult = result;
   }
 
-  return { code };
+  return { code, result: lastResult };
 }
 
-function compileIf(
-  args: any[],
-  targetVar: string | null,
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
+function compileIf(args: any[], state: CtxState): { code: string; result: string } {
   const [cond, thenBranch, elseBranch] = args;
-  const condExpr = compileExpression(cond, loopResultVar, state);
-  const thenCode = compileStatements(thenBranch, targetVar, loopResultVar, state);
-  const elseCode = elseBranch
-    ? compileStatements(elseBranch, targetVar, loopResultVar, state)
-    : { code: targetVar ? `${targetVar} = null;` : "" };
+  const condExpr = compileExpression(cond, state);
+  const thenCode = compileStatements(thenBranch, state);
+  const elseCode = elseBranch ? compileStatements(elseBranch, state) : { code: "", result: "null" };
+
+  const resultVar = genTemp(state);
 
   return {
     code: `\
-${condExpr.pre}if (${condExpr.expr}) {
+${condExpr.pre}
+let ${resultVar} = null;
+if (${condExpr.expr}) {
   ${thenCode.code}
+  ${resultVar} = ${thenCode.result};
 } else {
   ${elseCode.code}
+  ${resultVar} = ${elseCode.result};
 }`,
+    result: resultVar,
   };
 }
 
-function compileWhile(args: any[], targetVar: string | null, state: CtxState): { code: string } {
+function compileWhile(args: any[], state: CtxState): { code: string; result: string } {
   const [cond, body] = args;
-  const loopResult = genTemp(state);
 
   // Condition might have side effects, so we need to evaluate it inside the loop
   // But while(cond) expects an expression.
   // If cond is complex, we use while(true) { ... if(!cond) break; ... }
 
-  const condExpr = compileExpression(cond, loopResult, state);
+  const condExpr = compileExpression(cond, state);
   const isComplexCond = condExpr.pre.trim() !== "";
 
   const bodyVars = collectVars(body);
   const decls =
     bodyVars.length > 0 ? `let ${bodyVars.map((v) => `${toJSName(v)} = null`).join(", ")};` : "";
 
-  const bodyCode = compileStatements(body, loopResult, loopResult, state);
+  const bodyCode = compileStatements(body, state);
 
   let loopCode = "";
   if (isComplexCond) {
@@ -386,17 +370,14 @@ while (${condExpr.expr}) {
   }
 
   return {
-    code: `\
-${targetVar ? `let ${loopResult} = null;\n` : ""}${loopCode}${
-      targetVar ? `\n${targetVar} = ${loopResult};` : ""
-    }`,
+    code: loopCode,
+    result: "null",
   };
 }
 
-function compileFor(args: any[], targetVar: string | null, state: CtxState): { code: string } {
+function compileFor(args: any[], state: CtxState): { code: string; result: string } {
   const [varName, listExpr, body] = args;
-  const loopResult = genTemp(state);
-  const listExprRes = compileExpression(listExpr, null, state);
+  const listExprRes = compileExpression(listExpr, state);
   const loopVar = toJSName(varName);
 
   const bodyVars = collectVars(body);
@@ -405,109 +386,87 @@ function compileFor(args: any[], targetVar: string | null, state: CtxState): { c
     .map((v) => `${toJSName(v)} = null`);
   const declsStr = bodyDecls.length > 0 ? `let ${bodyDecls.join(", ")};` : "";
 
-  const bodyCode = compileStatements(body, loopResult, loopResult, state);
+  const bodyCode = compileStatements(body, state);
 
   return {
     code: `\
-${listExprRes.pre}let ${loopResult} = null;
+${listExprRes.pre}
 for (const ${loopVar} of ${listExprRes.expr}) {
   ${declsStr}
   ${bodyCode.code}
 }
-${targetVar ? `${targetVar} = ${loopResult};` : ""}
     `,
+    result: "null",
   };
 }
 
-function compileLet(
-  args: any[],
-  targetVar: string | null,
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
+function compileLet(args: any[], state: CtxState): { code: string; result: string } {
   const [name, val] = args;
   const jsName = toJSName(name);
-  const valExpr = compileExpression(val, loopResultVar, state);
+  const valExpr = compileExpression(val, state);
   return {
     code: `\
-${valExpr.pre}${jsName} = ${valExpr.expr};
-${targetVar ? `${targetVar} = ${jsName};` : ""}`,
+${valExpr.pre}${jsName} = ${valExpr.expr};`,
+    result: jsName,
   };
 }
 
-function compileSet(
-  args: any[],
-  targetVar: string | null,
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
+function compileSet(args: any[], state: CtxState): { code: string; result: string } {
   const [name, val] = args;
   const jsName = toJSName(name);
-  const valExpr = compileExpression(val, loopResultVar, state);
+  const valExpr = compileExpression(val, state);
   return {
     code: `\
-${valExpr.pre}${jsName} = ${valExpr.expr};
-${targetVar ? `${targetVar} = ${jsName};` : ""}`,
+${valExpr.pre}${jsName} = ${valExpr.expr};`,
+    result: jsName,
   };
 }
 
-function compileBreak(
-  args: any[],
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
-  const [val] = args;
-  if (val) {
-    const valExpr = compileExpression(val, loopResultVar, state);
-    return {
-      code: `\
-${valExpr.pre}${loopResultVar ? `${loopResultVar} = ${valExpr.expr};` : ""}
-break;`,
-    };
-  }
-  return { code: "break;" };
+function compileBreak(_args: any[], _state: CtxState): { code: string; result: string } {
+  return { code: "break;", result: "null" };
 }
 
-function compileReturn(args: any[], state: CtxState): { code: string } {
+function compileReturn(args: any[], state: CtxState): { code: string; result: string } {
   const [val] = args;
   if (val) {
-    // Note: return doesn't care about loopResultVar
-    const valExpr = compileExpression(val, null, state);
+    const valExpr = compileExpression(val, state);
     return {
       code: `${valExpr.pre}return ${valExpr.expr};`,
+      result: "null", // Unreachable
     };
   }
-  return { code: "return null;" };
+  return { code: "return null;", result: "null" };
 }
 
-function compileThrow(args: any[], state: CtxState): { code: string } {
+function compileThrow(args: any[], state: CtxState): { code: string; result: string } {
   const [msg] = args;
-  const msgExpr = compileExpression(msg, null, state);
+  const msgExpr = compileExpression(msg, state);
   return {
     code: `${msgExpr.pre}throw new ScriptError(${msgExpr.expr});`,
+    result: "null", // Unreachable
   };
 }
 
-function compileTry(
-  args: any[],
-  targetVar: string | null,
-  loopResultVar: string | null,
-  state: CtxState,
-): { code: string } {
+function compileTry(args: any[], state: CtxState): { code: string; result: string } {
   const [tryBlock, errorVar, catchBlock] = args;
-  const tryCode = compileStatements(tryBlock, targetVar, loopResultVar, state);
-  const catchCode = compileStatements(catchBlock, targetVar, loopResultVar, state);
+  const tryCode = compileStatements(tryBlock, state);
+  const catchCode = compileStatements(catchBlock, state);
 
   const errDecl = errorVar ? `let ${toJSName(errorVar)} = e.message || String(e);` : "";
+  const resultVar = genTemp(state);
 
   return {
     code: `\
+let ${resultVar} = null;
 try {
   ${tryCode.code}
+  ${resultVar} = ${tryCode.result};
 } catch (e) {
   ${errDecl}
   ${catchCode.code}
+  ${resultVar} = ${catchCode.result};
 }`,
+    result: resultVar,
   };
 }
 
@@ -515,24 +474,12 @@ function compileLambda(args: any[]): CompiledExpression {
   const [params, body] = args;
   const paramNames = (params as string[]).map(toJSName);
 
-  // Lambda compilation needs its own context state for temps?
-  // Actually, lambda body is a separate function, so it can reuse temps or have its own scope.
-  // But we are generating a string.
-  // We should probably use a fresh state for lambda body to reset temp counter?
-  // Or just keep incrementing. Incrementing is safer to avoid collisions if we inline (though we don't inline lambdas).
-
   const vars = collectVars(body);
   const bodyDecls = vars.filter((v) => !params.includes(v)).map((v) => `${toJSName(v)} = null`);
   const declsStr = bodyDecls.length > 0 ? `let ${bodyDecls.join(", ")};` : "";
 
-  // Lambda body is a function, so it needs to return the result.
-  // compileStatements returns code that assigns to targetVar.
-  // We want the last statement to return.
-  // But compileStatements doesn't support "return result".
-  // We can use a result var and then return it.
-
   const lambdaState = { tempIdx: 0 }; // Fresh state for lambda
-  const { code } = compileStatements(body, "result", null, lambdaState);
+  const { code, result } = compileStatements(body, lambdaState);
 
   const expr = `({
     type: "lambda",
@@ -540,25 +487,20 @@ function compileLambda(args: any[]): CompiledExpression {
     execute: (ctx) => {
       ${paramNames.map((p) => `let ${p} = ctx.vars[${JSON.stringify(p)}];`).join("\n")}
       ${declsStr}
-      let result = null;
       ${code}
-      return result;
+      return ${result};
     }
   })`;
 
   return { pre: "", expr };
 }
 
-function compileObjNew(
-  args: any[],
-  loopResultVar: string | null,
-  state: CtxState,
-): CompiledExpression {
+function compileObjNew(args: any[], state: CtxState): CompiledExpression {
   const props = [];
   let pre = "";
   for (const arg of args) {
-    const keyExpr = compileExpression(arg[0], loopResultVar, state);
-    const valExpr = compileExpression(arg[1], loopResultVar, state);
+    const keyExpr = compileExpression(arg[0], state);
+    const valExpr = compileExpression(arg[1], state);
     pre += keyExpr.pre + "\n" + valExpr.pre + "\n";
     props.push(`[${keyExpr.expr}]: ${valExpr.expr}`);
   }
@@ -578,16 +520,11 @@ function compileChainedComparison(argExprs: string[], op: string): CompiledExpre
   return { pre: "", expr: `(${parts.join(" && ")})` };
 }
 
-function compileOpcodeCall(
-  op: string,
-  args: any[],
-  loopResultVar: string | null,
-  state: CtxState,
-): CompiledExpression {
+function compileOpcodeCall(op: string, args: any[], state: CtxState): CompiledExpression {
   if (op === "quote") {
     return { pre: "", expr: JSON.stringify(args[0]) };
   }
-  const compiledArgs = args.map((a) => compileExpression(a, loopResultVar, state));
+  const compiledArgs = args.map((a) => compileExpression(a, state));
   const pre = compiledArgs.map((a) => a.pre).join("\n");
   const argExprs = compiledArgs.map((a) => a.expr);
 
@@ -740,35 +677,6 @@ function compileOpcodeCall(
       expr: `OPS[${JSON.stringify(op)}].handler(${JSON.stringify(args)}, ctx)`,
     };
   }
-
-  // For normal opcodes, we need to wrap args if they are arrays (quote)
-  // But here argExprs are already compiled expressions (strings).
-  // If the original arg was an array, compileExpression returned "[]" or "[...]"
-  // We need to check if we need to wrap.
-  // Wait, `compileExpression` handles `list.new` -> `[...]`.
-  // If the AST had a literal array `[1, 2]`, `compileExpression` would handle it?
-  // `compileExpression` handles `Array.isArray(node)`.
-  // If it's a literal array, it's not an opcode call.
-  // But wait, `compileExpression` treats array as opcode call unless it's empty.
-  // So literal arrays MUST be `list.new`.
-  // The only case where `args` contains an array is if it's a nested AST.
-  // `compileExpression` compiles it.
-  // So `argExprs` contains the RESULT of the evaluation.
-  // So we don't need to quote anything!
-  // The original `compileOpcodeCall` did: `args.map(a => Array.isArray(a) ? ["quote", a] : a)`
-  // This was because it was passing raw AST to handler?
-  // No, `handler` expects evaluated args.
-  // Wait, `OPS[op].handler` takes `args`.
-  // If `lazy` is false, `args` are evaluated.
-  // So why did the old code quote arrays?
-  // `const wrappedArgs = args.map(a => Array.isArray(a) ? ["quote", a] : a);`
-  // Maybe to prevent the handler from interpreting the array as an opcode call if it inspects it?
-  // But `handler` just receives values.
-  // If I pass `[1, 2]` to a handler, it's just an array.
-  // Unless the handler calls `evaluate` on it?
-  // Most handlers don't.
-  // I will assume I don't need to quote, or if I do, it's because of some specific behavior.
-  // Actually, if `compileExpression` returns a string that evaluates to an array, it's fine.
 
   return {
     pre,

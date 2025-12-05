@@ -188,16 +188,6 @@ describe("Compiler", () => {
     expect(run(script)).toBe(6);
   });
 
-  test("break with value", () => {
-    // for x in [1, 2, 3]: if (x == 2) break "found";
-    const script = Std.for(
-      "x",
-      List.listNew(1, 2, 3),
-      Std.if(BooleanLib.eq(Std.var("x"), 2), Std.break("found")),
-    );
-    expect(run(script)).toBe("found");
-  });
-
   test("return from lambda", () => {
     // (let f (lambda [] (return "early") "late")) (apply f) -> "early"
     const script = Std.seq(

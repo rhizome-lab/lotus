@@ -327,11 +327,9 @@ declare global {
    */
   function args(): readonly any[];
   /**
-   * Breaks out of the current loop, optionally returning a value.
-   *
-   * @param value The value to return from the loop.
+   * Breaks out of the current loop.
    */
-  function break_(value?: any): never;
+  function break_(): never;
   /**
    * Current caller
    */

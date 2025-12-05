@@ -221,35 +221,31 @@ const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
     lazy: true,
   },
   handler: ([cond, body], ctx) => {
-    let lastResult: any = null;
-
     const runBodyAsync = () => {
       const snapshot = enterScope(ctx);
       try {
         const bodyResult = evaluate(body, ctx);
         if (bodyResult instanceof Promise) {
           return bodyResult.then(
-            (bRes) => {
+            () => {
               exitScope(ctx, snapshot);
-              lastResult = bRes;
               return runLoop();
             },
             (err) => {
               exitScope(ctx, snapshot);
               if (err instanceof BreakSignal) {
-                return err.value ?? lastResult;
+                return null;
               }
               throw err;
             },
           );
         }
         exitScope(ctx, snapshot);
-        lastResult = bodyResult;
         return runLoop();
       } catch (e) {
         exitScope(ctx, snapshot);
         if (e instanceof BreakSignal) {
-          return e.value ?? lastResult;
+          return null;
         }
         throw e;
       }
@@ -265,12 +261,12 @@ const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
               if (res) {
                 return runBodyAsync();
               }
-              return lastResult;
+              return null;
             });
           }
 
           if (!condResult) {
-            return lastResult;
+            return null;
           }
 
           const snapshot = enterScope(ctx);
@@ -278,32 +274,30 @@ const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
             const bodyResult = evaluate(body, ctx);
             if (bodyResult instanceof Promise) {
               return bodyResult.then(
-                (bRes) => {
+                () => {
                   exitScope(ctx, snapshot);
-                  lastResult = bRes;
                   return runLoop();
                 },
                 (err) => {
                   exitScope(ctx, snapshot);
                   if (err instanceof BreakSignal) {
-                    return err.value ?? lastResult;
+                    return null;
                   }
                   throw err;
                 },
               );
             }
             exitScope(ctx, snapshot);
-            lastResult = bodyResult;
           } catch (e) {
             exitScope(ctx, snapshot);
             if (e instanceof BreakSignal) {
-              return e.value ?? lastResult;
+              return null;
             }
             throw e;
           }
         } catch (e) {
           if (e instanceof BreakSignal) {
-            return e.value ?? lastResult;
+            return null;
           }
           throw e;
         }
@@ -347,7 +341,6 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
       if (!Array.isArray(list)) return null;
 
       let i = 0;
-      let lastResult: any = null;
 
       const next = (): any => {
         while (i < list.length) {
@@ -367,31 +360,29 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
             const result = evaluate(body, ctx);
             if (result instanceof Promise) {
               return result.then(
-                (res) => {
+                () => {
                   exitScope(ctx, snapshot);
-                  lastResult = res;
                   return next();
                 },
                 (err) => {
                   exitScope(ctx, snapshot);
                   if (err instanceof BreakSignal) {
-                    return err.value ?? lastResult;
+                    return null;
                   }
                   throw err;
                 },
               );
             }
             exitScope(ctx, snapshot);
-            lastResult = result;
           } catch (e) {
             exitScope(ctx, snapshot);
             if (e instanceof BreakSignal) {
-              return e.value ?? lastResult;
+              return null;
             }
             throw e;
           }
         }
-        return lastResult;
+        return null;
       };
 
       return next();
@@ -406,28 +397,19 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
 });
 export { for_ as for };
 
-/**
- * Breaks out of the current loop.
- */
-const break_ = defineFullOpcode<[unknown?], never>("break", {
+/** Breaks out of the current loop. */
+const break_ = defineFullOpcode<[], never>("break", {
   metadata: {
     label: "Unless",
     category: "control",
     layout: "control-flow",
-    description: "Breaks out of the current loop, optionally returning a value.",
-    slots: [{ name: "Value", type: "block" }],
-    parameters: [
-      {
-        name: "value",
-        type: "any",
-        optional: true,
-        description: "The value to return from the loop.",
-      },
-    ],
+    description: "Breaks out of the current loop.",
+    slots: [],
+    parameters: [],
     returnType: "never",
   },
-  handler: ([value], _ctx) => {
-    throw new BreakSignal(value);
+  handler: (_args, _ctx) => {
+    throw new BreakSignal();
   },
 });
 export { break_ as break };

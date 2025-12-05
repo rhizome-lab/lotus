@@ -65,7 +65,7 @@ export function executeLambda(lambda: any, args: unknown[], ctx: ScriptContext):
 
 /** Signal thrown to break out of a loop. */
 export class BreakSignal {
-  constructor(public value: any = null) {}
+  constructor() {}
 }
 
 /** Signal thrown to return from a function. */

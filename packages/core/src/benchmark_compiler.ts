@@ -81,11 +81,13 @@ console.log(`Result: ${result2}`);
 
 const startJs = performance.now();
 let resultJs = 0;
-let i = 0;
-while (i < ITERATIONS) {
-  resultJs += i;
-  i += 1;
-}
+(() => {
+  let i = 0;
+  while (i < ITERATIONS) {
+    resultJs += i;
+    i += 1;
+  }
+})();
 const endJs = performance.now();
 const timeJs = endJs - startJs;
 console.log(`JS Execution: ${timeJs.toFixed(2)}ms`);
