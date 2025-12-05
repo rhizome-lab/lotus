@@ -35,6 +35,10 @@ export default withMermaid(
         { text: "Scripting", link: "/scripting/spec" },
       ],
 
+      search: {
+        provider: "local",
+      },
+
       sidebar: [
         {
           text: "Introduction",
