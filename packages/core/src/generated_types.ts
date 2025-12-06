@@ -202,12 +202,6 @@ declare global {
    */
   function div(a: number, b: number, ...args: number[]): number;
   /**
-   * Rounds down a number.
-   *
-   * @param num The number to floor.
-   */
-  function floor(num: number): number;
-  /**
    * Calculates the modulo of two numbers.
    *
    * @param a The dividend.
@@ -452,6 +446,139 @@ declare global {
    * @param body The code to execute in each iteration.
    */
   function while_(condition: any, body: any): any;
+  namespace math {
+    /**
+     * Returns the absolute value of a number.
+     *
+     * @param num The number.
+     */
+    function abs(num: number): number;
+    /**
+     * Returns the arccosine of a number.
+     *
+     * @param num The number.
+     */
+    function acos(num: number): number;
+    /**
+     * Returns the arcsine of a number.
+     *
+     * @param num The number.
+     */
+    function asin(num: number): number;
+    /**
+     * Returns the arctangent of a number.
+     *
+     * @param num The number.
+     */
+    function atan(num: number): number;
+    /**
+     * Returns the angle (in radians) from the X axis to a point.
+     *
+     * @param y The y coordinate.
+     * @param x The x coordinate.
+     */
+    function atan2(y: number, x: number): number;
+    /**
+     * Rounds up a number.
+     *
+     * @param num The number to ceil.
+     */
+    function ceil(num: number): number;
+    /**
+     * Clamps a number between a minimum and maximum value.
+     *
+     * @param val The value to clamp.
+     * @param min The minimum value.
+     * @param max The maximum value.
+     */
+    function clamp(val: number, min: number, max: number): number;
+    /**
+     * Returns the cosine of a number.
+     *
+     * @param angle The angle in radians.
+     */
+    function cos(angle: number): number;
+    /**
+     * Returns e raised to the power of a number.
+     *
+     * @param num The exponent.
+     */
+    function exp(num: number): number;
+    /**
+     * Rounds down a number.
+     *
+     * @param num The number to floor.
+     */
+    function floor(num: number): number;
+    /**
+     * Returns the natural logarithm (base e) of a number.
+     *
+     * @param num The number.
+     */
+    function log(num: number): number;
+    /**
+     * Returns the base 10 logarithm of a number.
+     *
+     * @param num The number.
+     */
+    function log10(num: number): number;
+    /**
+     * Returns the base 2 logarithm of a number.
+     *
+     * @param num The number.
+     */
+    function log2(num: number): number;
+    /**
+     * Returns the largest of the given numbers.
+     *
+     * @param arg0 First number.
+     * @param args Additional numbers.
+     */
+    function max(arg0: number, ...args: number[]): number;
+    /**
+     * Returns the smallest of the given numbers.
+     *
+     * @param arg0 First number.
+     * @param args Additional numbers.
+     */
+    function min(arg0: number, ...args: number[]): number;
+    /**
+     * Rounds a number to the nearest integer.
+     *
+     * @param num The number to round.
+     */
+    function round(num: number): number;
+    /**
+     * Returns the sign of a number, indicating whether the number is positive, negative or zero.
+     *
+     * @param num The number.
+     */
+    function sign(num: number): number;
+    /**
+     * Returns the sine of a number.
+     *
+     * @param angle The angle in radians.
+     */
+    function sin(angle: number): number;
+    /**
+     * Returns the square root of a number.
+     *
+     * @param num The number.
+     */
+    function sqrt(num: number): number;
+    /**
+     * Returns the tangent of a number.
+     *
+     * @param angle The angle in radians.
+     */
+    function tan(angle: number): number;
+    /**
+     * Returns the integer part of a number.
+     *
+     * @param num The number to truncate.
+     */
+    function trunc(num: number): number;
+  }
   namespace list {
     /**
      * Merges two or more lists.

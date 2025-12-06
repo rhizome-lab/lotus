@@ -253,6 +253,50 @@ ${compileValue(args[1], true)}}`;
     case "caller":
       return `${prefix}__ctx__.caller`;
 
+    // Math Opcodes
+    case "math.floor":
+      return `${prefix}Math.floor(${exprs[0]})`;
+    case "math.ceil":
+      return `${prefix}Math.ceil(${exprs[0]})`;
+    case "math.trunc":
+      return `${prefix}Math.trunc(${exprs[0]})`;
+    case "math.round":
+      return `${prefix}Math.round(${exprs[0]})`;
+    case "math.sin":
+      return `${prefix}Math.sin(${exprs[0]})`;
+    case "math.cos":
+      return `${prefix}Math.cos(${exprs[0]})`;
+    case "math.tan":
+      return `${prefix}Math.tan(${exprs[0]})`;
+    case "math.asin":
+      return `${prefix}Math.asin(${exprs[0]})`;
+    case "math.acos":
+      return `${prefix}Math.acos(${exprs[0]})`;
+    case "math.atan":
+      return `${prefix}Math.atan(${exprs[0]})`;
+    case "math.atan2":
+      return `${prefix}Math.atan2(${exprs[0]}, ${exprs[1]})`;
+    case "math.log":
+      return `${prefix}Math.log(${exprs[0]})`;
+    case "math.log2":
+      return `${prefix}Math.log2(${exprs[0]})`;
+    case "math.log10":
+      return `${prefix}Math.log10(${exprs[0]})`;
+    case "math.exp":
+      return `${prefix}Math.exp(${exprs[0]})`;
+    case "math.sqrt":
+      return `${prefix}Math.sqrt(${exprs[0]})`;
+    case "math.abs":
+      return `${prefix}Math.abs(${exprs[0]})`;
+    case "math.min":
+      return `${prefix}Math.min(${exprs.join(", ")})`;
+    case "math.max":
+      return `${prefix}Math.max(${exprs.join(", ")})`;
+    case "math.clamp":
+      return `${prefix}Math.min(Math.max(${exprs[0]}, ${exprs[1]}), ${exprs[2]})`;
+    case "math.sign":
+      return `${prefix}Math.sign(${exprs[0]})`;
+
     // List Opcodes
     case "list.len":
       return `${prefix}${exprs[0]}.length`;

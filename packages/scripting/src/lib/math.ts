@@ -182,7 +182,7 @@ export const pow = defineFullOpcode<[number, number, ...number[]], number>("^", 
  */
 export const random = defineFullOpcode<[number?, number?], number>("random", {
   metadata: {
-    label: "Round",
+    label: "Random",
     category: "math",
     description: "Generates a random number.",
     slots: [
@@ -229,7 +229,7 @@ export const random = defineFullOpcode<[number?, number?], number>("random", {
 });
 
 /** Rounds down a number. */
-export const floor = defineFullOpcode<[number], number>("floor", {
+export const floor = defineFullOpcode<[number], number>("math.floor", {
   metadata: {
     label: "Floor",
     category: "math",
@@ -240,5 +240,332 @@ export const floor = defineFullOpcode<[number], number>("floor", {
   },
   handler: ([num], _ctx) => {
     return Math.floor(num);
+  },
+});
+
+/** Rounds up a number. */
+export const ceil = defineFullOpcode<[number], number>("math.ceil", {
+  metadata: {
+    label: "Ceil",
+    category: "math",
+    description: "Rounds up a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number to ceil." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.ceil(num);
+  },
+});
+
+/** Returns the integer part of a number. */
+export const trunc = defineFullOpcode<[number], number>("math.trunc", {
+  metadata: {
+    label: "Trunc",
+    category: "math",
+    description: "Returns the integer part of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number to truncate." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.trunc(num);
+  },
+});
+
+/** Rounds a number to the nearest integer. */
+export const round = defineFullOpcode<[number], number>("math.round", {
+  metadata: {
+    label: "Round",
+    category: "math",
+    description: "Rounds a number to the nearest integer.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number to round." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.round(num);
+  },
+});
+
+// Trigonometry
+
+/** Returns the sine of a number. */
+export const sin = defineFullOpcode<[number], number>("math.sin", {
+  metadata: {
+    label: "Sin",
+    category: "math",
+    description: "Returns the sine of a number.",
+    slots: [{ name: "Angle", type: "block" }],
+    parameters: [{ name: "angle", type: "number", description: "The angle in radians." }],
+    returnType: "number",
+  },
+  handler: ([angle], _ctx) => {
+    return Math.sin(angle);
+  },
+});
+
+/** Returns the cosine of a number. */
+export const cos = defineFullOpcode<[number], number>("math.cos", {
+  metadata: {
+    label: "Cos",
+    category: "math",
+    description: "Returns the cosine of a number.",
+    slots: [{ name: "Angle", type: "block" }],
+    parameters: [{ name: "angle", type: "number", description: "The angle in radians." }],
+    returnType: "number",
+  },
+  handler: ([angle], _ctx) => {
+    return Math.cos(angle);
+  },
+});
+
+/** Returns the tangent of a number. */
+export const tan = defineFullOpcode<[number], number>("math.tan", {
+  metadata: {
+    label: "Tan",
+    category: "math",
+    description: "Returns the tangent of a number.",
+    slots: [{ name: "Angle", type: "block" }],
+    parameters: [{ name: "angle", type: "number", description: "The angle in radians." }],
+    returnType: "number",
+  },
+  handler: ([angle], _ctx) => {
+    return Math.tan(angle);
+  },
+});
+
+/** Returns the arcsine of a number. */
+export const asin = defineFullOpcode<[number], number>("math.asin", {
+  metadata: {
+    label: "Asin",
+    category: "math",
+    description: "Returns the arcsine of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.asin(num);
+  },
+});
+
+/** Returns the arccosine of a number. */
+export const acos = defineFullOpcode<[number], number>("math.acos", {
+  metadata: {
+    label: "Acos",
+    category: "math",
+    description: "Returns the arccosine of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.acos(num);
+  },
+});
+
+/** Returns the arctangent of a number. */
+export const atan = defineFullOpcode<[number], number>("math.atan", {
+  metadata: {
+    label: "Atan",
+    category: "math",
+    description: "Returns the arctangent of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.atan(num);
+  },
+});
+
+/** Returns the angle (in radians) from the X axis to a point. */
+export const atan2 = defineFullOpcode<[number, number], number>("math.atan2", {
+  metadata: {
+    label: "Atan2",
+    category: "math",
+    description: "Returns the angle (in radians) from the X axis to a point.",
+    slots: [
+      { name: "Y", type: "block" },
+      { name: "X", type: "block" },
+    ],
+    parameters: [
+      { name: "y", type: "number", description: "The y coordinate." },
+      { name: "x", type: "number", description: "The x coordinate." },
+    ],
+    returnType: "number",
+  },
+  handler: ([y, x], _ctx) => {
+    return Math.atan2(y, x);
+  },
+});
+
+// Log/Exp
+
+/** Returns the natural logarithm (base e) of a number. */
+export const log = defineFullOpcode<[number], number>("math.log", {
+  metadata: {
+    label: "Log",
+    category: "math",
+    description: "Returns the natural logarithm (base e) of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.log(num);
+  },
+});
+
+/** Returns the base 2 logarithm of a number. */
+export const log2 = defineFullOpcode<[number], number>("math.log2", {
+  metadata: {
+    label: "Log2",
+    category: "math",
+    description: "Returns the base 2 logarithm of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.log2(num);
+  },
+});
+
+/** Returns the base 10 logarithm of a number. */
+export const log10 = defineFullOpcode<[number], number>("math.log10", {
+  metadata: {
+    label: "Log10",
+    category: "math",
+    description: "Returns the base 10 logarithm of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.log10(num);
+  },
+});
+
+/** Returns e raised to the power of a number. */
+export const exp = defineFullOpcode<[number], number>("math.exp", {
+  metadata: {
+    label: "Exp",
+    category: "math",
+    description: "Returns e raised to the power of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The exponent." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.exp(num);
+  },
+});
+
+/** Returns the square root of a number. */
+export const sqrt = defineFullOpcode<[number], number>("math.sqrt", {
+  metadata: {
+    label: "Sqrt",
+    category: "math",
+    description: "Returns the square root of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.sqrt(num);
+  },
+});
+
+// Utilities
+
+/** Returns the absolute value of a number. */
+export const abs = defineFullOpcode<[number], number>("math.abs", {
+  metadata: {
+    label: "Abs",
+    category: "math",
+    description: "Returns the absolute value of a number.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.abs(num);
+  },
+});
+
+/** Returns the smallest of the given numbers. */
+export const min = defineFullOpcode<[number, ...number[]], number>("math.min", {
+  metadata: {
+    label: "Min",
+    category: "math",
+    description: "Returns the smallest of the given numbers.",
+    slots: [{ name: "Args", type: "block" }],
+    parameters: [
+      { name: "arg0", type: "number", description: "First number." },
+      { name: "...args", type: "number[]", description: "Additional numbers." },
+    ],
+    returnType: "number",
+  },
+  handler: (args, _ctx) => {
+    return Math.min(...args);
+  },
+});
+
+/** Returns the largest of the given numbers. */
+export const max = defineFullOpcode<[number, ...number[]], number>("math.max", {
+  metadata: {
+    label: "Max",
+    category: "math",
+    description: "Returns the largest of the given numbers.",
+    slots: [{ name: "Args", type: "block" }],
+    parameters: [
+      { name: "arg0", type: "number", description: "First number." },
+      { name: "...args", type: "number[]", description: "Additional numbers." },
+    ],
+    returnType: "number",
+  },
+  handler: (args, _ctx) => {
+    return Math.max(...args);
+  },
+});
+
+/** Clamps a number between a minimum and maximum value. */
+export const clamp = defineFullOpcode<[number, number, number], number>("math.clamp", {
+  metadata: {
+    label: "Clamp",
+    category: "math",
+    description: "Clamps a number between a minimum and maximum value.",
+    slots: [
+      { name: "Val", type: "block" },
+      { name: "Min", type: "block" },
+      { name: "Max", type: "block" },
+    ],
+    parameters: [
+      { name: "val", type: "number", description: "The value to clamp." },
+      { name: "min", type: "number", description: "The minimum value." },
+      { name: "max", type: "number", description: "The maximum value." },
+    ],
+    returnType: "number",
+  },
+  handler: ([val, min, max], _ctx) => {
+    return Math.min(Math.max(val, min), max);
+  },
+});
+
+/** Returns the sign of a number. */
+export const sign = defineFullOpcode<[number], number>("math.sign", {
+  metadata: {
+    label: "Sign",
+    category: "math",
+    description:
+      "Returns the sign of a number, indicating whether the number is positive, negative or zero.",
+    slots: [{ name: "Num", type: "block" }],
+    parameters: [{ name: "num", type: "number", description: "The number." }],
+    returnType: "number",
+  },
+  handler: ([num], _ctx) => {
+    return Math.sign(num);
   },
 });
