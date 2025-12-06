@@ -581,6 +581,48 @@ export function seed() {
   // Use elemental attack for this manager
   addVerb(combatManagerId, "attack", transpile(extractVerb(verbsPath, "combat_attack_elemental")));
 
+  addVerb(
+    combatManagerId,
+    "apply_status",
+    transpile(extractVerb(verbsPath, "combat_apply_status")),
+  );
+  addVerb(combatManagerId, "tick_status", transpile(extractVerb(verbsPath, "combat_tick_status")));
+
+  // 9a. Status Effect Prototypes
+  const effectBaseId = createEntity({
+    name: "Effect Base",
+    description: "Base for status effects.",
+  });
+  addVerb(effectBaseId, "on_apply", transpile(extractVerb(verbsPath, "effect_base_on_apply")));
+  addVerb(effectBaseId, "on_tick", transpile(extractVerb(verbsPath, "effect_base_on_tick")));
+  addVerb(effectBaseId, "on_remove", transpile(extractVerb(verbsPath, "effect_base_on_remove")));
+
+  const poisonEffectId = createEntity(
+    {
+      name: "Poison",
+      description: "Deals damage over time.",
+    },
+    effectBaseId,
+  );
+  addVerb(poisonEffectId, "on_tick", transpile(extractVerb(verbsPath, "poison_on_tick")));
+
+  const regenEffectId = createEntity(
+    {
+      name: "Regen",
+      description: "Heals over time.",
+    },
+    effectBaseId,
+  );
+  addVerb(regenEffectId, "on_tick", transpile(extractVerb(verbsPath, "regen_on_tick")));
+
+  // Link Poison to Combat Manager
+  const cm = entity(combatManagerId);
+  cm["poison_effect"] = poisonEffectId;
+  const cmCap = get_capability("entity.control", { target_id: combatManagerId });
+  if (cmCap) {
+    set_entity(cmCap, cm);
+  }
+
   // 9. Elemental Prototypes
   const fireElementalProtoId = createEntity({
     name: "Fire Elemental Prototype",
@@ -601,7 +643,7 @@ export function seed() {
   });
 
   // 10. Combat Verification
-  const warriorId = createEntity(
+  createEntity(
     {
       name: "Fire Warrior",
       location: lobbyId,
@@ -610,7 +652,7 @@ export function seed() {
     fireElementalProtoId,
   );
 
-  const orcId = createEntity(
+  createEntity(
     {
       name: "Water Orc",
       location: lobbyId,

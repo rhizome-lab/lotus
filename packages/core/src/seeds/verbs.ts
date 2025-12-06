@@ -969,17 +969,139 @@ export function combat_next_turn(this: Entity) {
   let index = session["current_turn_index"] as number;
   const order = session["turn_order"] as number[];
 
-  index = index + 1;
-  if (index >= list.len(order)) {
-    index = 0;
-    const round = session["round"] as number;
-    session["round"] = round + 1;
+  let nextId: number | null = null;
+  let attempts = 0;
+  const maxAttempts = list.len(order);
+
+  // Loop until we find someone who can act or run out of participants
+  while (attempts < maxAttempts) {
+    index = index + 1;
+    if (index >= list.len(order)) {
+      index = 0;
+      const round = session["round"] as number;
+      session["round"] = round + 1;
+    }
+
+    const candidateId = order[index];
+    // Process status effects
+    const canAct = call(this, "tick_status", entity(candidateId));
+
+    if (canAct) {
+      nextId = candidateId;
+      break;
+    } else {
+      call(entity(candidateId), "tell", "You are unable to act this turn!");
+    }
+
+    attempts = attempts + 1;
   }
 
   session["current_turn_index"] = index;
   set_entity(controlCap, session);
 
-  return order[index];
+  return nextId;
+}
+
+export function combat_apply_status(this: Entity) {
+  const target = arg<Entity>(0);
+  const effectEntity = arg<Entity>(1);
+  const duration = arg<number>(2); // optional
+  const magnitude = arg<number>(3); // optional
+  // const source = arg<Entity>(4); // optional - unused for now
+
+  if (!target || !effectEntity) return;
+
+  const effectId = effectEntity.id;
+  const effectKey = `${effectId}`;
+
+  // Get existing effects
+  const effects = (target["status_effects"] as Record<string, any>) ?? {};
+
+  // Create new effect data
+  const newEffect: Record<string, any> = {};
+  newEffect["effect_id"] = effectId;
+  if (duration !== null) newEffect["duration"] = duration;
+  if (magnitude !== null) newEffect["magnitude"] = magnitude;
+
+  // Update target
+  // We need to mutate the dictionary. `effects` is a reference so modifying it works locally,
+  // but we need to set it back on the entity.
+  effects[effectKey] = newEffect;
+
+  let controlCap = get_capability("entity.control", { target_id: target.id });
+  if (!controlCap) {
+    controlCap = get_capability("entity.control", { "*": true });
+  }
+
+  if (controlCap) {
+    target["status_effects"] = effects;
+    set_entity(controlCap, target);
+
+    // Hook
+    // Assuming all effects inherit from Effect Base and thus have the verbs
+    call(effectEntity, "on_apply", target, newEffect);
+
+    call(target, "tell", `Applied ${effectEntity["name"]}.`);
+  }
+}
+
+export function combat_tick_status(this: Entity) {
+  const target = arg<Entity>(0);
+  if (!target) return true;
+
+  const effects = (target["status_effects"] as Record<string, any>) ?? {};
+  const effectKeys = obj.keys(effects);
+
+  let canAct = true;
+  let controlCap = get_capability("entity.control", { target_id: target.id });
+  if (!controlCap) {
+    controlCap = get_capability("entity.control", { "*": true });
+  }
+
+  if (!controlCap) return true; // Can't modify, so assume true?
+
+  for (const key of effectKeys) {
+    const effectData = effects[key];
+    const effectId = effectData["effect_id"] as number;
+    const effectEntity = entity(effectId);
+
+    // Call on_tick
+    // Expect on_tick to return false if the entity should skip turn
+    const result = call(effectEntity, "on_tick", target, effectData);
+    if (result === false) canAct = false;
+
+    // Handle Duration
+    if (effectData["duration"] !== undefined && effectData["duration"] !== null) {
+      const d = effectData["duration"] as number;
+      const newDuration = d - 1;
+      effectData["duration"] = newDuration;
+
+      if (newDuration <= 0) {
+        call(effectEntity, "on_remove", target, effectData);
+        obj.del(effects, key);
+        call(target, "tell", `${effectEntity["name"]} wore off.`);
+      }
+    }
+  }
+
+  // Save changes
+  target["status_effects"] = effects;
+  set_entity(controlCap, target);
+
+  return canAct;
+}
+
+export function effect_base_on_apply() {
+  // No-op
+}
+
+export function effect_base_on_tick() {
+  // Default: return true (can act)
+  return true;
+}
+
+export function effect_base_on_remove() {
+  // No-op
 }
 
 export function combat_attack(this: Entity) {
@@ -1107,6 +1229,68 @@ export function combat_test(this: Entity) {
 
   const target = first.id === warrior.id ? orc : warrior;
 
+  // Apply poison if available
+  const poisonId = this["poison_effect"] as number;
+  if (poisonId) {
+    call(this, "apply_status", target, entity(poisonId), 3, 5);
+    send("message", `Debug: Applied Poison to ${target["name"]}`);
+  }
+
   // Just call attack - the seed will determine if it's elemental or not
   call(this, "attack", first, target);
+}
+
+export function poison_on_tick(this: Entity) {
+  const target = arg<Entity>(0);
+  const data = arg<Record<string, any>>(1);
+
+  const magnitude = (data["magnitude"] as number) ?? 5;
+
+  // Deal damage
+  const hp = (resolve_props(target)["hp"] as number) ?? 100;
+  const newHp = hp - magnitude;
+
+  let controlCap = get_capability("entity.control", { target_id: target.id });
+  if (!controlCap) {
+    controlCap = get_capability("entity.control", { "*": true });
+  }
+
+  if (controlCap) {
+    target["hp"] = newHp;
+    set_entity(controlCap, target);
+    call(target, "tell", `You take ${magnitude} poison damage!`);
+
+    if (newHp <= 0) {
+      call(target, "tell", "You succumbed to poison!");
+    }
+  }
+
+  return true;
+}
+
+export function regen_on_tick(this: Entity) {
+  const target = arg<Entity>(0);
+  const data = arg<Record<string, any>>(1);
+
+  const magnitude = (data["magnitude"] as number) ?? 5;
+
+  // Heal
+  const hp = (resolve_props(target)["hp"] as number) ?? 100;
+  const maxHp = (resolve_props(target)["max_hp"] as number) ?? 100;
+
+  let newHp = hp + magnitude;
+  if (newHp > maxHp) newHp = maxHp;
+
+  let controlCap = get_capability("entity.control", { target_id: target.id });
+  if (!controlCap) {
+    controlCap = get_capability("entity.control", { "*": true });
+  }
+
+  if (controlCap) {
+    target["hp"] = newHp;
+    set_entity(controlCap, target);
+    call(target, "tell", `You regenerate ${magnitude} HP.`);
+  }
+
+  return true;
 }
