@@ -1,5 +1,5 @@
-import { createSignal, Show } from "solid-js";
-import { gameStore } from "../store/game";
+import { createSignal, Show, For } from "solid-js";
+import { gameStore, Entity } from "../store/game";
 import ItemCreator from "./ItemCreator";
 import ItemEditor from "./ItemEditor";
 import { ScriptEditor, MonacoEditor, BlockDefinition } from "@viwo/web-editor";
@@ -35,6 +35,96 @@ export default function Builder() {
     } catch (e) {
       console.error("AI Completion Failed:", e);
       return null;
+    }
+  };
+
+  /* Script Fetching Logic */
+  const [selectedEntityId, setSelectedEntityId] = createSignal<number | null>(null);
+  const [verbName, setVerbName] = createSignal("interact"); // Default or empty
+
+  // Helper to fetch entities (copied from ItemEditor for now)
+  const items = (): Entity[] => {
+    // Identify missing IDs
+    const missingIds = new Set<number>();
+    const checkAndAdd = (id: number) => {
+      if (!gameStore.state.entities.has(id)) {
+        missingIds.add(id);
+      }
+    };
+
+    (gameStore.state.entities.get(gameStore.state.roomId!)?.["contents"] as number[])?.forEach(
+      checkAndAdd,
+    );
+    (gameStore.state.entities.get(gameStore.state.playerId!)?.["contents"] as number[])?.forEach(
+      checkAndAdd,
+    );
+
+    // Fetch missing entities
+    if (missingIds.size > 0) {
+      setTimeout(() => {
+        gameStore.client.fetchEntities(Array.from(missingIds));
+      }, 0);
+    }
+
+    // Return all entities in map for selection
+    // (ItemEditor filtered to room/inventory, but for script editor we might want everything available?)
+    // Let's stick to Room + Inventory + Player + Room itself for context
+    const allIds = new Set<number>();
+    if (gameStore.state.roomId) allIds.add(gameStore.state.roomId);
+    if (gameStore.state.playerId) allIds.add(gameStore.state.playerId);
+
+    (gameStore.state.entities.get(gameStore.state.roomId!)?.["contents"] as number[])?.forEach(
+      (id) => allIds.add(id),
+    );
+    (gameStore.state.entities.get(gameStore.state.playerId!)?.["contents"] as number[])?.forEach(
+      (id) => allIds.add(id),
+    );
+
+    return Array.from(allIds)
+      .map((id) => gameStore.state.entities.get(id))
+      .filter((e) => !!e);
+  };
+
+  const handleLoadScript = async () => {
+    const eid = selectedEntityId();
+    const vName = verbName();
+    if (!eid || !vName) {
+      alert("Please select an entity and enter a verb name.");
+      return;
+    }
+
+    console.log(`Loading verb '${vName}' from entity ${eid}...`);
+    try {
+      const code = await gameStore.client.getVerb(eid, vName);
+      setScriptCode(code);
+    } catch (e: any) {
+      console.error("Failed to load verb:", e);
+      alert(`Failed to load verb: ${e.message}`);
+      setScriptCode(`// Failed to load: ${e.message}`);
+    }
+  };
+
+  const handleSaveScript = async () => {
+    const code = scriptCode();
+    const eid = selectedEntityId();
+    const vName = verbName();
+
+    // If we loaded a script, default to saving back to it.
+    // But user might change selection.
+    // Let's use current selection, but warn if it differs from loaded?
+    // For simplicity, just use current selection.
+
+    if (!eid || !vName) {
+      alert("Please select an entity and enter a verb name to save to.");
+      return;
+    }
+
+    try {
+      await gameStore.client.updateVerb(eid, vName, code);
+      alert(`Saved verb '${vName}' to entity ${eid}.`);
+    } catch (e: any) {
+      console.error("Failed to save verb:", e);
+      alert(`Failed to save verb: ${e.message}`);
     }
   };
 
@@ -114,6 +204,50 @@ export default function Builder() {
 
       <Show when={activeTab() === "script-code"}>
         <div class="builder__script-panel">
+          <div
+            class="builder__toolbar"
+            style={{
+              padding: "10px",
+              margin: "10px",
+              background: "#2a2a2a",
+              "border-radius": "4px",
+              display: "flex",
+              gap: "10px",
+              "align-items": "center",
+            }}
+          >
+            <select
+              class="builder__input"
+              style={{ width: "200px", margin: 0 }}
+              onChange={(e) => setSelectedEntityId(Number(e.currentTarget.value))}
+              value={selectedEntityId() || ""}
+            >
+              <option value="" disabled>
+                Select Entity...
+              </option>
+              <For each={items()}>
+                {(item) => (
+                  <option value={item.id}>
+                    {item["name"] as string} ({item.id})
+                  </option>
+                )}
+              </For>
+            </select>
+            <input
+              type="text"
+              class="builder__input"
+              style={{ width: "150px", margin: 0 }}
+              placeholder="Verb Name (e.g. interact)"
+              value={verbName()}
+              onInput={(e) => setVerbName(e.currentTarget.value)}
+            />
+            <button class="builder__btn" onClick={handleLoadScript}>
+              Load
+            </button>
+            <button class="builder__btn builder__btn--primary" onClick={handleSaveScript}>
+              Save
+            </button>
+          </div>
           <MonacoEditor
             value={scriptCode()}
             onChange={(val) => setScriptCode(val)}
