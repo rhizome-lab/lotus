@@ -10,12 +10,12 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@viwo/shared": "workspace:*",
-    "@viwo/scripting": "workspace:*",
-    "@viwo/plugin-procgen": "workspace:*",
+    "@viwo/core": "workspace:*",
+    "@viwo/plugin-ai": "workspace:*",
     "@viwo/plugin-fs": "workspace:*",
     "@viwo/plugin-memory": "workspace:*",
-    "@viwo/plugin-net": "workspace:*"
+    "@viwo/plugin-net": "workspace:*",
+    "@viwo/plugin-procgen": "workspace:*"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
