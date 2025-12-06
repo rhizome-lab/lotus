@@ -478,6 +478,10 @@ function transpileNode(node: ts.Node, scope: Set<string>): any {
     return StdLib.break();
   }
 
+  if (ts.isContinueStatement(node)) {
+    return StdLib.continue();
+  }
+
   if (node.kind === ts.SyntaxKind.ThisKeyword) {
     return StdLib.this();
   }

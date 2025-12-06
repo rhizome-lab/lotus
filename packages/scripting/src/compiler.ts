@@ -181,6 +181,8 @@ ${compileValue(args[2])}}`;
       return `${toJSName(args[0])} = ${compileValue(args[1])};`;
     case "break":
       return "break;";
+    case "continue":
+      return "continue;";
     case "return":
       return `return ${args[0] ? compileValue(args[0]) : "null"};`;
     case "throw":

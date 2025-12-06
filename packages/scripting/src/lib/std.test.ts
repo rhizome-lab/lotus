@@ -75,6 +75,56 @@ createLibraryTester(StdLib, "Standard Library", (test) => {
     expect(evaluate(StdLib.var("i"), localCtx)).toBe(1);
   });
 
+  test("continue", () => {
+    const localCtx = { ...ctx, locals: {} };
+    evaluate(StdLib.let("i", 0), localCtx);
+    evaluate(StdLib.let("sum", 0), localCtx);
+    evaluate(
+      StdLib.while(
+        BooleanLib.lt(StdLib.var("i"), 5),
+        StdLib.seq(
+          StdLib.set("i", MathLib.add(StdLib.var("i"), 1)),
+          StdLib.if(BooleanLib.eq(MathLib.mod(StdLib.var("i"), 2), 0), StdLib.continue(), null),
+          StdLib.set("sum", MathLib.add(StdLib.var("sum"), 1)),
+        ),
+      ),
+      localCtx,
+    );
+    // i goes 1, 2, 3, 4, 5.
+    // loops when i < 5.
+    // Iteration 1: i=1. set i=1. if(1%2==0) false. sum+=1. sum=1.
+    // Iteration 2: i=1. lt(1,5) true.
+    // Wait, let's trace carefully.
+    // init i=0, sum=0.
+    // Loop check: 0 < 5. True.
+    // Body:
+    //   i = 0 + 1 = 1.
+    //   if (1 % 2 == 0) -> false.
+    //   sum = 0 + 1 = 1.
+    // Loop check: 1 < 5. True.
+    // Body:
+    //   i = 1 + 1 = 2.
+    //   if (2 % 2 == 0) -> true. CONTINUE.
+    // Loop check: 2 < 5. True.
+    // Body:
+    //   i = 2 + 1 = 3.
+    //   if (3 % 2 == 0) -> false.
+    //   sum = 1 + 1 = 2.
+    // Loop check: 3 < 5. True.
+    // Body:
+    //   i = 3 + 1 = 4.
+    //   if (4 % 2 == 0) -> true. CONTINUE.
+    // Loop check: 4 < 5. True.
+    // Body:
+    //   i = 4 + 1 = 5.
+    //   if (5 % 2 == 0) -> false.
+    //   sum = 2 + 1 = 3.
+    // Loop check: 5 < 5. False.
+    // Result sum = 3.
+    // Correct.
+    expect(evaluate(StdLib.var("sum"), localCtx)).toBe(3);
+  });
+
   test("return", () => {
     const localCtx = { ...ctx, locals: {} };
     expect(evaluate(StdLib.return("val"), localCtx) as any).toBe("val");

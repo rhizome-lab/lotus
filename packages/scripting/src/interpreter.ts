@@ -73,6 +73,11 @@ export class ReturnSignal {
   constructor(public value: any = null) {}
 }
 
+/** Signal thrown to continue to the next iteration of a loop. */
+export class ContinueSignal {
+  constructor() {}
+}
+
 /**
  * Unsafely casts a value to its awaited type. Use this when you are sure that the value is not a Promise.
  *
@@ -199,6 +204,9 @@ function executeLoop(
         }
         if (e instanceof ReturnSignal) {
           return e.value;
+        }
+        if (e instanceof ContinueSignal) {
+          throw e; // Propagate continue signal to loop handler
         }
         let scriptError: ScriptError;
         if (e instanceof ScriptError) {

@@ -1,4 +1,4 @@
-import { evaluate, BreakSignal, ReturnSignal } from "../interpreter";
+import { evaluate, BreakSignal, ReturnSignal, ContinueSignal } from "../interpreter";
 import { Entity } from "@viwo/shared/jsonrpc";
 import {
   defineFullOpcode,
@@ -251,6 +251,9 @@ const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
               if (err instanceof BreakSignal) {
                 return null;
               }
+              if (err instanceof ContinueSignal) {
+                return runLoop();
+              }
               throw err;
             },
           );
@@ -261,6 +264,9 @@ const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
         exitScope(ctx, snapshot);
         if (e instanceof BreakSignal) {
           return null;
+        }
+        if (e instanceof ContinueSignal) {
+          return runLoop();
         }
         throw e;
       }
@@ -313,6 +319,9 @@ const while_ = defineFullOpcode<[boolean, unknown], any, true>("while", {
         } catch (e) {
           if (e instanceof BreakSignal) {
             return null;
+          }
+          if (e instanceof ContinueSignal) {
+            continue;
           }
           throw e;
         }
@@ -384,6 +393,9 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
                   if (err instanceof BreakSignal) {
                     return null;
                   }
+                  if (err instanceof ContinueSignal) {
+                    return next();
+                  }
                   throw err;
                 },
               );
@@ -393,6 +405,9 @@ const for_ = defineFullOpcode<[ScriptRaw<string>, readonly unknown[], unknown], 
             exitScope(ctx, snapshot);
             if (e instanceof BreakSignal) {
               return null;
+            }
+            if (e instanceof ContinueSignal) {
+              return next();
             }
             throw e;
           }
@@ -428,6 +443,23 @@ const break_ = defineFullOpcode<[], never>("break", {
   },
 });
 export { break_ as break };
+
+/** Skips the rest of the current loop iteration. */
+const continue_ = defineFullOpcode<[], never>("continue", {
+  metadata: {
+    label: "Continue",
+    category: "control",
+    layout: "control-flow",
+    description: "Skips the rest of the current loop iteration.",
+    slots: [],
+    parameters: [],
+    returnType: "never",
+  },
+  handler: (_args, _ctx) => {
+    throw new ContinueSignal();
+  },
+});
+export { continue_ as continue };
 
 /**
  * Returns from the current function.

@@ -335,6 +335,10 @@ declare global {
    */
   function caller(): Entity;
   /**
+   * Skips the rest of the current loop iteration.
+   */
+  function continue_(): never;
+  /**
    * Iterates over a list, executing the body for each item.
    *
    * @param var The variable name.
