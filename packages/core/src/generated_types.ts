@@ -325,7 +325,7 @@ declare global {
   /**
    * Get all arguments
    */
-  function args(): readonly any[];
+  function args(): any[];
   /**
    * Breaks out of the current loop.
    */

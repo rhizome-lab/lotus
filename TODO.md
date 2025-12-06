@@ -2,7 +2,7 @@
 
 ## 1. Deep Simulation (Sandbox)
 
-- [ ] **Combat System**: Standardized libraries for turn-based combat math and state.
+- [x] **Combat System**: Standardized libraries for turn-based combat math and state.
 - [ ] **Quest Engine**: State machine implementation for tracking multi-stage narrative arcs.
 - [ ] **World Gen**: Procedural generation tools for creating vast maps.
 
@@ -44,4 +44,3 @@
 - [ ] **Core**: Add capability-based permissions for verbs
 - [ ] **Core**: Consider splitting permissions for net.http into multiple capabilities
 - [ ] **Plugins**: Add capability-based permissions to opcodes defined by plugins
-- [ ] **Compiler**: Investigate whether `BreakSignal` can be removed by removing IIFEs

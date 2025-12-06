@@ -929,3 +929,118 @@ Generate a single sentence of atmospheric prose describing a subtle event in thi
 export function director_start() {
   schedule("tick", [], 1000);
 }
+
+export function combat_start(this: Entity) {
+  const participants = arg<Entity[]>(0);
+  if (!participants || list.len(participants) < 2) {
+    return null;
+  }
+
+  const createCap = get_capability("sys.create", {});
+  const controlCap = get_capability("entity.control", { "*": true });
+
+  if (!createCap || !controlCap) {
+    send("message", "Combat Manager missing capabilities.");
+    return null;
+  }
+
+  const participantIds = list.map(participants, (p: Entity) => p.id);
+
+  const sessionData: Record<string, any> = {};
+  sessionData["name"] = "Combat Session";
+  sessionData["participants"] = participantIds;
+  sessionData["turn_order"] = participantIds;
+  sessionData["current_turn_index"] = 0;
+  sessionData["round"] = 1;
+  sessionData["location"] = this["location"];
+
+  const sessionId = create(createCap, sessionData);
+  return sessionId;
+}
+
+export function combat_next_turn(this: Entity) {
+  const sessionId = arg<number>(0);
+  const session = entity(sessionId);
+  // Combat Manager needs control over the session it created
+  const controlCap = get_capability("entity.control", { target_id: sessionId });
+
+  if (!controlCap) return null;
+
+  let index = session["current_turn_index"] as number;
+  const order = session["turn_order"] as number[];
+
+  index = index + 1;
+  if (index >= list.len(order)) {
+    index = 0;
+    const round = session["round"] as number;
+    session["round"] = round + 1;
+  }
+
+  session["current_turn_index"] = index;
+  set_entity(controlCap, session);
+
+  return order[index];
+}
+
+export function combat_attack(this: Entity) {
+  const attacker = arg<Entity>(0);
+  const target = arg<Entity>(1);
+
+  const attProps = resolve_props(attacker);
+  const defProps = resolve_props(target);
+
+  const attack = (attProps["attack"] as number) ?? 10;
+  const defense = (defProps["defense"] as number) ?? 0;
+
+  let damage = attack - defense;
+  if (damage < 1) damage = 1;
+
+  const hp = (defProps["hp"] as number) ?? 100;
+  const newHp = hp - damage;
+
+  // Combat Manager needs control over the target
+  // Assuming Combat Manager has global control or specific control
+  let targetCap = get_capability("entity.control", { target_id: target.id });
+  if (!targetCap) {
+    targetCap = get_capability("entity.control", { "*": true });
+  }
+
+  if (targetCap) {
+    target["hp"] = newHp;
+    set_entity(targetCap, target);
+
+    call(attacker, "tell", `You attack ${defProps["name"]} for ${damage} damage!`);
+    call(target, "tell", `${attProps["name"]} attacks you for ${damage} damage!`);
+
+    if (newHp <= 0) {
+      call(attacker, "tell", `${defProps["name"]} is defeated!`);
+      call(target, "tell", "You are defeated!");
+    }
+  } else {
+    call(
+      attacker,
+      "tell",
+      `You attack ${defProps["name"]}, but it seems invulnerable (no permission).`,
+    );
+  }
+}
+
+export function combat_test(this: Entity) {
+  const warrior = arg<Entity>(0);
+  const orc = arg<Entity>(1);
+
+  if (!warrior || !orc) {
+    send("message", "Usage: test <warrior> <orc>");
+    return;
+  }
+
+  const sessionId = call(this, "start", [warrior, orc]);
+  send("message", `Combat started! Session: ${sessionId}`);
+
+  const firstId = call(this, "next_turn", sessionId);
+  const first = entity(firstId);
+  send("message", `Turn: ${first["name"]}`);
+
+  const target = first.id === warrior.id ? orc : warrior;
+  call(this, "attack", first, target);
+}

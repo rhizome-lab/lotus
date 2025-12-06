@@ -566,5 +566,34 @@ export function seed() {
   addVerb(directorId, "tick", transpile(extractVerb(verbsPath, "director_tick")));
   addVerb(directorId, "start", transpile(extractVerb(verbsPath, "director_start")));
 
+  // 8. Combat Manager
+  const combatManagerId = createEntity({
+    name: "Combat Manager",
+    location: voidId,
+    description: "Manages combat sessions.",
+  });
+
+  createCapability(combatManagerId, "sys.create", {});
+  createCapability(combatManagerId, "entity.control", { "*": true });
+
+  addVerb(combatManagerId, "start", transpile(extractVerb(verbsPath, "combat_start")));
+  addVerb(combatManagerId, "next_turn", transpile(extractVerb(verbsPath, "combat_next_turn")));
+  addVerb(combatManagerId, "attack", transpile(extractVerb(verbsPath, "combat_attack")));
+
+  // 9. Combat Verification
+  const warriorId = createEntity({
+    name: "Warrior",
+    location: lobbyId,
+    props: { hp: 100, attack: 15, defense: 5, speed: 10 },
+  });
+
+  const orcId = createEntity({
+    name: "Orc",
+    location: lobbyId,
+    props: { hp: 80, attack: 12, defense: 2, speed: 8 },
+  });
+
+  addVerb(combatManagerId, "test", transpile(extractVerb(verbsPath, "combat_test")));
+
   console.log("Database seeded successfully.");
 }

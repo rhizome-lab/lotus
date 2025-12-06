@@ -1,9 +1,6 @@
-import { WebSocket } from "ws";
 import { CoreInterface } from "./types";
 
-/**
- * Context representing a connected player.
- */
+/** Context representing a connected player. */
 interface PlayerContext {
   id: number;
   ws: WebSocket;

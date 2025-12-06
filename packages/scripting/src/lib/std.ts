@@ -613,17 +613,17 @@ export const arg = defineFullOpcode<[number], any>("arg", {
 });
 
 /** Retrieves all arguments passed to the script. */
-export const args = defineFullOpcode<[], readonly any[]>("args", {
+export const args = defineFullOpcode<[], any[]>("args", {
   metadata: {
     label: "Define Constant",
     category: "data",
     description: "Get all arguments",
     slots: [],
     parameters: [],
-    returnType: "readonly any[]",
+    returnType: "any[]",
   },
   handler: (_args, ctx) => {
-    return ctx.args ?? [];
+    return [...(ctx.args ?? [])];
   },
 });
 
