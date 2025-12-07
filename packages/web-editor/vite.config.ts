@@ -10,7 +10,7 @@ export default defineConfig({
       name: "ViwoEditor",
     },
     rollupOptions: {
-      external: ["solid-js", "monaco-editor", "@viwo/scripting", "@viwo/shared"],
+      external: ["solid-js", "@viwo/scripting", "@viwo/shared"],
     },
   },
   plugins: [solidPlugin()],

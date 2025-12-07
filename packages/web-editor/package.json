@@ -12,6 +12,8 @@
     "format": "oxfmt"
   },
   "dependencies": {
+    "@monaco-editor/loader": "^1.7.0",
+    "@viwo/scripting": "workspace:*",
     "solid-js": "^1.8.15"
   },
   "devDependencies": {
