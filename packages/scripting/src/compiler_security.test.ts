@@ -32,11 +32,7 @@ describe("compiler security attributes", () => {
     // But compile() returns a function that we must call with context.
     // However, our implementation wraps runtime check.
 
-    const script = [
-      "std.seq",
-      ["std.let", "k", "constructor"],
-      ["obj.get", ["obj.new"], ["std.var", "k"]],
-    ];
+    const script = ["obj.get", ["obj.new", ["foo", "bar"]], ["std.arg", 0]];
 
     const context = {
       ops: {},
@@ -49,13 +45,12 @@ describe("compiler security attributes", () => {
     // We need a proper context for std.let/std.var to work if they use context?
     // std.let uses JS variables in the compiled function.
     // std.var just references them.
-    // It should work with minimal context since we refactored compiler to use JS vars?
-    // Let's check compiler.ts std.let implementation.
+    // It should work with minimal
     // It uses `let ${toJSName(name)} = ...`.
     // So we don't need context for vars.
 
     expect(() => {
-      compiledFn(context as any);
+      compiledFn({ args: ["constructor"] } as any);
     }).toThrow(/Security Error: Cannot access dangerous key "constructor"/);
   });
 
@@ -75,14 +70,10 @@ describe("compiler security attributes", () => {
 
   it("should prevent list.get with dynamic dangerous key", () => {
     // Dynamic key
-    const script = [
-      "std.seq",
-      ["std.let", "k", "constructor"],
-      ["list.get", ["list.new"], ["std.var", "k"]],
-    ];
+    const script = ["list.get", ["list.new"], ["std.arg", 0]];
     const compiledFn = compile(script, ops);
     expect(() => {
-      compiledFn({} as any);
+      compiledFn({ args: ["constructor"] } as any);
     }).toThrow(/Security Error: Cannot access dangerous key "constructor"/);
   });
 
@@ -95,7 +86,7 @@ describe("compiler security attributes", () => {
   });
 
   it("should NOT optimize dynamic keys (runtime check present)", () => {
-    const script = ["obj.get", ["obj.new", ["foo", "bar"]], ["std.var", "k"]];
+    const script = ["obj.get", ["obj.new", ["foo", "bar"]], ["std.arg", 0]];
     const compiledFn = compile(script, ops);
     const funcString = compiledFn.toString();
     expect(funcString).toContain("checkObjKey");

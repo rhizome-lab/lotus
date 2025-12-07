@@ -45,7 +45,8 @@ const ctx2 = createScriptContext({
   this: null!,
 });
 const startCompile = performance.now();
-const compiledFn = compile(script, OPS);
+// Compiling with optimizations is an unfair comparison against JavaScript
+const compiledFn = compile(script, OPS, { optimize: false });
 console.log(`${compiledFn}`);
 const endCompile = performance.now();
 

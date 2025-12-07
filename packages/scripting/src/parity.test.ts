@@ -70,180 +70,213 @@ describe("Parity: Interpreter vs Compiler", () => {
     checkParity("null", null);
     // Invalid because 1 is not an opcode
     checkParity("invalid opcode", [1, 2, 3]);
-    checkParity("quoted list", ["quote", [1, 2, 3]]);
+    checkParity("quoted list", StdLib.quote([1, 2, 3]));
   });
 
   describe("Numbers", () => {
-    checkParity("std.int", ["std.int", "123"]);
-    checkParity("std.int radix", ["std.int", "101", 2]);
-    checkParity("std.float", ["std.float", "123.456"]);
-    checkParity("std.number", ["std.number", "123"]);
-    checkParity("std.number from bool", ["std.number", true]);
+    checkParity("std.int", StdLib.int("123"));
+    checkParity("std.int radix", StdLib.int("101", 2));
+    checkParity("std.float", StdLib.float("123.456"));
+    checkParity("std.number", StdLib.number("123"));
+    checkParity("std.number from bool", StdLib.number(true));
   });
 
   describe("Arithmetic", () => {
-    checkParity("add", ["+", 1, 2]);
-    checkParity("sub", ["-", 10, 2]);
-    checkParity("mul", ["*", 3, 4]);
-    checkParity("div", ["/", 20, 5]);
-    checkParity("mod", ["%", 10, 3]);
-    checkParity("pow", ["^", 2, 3]);
-    checkParity("nested math", ["+", ["*", 2, 3], ["-", 10, 4]]);
+    checkParity("add", MathLib.add(1, 2));
+    checkParity("sub", MathLib.sub(10, 2));
+    checkParity("mul", MathLib.mul(3, 4));
+    checkParity("div", MathLib.div(20, 5));
+    checkParity("mod", MathLib.mod(10, 3));
+    checkParity("pow", MathLib.pow(2, 3));
+    checkParity("nested math", MathLib.add(MathLib.mul(2, 3), MathLib.sub(10, 4)));
   });
 
   describe("Logic", () => {
-    checkParity("eq true", ["==", 1, 1]);
-    checkParity("eq false", ["==", 1, 2]);
-    checkParity("neq", ["!=", 1, 2]);
-    checkParity("lt", ["<", 1, 2]);
-    checkParity("gt", [">", 2, 1]);
-    checkParity("lte", ["<=", 1, 1]);
-    checkParity("gte", [">=", 1, 1]);
-    checkParity("and", ["and", true, false]);
-    checkParity("or", ["or", false, true]);
-    checkParity("not", ["not", true]);
+    checkParity("eq true", BooleanLib.eq(1, 1));
+    checkParity("eq false", BooleanLib.eq(1, 2));
+    checkParity("neq", BooleanLib.neq(1, 2));
+    checkParity("lt", BooleanLib.lt(1, 2));
+    checkParity("gt", BooleanLib.gt(2, 1));
+    checkParity("lte", BooleanLib.lte(1, 1));
+    checkParity("gte", BooleanLib.gte(1, 1));
+    checkParity("and", BooleanLib.and(true, false));
+    checkParity("or", BooleanLib.or(false, true));
+    checkParity("not", BooleanLib.not(true));
   });
 
   describe("Control Flow", () => {
-    checkParity("if true", ["if", true, 10, 20]);
-    checkParity("if false", ["if", false, 10, 20]);
-    checkParity("seq", ["seq", 1, 2, 3]);
+    checkParity("if true", StdLib.if(true, 10, 20));
+    checkParity("if false", StdLib.if(false, 10, 20));
+    checkParity("seq", StdLib.seq(1, 2, 3));
 
-    checkParity("while", [
-      "seq",
-      ["let", "i", 0],
-      ["while", ["<", ["var", "i"], 3], ["set", "i", ["+", ["var", "i"], 1]]],
-      ["var", "i"],
-    ]);
+    checkParity(
+      "while",
+      StdLib.seq(
+        StdLib.let("i", 0),
+        StdLib.while(
+          BooleanLib.lt(StdLib.var("i"), 3),
+          StdLib.set("i", MathLib.add(StdLib.var("i"), 1)),
+        ),
+        StdLib.var("i"),
+      ),
+    );
   });
 
   describe("Variables", () => {
-    checkParity("let/var", ["seq", ["let", "x", 42], ["var", "x"]]);
+    checkParity("let/var", StdLib.seq(StdLib.let("x", 42), StdLib.var("x")));
 
-    checkParity("set", ["seq", ["let", "x", 1], ["set", "x", 2], ["var", "x"]]);
+    checkParity("set", StdLib.seq(StdLib.let("x", 1), StdLib.set("x", 2), StdLib.var("x")));
   });
 
   describe("Functions", () => {
-    checkParity("lambda apply", ["apply", ["lambda", ["x"], ["*", ["var", "x"], 2]], 21]);
+    checkParity(
+      "lambda apply",
+      StdLib.apply(StdLib.lambda(["x"], MathLib.mul(StdLib.var("x"), 2)), 21),
+    );
 
-    checkParity("lambda closure", [
-      "seq",
-      ["let", "a", 10],
-      ["apply", ["lambda", ["x"], ["+", ["var", "x"], ["var", "a"]]], 5],
-    ]);
+    checkParity(
+      "lambda closure",
+      StdLib.seq(
+        StdLib.let("a", 10),
+        StdLib.apply(StdLib.lambda(["x"], MathLib.add(StdLib.var("x"), StdLib.var("a"))), 5),
+      ),
+    );
   });
 
   describe("Objects", () => {
-    checkParity("obj.new", ["obj.new", ["a", 1], ["b", 2]]);
-    checkParity("obj.get", ["obj.get", ["obj.new", ["a", 1]], "a"]);
+    checkParity("obj.new", ObjectLib.objNew(["a", 1], ["b", 2]));
+    checkParity("obj.get", ObjectLib.objGet(ObjectLib.objNew(["a", 1]), "a"));
   });
+
   describe("Chained Expressions", () => {
-    checkParity("chained add", ["+", 1, 2, 3, 4]);
-    checkParity("chained sub", ["-", 10, 1, 2, 3]);
-    checkParity("chained mul", ["*", 1, 2, 3, 4]);
-    checkParity("chained div", ["/", 24, 2, 3, 2]);
-    checkParity("chained pow", ["^", 2, 3, 2]); // 2^3^2 = 64 (left associative)
+    checkParity("chained add", MathLib.add(1, 2, 3, 4));
+    checkParity("chained sub", MathLib.sub(10, 1, 2, 3));
+    checkParity("chained mul", MathLib.mul(1, 2, 3, 4));
+    checkParity("chained div", MathLib.div(24, 2, 3, 2));
+    checkParity("chained pow", MathLib.pow(2, 3, 2)); // 2^3^2 = 64 (left associative)
 
-    checkParity("chained and", ["and", true, true, true]);
-    checkParity("chained and false", ["and", true, false, true]);
-    checkParity("chained or", ["or", false, false, true]);
-    checkParity("chained or false", ["or", false, false, false]);
+    checkParity("chained and", BooleanLib.and(true, true, true));
+    checkParity("chained and false", BooleanLib.and(true, false, true));
+    checkParity("chained or", BooleanLib.or(false, false, true));
+    checkParity("chained or false", BooleanLib.or(false, false, false));
 
-    checkParity("chained lt", ["<", 1, 2, 3]);
-    checkParity("chained gt", [">", 3, 2, 1]);
-    checkParity("chained lte", ["<=", 1, 2, 2, 3]);
-    checkParity("chained gte", [">=", 3, 2, 2, 1]);
+    checkParity("chained lt", BooleanLib.lt(1, 2, 3));
+    checkParity("chained gt", BooleanLib.gt(3, 2, 1));
+    checkParity("chained lte", BooleanLib.lte(1, 2, 2, 3));
+    checkParity("chained gte", BooleanLib.gte(3, 2, 2, 1));
 
     // Fail cases
-    checkParity("chained lt fail", ["<", 1, 3, 2]);
+    checkParity("chained lt fail", BooleanLib.lt(1, 3, 2));
   });
 
   describe("List Library", () => {
-    checkParity("list.len", ["list.len", ["list.new", 1, 2, 3]]);
-    checkParity("list.empty true", ["list.empty", ["list.new"]]);
-    checkParity("list.empty false", ["list.empty", ["list.new", 1]]);
-    checkParity("list.get", ["list.get", ["list.new", 10, 20, 30], 1]);
-    checkParity("list.set", [
-      "seq",
-      ["let", "l", ["list.new", 1, 2, 3]],
-      ["list.set", ["var", "l"], 1, 99],
-      ["var", "l"],
-    ]);
-    checkParity("list.push", [
-      "seq",
-      ["let", "l", ["list.new", 1, 2]],
-      ["list.push", ["var", "l"], 3],
-      ["var", "l"],
-    ]);
-    checkParity("list.pop", [
-      "seq",
-      ["let", "l", ["list.new", 1, 2, 3]],
-      ["let", "popped", ["list.pop", ["var", "l"]]],
-      ["list.new", ["var", "popped"], ["var", "l"]],
-    ]);
-    checkParity("list.unshift", [
-      "seq",
-      ["let", "l", ["list.new", 2, 3]],
-      ["list.unshift", ["var", "l"], 1],
-      ["var", "l"],
-    ]);
-    checkParity("list.shift", [
-      "seq",
-      ["let", "l", ["list.new", 1, 2, 3]],
-      ["let", "shifted", ["list.shift", ["var", "l"]]],
-      ["list.new", ["var", "shifted"], ["var", "l"]],
-    ]);
-    checkParity("list.slice", ["list.slice", ["list.new", 1, 2, 3, 4, 5], 1, 4]);
-    checkParity("list.splice", [
-      "seq",
-      ["let", "l", ["list.new", 1, 2, 3, 4, 5]],
-      ["list.splice", ["var", "l"], 1, 2, 9, 10],
-      ["var", "l"],
-    ]);
-    checkParity("list.concat", [
+    checkParity("list.len", ListLib.listLen(ListLib.listNew(1, 2, 3)));
+    checkParity("list.empty true", ListLib.listEmpty(ListLib.listNew()));
+    checkParity("list.empty false", ListLib.listEmpty(ListLib.listNew(1)));
+    checkParity("list.get", ListLib.listGet(ListLib.listNew(10, 20, 30), 1));
+    checkParity(
+      "list.set",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2, 3)),
+        ListLib.listSet(StdLib.var("l"), 1, 99),
+        StdLib.var("l"),
+      ),
+    );
+    checkParity(
+      "list.push",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2)),
+        ListLib.listPush(StdLib.var("l"), 3),
+        StdLib.var("l"),
+      ),
+    );
+    checkParity(
+      "list.pop",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2, 3)),
+        StdLib.let("popped", ListLib.listPop(StdLib.var("l"))),
+        ListLib.listNew(StdLib.var("popped"), StdLib.var("l")),
+      ),
+    );
+    checkParity(
+      "list.unshift",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(2, 3)),
+        ListLib.listUnshift(StdLib.var("l"), 1),
+        StdLib.var("l"),
+      ),
+    );
+    checkParity(
+      "list.shift",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2, 3)),
+        StdLib.let("shifted", ListLib.listShift(StdLib.var("l"))),
+        ListLib.listNew(StdLib.var("shifted"), StdLib.var("l")),
+      ),
+    );
+    checkParity(
+      "list.slice",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2, 3, 4, 5)),
+        ListLib.listSlice(StdLib.var("l"), 1, 4),
+      ),
+    );
+    checkParity(
+      "list.splice",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2, 3, 4, 5)),
+        ListLib.listSplice(StdLib.var("l"), 1, 2, 9, 10),
+        StdLib.var("l"),
+      ),
+    );
+    checkParity(
       "list.concat",
-      ["list.new", 1, 2],
-      ["list.new", 3, 4],
-      ["list.new", 5],
-    ]);
-    checkParity("list.includes true", ["list.includes", ["list.new", 1, 2, 3], 2]);
-    checkParity("list.includes false", ["list.includes", ["list.new", 1, 2, 3], 4]);
-    checkParity("list.reverse", [
-      "seq",
-      ["let", "l", ["list.new", 1, 2, 3]],
-      ["list.reverse", ["var", "l"]],
-      ["var", "l"],
-    ]);
-    checkParity("list.sort", [
-      "seq",
-      ["let", "l", ["list.new", 3, 1, 2]],
-      ["list.sort", ["var", "l"]],
-      ["var", "l"],
-    ]);
+      ListLib.listConcat(ListLib.listNew(1, 2), ListLib.listNew(3, 4), ListLib.listNew(5)),
+    );
+    checkParity("list.includes true", ListLib.listIncludes(ListLib.listNew(1, 2, 3), 2));
+    checkParity("list.includes false", ListLib.listIncludes(ListLib.listNew(1, 2, 3), 4));
+    checkParity(
+      "list.reverse",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(1, 2, 3)),
+        ListLib.listReverse(StdLib.var("l")),
+        StdLib.var("l"),
+      ),
+    );
+    checkParity(
+      "list.sort",
+      StdLib.seq(
+        StdLib.let("l", ListLib.listNew(3, 1, 2)),
+        ListLib.listSort(StdLib.var("l")),
+        StdLib.var("l"),
+      ),
+    );
   });
 
   describe("Object Library", () => {
-    checkParity("obj.keys", ["obj.keys", ["obj.new", ["a", 1], ["b", 2]]]);
-    checkParity("obj.values", ["obj.values", ["obj.new", ["a", 1], ["b", 2]]]);
-    checkParity("obj.entries", ["obj.entries", ["obj.new", ["a", 1], ["b", 2]]]);
-    checkParity("obj.merge", [
+    checkParity("obj.keys", ObjectLib.objKeys(ObjectLib.objNew(["a", 1], ["b", 2])));
+    checkParity("obj.values", ObjectLib.objValues(ObjectLib.objNew(["a", 1], ["b", 2])));
+    checkParity("obj.entries", ObjectLib.objEntries(ObjectLib.objNew(["a", 1], ["b", 2])));
+    checkParity(
       "obj.merge",
-      ["obj.new", ["a", 1]],
-      ["obj.new", ["b", 2]],
-      ["obj.new", ["a", 3]], // Override
-    ]);
+      ObjectLib.objMerge(
+        ObjectLib.objNew(["a", 1]),
+        ObjectLib.objNew(["b", 2]),
+        ObjectLib.objNew(["a", 3]), // Override
+      ),
+    );
   });
 
   describe("String Library", () => {
-    checkParity("str.len", ["str.len", "hello"]);
-    checkParity("str.split", ["str.split", "a-b-c", "-"]);
-    checkParity("str.slice", ["str.slice", "hello world", 0, 5]);
-    checkParity("str.upper", ["str.upper", "hello"]);
-    checkParity("str.lower", ["str.lower", "HELLO"]);
-    checkParity("str.trim", ["str.trim", "  hello  "]);
-    checkParity("str.replace", ["str.replace", "hello world", "world", "viwo"]);
-    checkParity("str.includes true", ["str.includes", "hello world", "world"]);
-    checkParity("str.includes false", ["str.includes", "hello world", "viwo"]);
-    checkParity("str.join", ["str.join", ["list.new", "x", "y", "z"], ","]);
+    checkParity("str.len", StringLib.strLen("hello"));
+    checkParity("str.split", StringLib.strSplit("a-b-c", "-"));
+    checkParity("str.slice", StringLib.strSlice("hello world", 0, 5));
+    checkParity("str.upper", StringLib.strUpper("hello"));
+    checkParity("str.lower", StringLib.strLower("HELLO"));
+    checkParity("str.trim", StringLib.strTrim("  hello  "));
+    checkParity("str.replace", StringLib.strReplace("hello world", "world", "viwo"));
+    checkParity("str.includes true", StringLib.strIncludes("hello world", "world"));
+    checkParity("str.includes false", StringLib.strIncludes("hello world", "viwo"));
+    checkParity("str.join", StringLib.strJoin(ListLib.listNew("x", "y", "z"), ","));
   });
 });

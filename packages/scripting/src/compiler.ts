@@ -1,4 +1,5 @@
 import { type ScriptContext, ScriptError, type ScriptOps, type ScriptValue } from "./types";
+import { optimize } from "./optimizer";
 
 const HELPERS = {
   chainedCompare: {
@@ -98,22 +99,39 @@ const HELPERS = {
   typeof: (val: any) => (Array.isArray(val) ? "array" : val === null ? "null" : typeof val),
 };
 
+export interface CompileOptions {
+  optimize?: boolean;
+}
+
+export type CompileFn = (
+  script: ScriptValue<any>,
+  ops: ScriptOps,
+  options: { optimize?: boolean },
+) => (ctx: ScriptContext) => any;
+
 /**
- * Compiles a ViwoScript AST into a JavaScript function.
+ * Compiles a script AST into a JavaScript function.
  *
- * @param script The script to compile.
- * @param ops The opcode registry to use for compilation.
- * @returns A function that takes a ScriptContext and returns a Promise resolving to the result.
+ * @param script - The script AST to compile.
+ * @param ops - The opcode registry to use for compilation.
+ * @param options - Compiler options.
+ * @returns A function that executes the script given a context.
  */
 export function compile<Type>(
   script: ScriptValue<Type>,
   ops: ScriptOps,
+  options: CompileOptions = {},
 ): (ctx: ScriptContext) => Type {
-  // oxlint-disable-next-line no-new-func
+  const shouldOptimize = options.optimize ?? true;
+  const compileFn: CompileFn = (scriptArg, opsArg, optionsArg) =>
+    compile(scriptArg, opsArg, optionsArg);
+  const optimizedScript = shouldOptimize ? optimize(script, compileFn) : script;
+  const code = compileValue(optimizedScript, ops, true);
+  // eslint-disable-next-line no-new-func
   return new Function(
     "__helpers__",
     `return function compiled(__ctx__) {
-${compileValue(script, ops, true)}}`,
+${code}}`,
   )(HELPERS);
 }
 

@@ -137,7 +137,6 @@ type UnknownUnion =
   | boolean
   | null
   | undefined
-  | Capability
   | (Record<string, unknown> & { readonly length?: never })
   | (Record<string, unknown> & { readonly slice?: never });
 
