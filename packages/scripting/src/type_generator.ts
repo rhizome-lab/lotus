@@ -1,4 +1,4 @@
-import type { OpcodeMetadata } from "./types";
+import type { ClassMetadata, OpcodeMetadata } from "./types";
 
 export const RESERVED_TYPESCRIPT_KEYWORDS = new Set([
   "if",
@@ -51,7 +51,10 @@ const OPERATOR_MAP: Record<string, string> = {
   "^": "pow",
 };
 
-function generateJSDoc(op: OpcodeMetadata): string {
+function generateJSDoc(op: {
+  description?: string;
+  parameters?: readonly { name: string; description?: string }[];
+}): string {
   if (
     !op.description &&
     (!op.parameters || op.parameters.every((parameter) => !parameter.description))
@@ -113,18 +116,52 @@ function renderNamespace(name: string, content: any, indent: string): string {
   return output;
 }
 
-export function generateTypeDefinitions(opcodes: readonly OpcodeMetadata[]): string {
-  let definitions = `\
-interface Entity {
-  /** Unique ID of the entity */
-  id: number;
-  /**
-   * Resolved properties (merged from prototype and instance).
-   * Contains arbitrary game data like description, adjectives, custom_css.
-   */
-  [key: string]: unknown;
+function renderClass(meta: ClassMetadata): string {
+  let output = "";
+  if (meta.description) {
+    output += `/** ${meta.description} */\n`;
+  }
+  const implementsClause = meta.implements?.length
+    ? ` implements ${meta.implements.join(", ")}`
+    : "";
+  output += `class ${meta.name}${implementsClause} {\n`;
+
+  // Properties
+  if (meta.properties) {
+    for (const prop of meta.properties) {
+      if (prop.description) {
+        output += `  /** ${prop.description} */\n`;
+      }
+      output += `  ${prop.name}: ${prop.type};\n`;
+    }
+  }
+  // Index Signature
+  if (meta.indexSignature) {
+    output += `  ${meta.indexSignature};\n`;
+  }
+  // Methods
+  for (const method of meta.methods) {
+    if (method.name === "constructor") {
+      continue; // skip constructor in declaration for now if not explicit
+    }
+    output += generateJSDoc(method).replaceAll(/^/gm, "  ");
+    const params = method.parameters
+      .map((parameter) => {
+        const question = parameter.optional ? "?" : "";
+        return `${parameter.name}${question}: ${parameter.type}`;
+      })
+      .join(", ");
+    output += `  ${method.name}(${params}): ${method.returnType};\n`;
+  }
+  output += "}\n";
+  return output;
 }
 
+export function generateTypeDefinitions(
+  opcodes: readonly OpcodeMetadata[],
+  classes: readonly ClassMetadata[] = [],
+): string {
+  let definitions = `\
 /** Represents a scriptable action (verb) attached to an entity. */
 interface Verb {
   id: number;
@@ -135,9 +172,15 @@ interface Verb {
   code: ScriptValue<unknown>;
 }
 
+const RAW_MARKER: unique symbol;
+interface ScriptRaw<Type> {
+  [RAW_MARKER]: Type;
+}
+
 interface Capability {
   readonly __brand: "Capability";
   readonly id: string;
+  readonly ownerId: number;
 }
 
 type UnionToIntersection<Type> = (Type extends Type ? (type: Type) => 0 : never) extends (
@@ -178,8 +221,115 @@ type ScriptExpression<Args extends (string | ScriptValue_<unknown>)[], Result> =
   __returnType: Result;
 };
 
+interface OpcodeParameter {
+  name: string;
+  type: string;
+  optional?: boolean;
+  description?: string;
+}
+
+interface FullOpcodeParameter extends OpcodeParameter {
+  description: string;
+}
+
+/** Metadata describing an opcode for documentation and UI generation. */
+interface OpcodeMetadata<Lazy extends boolean = boolean, Full extends boolean = false> {
+  /** Human-readable label. */
+  label: string;
+  /** The opcode name. */
+  opcode: string;
+  /** Category for grouping. */
+  category: string;
+  /** Description of what the opcode does. */
+  description?: string;
+  // For Node Editor
+  layout?: "infix" | "standard" | "primitive" | "control-flow";
+  slots?: {
+    name: string;
+    type: "block" | "string" | "number" | "boolean";
+    default?: any;
+  }[];
+  // For Monaco/TS
+  parameters?: readonly (Full extends true ? FullOpcodeParameter : OpcodeParameter)[];
+  genericParameters?: string[];
+  returnType?: string;
+  /** If true, arguments are NOT evaluated before being passed to the handler. Default: false (Strict). */
+  lazy?: Lazy;
+}
+
+interface FullOpcodeMetadata<Lazy extends boolean = boolean>
+  extends Omit<OpcodeMetadata<Lazy, true>, "slots" | "description" | "parameters" | "returnType">,
+    Required<
+      Pick<OpcodeMetadata<Lazy, true>, "slots" | "description" | "parameters" | "returnType">
+    > {}
+
+type OpcodeHandler<Args extends readonly unknown[], Ret, Lazy extends boolean = boolean> = (
+  args: {
+    [Key in keyof Args]: Args[Key] extends ScriptRaw<infer Type>
+      ? Type
+      : Lazy extends true
+      ? ScriptValue<Args[Key]>
+      : Args[Key];
+  },
+  ctx: ScriptContext,
+) => Ret | Promise<Ret>;
+
+type IsAny<Type> = 0 extends 1 & Type ? true : false;
+
+interface OpcodeBuilder<
+  Args extends (string | ScriptValue_<unknown>)[],
+  Ret,
+  Lazy extends boolean = boolean,
+> {
+  (
+    ...args: IsAny<Args> extends true
+      ? any
+      : {
+          [Key in keyof Args]: Args[Key] extends ScriptRaw<infer Type>
+            ? Type
+            : ScriptValue<Args[Key]>;
+        }
+  ): ScriptExpression<Args, Ret>;
+  opcode: string;
+  handler: OpcodeHandler<Args, Ret, Lazy>;
+  metadata: OpcodeMetadata<Lazy>;
+}
+
+interface StackFrame {
+  name: string;
+  args: unknown[];
+}
+
+interface ScriptContext {
+  /** The entity that initiated the script execution. */
+  readonly caller: Entity;
+  /** The entity the script is currently attached to/executing on. */
+  readonly this: Entity;
+  /** Arguments passed to the script. */
+  readonly args: readonly unknown[];
+  /** Gas limit to prevent infinite loops. */
+  gas: number;
+  /** Function to send messages back to the caller. */
+  readonly send?: (type: string, payload: unknown) => void;
+  /** List of warnings generated during execution. */
+  readonly warnings: string[];
+  /** Copy-On-Write flag for scope forking. */
+  cow: boolean;
+  /** Local variables in the current scope. */
+  vars: Record<string, unknown>;
+  /** Call stack for error reporting. */
+  readonly stack: StackFrame[];
+  /** Opcode registry for this context. */
+  readonly ops: Record<string, OpcodeBuilder<any[], any>>;
+}
+
 // Standard library functions
 `;
+
+  // Render Classes
+  for (const cls of classes) {
+    definitions += `${renderClass(cls)}\n`;
+  }
 
   const rootNamespace: Record<string, any> = {};
 

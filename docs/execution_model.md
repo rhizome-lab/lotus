@@ -78,7 +78,7 @@ The **SDK** is a thin compile-time shim.
 
 ```typescript
 // Implicitly uses EntityControl SDK Class
-const cap = std.arg(0) as EntityControl;
+const cap = std.arg<EntityControl>(0);
 cap.destroy();
 ```
 
@@ -101,6 +101,41 @@ cap.destroy();
   - Inside `destroy`: Calls `sys.destroy`.
   - Kernel validates `sys.destroy` (Checks permissions).
   - Entity is deleted.
+
+### 4. The "Context Injection" Pattern
+
+An important detail is how `ScriptContext` (the ephemeral execution state) is passed to Capabilities.
+
+- **Question:** Why isn't `ctx` passed to the Capability constructor?
+- **Answer:** **Lifecycle Mismatch.**
+  - **Capabilities** are persistent, cached, and identity-focused. `EntityControl` for ID 5 is the same object across many different requests.
+  - **ScriptContext** is ephemeral. It represents _one specific execution_ (e.g., "Player A typed 'jump' at 12:00").
+
+Therefore, `ctx` is injected into **every method call** by the runtime.
+
+```typescript
+// User sees:
+control.destroy(targetId);
+
+// Runtime executes:
+control.destroy(targetId, ctx);
+```
+
+This ensures that a single long-lived Capability instance can safely service requests from different contexts.
+
+#### Design Decisions
+
+1.  **Why is `ctx` the last argument?**
+
+    - **Ignoring Arguments:** In JavaScript, extra trailing arguments are safely ignored. A method `add(a, b)` can be implemented as `(a, b) => a + b` even if called as `add(1, 2, ctx)`. If `ctx` were first, every method would _have_ to declare it (e.g., `(_ctx, a, b) => ...`) to access `a` and `b` correctly.
+    - **Signatures:** It keeps the "business logic" implementation signature `(targetId)` closer to the exposed API signature `(targetId)`.
+
+2.  **Are Capabilities Stateful?**
+    - **Persistence:** Yes, Capability objects are instantiated once and cached (Singleton/Flyweight pattern) for performance.
+    - **Statelessness:** Crucially, they should be **stateless services**.
+      - ✅ **Good:** `this.id` (Immutable identity).
+      - ❌ **Bad:** `this.lastCaller` (Request-specific state).
+    - **Risk:** Storing request data on `this` would indeed leak state between users. Developers must use `ctx.vars` or function arguments for request-scoped data.
 
 ---
 

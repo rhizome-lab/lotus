@@ -232,3 +232,33 @@ export function defineFullOpcode<
 ): OpcodeBuilder<Args, Ret, Lazy> {
   return defineOpcode(opcode, def);
 }
+
+/** Metadata for a method on an SDK class. */
+export interface MethodMetadata {
+  name: string;
+  description?: string;
+  parameters: { name: string; type: string; optional?: boolean }[];
+  returnType: string;
+}
+
+/** Metadata for a property on an SDK class. */
+export interface PropertyMetadata {
+  name: string;
+  type: string;
+  description?: string;
+}
+
+/** Metadata for an SDK class for type generation. */
+export interface ClassMetadata {
+  name: string;
+  description?: string;
+  methods: MethodMetadata[];
+  properties?: PropertyMetadata[];
+  indexSignature?: string;
+  implements?: string[]; // e.g. "Capability"
+}
+
+/** Interface for classes that expose metadata for type generation. */
+export interface ExposedSDKClass {
+  metadata: ClassMetadata;
+}

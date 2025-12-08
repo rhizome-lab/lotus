@@ -1,14 +1,12 @@
 // Mock of the internal privileged system (normally in core/repo.ts)
 const INTERNAL = {
-  db: new Map() as Map<number, string>, // id -> name
   createEntity: (name: string) => {
     const id = Math.floor(Math.random() * 1000);
     INTERNAL.db.set(id, name);
     return id;
   },
-  deleteEntity: (id: number) => {
-    return INTERNAL.db.delete(id);
-  },
+  db: new Map() as Map<number, string>, // id -> name
+  deleteEntity: (id: number) => INTERNAL.db.delete(id),
 };
 
 // Base Capability Class (Abstract)
@@ -90,8 +88,8 @@ function userScript(sysCap: SystemCreateCapability) {
     // 4. Destroy it
     myEntityCap.destroy();
     console.log("Script: Destroyed entity.");
-  } catch (err) {
-    console.error("Script Error:", err);
+  } catch (error) {
+    console.error("Script Error:", error);
   }
 }
 
@@ -100,3 +98,6 @@ console.log("--- Starting Prototype Mock ---");
 const rootCap = new SystemCreateCapability();
 userScript(rootCap);
 console.log("--- End Prototype Mock ---");
+
+// oxlint-disable-next-line require-module-specifiers
+export {};

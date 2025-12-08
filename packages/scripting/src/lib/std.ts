@@ -946,17 +946,15 @@ export const quote = defineFullOpcode<[value: ScriptRaw<unknown>], any, true>("s
 export const callMethod = defineFullOpcode<[obj: any, method: string, ...args: any[]], any>(
   "std.call_method",
   {
-    handler: ([obj, method, ...args], _ctx) => {
+    handler: ([obj, method, ...args], ctx) => {
       if (obj === null || obj === undefined) {
         throw new ScriptError(`Cannot call method '${method}' on ${obj}`);
       }
-
       const func = obj[method];
       if (typeof func !== "function") {
         throw new ScriptError(`Property '${method}' of ${String(obj)} is not a function`);
       }
-
-      return func.call(obj, ...args, _ctx);
+      return func.call(obj, ...args, ctx);
     },
     metadata: {
       category: "logic",

@@ -6,10 +6,11 @@ describe("Method Call 'this' Context", () => {
 
   it("should preserve 'this' in method calls", () => {
     const nativeObj = {
-      id: "SECRET",
-      check: function () {
+      // oxlint-disable-next-line consistent-function-scoping
+      check: function check() {
         return this.id;
       },
+      id: "SECRET",
     };
 
     // Script: arg(0).check()

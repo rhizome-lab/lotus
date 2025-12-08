@@ -1,4 +1,4 @@
-import { ObjectLib, StdLib, compile, transpile } from "../packages/scripting/src/index.ts";
+import { compile, transpile } from "../packages/scripting/src/index.ts";
 import { describe, expect, it } from "bun:test";
 
 describe("Typed Facade Architecture", () => {
@@ -23,10 +23,11 @@ describe("Typed Facade Architecture", () => {
 
     // 3. Execution (Simulating Native Object Host)
     const nativeObj = {
-      id: "SECRET_ID",
-      check: function () {
+      // oxlint-disable-next-line consistent-function-scoping
+      check: function check() {
         return this.id;
       },
+      id: "SECRET_ID",
     };
 
     const result = compiled({ args: [nativeObj] } as any);

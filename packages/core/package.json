@@ -22,6 +22,7 @@
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
     "@typescript/native-preview": "latest",
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "ts-morph": "^27.0.2"
   }
 }
