@@ -51,15 +51,14 @@ export function getEntities(ids: number[]): Entity[] {
   if (ids.length === 0) {
     return [];
   }
-  const placeholders = ids.map(() => "?").join(", ");
-  const rows = db
-    .query(`SELECT * FROM entities WHERE id IN (${placeholders})`)
-    .all(...ids) as any[];
-
-  // We map over the rows, but we might want to return them in the order of requested IDs?
-  // Or just return the list. The client can map them back.
-  // Let's return the list of found entities.
-  return rows.map(resolveEntity);
+  const entities: Entity[] = [];
+  for (const entityId of ids) {
+    const entity = getEntity(entityId);
+    if (entity) {
+      entities.push(entity);
+    }
+  }
+  return entities;
 }
 
 /**
@@ -119,71 +118,43 @@ export interface Verb {
  * @returns An array of Verb objects.
  */
 export function getVerbs(entityId: number): Verb[] {
-  // Recursive function to collect verbs up the prototype chain
-  const collectVerbs = (id: number, visited: Set<number>): Verb[] => {
-    if (visited.has(id)) {
-      return [];
-    }
-    visited.add(id);
-    const verbs = db
-      .query<{ id: number; entity_id: number; name: string; code: string }, [id: number]>(
-        "SELECT * FROM verbs WHERE entity_id = ?",
+  // Use CTE to find all verbs in the prototype chain
+  // We wish to allow children to override verbs by name.
+  // We select from Lineage -> Verbs.
+  // Then we group by name in JS or use logic to keep the one with lowest depth (nearest).
+  const rows = db
+    .query<{ id: number; entity_id: number; name: string; code: string; depth: number }, [number]>(
+      `WITH RECURSIVE lineage AS (
+        SELECT id, prototype_id, 0 as depth FROM entities WHERE id = ?
+        UNION ALL
+        SELECT e.id, e.prototype_id, l.depth + 1
+        FROM entities e
+        JOIN lineage l ON e.id = l.prototype_id
       )
-      .all(id)
-      .map((verb) => ({ ...verb, code: JSON.parse(verb.code) }));
-    // Check prototype
-    const entity = db
-      .query<{ prototype_id: number | null }, [id: number]>(
-        "SELECT prototype_id FROM entities WHERE id = ?",
-      )
-      .get(id);
-    if (entity?.prototype_id) {
-      const protoVerbs = collectVerbs(entity.prototype_id, visited);
-      // Merge, keeping the child's verb if names collide
-      const verbNames = new Set(verbs.map((verb) => verb.name));
-      for (const pv of protoVerbs) {
-        if (!verbNames.has(pv.name)) {
-          verbs.push(pv);
-        }
-      }
-    }
-    return verbs;
-  };
-
-  return collectVerbs(entityId, new Set());
-}
-
-// Recursive lookup
-function lookupVerb(id: number, name: string, visited: Set<number>): Verb | null {
-  if (visited.has(id)) {
-    return null;
-  }
-  visited.add(id);
-  const row = db
-    .query<
-      {
-        id: number;
-        entity_id: number;
-        name: string;
-        code: string;
-        permissions: string;
-      },
-      [id: number, name: string]
-    >("SELECT * FROM verbs WHERE entity_id = ? AND name = ?")
-    .get(id, name);
-  if (row) {
-    return { ...row, code: JSON.parse(row.code) };
-  }
-  // Check prototype
-  const entity = db
-    .query<{ prototype_id: number | null }, [id: number]>(
-      "SELECT prototype_id FROM entities WHERE id = ?",
+      SELECT v.id, v.entity_id, v.name, v.code, l.depth
+      FROM verbs v
+      JOIN lineage l ON v.entity_id = l.id
+      ORDER BY l.depth DESC;`, // Order by depth DESC (Root -> Leaf) so Leaf overrides Root
     )
-    .get(id);
-  if (entity?.prototype_id) {
-    return lookupVerb(entity.prototype_id, name, visited);
+    .all(entityId);
+
+  const verbMap = new Map<string, Verb>();
+  for (const row of rows) {
+    // Because we iterate Root -> Leaf (Depth DESC means high depth (root) first? Wait.
+    // 0 is leaf. N is root.
+    // depth 0 = instance.
+    // depth 1 = parent.
+    // ORDER BY depth DESC means we see Root first. Then Leaf.
+    // So Leaf overwrites Root.
+    verbMap.set(row.name, {
+      code: JSON.parse(row.code),
+      entity_id: row.entity_id,
+      id: row.id,
+      name: row.name,
+    });
   }
-  return null;
+
+  return Array.from(verbMap.values());
 }
 
 /**
@@ -194,7 +165,37 @@ function lookupVerb(id: number, name: string, visited: Set<number>): Verb | null
  * @returns The Verb object or null if not found.
  */
 export function getVerb(entityId: number, name: string): Verb | null {
-  return lookupVerb(entityId, name, new Set());
+  // Find the closest verb in the prototype chain with the given name
+  const row = db
+    .query<
+      { id: number; entity_id: number; name: string; code: string; depth: number },
+      [id: number, name: string]
+    >(
+      `WITH RECURSIVE lineage AS (
+        SELECT id, prototype_id, 0 as depth FROM entities WHERE id = ?
+        UNION ALL
+        SELECT e.id, e.prototype_id, l.depth + 1
+        FROM entities e
+        JOIN lineage l ON e.id = l.prototype_id
+      )
+      SELECT v.id, v.entity_id, v.name, v.code, l.depth
+      FROM verbs v
+      JOIN lineage l ON v.entity_id = l.id
+      WHERE v.name = ?
+      ORDER BY l.depth ASC
+      LIMIT 1;`, // depth ASC means Leaf (0) -> Root (N). We want the first one found (Leaf).
+    )
+    .get(entityId, name);
+
+  if (!row) {
+    return null;
+  }
+  return {
+    code: JSON.parse(row.code),
+    entity_id: row.entity_id,
+    id: row.id,
+    name: row.name,
+  };
 }
 
 /**

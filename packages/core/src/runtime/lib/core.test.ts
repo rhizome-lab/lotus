@@ -8,7 +8,14 @@ import {
   createScriptContext,
   evaluate,
 } from "@viwo/scripting";
-import { addVerb, createCapability, createEntity, getEntity, getPrototypeId } from "../../repo";
+import {
+  addVerb,
+  createCapability,
+  createEntity,
+  getEntity,
+  getPrototypeId,
+  updateEntity,
+} from "../../repo";
 import { beforeAll, expect } from "bun:test";
 import { createLibraryTester } from "@viwo/scripting/test-utils";
 
@@ -27,6 +34,8 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
     createCapability(id, "sys.sudo", {});
     createCapability(4, "sys.sudo", {});
 
+    // Ensure entity 101 exists for tests
+    updateEntity({ id: 101 });
     addVerb(101, "get_dynamic", "resolved_value");
   });
 
@@ -89,7 +98,7 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
       CoreLib.setEntity(KernelLib.getCapability("entity.control"), { id, name: "updated" }),
       ctx,
     );
-    expect(getEntity(id)?.name).toBe("updated");
+    expect(getEntity(id)?.["name"]).toBe("updated");
   });
 
   test("get_prototype", () => {
@@ -163,6 +172,7 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
       this: { id: 4 },
     });
 
+    updateEntity({ id: 103 });
     addVerb(103, "say_hello", StdLib.send("message", "Hello!"));
 
     evaluate(

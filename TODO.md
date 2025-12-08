@@ -45,7 +45,6 @@
 - [ ] **Plugins**: Add capability-based permissions to opcodes defined by plugins
 - [ ] **Scripting**: Add async support to compiler
 - [ ] **Scripting**: Attempt to change BreakSignal and ContinueSignal to not throw, since we use a stack based interpreter so we should be able to simply return them
-- [ ] **Database**: Recursive CTEs for retrieving prototype chain
 - [ ] **Scripting**: Figure out what to do with the duplication of `procgen.random` vs Std `random` opcodes
 - [ ] **Seed**: Fix hotel seed - floors and rooms should be 'ephemeral' - that is, they should be destroyed when a: no longer in use and b: not modified.
 - [ ] **Seed**: Make sure mailbox uses capability based permissions.
