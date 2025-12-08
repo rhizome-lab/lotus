@@ -11,19 +11,6 @@ import { db } from "./db";
  * @param id - The ID of the entity to fetch.
  * @returns The resolved Entity object or null if not found.
  */
-const resolveEntity = (entity: any): Entity => {
-  let props = JSON.parse(entity.props);
-  // Recursive prototype resolution
-  if (entity.prototype_id) {
-    const proto = getEntity(entity.prototype_id);
-    if (proto) {
-      // Merge props: Instance overrides Prototype
-      props = { ...proto, ...props };
-    }
-  }
-  return { ...props, id: entity.id };
-};
-
 /**
  * Fetches an entity by ID, resolving its properties against its prototype.
  *
@@ -33,12 +20,28 @@ const resolveEntity = (entity: any): Entity => {
  * @returns The resolved Entity object or null if not found.
  */
 export function getEntity(id: number): Entity | null {
-  const entity = db.query("SELECT * FROM entities WHERE id = ?").get(id) as any;
-  if (!entity) {
-    console.log(`getEntity: entity ${id} not found in DB`);
+  const chain = db
+    .query<{ id: number; props: string }, [number]>(
+      `WITH RECURSIVE lineage AS (
+        SELECT id, prototype_id, props, 0 as depth FROM entities WHERE id = ?
+        UNION ALL
+        SELECT e.id, e.prototype_id, e.props, l.depth + 1
+        FROM entities e
+        JOIN lineage l ON e.id = l.prototype_id
+      )
+      SELECT id, props FROM lineage ORDER BY depth DESC;`,
+    )
+    .all(id);
+  if (chain.length === 0) {
     return null;
   }
-  return resolveEntity(entity);
+  // Merge properties from root (oldest prototype) to leaf (instance)
+  let mergedProps = {};
+  for (const row of chain) {
+    mergedProps = { ...mergedProps, ...JSON.parse(row.props) };
+  }
+  const instance = chain.at(-1)!;
+  return { ...mergedProps, id: instance.id };
 }
 
 /**
