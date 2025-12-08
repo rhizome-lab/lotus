@@ -114,12 +114,10 @@ describe("Mailbox Verification", () => {
           ),
           CoreLib.setEntity(
             StdLib.var("cap"),
-            ObjectLib.objMerge(
-              StdLib.var("item"),
-              ObjectLib.objNew(
-                ["location", ObjectLib.objGet(StdLib.var("dest"), "id")],
-                ["owner", StdLib.var("newOwner")],
-              ),
+            StdLib.var("item"),
+            ObjectLib.objNew(
+              ["location", ObjectLib.objGet(StdLib.var("dest"), "id")],
+              ["owner", StdLib.var("newOwner")],
             ),
           ),
           true,

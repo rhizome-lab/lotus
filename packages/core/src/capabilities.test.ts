@@ -93,6 +93,7 @@ describe("Capability Security", () => {
         CoreLib.setEntity(
           ObjectLib.objNew(["name", "Fail"]), // Invalid cap
           CoreLib.entity(targetId),
+          ObjectLib.objNew(), // updates
         ),
         ctx,
       );
@@ -109,7 +110,8 @@ describe("Capability Security", () => {
     await evaluate(
       CoreLib.setEntity(
         KernelLib.getCapability("entity.control", ObjectLib.objNew(["*", true])),
-        ObjectLib.objSet(CoreLib.entity(targetId), "name", "Modified"),
+        CoreLib.entity(targetId),
+        ObjectLib.objNew(["name", "Modified"]),
       ),
       ctx,
     );

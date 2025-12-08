@@ -63,3 +63,4 @@
 - [ ] **AI**: Return images and audio in a usable format in `plugins/ai/src/lib.ts`
 - [ ] **AI**: Add support for specifying image size in `plugins/ai/src/lib.ts`
 - [ ] **AI**: Add support for streaming text in `plugins/ai/src/lib.ts`
+- [ ] **Seed**: `player_quest_log` in `packages/core/src/seeds/verbs.ts` should return an object, not text

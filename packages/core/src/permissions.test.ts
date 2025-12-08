@@ -53,7 +53,8 @@ describe("Capability Permissions", () => {
       ),
       CoreLib.setEntity(
         StdLib.var("cap"),
-        ObjectLib.objSet(CoreLib.entity(target.id), "name", newName),
+        CoreLib.entity(target.id),
+        ObjectLib.objNew(["name", newName]),
       ),
     );
 

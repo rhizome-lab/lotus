@@ -82,9 +82,7 @@ describe("Player Commands", () => {
 
   it("should inspect item", async () => {
     // Create item in room
-    console.log("Creating Box...");
     const boxId = createEntity({ location: room.id, name: "Box" });
-    console.log(`Created Box with ID ${boxId}`);
 
     // Update room contents
     const freshRoom = getEntity(room.id)!;

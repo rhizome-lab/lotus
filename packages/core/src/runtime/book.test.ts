@@ -1,4 +1,5 @@
 import * as CoreLib from "../runtime/lib/core";
+import * as KernelLib from "../runtime/lib/kernel";
 import {
   BooleanLib,
   ListLib,
@@ -8,7 +9,7 @@ import {
   createScriptContext,
   evaluate,
 } from "@viwo/scripting";
-import { addVerb, createEntity, getEntity } from "../repo";
+import { addVerb, createCapability, createEntity, getEntity } from "../repo";
 import { beforeEach, describe, expect, it } from "bun:test";
 import type { Entity } from "@viwo/shared/jsonrpc";
 import { GameOpcodes } from "./opcodes";
@@ -40,6 +41,9 @@ describe("Book Item Scripting", () => {
 
     // Add tell verb
     addVerb(callerId, "tell", StdLib.send("message", StdLib.arg(0)));
+
+    // Give book control over itself
+    createCapability(bookId, "entity.control", { target_id: bookId });
   });
 
   it("should list chapters", async () => {
@@ -129,7 +133,18 @@ describe("Book Item Scripting", () => {
       ObjectLib.objSet(StdLib.var("newChapter"), "title", StdLib.var("title")),
       ObjectLib.objSet(StdLib.var("newChapter"), "content", StdLib.var("content")),
       ListLib.listPush(StdLib.var("chapters"), StdLib.var("newChapter")),
-      CoreLib.setEntity(ObjectLib.objSet(StdLib.this(), "chapters", StdLib.var("chapters"))),
+      StdLib.let(
+        "cap",
+        KernelLib.getCapability(
+          "entity.control",
+          ObjectLib.objNew(["target_id", ObjectLib.objGet(StdLib.this(), "id")]),
+        ),
+      ),
+      CoreLib.setEntity(
+        StdLib.var("cap"),
+        StdLib.this(),
+        ObjectLib.objNew(["chapters", StdLib.var("chapters")]),
+      ),
       CoreLib.call(StdLib.caller(), "tell", "Chapter added."),
     );
 

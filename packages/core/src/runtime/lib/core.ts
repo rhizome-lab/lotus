@@ -232,9 +232,13 @@ export const setEntity = defineFullOpcode<[Capability | null, Entity, object], E
       if ("id" in updates) {
         throw new ScriptError("set_entity: cannot update 'id'");
       }
+      const allowedOwners = [ctx.this.id];
+      if (ctx.caller) {
+        allowedOwners.push(ctx.caller.id);
+      }
       checkCapability(
         capability,
-        ctx.this.id,
+        allowedOwners,
         "entity.control",
         (params) => params["target_id"] === (entity as Entity).id,
       );

@@ -90,7 +90,7 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
   });
 
   test("entity", () => {
-    expect(evaluate(CoreLib.entity(id), ctx)).toEqual({ id });
+    expect(evaluate(CoreLib.entity(id), ctx)).toEqual({ id, prototype_id: null });
   });
 
   test("set_entity", () => {
@@ -98,8 +98,7 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
     const result = evaluate(
       CoreLib.setEntity(KernelLib.getCapability("entity.control"), { id }, { name: "updated" }),
       ctx,
-    );
-    // @ts-expect-error - dynamic prop
+    ) as unknown as { id: number; name: string };
     expect(result.name).toBe("updated");
     expect(result.id).toBe(id);
 

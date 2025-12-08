@@ -125,6 +125,8 @@ export interface MessageNotification extends JsonRpcNotification {
 export interface Entity {
   /** Unique ID of the entity */
   id: number;
+  /** Unique ID of the entity's prototype */
+  prototype_id?: number | null;
   /**
    * Resolved properties (merged from prototype and instance).
    * Contains arbitrary game data like description, adjectives, custom_css.

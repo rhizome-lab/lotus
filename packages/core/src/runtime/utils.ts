@@ -57,7 +57,7 @@ export function resolveProps(entity: Entity, ctx: ScriptContext): Entity {
 
 export function checkCapability(
   cap: Capability | undefined,
-  ownerId: number,
+  ownerId: number | number[],
   type: string,
   paramsMatch?: (params: Record<string, unknown>) => boolean,
 ) {
@@ -70,7 +70,15 @@ export function checkCapability(
     throw new ScriptError("Invalid capability");
   }
 
-  if (dbCap.owner_id !== ownerId) {
+  if (Array.isArray(ownerId)) {
+    if (!ownerId.includes(dbCap.owner_id)) {
+      throw new ScriptError(
+        `Capability not owned by caller (expected one of ${ownerId.join(", ")}, got ${
+          dbCap.owner_id
+        })`,
+      );
+    }
+  } else if (dbCap.owner_id !== ownerId) {
     throw new ScriptError("Capability not owned by caller");
   }
 

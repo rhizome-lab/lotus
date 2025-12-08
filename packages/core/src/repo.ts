@@ -21,7 +21,7 @@ import { db } from "./db";
  */
 export function getEntity(id: number): Entity | null {
   const chain = db
-    .query<{ id: number; props: string }, [number]>(
+    .query<{ id: number; prototype_id: number | null; props: string }, [number]>(
       `WITH RECURSIVE lineage AS (
         SELECT id, prototype_id, props, 0 as depth FROM entities WHERE id = ?
         UNION ALL
@@ -29,19 +29,21 @@ export function getEntity(id: number): Entity | null {
         FROM entities e
         JOIN lineage l ON e.id = l.prototype_id
       )
-      SELECT id, props FROM lineage ORDER BY depth DESC;`,
+      SELECT id, prototype_id, props FROM lineage ORDER BY depth DESC;`,
     )
     .all(id);
+  // Merge properties from root (oldest prototype) to leaf (instance)
   if (chain.length === 0) {
     return null;
   }
-  // Merge properties from root (oldest prototype) to leaf (instance)
+
   let mergedProps = {};
   for (const row of chain) {
     mergedProps = { ...mergedProps, ...JSON.parse(row.props) };
   }
+
   const instance = chain.at(-1)!;
-  return { ...mergedProps, id: instance.id };
+  return { ...mergedProps, id: instance.id, prototype_id: instance.prototype_id };
 }
 
 /**
@@ -101,13 +103,18 @@ export function updateEntity(...entities: readonly Entity[]) {
 
   const transaction = db.transaction(() => {
     for (const { id, ...updates } of entities) {
-      // 1. Fetch current raw props (avoiding recursive CTE for speed and to avoid flattening)
+      // 1. Fetch current raw props and prototype_id
       const row = db
-        .query<{ props: string }, [number]>("SELECT props FROM entities WHERE id = ?")
+        .query<{ props: string; prototype_id: number | null }, [number]>(
+          "SELECT props, prototype_id FROM entities WHERE id = ?",
+        )
         .get(id);
 
       let currentProps = {};
+      let prototypeId: number | null = null;
+
       if (row) {
+        prototypeId = row.prototype_id;
         try {
           currentProps = JSON.parse(row.props);
         } catch {
@@ -119,10 +126,11 @@ export function updateEntity(...entities: readonly Entity[]) {
       const newProps = { ...currentProps, ...updates };
 
       // 3. Save
-      // We use INSERT OR REPLACE semantics regarding ID, but since we read first, we know it exists (or we seek to create it if we passed an ID).
-      // actually if the row didn't exist, currentProps is empty, acts as create.
-      db.query("INSERT OR REPLACE INTO entities (id, props) VALUES (?, ?)").run(
+      // We use INSERT OR REPLACE to handle both update and creation (if ID provided).
+      // We must preserve prototype_id.
+      db.query("INSERT OR REPLACE INTO entities (id, prototype_id, props) VALUES (?, ?, ?)").run(
         id,
+        prototypeId,
         JSON.stringify(newProps),
       );
     }
