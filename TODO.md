@@ -46,7 +46,6 @@
 - [ ] **Scripting**: Add async support to compiler
 - [ ] **Scripting**: Attempt to change BreakSignal and ContinueSignal to not throw, since we use a stack based interpreter so we should be able to simply return them
 - [ ] **Database**: Recursive CTEs for retrieving prototype chain
-- [ ] **Style**: Convert `apps/web/src/components/ThemeEditor.tsx` to BEM in `packages/shared/src/index.css`
 - [ ] **Scripting**: Figure out what to do with the duplication of `procgen.random` vs Std `random` opcodes
 - [ ] **Seed**: Fix hotel seed - floors and rooms should be 'ephemeral' - that is, they should be destroyed when a: no longer in use and b: not modified.
 - [ ] **Seed**: Make sure mailbox uses capability based permissions.
@@ -64,4 +63,3 @@
 - [ ] **AI**: Return images and audio in a usable format in `plugins/ai/src/lib.ts`
 - [ ] **AI**: Add support for specifying image size in `plugins/ai/src/lib.ts`
 - [ ] **AI**: Add support for streaming text in `plugins/ai/src/lib.ts`
-- [ ] **Core**: Fix tests in `packages/core/src/runtime/lib/core.test.ts`: `call` test should verify, using a mocked verb, that it actually calls the verb; `set_entity` and `set_prototype` should add real testcases

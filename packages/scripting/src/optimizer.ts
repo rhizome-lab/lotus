@@ -75,6 +75,7 @@ export function optimize<Type>(
   if (!Array.isArray(script) || typeof script[0] !== "string") {
     return script;
   }
+  console.log(script, isPureSubtree(script, isTopLevel));
   if (!isPureSubtree(script, isTopLevel)) {
     switch (script[0]) {
       case "std.quote":

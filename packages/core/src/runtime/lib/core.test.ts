@@ -8,7 +8,7 @@ import {
   createScriptContext,
   evaluate,
 } from "@viwo/scripting";
-import { addVerb, createCapability, createEntity, getEntity } from "../../repo";
+import { addVerb, createCapability, createEntity, getEntity, getPrototypeId } from "../../repo";
 import { beforeAll, expect } from "bun:test";
 import { createLibraryTester } from "@viwo/scripting/test-utils";
 
@@ -43,6 +43,8 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
 
   test("call", () => {
     expect(() => evaluate(CoreLib.call({ id }, "missing"), ctx)).toThrow();
+    // Verify successful call
+    expect(evaluate(CoreLib.call({ id: 101 }, "get_dynamic"), ctx)).toBe("resolved_value");
   });
 
   test("call stack trace", () => {
@@ -83,7 +85,11 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
   });
 
   test("set_entity", () => {
-    evaluate(CoreLib.setEntity(KernelLib.getCapability("entity.control"), { id }), ctx);
+    evaluate(
+      CoreLib.setEntity(KernelLib.getCapability("entity.control"), { id, name: "updated" }),
+      ctx,
+    );
+    expect(getEntity(id)?.name).toBe("updated");
   });
 
   test("get_prototype", () => {
@@ -92,6 +98,7 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
 
   test("set_prototype", () => {
     evaluate(CoreLib.setPrototype(KernelLib.getCapability("entity.control"), { id }, 2), ctx);
+    expect(getPrototypeId(id)).toBe(2);
   });
 
   test("resolve_props", () => {
