@@ -1,7 +1,6 @@
 import { type Capability, type ScriptContext, ScriptError } from "@viwo/scripting";
 import { checkCapability, deepFreeze } from "./utils";
-import { destroyEntityLogic, setPrototypeLogic, updateEntityLogic } from "./logic";
-import { getEntity } from "../repo";
+import { deleteEntity, getEntity, setPrototypeId, updateEntity } from "../repo";
 
 export abstract class BaseCapability implements Capability {
   static readonly type: string;
@@ -17,9 +16,6 @@ export abstract class BaseCapability implements Capability {
   }
 
   // Helper to check ownership or validity if needed
-  check(ctx: ScriptContext) {
-    checkCapability(this, ctx.this.id, this.type);
-  }
 }
 
 export class EntityControl extends BaseCapability {
@@ -27,7 +23,7 @@ export class EntityControl extends BaseCapability {
 
   // Example Method 1: Destroy
   // Logic refactored from sys.destroy opcode
-  destroy(targetId: number | null, ctx: ScriptContext) {
+  destroy(targetId: number | null, _ctx: ScriptContext) {
     // If targetId is null, assume we are destroying the target of this capability?
     // The capability has a target_id param.
     // Core logic checks if params["target_id"] === targetId.
@@ -37,11 +33,16 @@ export class EntityControl extends BaseCapability {
     if (targetId === null) {
       throw new ScriptError("EntityControl.destroy: targetId is required");
     }
-    destroyEntityLogic(this, targetId, ctx);
+
+    if (!this.params["*"] && this.params["target_id"] !== targetId) {
+      throw new ScriptError("Capability parameters do not match requirements");
+    }
+
+    deleteEntity(targetId);
     return true;
   }
 
-  update(targetId: number, updates: object, ctx: ScriptContext) {
+  update(targetId: number, updates: object, _ctx: ScriptContext) {
     if (!targetId && targetId !== 0) {
       throw new ScriptError("EntityControl.update: targetId is required");
     }
@@ -49,10 +50,23 @@ export class EntityControl extends BaseCapability {
     if (!entity) {
       throw new ScriptError(`EntityControl.update: entity ${targetId} not found`);
     }
-    return updateEntityLogic(this, entity, updates, ctx);
+
+    if ("id" in updates) {
+      throw new ScriptError("set_entity: cannot update 'id'");
+    }
+    if ("prototype_id" in updates) {
+      throw new ScriptError("set_entity: cannot update 'prototype_id'");
+    }
+
+    if (!this.params["*"] && this.params["target_id"] !== targetId) {
+      throw new ScriptError("Capability parameters do not match requirements");
+    }
+
+    updateEntity({ id: targetId, ...updates });
+    return { ...entity, ...updates };
   }
 
-  setPrototype(targetId: number, protoId: number | null, ctx: ScriptContext) {
+  setPrototype(targetId: number, protoId: number | null, _ctx: ScriptContext) {
     if (!targetId && targetId !== 0) {
       throw new ScriptError("EntityControl.setPrototype: targetId is required");
     }
@@ -60,7 +74,17 @@ export class EntityControl extends BaseCapability {
     if (!entity) {
       throw new ScriptError(`EntityControl.setPrototype: entity ${targetId} not found`);
     }
-    setPrototypeLogic(this, entity, protoId, ctx);
+
+    if (!this.params["*"] && this.params["target_id"] !== targetId) {
+      throw new ScriptError("Capability parameters do not match requirements");
+    }
+
+    if (protoId !== null && typeof protoId !== "number") {
+      throw new ScriptError(
+        `set_prototype: expected number or null for prototype ID, got ${JSON.stringify(protoId)}`,
+      );
+    }
+    setPrototypeId(targetId, protoId);
     return true;
   }
 }
@@ -87,11 +111,15 @@ function createCapabilityProxy(capability: BaseCapability): BaseCapability {
   return new Proxy(capability, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver);
-      if (typeof value === "function" && prop !== "check" && prop !== "constructor") {
+      if (typeof value === "function" && prop !== "constructor") {
         return function proxy(this: BaseCapability, ...args: any[]) {
           const ctx = args.at(-1);
           if (ctx && typeof ctx === "object" && "this" in ctx) {
-            this.check(ctx);
+            checkCapability(
+              target,
+              ctx.this.id,
+              (target.constructor as typeof BaseCapability).type,
+            );
           }
           return value.apply(this, args);
         };

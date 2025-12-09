@@ -14,8 +14,8 @@ These steps can be implemented immediately on top of the current engine to stric
 
 ### Current Status (Dec 2025)
 
+- **Typed Facade**: **Implemented**. `EntityControl` has been implemented with automated proxy-based validation (`createCapabilityProxy`), ensuring 100% type safety and runtime security without manual checks in methods.
 - **Strict Type Generation**: In Progress. `generated_types.ts` is being generated with interfaces for Entities and Verbs.
-- **Typed Facade**: Aligned. `WrappedEntity` has been removed as it was an unnecessary abstraction. We are relying on `generated_types.ts` to expose `Capability` wrapper classes (like `EntityControl`) which map directly to opcodes.
 - **Standard Library**:
   - ✅ `std.int`, `std.float`, `std.number` added for safe parsing.
   - ✅ `std.random` refactored for clarity.

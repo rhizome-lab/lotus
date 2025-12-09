@@ -175,7 +175,7 @@ declare global {
   }
   class EntityControl {
     destroy(targetId: number): boolean;
-    update(targetId: number, updates: object): Entity;
+    update(targetId: number, updates: object): any;
     setPrototype(targetId: number, protoId: number): boolean;
   }
 

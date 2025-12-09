@@ -137,7 +137,7 @@ createLibraryTester(CoreLib, "Core Library", (test) => {
     expect(() =>
       evaluate(
         CoreLib.sudo(
-          { __brand: "Capability", id: "" },
+          { __brand: "Capability", id: "", ownerId: 0, type: "fake" },
           { id: 101 },
           "get_dynamic",
           ListLib.listNew(),

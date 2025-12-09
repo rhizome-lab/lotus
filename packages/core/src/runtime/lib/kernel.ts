@@ -31,7 +31,12 @@ export const getCapability = defineFullOpcode<[type: string, filter?: object], C
       if (!match) {
         return null;
       }
-      return { __brand: "Capability", id: match.id };
+      return {
+        __brand: "Capability",
+        id: match.id,
+        ownerId: match.owner_id,
+        type: match.type,
+      };
     },
     metadata: {
       category: "kernel",
@@ -81,7 +86,7 @@ export const mint = defineFullOpcode<
       throw new ScriptError(`mint: authority namespace '${allowedNs}' does not cover '${type}'`);
     }
     const newId = createCapability(ctx.this.id, type, params as never);
-    return { __brand: "Capability", id: newId };
+    return { __brand: "Capability", id: newId, ownerId: ctx.this.id, type };
   },
   metadata: {
     category: "kernel",
@@ -121,7 +126,12 @@ export const delegate = defineFullOpcode<
     const newParams = { ...parentCap.params, ...(restrictions as object) };
     const newId = createCapability(ctx.this.id, parentCap.type, newParams);
 
-    return { __brand: "Capability", id: newId };
+    return {
+      __brand: "Capability",
+      id: newId,
+      ownerId: ctx.this.id,
+      type: parentCap.type,
+    };
   },
   metadata: {
     category: "kernel",

@@ -105,7 +105,12 @@ describe("Capability Permissions", () => {
   describe("Adversarial Tests", () => {
     test("Capability Forgery", () => {
       // Attacker tries to use a fake capability object
-      const fakeCap = { __brand: "Capability" as const, id: crypto.randomUUID() };
+      const fakeCap = {
+        __brand: "Capability" as const,
+        id: crypto.randomUUID(),
+        ownerId: owner.id,
+        type: "fake.type",
+      };
       const script = KernelLib.giveCapability(fakeCap, CoreLib.entity(other.id));
       const ctx = createScriptContext({ args: [], caller: owner, ops: GameOpcodes, this: owner });
       // Should fail because ID doesn't exist in DB
@@ -120,7 +125,12 @@ describe("Capability Permissions", () => {
       // Attacker tries to use Owner's capability ID
       // We have to manually construct the capability object because get_capability
       // only returns caps owned by the caller.
-      const stolenCap = { __brand: "Capability" as const, id: ownerCapId };
+      const stolenCap = {
+        __brand: "Capability" as const,
+        id: ownerCapId,
+        ownerId: other.id, // Try to claim we own it
+        type: "test.cap",
+      };
       const script = KernelLib.giveCapability(stolenCap, CoreLib.entity(other.id));
       // Attacker is the caller
       const ctx = createScriptContext({ args: [], caller: other, ops: GameOpcodes, this: other });
@@ -135,7 +145,12 @@ describe("Capability Permissions", () => {
       const mintAuthId = createCapability(owner.id, "sys.mint", {
         namespace: "user.1",
       });
-      const mintAuth = { __brand: "Capability" as const, id: mintAuthId };
+      const mintAuth = {
+        __brand: "Capability" as const,
+        id: mintAuthId,
+        ownerId: owner.id,
+        type: "sys.mint",
+      };
       // Try to mint outside namespace
       const script = KernelLib.mint(mintAuth, "sys.sudo", ObjectLib.objNew());
       const ctx = createScriptContext({ args: [], caller: owner, ops: GameOpcodes, this: owner });
@@ -147,7 +162,12 @@ describe("Capability Permissions", () => {
     test("Invalid Authority for Minting", () => {
       // Try to use a non-sys.mint capability as authority
       const badAuthId = createCapability(owner.id, "entity.control", {});
-      const badAuth = { __brand: "Capability" as const, id: badAuthId };
+      const badAuth = {
+        __brand: "Capability" as const,
+        id: badAuthId,
+        ownerId: owner.id,
+        type: "entity.control",
+      };
       const script = KernelLib.mint(badAuth, "some.cap", ObjectLib.objNew());
       const ctx = createScriptContext({ args: [], caller: owner, ops: GameOpcodes, this: owner });
       expect(Promise.resolve().then(() => evaluate(script, ctx))).rejects.toThrow(
