@@ -45,6 +45,7 @@ export {
   getCapability,
   createCapability,
   getEntities,
+  getVerb,
 } from "./repo";
 export { checkCapability } from "./runtime/utils";
 export {

@@ -718,20 +718,83 @@ export function seed() {
     questBaseId,
   );
 
-  // Create Chips and Drinks items in Gemstore so they exist
-  createEntity({
-    adjectives: ["food:chips"],
-    description: "Salty and crunchy.",
-    location: gemstoreId,
-    name: "Bag of Chips",
+  // 12. Hotel Seed (Stage 1)
+  const hotelManagerPath = resolve(__dirname, "seeds/hotel/manager.ts");
+  const hotelPrototypesPath = resolve(__dirname, "seeds/hotel/prototypes.ts");
+
+  // Create Hotel Manager
+  const hotelManagerId = createEntity({
+    description: "The concierge of the Grand Hotel.",
+    location: voidId,
+    name: "Hotel Manager",
   });
 
-  createEntity({
-    adjectives: ["food:drink"],
-    description: "Fizzy drink.",
-    location: gemstoreId,
-    name: "Sode Pop",
+  // Grant capabilities
+  createCapability(hotelManagerId, "sys.create", {});
+  createCapability(hotelManagerId, "entity.control", { "*": true });
+
+  // Add Manager Verbs
+  addVerb(hotelManagerId, "enter", transpile(extractVerb(hotelManagerPath, "manager_enter")));
+  addVerb(
+    hotelManagerId,
+    "create_lobby",
+    transpile(extractVerb(hotelManagerPath, "manager_create_lobby")),
+  );
+  addVerb(
+    hotelManagerId,
+    "create_room",
+    transpile(extractVerb(hotelManagerPath, "manager_create_room")),
+  );
+  addVerb(
+    hotelManagerId,
+    "cleanup_loop",
+    transpile(extractVerb(hotelManagerPath, "manager_cleanup_loop")),
+  );
+  addVerb(hotelManagerId, "gc", transpile(extractVerb(hotelManagerPath, "manager_gc")));
+
+  // Start Cleanup Loop
+  addVerb(hotelManagerId, "start", transpile("schedule('cleanup_loop', [], 1000)")); // Simple inline start script
+  // We can't easily auto-start without an event or main loop trigger,
+  // but let's assume 'seed' is run once.
+  // We can't "call" the verb here easily in seed.ts without a context?
+  // seed.ts is just DB setup. The server needs to START it.
+  // The Director has a 'start' verb that is scheduled?
+  // Check index.ts or similar where Director is started?
+  // Actually, standard practice here seems to be providing the verb, and maybe some bootstrap script checks for it.
+  // For now, let's just make sure the verbs are there.
+
+  // Prototypes
+  const hotelRoomProtoId = createEntity({
+    description: "A standard hotel room.",
+    name: "Hotel Room Prototype",
   });
+  addVerb(
+    hotelRoomProtoId,
+    "on_enter",
+    transpile(extractVerb(hotelPrototypesPath, "room_on_enter")),
+  );
+  addVerb(
+    hotelRoomProtoId,
+    "on_leave",
+    transpile(extractVerb(hotelPrototypesPath, "room_on_leave")),
+  );
+
+  const hotelLobbyProtoId = createEntity({
+    description: "Points to the Hotel Manager.",
+    name: "Hotel Lobby Prototype",
+  });
+  // Lobby might share logic with room or have its own. For now, basic.
+
+  // Configure Manager with Prototypes
+  updateEntity({
+    ...getEntity(hotelManagerId)!,
+    lobby_proto_id: hotelLobbyProtoId,
+    room_proto_id: hotelRoomProtoId,
+  });
+
+  // Link Hotel Entry to Lobby (Optional/Temporary)
+  // Let's add 'hotel' verb to Lobby to call manager:enter
+  addVerb(lobbyId, "hotel", transpile(`call(entity(${hotelManagerId}), "enter")`));
 
   if (process.env.NODE_ENV !== "test") {
     console.log("Seeding complete!");
