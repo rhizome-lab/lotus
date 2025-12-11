@@ -3,7 +3,7 @@ import "../../generated_types";
 // oxlint-disable-next-line no-unassigned-import
 import "../../plugin_types";
 
-export function manager_enter() {
+export function manager_enter(this: Entity) {
   const player = std.caller();
   const lobbyId = this["lobby_id"] as number;
 
@@ -23,7 +23,7 @@ export function manager_enter() {
   }
 }
 
-export function manager_create_lobby() {
+export function manager_create_lobby(this: Entity) {
   const createCap = get_capability("sys.create", {});
   const controlCap = get_capability("entity.control", { "*": true });
 
@@ -59,8 +59,7 @@ export function manager_create_lobby() {
   return lobbyId;
 }
 
-export function manager_create_room() {
-  const _type = std.arg<string>(0);
+export function manager_create_room(this: Entity) {
   const params = std.arg<Record<string, any>>(1) || {};
 
   const createCap = get_capability("sys.create", {});
@@ -87,6 +86,16 @@ export function manager_create_room() {
     managed_by: this.id,
   });
 
+  // Generate content
+  // Pick a random theme
+  const themes = ["modern", "victorian", "scifi", "rustic"];
+  const themeCount = list.len(themes);
+  const maxThemeIdx = themeCount - 1;
+  const themeIdx = random.between(0, maxThemeIdx);
+  const selectedTheme = list.get(themes, themeIdx);
+
+  call(this, "generate_content", roomId, selectedTheme);
+
   // Track the room
   const activeRooms = (this["active_rooms"] as number[]) ?? [];
   list.push(activeRooms, roomId);
@@ -95,7 +104,7 @@ export function manager_create_room() {
   return roomId;
 }
 
-export function manager_cleanup_loop() {
+export function manager_cleanup_loop(this: Entity) {
   // 1. Find all entities managed by this manager
   // In a real DB we'd query by prop, but here we might need to track them in a list or scan.
   // For Stage 1 failure-resistance, let's just scan 'hotel_entities' list if we maintain one,
@@ -128,7 +137,7 @@ export function manager_cleanup_loop() {
     // Actually, 'on_leave' should update 'last_occupied'.
     // If 'last_occupied' is > X seconds ago AND empty, destroy.
 
-    const lastOccupied = (room["last_occupied"] as number) ?? 0;
+    const lastOccupied = (room["last_occupied"] as string) ?? time.now();
     const isEmpty = list.len(contents) === 0; // Very naive for now
 
     if (
@@ -145,6 +154,71 @@ export function manager_cleanup_loop() {
 
   std.call_method(controlCap, "update", this.id, { active_rooms: stillActiveRooms });
   schedule("cleanup_loop", [], 5000);
+}
+
+export function manager_generate_content() {
+  const roomId = std.arg<number>(0);
+  const selectedTheme = std.arg<string>(1) ?? "modern";
+
+  const createCap = get_capability("sys.create", {});
+  const controlCap = get_capability("entity.control", { "*": true });
+
+  if (!createCap || !controlCap) {
+    return;
+  }
+
+  // 1. Apply Theme Description
+  let themeDesc = "";
+  if (selectedTheme === "modern") {
+    themeDesc = "Sleek lines and minimalist decor.";
+  } else if (selectedTheme === "victorian") {
+    themeDesc = "Ornate woodwork and heavy drapes.";
+  } else if (selectedTheme === "scifi") {
+    themeDesc = "Glowing panels and metallic surfaces.";
+  } else if (selectedTheme === "rustic") {
+    themeDesc = "Rough-hewn wood and cozy fabrics.";
+  }
+
+  const room = entity(roomId);
+  if (room) {
+    std.call_method(controlCap, "update", roomId, {
+      description: `${room["description"]} It has a ${selectedTheme} style. ${themeDesc}`,
+      theme: selectedTheme,
+    });
+  }
+
+  // 2. Generate Furniture
+  const furnitureCount = random.between(2, 5); // 2 to 5 items
+
+  for (let idx = 0; idx < furnitureCount; idx += 1) {
+    // Pick random furniture
+    const common = ["Chair", "Table", "Lamp", "Rug"];
+    let specific: string[] = [];
+    if (selectedTheme === "modern") {
+      specific = ["Glass Desk", "Beanbag"];
+    } else if (selectedTheme === "victorian") {
+      specific = ["Armchair", "Grandfather Clock"];
+    } else if (selectedTheme === "scifi") {
+      specific = ["Holo-Projector", "Pod"];
+    } else if (selectedTheme === "rustic") {
+      specific = ["Rocking Chair", "Fireplace"];
+    }
+
+    const allOptions = list.concat(common, specific);
+    const count = list.len(allOptions);
+    const maxIdx = count - 1;
+    const idx = random.between(0, maxIdx);
+    const furnitureType = list.get(allOptions, idx) as string;
+
+    const itemName = `${selectedTheme} ${furnitureType}`;
+
+    std.call_method(createCap, "create", {
+      adjectives: [`style:${selectedTheme}`, `type:${furnitureType}`],
+      description: `A ${selectedTheme}-style ${furnitureType}.`,
+      location: roomId,
+      name: itemName,
+    });
+  }
 }
 
 export function manager_gc() {
