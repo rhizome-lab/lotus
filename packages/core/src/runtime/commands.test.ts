@@ -94,11 +94,8 @@ describe("Player Commands", () => {
     await runCommand("look", ["Box"]);
     expect(sentMessages.length).toBeGreaterThan(0);
     // Inspect payload assuming it's { entities: [...] }
-    const msg = sentMessages[0];
+    const [msg] = sentMessages;
     expect(msg).toBeDefined();
-    // Sometimes it pushes the list directly? Check send implementation.
-    // implementation: if payload.entities, push(payload.entities).
-    // So sentMessages[0] IS the array.
     expect(Array.isArray(msg)).toBe(true);
     expect(msg.length).toBeGreaterThan(0);
     expect(msg[0].name).toEqual("Box");
@@ -152,7 +149,6 @@ describe("Player Commands", () => {
     await runCommand("go", ["north"]);
 
     const updatedPlayer = getEntity(player.id)!;
-    console.log("DEBUG: Sent Messages for Move:", JSON.stringify(sentMessages, null, 2));
     expect(updatedPlayer["location"]).toBe(otherRoomId);
 
     // Find the update message (array of entities)
@@ -203,9 +199,6 @@ describe("Player Commands", () => {
     await runCommand("set", ["Stone", "weight", 20]);
 
     const updatedItem = getEntity(itemId)!;
-    if (updatedItem["weight"] !== 20) {
-      console.log("DEBUG: Sent messages:", JSON.stringify(sentMessages, null, 2));
-    }
     expect(updatedItem["weight"]).toBe(20);
   });
 });
@@ -240,12 +233,6 @@ describe("Recursive Move Check", () => {
       )
       .get();
 
-    console.log("DEBUG: Player Base:", playerBase);
-    if (!playerBase) {
-      const all = db.query("SELECT json_extract(props, '$.name') as name FROM entities").all();
-      console.log("DEBUG: All Entities:", all);
-    }
-
     // Create a room
     const voidEntity = db
       .query<{ id: number }, []>(
@@ -255,9 +242,6 @@ describe("Recursive Move Check", () => {
     if (!voidEntity) {
       throw new Error("Void not found");
     }
-    console.log("DEBUG: Void Entity:", voidEntity);
-    const freshVoid = getEntity(voidEntity.id);
-    console.log("DEBUG: Void Prototype:", freshVoid?.prototype_id);
 
     const callerId = createEntity({ location: voidEntity.id, name: "Player" }, playerBase!.id);
     caller = getEntity(callerId)!;

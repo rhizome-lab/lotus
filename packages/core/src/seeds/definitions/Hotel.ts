@@ -196,6 +196,11 @@ export class HotelManager extends EntityBase {
       return;
     }
 
+    const room = entity(roomId);
+    if (!room) {
+      return;
+    }
+
     // 1. Apply Theme Description
     let themeDesc = "";
     if (selectedTheme === "modern") {
@@ -208,19 +213,20 @@ export class HotelManager extends EntityBase {
       themeDesc = "Rough-hewn wood and cozy fabrics.";
     }
 
-    const room = entity(roomId);
-    if (room) {
-      controlCap.update(roomId, {
-        description: `${room["description"]} It has a ${selectedTheme} style. ${themeDesc}`,
-        theme: selectedTheme,
-      });
-    }
+    controlCap.update(roomId, {
+      description: `${room["description"]} It has a ${selectedTheme} style. ${themeDesc}`,
+      theme: selectedTheme,
+    });
 
     // 2. Generate Furniture
     const furnitureCount = random.between(2, 5); // 2 to 5 items
     // Pick random furniture
     const common = ["Chair", "Table", "Lamp", "Rug"];
     let idx = 0;
+
+    // Collect new item IDs here
+    const newItems: number[] = [];
+
     while (idx < furnitureCount) {
       let specific: string[] = [];
       if (selectedTheme === "modern") {
@@ -241,23 +247,21 @@ export class HotelManager extends EntityBase {
 
       const itemName = `${selectedTheme} ${furnitureType}`;
 
-      // Manual location handling: Add furniture to room contents
-      if (room) {
-        const contents = (room["contents"] as number[]) ?? [];
-        // Workaround for transpiler issue with const logic?
-        const newItemId = createCap.create({
-          adjectives: [`style:${selectedTheme}`, `type:${furnitureType}`],
-          description: `A ${selectedTheme}-style ${furnitureType}.`,
-          location: roomId,
-          name: itemName,
-        });
+      const newItemId = createCap.create({
+        adjectives: [`style:${selectedTheme}`, `type:${furnitureType}`],
+        description: `A ${selectedTheme}-style ${furnitureType}.`,
+        location: roomId,
+        name: itemName,
+      });
 
-        const newContents = list.concat(contents, [newItemId]);
-        controlCap.update(roomId, { contents: newContents });
-        send("message", `DEBUG: Added item to room ${roomId}`);
-      }
+      list.push(newItems, newItemId);
       idx += 1;
     }
+
+    // Batch update contents once
+    const contents = (room["contents"] as number[]) ?? [];
+    const newContents = list.concat(contents, newItems);
+    controlCap.update(roomId, { contents: newContents });
   }
 
   gc() {

@@ -184,20 +184,16 @@ export class Player extends EntityBase {
     const room = entity(caller.location!) as EntityBase;
     const roomId = room.id;
     if (!roomId) {
-      send("message", "DEBUG: Room missing");
+      send("message", "Unknown room");
       return;
     }
     if (!itemId) {
-      send("message", "DEBUG: itemId missing");
+      send("message", "Unknown item");
       return;
     }
     const contents = room.contents ?? [];
     const newContents = list.concat(contents, [itemId]);
     controlCap.update(roomId, { contents: newContents });
-    send(
-      "message",
-      `DEBUG: Added ${itemId} to room ${roomId} contents. New size: ${list.len(newContents)}`,
-    );
     send("message", `You create ${name}.`);
     call(std.caller(), "look");
     return itemId;
