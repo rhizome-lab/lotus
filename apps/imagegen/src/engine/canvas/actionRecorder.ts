@@ -1,17 +1,18 @@
 export type CanvasAction =
-  | { type: "layer.create"; layerId: string; name: string }
-  | { type: "layer.remove"; layerId: string }
-  | { type: "layer.update"; layerId: string; updates: any }
-  | { type: "layer.setActive"; layerId: string }
-  | { type: "draw.start"; x: number; y: number; tool: string; color: string; size: number }
+  | { layerId: string; name: string; type: "layer.create" }
+  | { controlType: string; layerId: string; name: string; type: "layer.create_control" }
+  | { layerId: string; type: "layer.remove" }
+  | { layerId: string; updates: any; type: "layer.update" }
+  | { layerId: string; type: "layer.setActive" }
+  | { color: string; size: number; tool: string; type: "draw.start"; x: number; y: number }
   | { type: "draw.move"; x: number; y: number }
   | { type: "draw.end" }
   | {
-      type: "generate";
-      prompt: string;
-      negativePrompt?: string;
-      bbox: { x: number; y: number; width: number; height: number };
+      bbox: { height: number; width: number; x: number; y: number };
       layerId: string;
+      negativePrompt?: string;
+      prompt: string;
+      type: "generate";
     };
 
 export function actionsToViwoScript(actions: CanvasAction[]): string {

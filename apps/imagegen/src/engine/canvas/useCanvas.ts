@@ -4,6 +4,8 @@ import { createSignal } from "solid-js";
 export interface Layer {
   id: string;
   name: string;
+  type: "raster" | "control";
+  controlType?: string;
   visible: boolean;
   opacity: number;
   canvas: HTMLCanvasElement;
@@ -32,7 +34,7 @@ export function useCanvas(width: number, height: number) {
   let lastX = 0;
   let lastY = 0;
 
-  function createLayer(name: string): Layer {
+  function createLayer(name: string, type: "raster" | "control" = "raster"): Layer {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
@@ -43,6 +45,7 @@ export function useCanvas(width: number, height: number) {
       locked: false,
       name,
       opacity: 1,
+      type,
       visible: true,
     };
 
@@ -54,6 +57,18 @@ export function useCanvas(width: number, height: number) {
     setLayers([...layers(), layer]);
     setActiveLayerId(layer.id);
     setActions([...actions(), { layerId: layer.id, name, type: "layer.create" }]);
+    return layer.id;
+  }
+
+  function addControlLayer(name: string, controlType: string) {
+    const layer = createLayer(name, "control");
+    layer.controlType = controlType;
+    setLayers([...layers(), layer]);
+    setActiveLayerId(layer.id);
+    setActions([
+      ...actions(),
+      { controlType, layerId: layer.id, name, type: "layer.create_control" },
+    ]);
     return layer.id;
   }
 
@@ -90,7 +105,19 @@ export function useCanvas(width: number, height: number) {
       }
 
       ctx.globalAlpha = layer.opacity;
-      ctx.drawImage(layer.canvas, 0, 0);
+
+      // Apply blue tint to control layers for visual distinction
+      if (layer.type === "control") {
+        ctx.save();
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(layer.canvas, 0, 0);
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = "rgba(100, 150, 255, 0.2)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+      } else {
+        ctx.drawImage(layer.canvas, 0, 0);
+      }
     }
 
     ctx.globalAlpha = 1;
@@ -200,6 +227,7 @@ export function useCanvas(width: number, height: number) {
   return {
     actions,
     activeLayerId,
+    addControlLayer,
     addLayer,
     bbox,
     bboxDraft,

@@ -11,16 +11,32 @@ function LayerMode() {
 
   const [prompt, setPrompt] = createSignal("");
   const [negativePrompt, setNegativePrompt] = createSignal("");
+  const [controlTypes, setControlTypes] = createSignal<
+    { type: string; label: string; description: string }[]
+  >([]);
 
   // oxlint-disable-next-line no-unassigned-vars
   let canvasRef: HTMLCanvasElement | undefined;
   // oxlint-disable-next-line no-unassigned-vars
   let overlayRef: HTMLCanvasElement | undefined;
 
-  onMount(() => {
+  onMount(async () => {
     canvas.addLayer("Background");
     if (canvasRef) {
       canvas.setCompositeCanvas(canvasRef);
+    }
+
+    // Fetch available ControlNet types
+    try {
+      const capability = await sendRpc("get_capability", { type: "controlnet.generate" });
+      const types = await sendRpc("std.call_method", {
+        args: [],
+        method: "getAvailableTypes",
+        object: capability,
+      });
+      setControlTypes(types);
+    } catch (error) {
+      console.error("Failed to fetch ControlNet types:", error);
     }
   });
 
@@ -235,6 +251,29 @@ function LayerMode() {
           + Add Layer
         </button>
 
+        <Show when={controlTypes().length > 0}>
+          <select
+            class="glass-select"
+            onChange={(e) => {
+              const type = e.currentTarget.value;
+              if (type) {
+                const typeInfo = controlTypes().find((ct) => ct.type === type);
+                canvas.addControlLayer(typeInfo?.label ?? "Control", type);
+                e.currentTarget.value = ""; // Reset selection
+              }
+            }}
+          >
+            <option value="">+ Add Control Layer</option>
+            <For each={controlTypes()}>
+              {(ct) => (
+                <option value={ct.type} title={ct.description}>
+                  {ct.label}
+                </option>
+              )}
+            </For>
+          </select>
+        </Show>
+
         <button
           class="glass-button"
           onClick={() => exportAsViwoScript(canvas.actions())}
@@ -252,7 +291,11 @@ function LayerMode() {
                 }`}
                 onClick={() => canvas.setActiveLayerId(layer.id)}
               >
-                <span>{layer.name}</span>
+                <span>
+                  {layer.type === "control" ? "🎛️ " : ""}
+                  {layer.name}
+                  {layer.controlType ? ` (${layer.controlType})` : ""}
+                </span>
                 <div class="layer-mode__layer-controls">
                   <button
                     onClick={(e) => {

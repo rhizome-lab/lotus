@@ -21,9 +21,14 @@ from pydantic import BaseModel
 import base64
 from io import BytesIO
 
+from controlnet import ControlNetManager
+
 
 # Pipeline cache to avoid reloading models
 pipeline_cache: dict[str, DiffusionPipeline] = {}
+
+# ControlNet manager
+controlnet_manager = ControlNetManager()
 
 
 @asynccontextmanager
@@ -107,10 +112,147 @@ def image_to_base64(img: Image.Image) -> str:
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
+def base64_to_image(b64: str) -> Image.Image:
+    """Convert base64 string to PIL Image."""
+    image_bytes = base64.b64decode(b64)
+    return Image.open(BytesIO(image_bytes))
+
+
+class ControlNetPreprocessRequest(BaseModel):
+    """Request model for ControlNet preprocessing."""
+
+    image: str  # base64 encoded
+    type: str  # control type (canny, depth, etc.)
+
+
+class ControlNetGenerateRequest(BaseModel):
+    """Request model for ControlNet generation."""
+
+    prompt: str
+    control_image: str  # base64 encoded
+    type: str  # control type
+    model_id: str = "runwayml/stable-diffusion-v1-5"
+    strength: float = 1.0
+    width: int | None = None
+    height: int | None = None
+    num_inference_steps: int = 50
+    guidance_scale: float = 7.5
+    negative_prompt: str | None = None
+    seed: int | None = None
+
+
+class ControlTypesResponse(BaseModel):
+    """Response model for available control types."""
+
+    types: list[dict[str, str]]
+
+
 @app.get("/health")
 async def health() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok", "device": "cuda" if torch.cuda.is_available() else "cpu"}
+
+
+@app.get("/controlnet/types", response_model=ControlTypesResponse)
+async def get_controlnet_types() -> ControlTypesResponse:
+    """
+    Get available ControlNet types with metadata.
+
+    Returns:
+        ControlTypesResponse with list of control types
+    """
+    types = controlnet_manager.get_available_types()
+    return ControlTypesResponse(types=types)
+
+
+@app.post("/controlnet/preprocess", response_model=ImageResponse)
+async def controlnet_preprocess(req: ControlNetPreprocessRequest) -> ImageResponse:
+    """
+    Preprocess an image for ControlNet.
+
+    Args:
+        req: Request containing base64 image and control type
+
+    Returns:
+        ImageResponse with preprocessed control image
+
+    Raises:
+        HTTPException: If preprocessing fails
+    """
+    try:
+        # Decode input image
+        input_image = base64_to_image(req.image)
+
+        # Preprocess
+        control_image = controlnet_manager.preprocess(input_image, req.type)
+
+        # Convert to base64
+        image_b64 = image_to_base64(control_image)
+
+        return ImageResponse(
+            image=image_b64,
+            width=control_image.width,
+            height=control_image.height,
+            format="png",
+        )
+
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=f"Invalid control type: {error!s}") from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=500, detail=f"Preprocessing failed: {error!s}"
+        ) from error
+
+
+@app.post("/controlnet/generate", response_model=ImageResponse)
+async def controlnet_generate(req: ControlNetGenerateRequest) -> ImageResponse:
+    """
+    Generate an image with ControlNet guidance.
+
+    Args:
+        req: Request containing prompt, control image, and parameters
+
+    Returns:
+        ImageResponse with generated image
+
+    Raises:
+        HTTPException: If generation fails
+    """
+    try:
+        # Decode control image
+        control_image = base64_to_image(req.control_image)
+
+        # Generate
+        result_image = controlnet_manager.generate(
+            prompt=req.prompt,
+            control_image=control_image,
+            control_type=req.type,
+            base_model=req.model_id,
+            strength=req.strength,
+            width=req.width,
+            height=req.height,
+            num_inference_steps=req.num_inference_steps,
+            guidance_scale=req.guidance_scale,
+            negative_prompt=req.negative_prompt,
+            seed=req.seed,
+        )
+
+        # Convert to base64
+        image_b64 = image_to_base64(result_image)
+
+        return ImageResponse(
+            image=image_b64,
+            width=result_image.width,
+            height=result_image.height,
+            format="png",
+        )
+
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=f"Invalid request: {error!s}") from error
+    except Exception as error:
+        raise HTTPException(
+            status_code=500, detail=f"Generation failed: {error!s}"
+        ) from error
 
 
 @app.post("/text-to-image", response_model=ImageResponse)
