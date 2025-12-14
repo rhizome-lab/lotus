@@ -55,22 +55,6 @@ export class Player extends EntityBase {
   }
 
   dig(direction: string) {
-    // Note: direction is arg 0. But extracting variable args is tricky in class methods if not explicit?
-    // Wait, transpile unwrap logic should handle named args.
-    // If we define dig(direction: string), arg(0) is mapped to direction.
-    // The original code used `std.args()` to get rest args.
-    // We can define `dig(direction: string, ...rest: any[])`?
-    // Our transpiler likely just maps defined args.
-    // We can access `std.arg` directly if needed inside method body for extra args,
-    // OR we can rely on standard library `std.args()`.
-    // The original code: `const roomName = str.join(list.slice(std.args(), 1), " ");`
-    // This implies variable arguments.
-    // Our new transpiler logic: `const direction = std.arg(0)`.
-    // `std.args()` returns ALL args.
-    // So `direction` will be effectively `arg(0)`.
-
-    // However, existing implementation used: `const direction = std.arg(0);`
-
     const roomName = str.join(list.slice(std.args(), 1), " ");
 
     if (!direction) {
@@ -94,38 +78,6 @@ export class Player extends EntityBase {
         exitData["direction"] = direction;
         exitData["destination"] = newRoomId;
         const exitId = createCap.create(exitData);
-
-        // ENTITY_BASE_ID_PLACEHOLDER needs to be handled.
-        // In the original file it was an injected number by string replacement.
-        // Here we are compiling TypeScript. We can't easily inject it AFTER compile unless we return string code.
-        // BUT wait, `transpile` returns S-expression.
-        // `EntityBase.ts` and `Player.ts` are compiled at runtime by `loader.ts`?
-        // No, `loader.ts` reads the file source and transpiles it.
-        // It's still using `transpile()`.
-        // So `ENTITY_BASE_ID_PLACEHOLDER` will be transpiled as a variable.
-        // We probably want to pass `EntityBase` ID into the constructor or closure?
-        // Or we can rely on Global `entity_base_id`?
-        // Or we can assume we will string-replace it in the loader potentially.
-        // The original code `transpile(extractVerb(...).replace(...))` did string replacement on source.
-        // We can do the same in `loader.ts` if we define placeholders.
-        // But `loader.ts` parses AST.
-        // If we leave `ENTITY_BASE_ID_PLACEHOLDER` as a global variable, the transpiler emits `std.var("ENTITY_BASE_ID_PLACEHOLDER")` (or similar).
-        // If we want it to be a literal number, we need to replace it in the emitted code OR source.
-        // Let's assume for now we will string replace in `seed.ts` logic on the emitted code string?
-        // Actually, `loader.ts` returns `ScriptValue`. Replacing in JSON structure is hard.
-        // Ideally we resolve it at runtime?
-        // But `EntityBase` is created during seed. It has a dynamic ID.
-        // Maybe we store `EntityBase` ID in a known place? Like System?
-        // OR we just use `call(system, "get_entity_base_id")`?
-        // That seems cleaner.
-        // But for now to match exactly...
-        // Let's assume I will replace the variable in `seed.ts` after loading.
-        // OR I can use the same string replacement trick if I expose the source code from loader?
-        // Loader returns `Map<string, ScriptValue>`.
-        // I can change loader to perform replacements?
-        // Let's stick to the placeholder and I'll handle replacement in `seed.ts`.
-        // But I need to ensure `ENTITY_BASE_ID_PLACEHOLDER` is valid TS for `ts.createSourceFile`.
-        // `declare const` works for that.
 
         controlCap.setPrototype(newRoomId, ENTITY_BASE_ID_PLACEHOLDER);
 
@@ -388,11 +340,10 @@ export class Player extends EntityBase {
     const quests = (player["quests"] as Record<string, any>) ?? {};
 
     if (list.len(obj.keys(quests)) === 0) {
-      send("message", "No active quests.");
-      return;
+      return { quests: [] };
     }
 
-    let output = "Quest Log:\n";
+    const questList: any[] = [];
 
     for (const qId of obj.keys(quests)) {
       const qState = quests[qId];
@@ -403,8 +354,7 @@ export class Player extends EntityBase {
       const questEnt = entity(std.int(qId));
       const structure = call(questEnt, "get_structure") as any;
 
-      output = str.concat(output, `\n[${questEnt["name"]}]\n`);
-
+      const tasks: any[] = [];
       const stack: any[] = [{ depth: 0, id: structure.id }];
 
       while (list.len(stack) > 0) {
@@ -412,21 +362,13 @@ export class Player extends EntityBase {
         const node = call(questEnt, "get_node", item.id) as any;
         const taskState = qState.tasks[item.id] || { status: "locked" };
 
-        let indent = "";
-        let idx = 0;
-        while (idx < item.depth) {
-          indent = str.concat(indent, "  ");
-          idx += 1;
-        }
-
-        let mark = "[ ]";
-        if (taskState.status === "completed") {
-          mark = "[x]";
-        } else if (taskState.status === "active") {
-          mark = "[>]";
-        }
-
-        output = str.concat(output, `${indent}${mark} ${node.description}\n`);
+        list.push(tasks, {
+          depth: item.depth,
+          description: node.description,
+          id: item.id,
+          status: taskState.status,
+          type: node.type,
+        });
 
         if (node.children) {
           let idx = list.len(node.children) - 1;
@@ -436,8 +378,16 @@ export class Player extends EntityBase {
           }
         }
       }
+
+      list.push(questList, {
+        id: std.int(qId),
+        name: questEnt["name"],
+        started_at: qState.started_at,
+        status: qState.status,
+        tasks: tasks,
+      });
     }
 
-    call(player, "tell", output);
+    return { quests: questList };
   }
 }
