@@ -315,12 +315,12 @@ No changes needed! Blocks auto-generate from capability metadata:
 
 ### Acceptance Criteria
 
-- [ ] Load ControlNet models (canny, depth, pose, scribble)
-- [ ] Apply ControlNet in generation with strength control
-- [ ] Preprocessor visualization in Layer Mode
-- [ ] Control layers render with visual distinction
-- [ ] Multiple control layers in single generation
-- [ ] Auto-generated ControlNet blocks in Blocks Mode
+- [x] Load ControlNet models (canny, depth, pose, scribble)
+- [x] Apply ControlNet in generation with strength control
+- [x] Preprocessor visualization in Layer Mode
+- [x] Control layers render with visual distinction
+- [x] Multiple control layers in single generation
+- [x] Auto-generated ControlNet blocks in Blocks Mode
 
 ### Testing
 
@@ -499,13 +499,13 @@ async function inpaintMasked(layerId: string, maskLayerId: string) {
 
 ### Acceptance Criteria
 
-- [ ] Paint mask on layer
-- [ ] Inpaint masked area with prompt
-- [ ] Outpaint (extend canvas bounds)
-- [ ] Upscale 2x/4x with ESRGAN/RealESRGAN
-- [ ] Face restoration
-- [ ] Mask visualization (red overlay)
-- [ ] Auto-generated inpaint/upscale blocks
+- [x] Paint mask on layer
+- [x] Inpaint masked area with prompt
+- [x] Outpaint (extend canvas bounds)
+- [x] Upscale 2x/4x with ESRGAN/RealESRGAN
+- [x] Face restoration
+- [x] Mask visualization (red overlay)
+- [x] Auto-generated inpaint/upscale blocks
 
 ### Testing
 
@@ -513,6 +513,141 @@ async function inpaintMasked(layerId: string, maskLayerId: string) {
 2. Click "Inpaint" → regenerates masked area
 3. Select image → Upscale 2x → verify quality
 4. Portrait → Restore Faces → verify improvement
+
+---
+
+## Phase 3.5: Advanced Parameters & ComfyUI-Level Features ✅ **COMPLETE**
+
+### Overview
+
+Enhanced Phase 3 with runtime parameter passing, SDXL multi-prompt support, compute limits, traditional upscaling methods, and hybrid img2img upscaling to achieve ComfyUI-level flexibility.
+
+### Features Implemented
+
+#### Runtime Parameter Passing ✅
+
+- **No capability minting required** - All parameters passed via method args
+- Params object as 4th argument to capability methods
+- Dynamic model selection, steps, CFG, strength, etc.
+
+#### SDXL Multi-Prompt Support ✅
+
+- `prompt_2` and `negative_prompt_2` for dual text encoders
+- Auto-detection based on model ID (checks for "xl")
+- Smart UI with optional toggle (hidden by default)
+- Auto-fills from primary prompt when enabled
+- Applies to both positive and negative conditioning
+
+#### Compute Budget System ✅
+
+- Formula: `(width × height × steps) / 1,000,000`
+- Validation before generation
+- Display in UI with real-time cost calculation
+- Prevents excessive resource usage
+
+#### Traditional Upscaling Methods ✅
+
+- **5 interpolation methods:**
+  - `lanczos` - High quality (default)
+  - `bicubic` - Better quality
+  - `bilinear` - Basic smoothing
+  - `nearest` - Fast, pixelated
+  - `area` - CV2 INTER_AREA
+- Fast, no diffusion required
+- 2x and 4x factor support
+
+#### Hybrid Img2Img Upscaling ✅
+
+- **ComfyUI-equivalent quality**
+- Step 1: Traditional upscale (fast)
+- Step 2: img2img refinement with low denoise (0.2-0.4)
+- Configurable denoise strength
+- Uses existing SD models
+
+#### Advanced UI Controls ✅
+
+- Model selection dropdown (SD 1.5, SDXL, Inpaint variants)
+- Collapsible advanced parameters panel
+- Strength, steps, CFG sliders
+- Upscale mode selector (Fast/Hybrid/ESRGAN)
+- Method selector for traditional upscaling
+- Factor selector (2x/4x)
+- Compute cost display
+
+### Backend Changes
+
+**Python Files:**
+
+- `plugins/diffusers/server/inpaint.py` - Multi-prompts, compute validation
+- `plugins/diffusers/server/upscale_traditional.py` - NEW: 5 traditional methods + hybrid upscaler
+- `plugins/diffusers/server/main.py` - Updated request models, 2 new endpoints
+
+**TypeScript Files:**
+
+- `plugins/diffusers/src/inpaint.ts` - Runtime params via params object
+- `plugins/diffusers/src/upscale.ts` - Added `upscaleTraditional()` and `upscaleImg2Img()`
+
+**Frontend Files:**
+
+- `apps/imagegen/src/modes/LayerMode.tsx` - Full UI with smart multi-prompts
+
+### API Enhancements
+
+**New Endpoints:**
+
+- `POST /upscale/traditional` - Fast interpolation upscaling
+- `POST /upscale/img2img` - Hybrid upscale with refinement
+
+**Updated Endpoints:**
+
+- `/inpaint` - Now accepts `prompt_2`, `negative_prompt_2`, `max_compute`
+- `/outpaint` - Same additions
+
+### Usage Examples
+
+```typescript
+// Inpaint with SDXL multi-prompts
+await sendRpc("std.call_method", {
+  object: inpaintCap,
+  method: "inpaint",
+  args: [
+    imageB64,
+    maskB64,
+    "beautiful landscape",
+    {
+      model_id: "stabilityai/stable-diffusion-xl-inpainting",
+      prompt_2: "masterpiece, ultra detailed",
+      negative_prompt_2: "low quality, artifacts",
+      num_inference_steps: 50,
+      guidance_scale: 7.5,
+      max_compute: 100,
+    },
+  ],
+});
+
+// Hybrid upscaling (ComfyUI quality)
+await sendRpc("std.call_method", {
+  object: upscaleCap,
+  method: "upscaleImg2Img",
+  args: [
+    imageB64,
+    "high resolution, sharp",
+    {
+      factor: 2,
+      denoise_strength: 0.3,
+      upscale_method: "lanczos",
+    },
+  ],
+});
+```
+
+### Key Achievements
+
+✅ **ComfyUI Feature Parity** - Matches quality and flexibility  
+✅ **Smart Defaults** - Multi-prompts auto-fill, minimize clutter  
+✅ **Runtime Flexibility** - No capability minting required  
+✅ **Performance** - Traditional upscale = instant  
+✅ **Quality** - Hybrid upscale = best of both worlds
 
 ---
 
@@ -865,121 +1000,6 @@ Integrate the imagegen frontend with viwo's entity system to enable saving gener
 
 ---
 
-## Phase 6: Performance & Polish
-
-### Entity Storage
-
-```typescript
-// Save generated image as entity
-async function saveAsEntity(imageBlob: Blob, metadata: any) {
-  // Create entity with image property
-  const entityId = await sendRpc("sys.create", {
-    props: {
-      name: metadata.prompt,
-      image: await blobToBase64(imageBlob),
-      metadata: JSON.stringify(metadata),
-    },
-  });
-
-  // Attach to current room
-  if (currentRoom) {
-    await sendRpc("entity.verb", {
-      entity: currentRoom,
-      verb: "addItem",
-      args: [entityId],
-    });
-  }
-}
-```
-
-### Image Verbs
-
-```typescript
-// Define image manipulation verbs
-export const imageVerbs = {
-  async transform(ctx, rotation: number, scale: number) {
-    // Transform image
-  },
-
-  async filter(ctx, type: "blur" | "sharpen" | "grayscale") {
-    // Apply filter
-  },
-
-  async composite(ctx, overlayImage: Buffer, x: number, y: number) {
-    // Composite images
-  },
-};
-```
-
----
-
-## Phase 6: Performance & Polish
-
-### Service Worker
-
-```typescript
-// apps/imagegen/public/sw.js
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open("imagegen-v1").then((cache) => {
-      return cache.addAll([
-        "/",
-        "/index.html",
-        "/src/main.tsx",
-        // ... assets
-      ]);
-    }),
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  // Cache-first for assets
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    }),
-  );
-});
-```
-
-### Multi-Format Metadata
-
-```typescript
-// packages/image-io/src/index.ts
-export async function embedMetadata(
-  image: Buffer,
-  format: "png" | "jpeg" | "webp",
-  metadata: object,
-): Promise<Buffer> {
-  if (format === "png") {
-    return embedPngMetadata(image, metadata);
-  } else if (format === "jpeg") {
-    return embedExif(image, metadata);
-  } else {
-    return embedWebpExif(image, metadata);
-  }
-}
-
-export async function convertImage(
-  image: Buffer,
-  from: string,
-  to: string,
-  options: { quality?: number; preserveMetadata?: boolean },
-): Promise<Buffer> {
-  // Use sharp or similar
-  const metadata = options.preserveMetadata ? await readMetadata(image, from) : null;
-
-  const converted = await sharp(image).toFormat(to, { quality: options.quality }).toBuffer();
-
-  if (metadata) {
-    return await embedMetadata(converted, to, metadata);
-  }
-  return converted;
-}
-```
-
----
-
 ## Technical Reference
 
 ### Key Files
@@ -1003,143 +1023,6 @@ export async function convertImage(
 - **Build:** `bun run build`
 - **Viwo server:** `ws://localhost:8080`
 - **Python server:** `http://localhost:8001` (for diffusers)
-
----
-
-## Phase 3.5: Advanced Parameters & ComfyUI-Level Features ✅ COMPLETE
-
-### Overview
-
-Enhanced Phase 3 with runtime parameter passing, SDXL multi-prompt support, compute limits, traditional upscaling methods, and hybrid img2img upscaling to achieve ComfyUI-level flexibility.
-
-### Features Implemented
-
-#### Runtime Parameter Passing ✅
-
-- **No capability minting required** - All parameters passed via method args
-- Params object as 4th argument to capability methods
-- Dynamic model selection, steps, CFG, strength, etc.
-
-#### SDXL Multi-Prompt Support ✅
-
-- `prompt_2` and `negative_prompt_2` for dual text encoders
-- Auto-detection based on model ID (checks for "xl")
-- Smart UI with optional toggle (hidden by default)
-- Auto-fills from primary prompt when enabled
-- Applies to both positive and negative conditioning
-
-#### Compute Budget System ✅
-
-- Formula: `(width × height × steps) / 1,000,000`
-- Validation before generation
-- Display in UI with real-time cost calculation
-- Prevents excessive resource usage
-
-#### Traditional Upscaling Methods ✅
-
-- **5 interpolation methods:**
-  - `lanczos` - High quality (default)
-  - `bicubic` - Better quality
-  - `bilinear` - Basic smoothing
-  - `nearest` - Fast, pixelated
-  - `area` - CV2 INTER_AREA
-- Fast, no diffusion required
-- 2x and 4x factor support
-
-#### Hybrid Img2Img Upscaling ✅
-
-- **ComfyUI-equivalent quality**
-- Step 1: Traditional upscale (fast)
-- Step 2: img2img refinement with low denoise (0.2-0.4)
-- Configurable denoise strength
-- Uses existing SD models
-
-#### Advanced UI Controls ✅
-
-- Model selection dropdown (SD 1.5, SDXL, Inpaint variants)
-- Collapsible advanced parameters panel
-- Strength, steps, CFG sliders
-- Upscale mode selector (Fast/Hybrid/ESRGAN)
-- Method selector for traditional upscaling
-- Factor selector (2x/4x)
-- Compute cost display
-
-### Backend Changes
-
-**Python Files:**
-
-- `plugins/diffusers/server/inpaint.py` - Multi-prompts, compute validation
-- `plugins/diffusers/server/upscale_traditional.py` - NEW: 5 traditional methods + hybrid upscaler
-- `plugins/diffusers/server/main.py` - Updated request models, 2 new endpoints
-
-**TypeScript Files:**
-
-- `plugins/diffusers/src/inpaint.ts` - Runtime params via params object
-- `plugins/diffusers/src/upscale.ts` - Added `upscaleTraditional()` and `upscaleImg2Img()`
-
-**Frontend Files:**
-
-- `apps/imagegen/src/modes/LayerMode.tsx` - Full UI with smart multi-prompts
-
-### API Enhancements
-
-**New Endpoints:**
-
-- `POST /upscale/traditional` - Fast interpolation upscaling
-- `POST /upscale/img2img` - Hybrid upscale with refinement
-
-**Updated Endpoints:**
-
-- `/inpaint` - Now accepts `prompt_2`, `negative_prompt_2`, `max_compute`
-- `/outpaint` - Same additions
-
-### Usage Examples
-
-```typescript
-// Inpaint with SDXL multi-prompts
-await sendRpc("std.call_method", {
-  object: inpaintCap,
-  method: "inpaint",
-  args: [
-    imageB64,
-    maskB64,
-    "beautiful landscape",
-    {
-      model_id: "stabilityai/stable-diffusion-xl-inpainting",
-      prompt_2: "masterpiece, ultra detailed",
-      negative_prompt_2: "low quality, artifacts",
-      num_inference_steps: 50,
-      guidance_scale: 7.5,
-      max_compute: 100,
-    },
-  ],
-});
-
-// Hybrid upscaling (ComfyUI quality)
-await sendRpc("std.call_method", {
-  object: upscaleCap,
-  method: "upscaleImg2Img",
-  args: [
-    imageB64,
-    "high resolution, sharp",
-    {
-      factor: 2,
-      denoise_strength: 0.3,
-      upscale_method: "lanczos",
-    },
-  ],
-});
-```
-
-### Key Achievements
-
-✅ **ComfyUI Feature Parity** - Matches quality and flexibility  
-✅ **Smart Defaults** - Multi-prompts auto-fill, minimize clutter  
-✅ **Runtime Flexibility** - No capability minting required  
-✅ **Performance** - Traditional upscale = instant  
-✅ **Quality** - Hybrid upscale = best of both worlds
-
----
 
 ## Phase 6: Performance & Polish ✅ **COMPLETE**
 
