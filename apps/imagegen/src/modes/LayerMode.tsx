@@ -102,6 +102,10 @@ function LayerMode(props: LayerModeProps = {}) {
     return (box.width * box.height * steps()) / 1_000_000;
   };
 
+  // ControlNet state
+  const [controlNetStrength, setControlNetStrength] = createSignal(1);
+  const [preprocessingLayerId, setPreprocessingLayerId] = createSignal<string | null>(null);
+
   // oxlint-disable-next-line no-unassigned-vars
   let canvasRef: HTMLCanvasElement | undefined;
   // oxlint-disable-next-line no-unassigned-vars
@@ -207,17 +211,63 @@ function LayerMode(props: LayerModeProps = {}) {
     }
 
     try {
-      const imageUrl = await generation.generate({
-        height: Math.max(64, Math.round(box.height / 8) * 8),
-        negativePrompt: negativePrompt(),
-        prompt: prompt(),
-        width: Math.max(64, Math.round(box.width / 8) * 8),
-        x: box.x,
-        y: box.y,
-      });
+      // Check for visible control layers
+      const controlLayers = canvas.layers().filter((l) => l.type === "control" && l.visible);
 
-      const layerId = canvas.addLayer("Generated");
-      canvas.loadImageToLayer(layerId, imageUrl, box.x, box.y);
+      if (controlLayers.length > 0) {
+        // ControlNet generation
+        // For now, use the first control layer (TODO: support multiple)
+        const [controlLayer] = controlLayers;
+
+        if (!controlLayer.controlType) {
+          alert("Control layer missing type information");
+          return;
+        }
+
+        // Convert control layer canvas to blob and base64
+        const controlBlob = await canvasToBlob(controlLayer.canvas);
+        const controlB64 = await blobToBase64(controlBlob);
+
+        // Get ControlNet capability
+        const capability = await sendRpc("get_capability", { type: "controlnet.generate" });
+
+        // Build params object for ControlNet
+        const params: any = {
+          guidance_scale: cfg(),
+          num_inference_steps: steps(),
+          strength: controlNetStrength(),
+        };
+
+        if (negativePrompt()) {
+          params.negative_prompt = negativePrompt();
+        }
+
+        // Call apply method with control image and params
+        const result = await sendRpc("std.call_method", {
+          args: [controlB64, prompt(), controlLayer.controlType, params],
+          method: "apply",
+          object: capability,
+        });
+
+        // Load result to new layer
+        const layerId = canvas.addLayer("ControlNet Generated");
+        const resultImg = `data:image/png;base64,${result.image}`;
+        canvas.loadImageToLayer(layerId, resultImg, box.x, box.y);
+      } else {
+        // Standard generation (no ControlNet)
+        const imageUrl = await generation.generate({
+          cfg: cfg(),
+          height: Math.max(64, Math.round(box.height / 8) * 8),
+          negativePrompt: negativePrompt(),
+          prompt: prompt(),
+          width: Math.max(64, Math.round(box.width / 8) * 8),
+          x: box.x,
+          y: box.y,
+        });
+
+        const layerId = canvas.addLayer("Generated");
+        canvas.loadImageToLayer(layerId, imageUrl, box.x, box.y);
+      }
     } catch (error) {
       console.error("Generation error:", error);
       alert(`Generation failed: ${error}`);
@@ -409,6 +459,46 @@ function LayerMode(props: LayerModeProps = {}) {
     }
   }
 
+  async function handlePreprocess(layerId: string) {
+    const layer = canvas.layers().find((l) => l.id === layerId);
+    if (!layer || layer.type !== "control" || !layer.controlType) {
+      return;
+    }
+
+    // Scribble layers don't need preprocessing
+    if (layer.controlType === "scribble") {
+      alert("Scribble layers don't require preprocessing - draw directly!");
+      return;
+    }
+
+    try {
+      setPreprocessingLayerId(layerId);
+
+      // Convert canvas to blob and base64
+      const imageBlob = await canvasToBlob(layer.canvas);
+      const imageB64 = await blobToBase64(imageBlob);
+
+      // Get ControlNet capability
+      const capability = await sendRpc("get_capability", { type: "controlnet.generate" });
+
+      // Call preprocess method
+      const result = await sendRpc("std.call_method", {
+        args: [imageB64, layer.controlType],
+        method: "preprocess",
+        object: capability,
+      });
+
+      // Load preprocessed image back to layer
+      const resultImg = `data:image/png;base64,${result.image}`;
+      canvas.loadImageToLayer(layerId, resultImg, 0, 0);
+    } catch (error) {
+      console.error("Preprocess error:", error);
+      alert(`Preprocessing failed: ${error}`);
+    } finally {
+      setPreprocessingLayerId(null);
+    }
+  }
+
   return (
     <div class="layer-mode">
       <div class="layer-mode__sidebar">
@@ -483,6 +573,23 @@ function LayerMode(props: LayerModeProps = {}) {
               value={negativePrompt()}
               onInput={(e) => setNegativePrompt(e.currentTarget.value)}
             />
+            {/* ControlNet indicator and strength */}
+            <Show when={canvas.layers().some((l) => l.type === "control" && l.visible)}>
+              <div class="layer-mode__controlnet-info">
+                <span>🎛️ ControlNet Active</span>
+                <label>
+                  Strength: {controlNetStrength()}
+                  <input
+                    type="range"
+                    min="0"
+                    max="2"
+                    step="0.1"
+                    value={controlNetStrength()}
+                    onInput={(e) => setControlNetStrength(Number(e.currentTarget.value))}
+                  />
+                </label>
+              </div>
+            </Show>
             <button
               class="glass-button glass-button--primary"
               disabled={!prompt() || generation.generating()}
@@ -783,6 +890,19 @@ function LayerMode(props: LayerModeProps = {}) {
                   >
                     {layer.visible ? "👁️" : "🚫"}
                   </button>
+                  {/* Preprocess button for control layers */}
+                  <Show when={layer.type === "control" && layer.controlType !== "scribble"}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePreprocess(layer.id);
+                      }}
+                      disabled={preprocessingLayerId() === layer.id}
+                      title={`Preprocess ${layer.controlType} layer`}
+                    >
+                      {preprocessingLayerId() === layer.id ? "⏳" : "🎨"}
+                    </button>
+                  </Show>
                   {/* Upscale button with mode selector */}
                   <select
                     class="layer-mode__upscale-mode"

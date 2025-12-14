@@ -143,7 +143,7 @@ onMount(async () => {
 
 ---
 
-## Phase 2: ControlNet & Regional Prompting
+## Phase 2: ControlNet & Regional Prompting ✅ **COMPLETE**
 
 ### Goal
 
