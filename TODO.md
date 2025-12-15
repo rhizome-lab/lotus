@@ -12,7 +12,7 @@
 - [x] **Streaming**: Implement `streamText` support in `plugins/ai` for real-time typing effects.
 - [x] **Dynamic State Context**: Implement system for mutable personality traits and ephemeral emotions that feed into LLM context.
 - [x] **Director AI**: Meta-AI agent for pacing and environment control.
-- [ ] **Chat Tree**: SillyTavern-style chat tree for roleplay. This should not be the only way to roleplay, so it should be implemented in scripting (`seed.ts`).
+- [x] Chat Tree: SillyTavern-style chat tree for roleplay (implements in scripting `seed.ts`)he only way to roleplay, so it should be implemented in scripting (`seed.ts`).
 
 ## 3. Ubiquitous Access (Chatbot)
 

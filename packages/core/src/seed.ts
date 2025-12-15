@@ -2,6 +2,7 @@ import { addVerb, createCapability, createEntity, getEntity, updateEntity } from
 import { db } from "./db";
 import { loadEntityDefinition } from "./seeds/loader";
 import { resolve } from "node:path";
+import { seedChatTree } from "./seeds/chat_tree";
 import { seedHotel } from "./seeds/hotel";
 import { seedItems } from "./seeds/items";
 
@@ -726,6 +727,9 @@ export function seed() {
   // 12. Hotel Seed (Stage 1)
   // 12. Hotel Seed (Stage 1)
   seedHotel(voidId, lobbyId);
+
+  // 13. Chat Tree Seed
+  seedChatTree(voidId, playerId);
 
   if (process.env.NODE_ENV !== "test") {
     console.log("Seeding complete!");
