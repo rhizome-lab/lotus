@@ -1,7 +1,7 @@
 import type { ScriptValue } from "@viwo/scripting";
 import { createSignal } from "solid-js";
 
-export interface WorkflowTemplate {
+interface WorkflowTemplate {
   id: string;
   name: string;
   description: string;

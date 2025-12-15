@@ -9,6 +9,10 @@
       "entry": ["{src/index.ts,src/index.tsx,index.html}"],
       "project": ["src/**/*.{ts,tsx}"]
     },
+    "apps/imagegen": {
+      "entry": ["{src/index.tsx,index.html}", "src/engine/canvas/scriptToLayers.ts"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
     "plugins/*": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]

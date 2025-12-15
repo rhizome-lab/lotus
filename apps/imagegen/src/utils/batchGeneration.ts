@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-export interface GenerationRequest {
+interface GenerationRequest {
   prompt: string;
   negativePrompt?: string;
   width: number;
@@ -11,13 +11,13 @@ export interface GenerationRequest {
   [key: string]: unknown;
 }
 
-export interface GenerationResult {
+interface GenerationResult {
   image_url: string;
   seed?: number;
   request: GenerationRequest;
 }
 
-export interface BatchOptions {
+interface BatchOptions {
   onProgress?: (current: number, total: number) => void;
   onComplete?: (results: GenerationResult[]) => void;
   onError?: (error: Error, request: GenerationRequest, idx: number) => void;

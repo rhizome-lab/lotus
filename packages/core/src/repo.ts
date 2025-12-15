@@ -348,18 +348,6 @@ export function getCapabilities(ownerId: number): Capability[] {
   }));
 }
 
-export function getCapabilitiesByType(ownerId: number, type: string): Capability[] {
-  const rows = db
-    .query<Capability, [number, string]>(
-      "SELECT * FROM capabilities WHERE owner_id = ? AND type = ?",
-    )
-    .all(ownerId, type);
-  return rows.map((row) => ({
-    ...row,
-    params: JSON.parse(row.params as unknown as string) as Record<string, unknown>,
-  }));
-}
-
 export function getCapability(id: string): Capability | null {
   const row = db
     .query<{ id: string; owner_id: number; type: string; params: string }, [string]>(

@@ -1,7 +1,7 @@
 // oxlint-disable prefer-add-event-listener
 import { createEffect, createSignal, onCleanup } from "solid-js";
 
-export interface CapabilityMetadata {
+interface CapabilityMetadata {
   type: string;
   label: string;
   description: string;
@@ -152,7 +152,7 @@ export interface GenerationMetadata {
   [key: string]: any;
 }
 
-export interface SaveImageOptions {
+interface SaveImageOptions {
   imageName: string;
   metadata: GenerationMetadata;
   roomId?: number;

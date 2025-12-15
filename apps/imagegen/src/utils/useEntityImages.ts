@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-export interface ImageEntityData {
+interface ImageEntityData {
   id: number;
   image: string;
   image_type: string;

@@ -17,7 +17,7 @@ export interface Layer {
   locked: boolean;
 }
 
-export interface BoundingBox {
+interface BoundingBox {
   x: number;
   y: number;
   width: number;

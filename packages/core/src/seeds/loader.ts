@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { transpile } from "@viwo/scripting";
 import ts from "typescript";
 
-export interface EntityDefinition {
+interface EntityDefinition {
   props: Record<string, any>;
   verbs: Map<string, any>; // S-expressions
 }

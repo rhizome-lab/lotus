@@ -1,6 +1,7 @@
 import { For, Show, createEffect, createSignal, onMount } from "solid-js";
 import {
   type GenerationMetadata,
+  blobToBase64,
   saveImageAsEntity,
   useViwoConnection,
 } from "../utils/viwo-connection";
@@ -21,19 +22,6 @@ function canvasToBlob(canvasElement: HTMLCanvasElement): Promise<Blob> {
         reject(new Error("Failed to convert canvas to blob"));
       }
     });
-  });
-}
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.addEventListener("loadend", () => {
-      resolve((reader.result as string).replace(/^[^,+],/, ""));
-    });
-    reader.addEventListener("error", () => {
-      reject(reader.error);
-    });
-    reader.readAsDataURL(blob);
   });
 }
 

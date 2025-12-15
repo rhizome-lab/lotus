@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
 
-export interface GenerationRequest {
+interface GenerationRequest {
   prompt: string;
   negativePrompt?: string;
   width: number;

@@ -1,9 +1,12 @@
+// NOTE: This file is not currently used. It was part of Phase 4 implementation
+// for script-to-layer visualization. When ready to integrate, export the functions below.
+
 import type { Layer } from "./useCanvas";
 import type { Point } from "./operations";
 import type { ScriptValue } from "@viwo/scripting";
 
 /** Extended layer interface for script-visualized layers */
-export interface ScriptLayer extends Layer {
+interface ScriptLayer extends Layer {
   source?: "script" | "user";
   scriptNode?: ScriptValue<unknown>; // Original S-expression for re-export
   editable: boolean;
