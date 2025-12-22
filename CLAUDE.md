@@ -128,6 +128,16 @@ Register via `ctx.core.registerLibrary()` in `onLoad()`. Expose opcodes via `def
 
 Opcodes prefixed by library: `std.*`, `math.*`, `str.*`, `list.*`, `obj.*`, `time.*`, `bool.*`.
 
+Each stdlib file exports type-safe constructor functions that generate the S-expression AST. Use these in tests and TypeScript code:
+```typescript
+import * as StdLib from "../lib/std";
+import * as ListLib from "../lib/list";
+
+// Type-safe: StdLib.set("x", 10) generates ["std.set", "x", 10]
+evaluate(StdLib.set("myVar", 42), ctx);
+evaluate(ListLib.listNew(1, 2, 3), ctx);
+```
+
 ## Type Checking
 
 Uses `tsgo` (TypeScript native preview). Run `bun run check:types` or per-package `bun --filter @viwo/core check:types`.
