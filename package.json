@@ -22,7 +22,7 @@
     "dev:web": "bun --filter @viwo/web dev",
     "dev:discord": "bun --filter @viwo/discord-bot dev",
     "dev:cli": "bun --filter @viwo/admin-cli dev",
-    "dev:tui": "bun --filter @viwo/tui dev",
+    "dev:tui": "bun run --cwd apps/tui dev",
     "db:wipe": "bun --filter @viwo/core db:wipe",
     "admin": "bun --filter @viwo/admin-cli start",
     "lint": "oxlint",
