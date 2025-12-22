@@ -27,10 +27,11 @@ Agentic by default - continue through tasks unless:
 - Decision has significant irreversible consequences
 - User explicitly asked to be consulted
 
-Marathon mode (active): Continuous autonomous work through TODO.md until empty or blocked.
-- Commit after each logical unit (creates resume points)
-- Bail out if stuck in a loop (3+ retries on same error)
-- If genuinely blocked, document state in TODO.md and stop
+Fresh mode (active): Consider wrapping up when:
+- Major feature complete
+- 50+ tool calls
+- Re-reading files repeatedly (context degradation)
+- Conversation drifted across unrelated topics
 
 See `docs/session-modes.md` to switch modes.
 
