@@ -2,10 +2,7 @@
 
 ## Next Up
 
-1. Fix `std.set` silent failure - should throw if variable not in scope chain
-2. Fix stdlib opcode labels (`listEmpty`, `listGet`, etc.)
-3. Replace `Math.random()` temp variable suffix with counter in transpiler
-4. Audit kernel restrictions in `packages/core/src/runtime/lib/kernel.ts`
+(Empty - see backlog sections below)
 
 ## 1. Deep Simulation (Sandbox)
 
@@ -74,10 +71,11 @@
 
 ## Issues Found During Architecture Review
 
-- [ ] **Transpiler**: Temp variable generation uses `Math.random()` suffix - theoretically can collide (use counter instead)
+- [x] **Transpiler**: Temp variable generation uses `Math.random()` suffix - theoretically can collide (use counter instead) - FIXED: uses counter now
 - [ ] **Transpiler**: Optional chaining `obj?.method()` may lose `this` context (TODO comment at line ~1020)
-- [ ] **Interpreter**: `std.set` silently does nothing if variable not found in scope chain - should throw or create at top level
+- [x] **Interpreter**: `std.set` silently does nothing if variable not found in scope chain - should throw or create at top level - FIXED: throws ScriptError
 - [ ] **Optimizer**: Catches all errors silently with `console.error` - optimization failures not surfaced to user
-- [ ] **Stdlib**: Several opcode labels are wrong (e.g., `listEmpty` labeled "Index Of", `listGet` labeled "Insert Item")
+- [x] **Stdlib**: Several opcode labels are wrong (e.g., `listEmpty` labeled "Index Of", `listGet` labeled "Insert Item") - FIXED: corrected 10 labels
 - [ ] **Core**: Copy-on-Write pattern only helps scope forking, doesn't protect against external mutation of vars object
 - [ ] **Core**: Verb compilation cache uses `JSON.stringify(code)` as key - inefficient for large verbs
+- [ ] **Kernel**: `delegate` opcode allows privilege ESCALATION - restrictions can override parent params (see comment in kernel.ts)

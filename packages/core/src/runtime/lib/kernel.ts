@@ -17,7 +17,9 @@ export const getCapability = defineFullOpcode<[type: string, filter?: object], C
         if (capability.type !== type) {
           return false;
         }
-        // Check for wildcard
+        // UNDOCUMENTED: Wildcard capability bypasses all filter checks.
+        // A capability with { "*": true } matches ANY filter, acting as a super-capability.
+        // This should either be documented or removed - see TODO.md
         if (capability.params["*"] === true) {
           return true;
         }
@@ -122,9 +124,18 @@ export const delegate = defineFullOpcode<
       throw new ScriptError("delegate: invalid parent capability");
     }
 
+    // SECURITY ISSUE: This implementation allows privilege ESCALATION, not just restriction.
+    // Spreading restrictions OVER parentCap.params means child can OVERRIDE parent values.
+    // Example: parent { readonly: true } + restrictions { readonly: false } = { readonly: false }
+    //
+    // Proper implementation should validate each restriction is actually MORE restrictive:
+    // - Numeric: new value should be narrower range or equal
+    // - Boolean flags: if parent is restrictive, child cannot be less restrictive
+    // - Target IDs: child cannot access targets parent cannot access
+    // - Wildcards: if parent lacks wildcard, child cannot add wildcard
+    //
     // For now, delegation just creates a new capability with same type but potentially modified params
-
-    // Here we'll just merge params for simplicity of the prototype
+    // TODO: Implement proper subset validation
     const newParams = { ...parentCap.params, ...(restrictions as object) };
     const newId = createCapability(ctx.this.id, parentCap.type, newParams);
 
@@ -201,7 +212,7 @@ export const hasCapability = defineFullOpcode<
       if (capability.type !== type) {
         return false;
       }
-      // Check for wildcard
+      // Wildcard capability - see comment in getCapability
       if (capability.params["*"] === true) {
         return true;
       }
