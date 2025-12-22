@@ -14,7 +14,7 @@ const listNew_ = defineFullOpcode<[...items: unknown[]], any[]>("list.new", {
     category: "list",
     description: "Creates a new list from the provided arguments.",
     genericParameters: ["Type"],
-    label: "Length",
+    label: "New List",
     parameters: [
       {
         description: "The items to include in the list.",
@@ -59,7 +59,7 @@ export const listEmpty = defineFullOpcode<[list: readonly unknown[]], boolean>("
   metadata: {
     category: "list",
     description: "Checks if the list has no items.",
-    label: "Index Of",
+    label: "Is Empty",
     parameters: [
       {
         description: "The list to check.",
@@ -80,7 +80,7 @@ const listGet_ = defineFullOpcode<[list: readonly unknown[], index: number], any
     category: "list",
     description: "Retrieves the item at the specified index.",
     genericParameters: ["Type"],
-    label: "Insert Item",
+    label: "Get Item",
     parameters: [
       { description: "The list to access.", name: "list", type: "Type[]" },
       { description: "The index of the item.", name: "index", type: "number" },
@@ -111,7 +111,7 @@ const listSet_ = defineFullOpcode<[list: unknown[], index: number, value: unknow
       category: "list",
       description: "Sets the item at the specified index.",
       genericParameters: ["Type"],
-      label: "Shift Item",
+      label: "Set Item",
       parameters: [
         { description: "The list to modify.", name: "list", type: "Type[]" },
         { description: "The index to set.", name: "index", type: "number" },

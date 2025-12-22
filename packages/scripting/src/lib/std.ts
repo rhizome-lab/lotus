@@ -39,7 +39,7 @@ const this_ = defineFullOpcode<[], Entity>("std.this", {
   metadata: {
     category: "data",
     description: "Current entity",
-    label: "To String",
+    label: "This",
     parameters: [],
     returnType: "Entity",
     slots: [],
@@ -53,7 +53,7 @@ export const caller = defineFullOpcode<[], Entity>("std.caller", {
   metadata: {
     category: "data",
     description: "Current caller",
-    label: "To Number",
+    label: "Caller",
     parameters: [],
     returnType: "Entity",
     slots: [],
@@ -422,7 +422,7 @@ const break_ = defineFullOpcode<[], never>("std.break", {
   metadata: {
     category: "control",
     description: "Breaks out of the current loop.",
-    label: "Unless",
+    label: "Break",
     layout: "control-flow",
     parameters: [],
     returnType: "never",
@@ -494,7 +494,7 @@ export const jsonParse = defineFullOpcode<[json: string], unknown>("json.parse",
   metadata: {
     category: "data",
     description: "Parses a JSON string into a value.",
-    label: "Assign Variable",
+    label: "Parse JSON",
     parameters: [{ description: "The JSON string to parse.", name: "string", type: "string" }],
     returnType: "unknown",
     slots: [{ name: "String", type: "string" }],
@@ -565,7 +565,7 @@ const var_ = defineFullOpcode<[name: string], any>("std.var", {
   metadata: {
     category: "data",
     description: "Retrieves a local variable from the current scope.",
-    label: "Define Variable",
+    label: "Get Variable",
     parameters: [{ description: "The variable name.", name: "name", type: "string" }],
     returnType: "any",
     slots: [{ name: "Name", type: "string" }],
@@ -718,7 +718,7 @@ export const args = defineFullOpcode<[], any[]>("std.args", {
   metadata: {
     category: "data",
     description: "Get all arguments",
-    label: "Define Constant",
+    label: "Get Arguments",
     parameters: [],
     returnType: "any[]",
     slots: [],
