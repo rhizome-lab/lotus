@@ -12,7 +12,7 @@
 - [x] **Streaming**: Implement `streamText` support in `plugins/ai` for real-time typing effects.
 - [x] **Dynamic State Context**: Implement system for mutable personality traits and ephemeral emotions that feed into LLM context.
 - [x] **Director AI**: Meta-AI agent for pacing and environment control.
-- [x] Chat Tree: SillyTavern-style chat tree for roleplay (implements in scripting `seed.ts`)he only way to roleplay, so it should be implemented in scripting (`seed.ts`).
+- [x] **Chat Tree**: SillyTavern-style chat tree for roleplay (implemented in `seed.ts`).
 
 ## 3. Ubiquitous Access (Chatbot)
 
@@ -64,3 +64,13 @@
 - [ ] **AI**: Return images and audio in a usable format in `plugins/ai/src/lib.ts`
 - [ ] **AI**: Add support for specifying image size in `plugins/ai/src/lib.ts`
 - [ ] **AI**: Add support for streaming text in `plugins/ai/src/lib.ts`
+
+## Issues Found During Architecture Review
+
+- [ ] **Transpiler**: Temp variable generation uses `Math.random()` suffix - theoretically can collide (use counter instead)
+- [ ] **Transpiler**: Optional chaining `obj?.method()` may lose `this` context (TODO comment at line ~1020)
+- [ ] **Interpreter**: `std.set` silently does nothing if variable not found in scope chain - should throw or create at top level
+- [ ] **Optimizer**: Catches all errors silently with `console.error` - optimization failures not surfaced to user
+- [ ] **Stdlib**: Several opcode labels are wrong (e.g., `listEmpty` labeled "Index Of", `listGet` labeled "Insert Item")
+- [ ] **Core**: Copy-on-Write pattern only helps scope forking, doesn't protect against external mutation of vars object
+- [ ] **Core**: Verb compilation cache uses `JSON.stringify(code)` as key - inefficient for large verbs
