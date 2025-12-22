@@ -27,11 +27,10 @@ Agentic by default - continue through tasks unless:
 - Decision has significant irreversible consequences
 - User explicitly asked to be consulted
 
-Fresh mode (active): Consider wrapping up when:
-- Major feature complete
-- 50+ tool calls
-- Re-reading files repeatedly (context degradation)
-- Conversation drifted across unrelated topics
+Marathon mode (active): Continuous autonomous work through TODO.md until empty or blocked.
+- Commit after each logical unit (creates resume points)
+- Bail out if stuck in a loop (3+ retries on same error)
+- If genuinely blocked, document state in TODO.md and stop
 
 See `docs/session-modes.md` to switch modes.
 
@@ -79,66 +78,55 @@ bun run db:wipe         # Delete world.sqlite
 
 ## Architecture
 
-Viwo is a multiplayer scriptable virtual world engine. The codebase is a Bun monorepo with workspaces:
+Viwo is a multiplayer scriptable virtual world engine. See `docs/architecture.md` for deep-dive.
+
+### Execution Model ("Sandwich Architecture")
+```
+TypeScript Code → [transpiler] → S-expressions (JSON AST) → [compiler] → JavaScript
+```
+- **Top**: Developer writes TypeScript (transpiled, never executed directly)
+- **Middle**: S-expressions as stable ABI (serializable, language-agnostic, secure)
+- **Bottom**: Kernel executes via opcodes (only way to affect world state)
 
 ### Core Packages
-- **packages/scripting**: ViwoScript language - an S-expression language using JSON syntax
-  - `transpiler.ts`: TypeScript → ViwoScript AST (uses TypeScript compiler API)
-  - `compiler.ts`: ViwoScript AST → JavaScript function
-  - `interpreter.ts`: Direct AST evaluation (fallback)
-  - `decompiler.ts`: AST → source code
-  - Standard library in `lib/` (std, math, string, list, object, boolean, time)
+- **packages/scripting**: ViwoScript language (transpiler, compiler, interpreter, decompiler, optimizer)
+- **packages/core**: Game engine (entities, verbs, capabilities, scheduler, WebSocket server)
+- **packages/shared**: JSON-RPC types
+- **packages/client**: WebSocket client library
 
-- **packages/core**: Game engine runtime
-  - `index.ts`: WebSocket server, JSON-RPC handler
-  - `repo.ts`: Entity/verb CRUD operations (SQLite)
-  - `scheduler.ts`: Scheduled task execution
-  - `runtime/opcodes.ts`: Game-specific opcodes
-  - `runtime/lib/core.ts`: Core game operations (entity manipulation)
-  - `runtime/lib/kernel.ts`: Capability-restricted kernel operations
-  - `seeds/`: Entity definitions and world seed data
-
-- **packages/shared**: JSON-RPC types and shared utilities
-- **packages/client**: TypeScript client library for connecting to core
-
-### Frontend Apps
-- **apps/web**: SolidJS web client with visual script editor
-- **apps/tui**: Terminal UI
-- **apps/cli**: Command-line interface
-- **apps/discord-bot**: Discord integration
-- **apps/server**: Standalone server entry point
+### Apps
+- **apps/server**: Boots core + plugins (the server all clients connect to)
+- **apps/web**: SolidJS game client
+- **apps/tui**: Terminal UI with code editor
+- **apps/discord-bot**: Discord integration (channel↔room linking)
+- **apps/playground**: Standalone scripting sandbox
+- **apps/imagegen**: Image generation editor
 
 ### Plugins
-Plugins extend the scripting language with external capabilities:
-- **plugins/ai**: AI/LLM integration (uses Vercel AI SDK with multiple providers)
-- **plugins/vector**: Vector search with sqlite-vec
-- **plugins/sqlite**: Direct SQLite access
-- **plugins/memory**: Persistent memory for NPCs
-- **plugins/procgen**: Procedural generation
-- **plugins/diffusers**: Image generation
+Register via `ctx.core.registerLibrary()` in `onLoad()`. Expose opcodes via `defineFullOpcode()`.
+- **ai**: LLM text/image/embeddings (Vercel AI SDK)
+- **memory**: RAG with vector search (depends on ai, vector)
+- **vector**: sqlite-vec wrapper
+- **procgen**: Seeded random, simplex noise
+- **fs/net/sqlite**: Capability-gated I/O
 
-### Ops (CI/tooling)
-- **ops/lint**, **ops/format**, **ops/types**, **ops/test**: Per-package tooling
+### Key Patterns
+- **Entities**: Prototype-based inheritance, schema-free props (JSON), stored in SQLite
+- **Verbs**: S-expression scripts attached to entities, resolved via prototype chain
+- **Capabilities**: Authorization tokens with params (e.g., `entity.control { target_id: 42 }`)
+- **Lazy Opcodes**: Control flow opcodes receive raw AST, evaluate conditionally
 
 ## ViwoScript
 
-Scripts are JSON S-expressions. Example:
 ```json
-["seq",
-  ["let", "name", ["arg", 0]],
-  ["call", ["caller"], "tell", ["str.concat", "Hello, ", ["var", "name"], "!"]]
+["std.seq",
+  ["std.let", "name", ["std.arg", 0]],
+  ["send", "message", ["str.concat", "Hello, ", ["std.var", "name"], "!"]]
 ]
 ```
 
-The transpiler converts TypeScript to ViwoScript AST. The compiler then generates optimized JavaScript. Standard opcodes are prefixed by library (e.g., `std.log`, `math.add`, `str.concat`).
-
-## Key Patterns
-
-- **Entities**: Everything in the world (rooms, items, NPCs, players) is an entity stored in SQLite
-- **Verbs**: Scripts attached to entities, invoked by name
-- **Capabilities**: Permission tokens that control what scripts can do
-- **JSON-RPC**: Client-server communication protocol
+Opcodes prefixed by library: `std.*`, `math.*`, `str.*`, `list.*`, `obj.*`, `time.*`, `bool.*`.
 
 ## Type Checking
 
-Uses TypeScript 6 native preview (`tsgo`) for fast type checking. Each package has its own `check:types` script.
+Uses `tsgo` (TypeScript native preview). Run `bun run check:types` or per-package `bun --filter @viwo/core check:types`.
