@@ -2,22 +2,11 @@ import * as BooleanLib from "./lib/boolean";
 import * as ListLib from "./lib/list";
 import * as ObjectLib from "./lib/object";
 import * as StdLib from "./lib/std";
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { transpile } from "./transpiler";
 
-// Mock Math.random for deterministic temp vars
-const originalRandom = Math.random;
-beforeEach(() => {
-  let idx = 0;
-  Math.random = () => {
-    const val = idx * 0.1;
-    idx += 1;
-    return val % 1;
-  };
-});
-afterEach(() => {
-  Math.random = originalRandom;
-});
+// Temp vars are now deterministic: __tmp_1, __tmp_2, etc.
+// Counter resets at start of each transpile() call.
 
 describe("transpiler optional chaining", () => {
   test("simple optional property access", () => {
@@ -185,7 +174,7 @@ describe("transpiler optional chaining", () => {
 
   test("mixed chain a.b?.c", () => {
     const code = "a.b?.c";
-    const tmp = "__tmp_";
+    const tmp = "__tmp_1";
     const expected = StdLib.seq(
       StdLib.let(tmp, ObjectLib.objGet(StdLib.var("a"), "b")),
       StdLib.if(
@@ -209,7 +198,7 @@ describe("transpiler optional chaining", () => {
 
   test("mixed chain a.b?.[c]", () => {
     const code = "a.b?.[c]";
-    const tmp = "__tmp_";
+    const tmp = "__tmp_1";
     const expected = StdLib.seq(
       StdLib.let(tmp, ObjectLib.objGet(StdLib.var("a"), "b")),
       StdLib.if(
@@ -233,7 +222,7 @@ describe("transpiler optional chaining", () => {
 
   test("mixed chain a[b]?.c", () => {
     const code = "a[b]?.c";
-    const tmp = "__tmp_";
+    const tmp = "__tmp_1";
     const expected = StdLib.seq(
       StdLib.let(tmp, ObjectLib.objGet(StdLib.var("a"), StdLib.var("b"))),
       StdLib.if(
@@ -269,10 +258,7 @@ describe("transpiler optional chaining", () => {
 
   test("mixed chain a()?.c", () => {
     const code = "a()?.c";
-    // a() is complex, so temp var.
-    // i=0.
-    const tmp = "__tmp_"; // 0.toString(36) is "0", slice(2,8) is ""
-    // Wait, if slice returns empty, var name is "__tmp_".
+    const tmp = "__tmp_1";
 
     const expected = StdLib.seq(
       StdLib.let(tmp, StdLib.apply(StdLib.var("a"))),

@@ -14,11 +14,14 @@ const OPCODE_MAPPINGS: Record<string, string> = {
   "console.log": "std.log",
 };
 
+let tempVarCounter = 0;
+
 export function registerOpcodeMapping(tsName: string, opcode: string) {
   OPCODE_MAPPINGS[tsName] = opcode;
 }
 
 export function transpile(code: string): any {
+  tempVarCounter = 0;
   const sourceFile = ts.createSourceFile("script.ts", code, ts.ScriptTarget.Latest, true);
 
   const scope = new Set<string>();
@@ -843,7 +846,8 @@ function isSimpleNode(node: any): boolean {
 }
 
 function generateTempVar() {
-  return `__tmp_${Math.random().toString(36).slice(2, 8)}`;
+  tempVarCounter += 1;
+  return `__tmp_${tempVarCounter}`;
 }
 
 interface ChainPart {
