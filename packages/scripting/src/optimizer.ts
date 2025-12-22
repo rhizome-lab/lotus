@@ -76,7 +76,7 @@ export type OptimizeWarningCallback = (warning: {
  */
 export interface OptimizeOptions {
   /** Callback for warnings during optimization. If not provided, warnings are logged to console.error. */
-  onWarning?: OptimizeWarningCallback;
+  onWarning?: OptimizeWarningCallback | undefined;
 }
 
 /**
@@ -108,7 +108,7 @@ export function optimize<Type>(
       }
     }
     // 1. Recursively optimize children (pass options for warning callback)
-    const childOptions = { onWarning };
+    const childOptions: OptimizeOptions = { onWarning };
     return [
       script[0],
       ...script.slice(1).map((child) => optimizeInternal(child, compileFn, false, childOptions)),
