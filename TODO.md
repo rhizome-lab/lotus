@@ -1,5 +1,12 @@
 # Viwo Roadmap & TODOs
 
+## Next Up
+
+1. Fix `std.set` silent failure - should throw if variable not in scope chain
+2. Fix stdlib opcode labels (`listEmpty`, `listGet`, etc.)
+3. Replace `Math.random()` temp variable suffix with counter in transpiler
+4. Audit kernel restrictions in `packages/core/src/runtime/lib/kernel.ts`
+
 ## 1. Deep Simulation (Sandbox)
 
 - [x] **Combat System**: Standardized libraries for turn-based combat math and state.
