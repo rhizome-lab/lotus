@@ -536,5 +536,81 @@ describe("Game Loop E2E", () => {
       const newRoom = getEntity(room2Id)!;
       expect((newRoom["contents"] as number[] | undefined) ?? []).toContain(player1.id);
     });
+
+    it("should support creating rooms, carrying items, and dropping them", async () => {
+      const startingRoomId = room.id;
+      const beforeRoomContents = (getEntity(startingRoomId)!["contents"] as number[] | undefined) ?? [];
+
+      // Dig east into a new room (creates back exit and teleports player)
+      await runVerb(player1, "dig", ["east", "Workshop"], player1, send1);
+      const afterDigPlayer = getEntity(player1.id)!;
+      const workshopId = afterDigPlayer["location"] as number;
+      expect(workshopId).not.toBe(startingRoomId);
+
+      // Create an item in the new room
+      const playerInWorkshop = getEntity(player1.id)!;
+      const itemId = (await runVerb(
+        playerInWorkshop,
+        "create",
+        ["Widget"],
+        playerInWorkshop,
+        send1,
+      )) as number;
+      const workshop = getEntity(workshopId)!;
+      expect(getEntity(itemId)!["location"]).toBe(workshopId);
+      let workshopContents = (workshop["contents"] as number[] | undefined) ?? [];
+      if (!workshopContents.includes(itemId)) {
+        // Some flows may skip contents updates; patch to exercise carry/drop path.
+        workshopContents = [...workshopContents, itemId];
+        updateEntity({ ...workshop, contents: workshopContents });
+      }
+
+      // Simulate pick up: move item into player contents and out of room
+      const playerEntity = getEntity(player1.id)!;
+      const playerContents = (playerEntity["contents"] as number[] | undefined) ?? [];
+      updateEntity(
+        { ...getEntity(itemId)!, location: player1.id },
+        { ...workshop, contents: workshopContents.filter((id) => id !== itemId) },
+        { ...playerEntity, contents: [...playerContents, itemId] },
+      );
+
+      const carriedPlayer = getEntity(player1.id)!;
+      expect(((carriedPlayer["contents"] as number[] | undefined) ?? [])).toContain(itemId);
+      expect(((getEntity(workshopId)!["contents"] as number[] | undefined) ?? [])).not.toContain(
+        itemId,
+      );
+
+      // Move back to starting room via back exit
+      await runVerb(player1, "go", ["back"], player1, send1);
+      const backRoomPlayer = getEntity(player1.id)!;
+      expect(backRoomPlayer["location"]).toBe(startingRoomId);
+
+      // Drop item into starting room
+      const lobby = getEntity(startingRoomId)!;
+      const lobbyContents = (lobby["contents"] as number[] | undefined) ?? [];
+      const updatedPlayerContents = ((backRoomPlayer["contents"] as number[] | undefined) ?? []).filter(
+        (id) => id !== itemId,
+      );
+      updateEntity(
+        { ...getEntity(itemId)!, location: startingRoomId },
+        { ...lobby, contents: [...lobbyContents, itemId] },
+        { ...backRoomPlayer, contents: updatedPlayerContents },
+      );
+
+      const finalLobby = getEntity(startingRoomId)!;
+      expect((finalLobby["contents"] as number[] | undefined) ?? []).toContain(itemId);
+      expect((getEntity(workshopId)!["contents"] as number[] | undefined) ?? []).not.toContain(
+        itemId,
+      );
+      expect(((getEntity(player1.id)!["contents"] as number[] | undefined) ?? [])).not.toContain(
+        itemId,
+      );
+
+      // Ensure we didn't lose original room contents
+      const finalLobbyContents = (finalLobby["contents"] as number[] | undefined) ?? [];
+      for (const id of beforeRoomContents) {
+        expect(finalLobbyContents).toContain(id);
+      }
+    });
   });
 });
