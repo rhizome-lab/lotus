@@ -4,6 +4,7 @@ import {
   createEntity,
   deleteEntity,
   getEntity,
+  getCapabilities,
   getVerb,
   updateEntity,
 } from "../repo";
@@ -321,6 +322,43 @@ describe("Game Loop E2E", () => {
   });
 
   describe("Adversarial Scenarios", () => {
+    it("should prevent minting with non-sys.mint authority", async () => {
+      // Give player1 an unrelated capability and attempt to mint with it
+      const nonMintCapId = createCapability(player1.id, "entity.control", { target_id: room.id });
+      addVerb(player1.id, "mint_bad", [
+        "std.seq",
+        ["std.return", ["mint", ["get_capability", "entity.control"], "evil.cap", {}]],
+      ] as any);
+
+      await expect(runVerb(player1, "mint_bad", [], player1, send1)).rejects.toThrow(
+        "mint: authority must be sys.mint",
+      );
+
+      const caps = getCapabilities(player1.id);
+      expect(caps.find((cap) => cap.type === "evil.cap")).toBeUndefined();
+      // cleanup
+      deleteEntity(nonMintCapId);
+    });
+
+    it("should enforce namespace when minting capabilities", async () => {
+      // Grant scoped sys.mint to player1
+      createCapability(player1.id, "sys.mint", { namespace: "player1." });
+      addVerb(player1.id, "mint_namespace", [
+        "std.seq",
+        [
+          "std.return",
+          ["mint", ["get_capability", "sys.mint"], "othernamespace.cap", { foo: "bar" }],
+        ],
+      ] as any);
+
+      await expect(runVerb(player1, "mint_namespace", [], player1, send1)).rejects.toThrow(
+        "mint: authority namespace 'player1.' does not cover 'othernamespace.cap'",
+      );
+
+      const caps = getCapabilities(player1.id);
+      expect(caps.find((cap) => cap.type === "othernamespace.cap")).toBeUndefined();
+    });
+
     it("should reject creation when sys.create is missing", async () => {
       db.query("DELETE FROM capabilities WHERE owner_id = ? AND type = 'sys.create'").run(
         player2.id,
