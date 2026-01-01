@@ -320,6 +320,52 @@ describe("Game Loop E2E", () => {
     });
   });
 
+  describe("Adversarial Scenarios", () => {
+    it("should reject creation when sys.create is missing", async () => {
+      db.query("DELETE FROM capabilities WHERE owner_id = ? AND type = 'sys.create'").run(
+        player2.id,
+      );
+      const beforeContents = (getEntity(room.id)?.contents ?? []).length;
+
+      const result = await runVerb(player2, "create", ["Forbidden"], player2, send2);
+      expect(result).toBeUndefined();
+
+      const after = getEntity(room.id)!;
+      expect(after.contents ?? []).toHaveLength(beforeContents);
+      const msg = messages2.find(
+        (m) => m.type === "message" && m.payload === "You do not have permission to create here.",
+      );
+      expect(msg).toBeDefined();
+    });
+
+    it("should block recursive teleport into self", async () => {
+      const originalLocation = player1.location;
+      await runVerb(player1, "teleport", [getEntity(player1.id)!], player1, send1);
+
+      const msg = messages1.find(
+        (m) => m.type === "message" && m.payload === "You can't put something inside itself.",
+      );
+      expect(msg).toBeDefined();
+      const updated = getEntity(player1.id)!;
+      expect(updated.location).toBe(originalLocation);
+    });
+
+    it("should refuse dig without required capabilities", async () => {
+      db.query("DELETE FROM capabilities WHERE owner_id = ?").run(player2.id);
+      const beforeExits = getEntity(room.id)?.exits ?? [];
+
+      const result = await runVerb(player2, "dig", ["east", "Honeypot"], player2, send2);
+      expect(result).toBeNull();
+
+      const message = messages2.find(
+        (m) => m.type === "message" && m.payload === "You cannot dig here.",
+      );
+      expect(message).toBeDefined();
+      const after = getEntity(room.id)!;
+      expect(after.exits ?? []).toHaveLength(beforeExits.length);
+    });
+  });
+
   describe("State Persistence", () => {
     it("should persist entity changes across operations", async () => {
       // Create an item with initial state
