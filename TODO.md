@@ -25,6 +25,11 @@
 - [ ] **Discord Bot**: Flesh out full feature parity with Web client.
 - [ ] **Integration Tests**: Add end-to-end `bun:test` harness for core: boot server, seed minimal world, connect via `packages/client`, exercise login/move/verb flow, assert DB state/events/capability enforcement.
 
+## Testing & Hardening
+
+- [ ] **Object Creation Flows**: Add regression tests around create/dig/set verbs covering prototype assignment, room contents updates, and capability-gated creation failures.
+- [ ] **Adversarial Actors**: Red-team scenarios for capability abuse (missing caps, spoofed locations, recursive containment, excessive gas) with assertions that operations are rejected and state remains consistent.
+
 ## 4. Knowledge & Productivity (Notion)
 
 - [x] **Vector Plugin**: Core integration with `sqlite-vec` for semantic search.
