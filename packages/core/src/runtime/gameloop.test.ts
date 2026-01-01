@@ -103,6 +103,10 @@ describe("Game Loop E2E", () => {
     // Grant player 2 the same capabilities so they can also create
     createCapability(player2Id, "sys.create", {});
     createCapability(player2Id, "entity.control", { "*": true });
+
+    // Ensure room tracks occupants for look/teleport flows
+    updateEntity({ ...room, contents: [player1Id, player2Id] });
+    room = getEntity(roomId)!;
   });
 
   // oxlint-disable-next-line max-params
@@ -132,6 +136,18 @@ describe("Game Loop E2E", () => {
   };
 
   describe("Multi-Entity Interactions", () => {
+    it("should include room and occupants when looking", async () => {
+      await runVerb(player1, "look", [], player1, send1);
+
+      const update = [...messages1].reverse().find((msg) => msg.type === "update");
+      expect(update).toBeDefined();
+      const entities = (update!.payload as any).entities as Array<{ name?: string }>;
+      const names = entities.map((ent) => ent.name);
+      expect(names).toContain("Test Room");
+      expect(names).toContain("Alice");
+      expect(names).toContain("Bob");
+    });
+
     it("should handle two players in the same room", async () => {
       // Both players look at the room
       await runVerb(player1, "look", [], player1, send1);
@@ -190,6 +206,21 @@ describe("Game Loop E2E", () => {
 
       // Item should be gone
       expect(getEntity(itemId)).toBeNull();
+    });
+
+    it("should add created items to room contents and emit updates", async () => {
+      const itemId = (await runVerb(player1, "create", ["Lantern"], player1, send1)) as number;
+      const updatedRoom = getEntity(room.id)!;
+      expect(updatedRoom.contents).toContain(itemId);
+
+      const message = messages1.find(
+        (msg) => msg.type === "message" && msg.payload === "You create Lantern.",
+      );
+      expect(message).toBeDefined();
+
+      const update = messages1.find((msg) => msg.type === "update");
+      const entities = (update?.payload as any)?.entities?.map((ent: any) => ent.name) ?? [];
+      expect(entities).toContain("Lantern");
     });
   });
 
@@ -411,9 +442,13 @@ describe("Game Loop E2E", () => {
       // Player goes north
       await runVerb(player1, "go", ["north"], player1, send1);
 
-      // Player should now be in room2
+      // Player should now be in room2 and contents should be updated
       const updatedPlayer = getEntity(player1.id)!;
       expect(updatedPlayer["location"]).toBe(room2Id);
+      const updatedRoom = getEntity(room.id)!;
+      expect(updatedRoom.contents ?? []).not.toContain(player1.id);
+      const newRoom = getEntity(room2Id)!;
+      expect(newRoom.contents ?? []).toContain(player1.id);
     });
   });
 });
