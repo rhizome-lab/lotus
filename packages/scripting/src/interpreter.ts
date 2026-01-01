@@ -263,7 +263,16 @@ async function handleAsyncResult(
   stackIdx: number[],
   options: { catchReturn?: boolean; initialGas?: number },
 ): Promise<unknown> {
-  let currentResult = await promise;
+  let currentResult: unknown;
+  try {
+    currentResult = await promise;
+  } catch (error) {
+    // Handle ReturnSignal from async operations (e.g., std.return after async op in std.seq)
+    if (error instanceof ReturnSignal && options.catchReturn) {
+      return error.value;
+    }
+    throw error;
+  }
   // Push result to parent frame and continue loop
   if (sp === 0) {
     return currentResult;

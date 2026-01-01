@@ -414,8 +414,9 @@ const listFind_ = defineFullOpcode<[list: readonly unknown[], lambda: unknown], 
     }
     let idx = 0;
     const next = (): unknown => {
-      for (; idx < list.length; idx += 1) {
+      for (; idx < list.length; ) {
         const item = list[idx];
+        idx += 1; // Increment before async so next() continues from next item
         const res = executeLambda(func as any, [item], ctx);
         if (res instanceof Promise) {
           return res.then((res) => (res ? item : next()));
@@ -463,8 +464,9 @@ const listMap_ = defineFullOpcode<[list: readonly unknown[], lambda: unknown], a
     const result: unknown[] = [];
     let idx = 0;
     const next = (): unknown[] | Promise<unknown[]> => {
-      for (; idx < list.length; idx += 1) {
+      for (; idx < list.length; ) {
         const item = list[idx];
+        idx += 1; // Increment before async operations so next() continues from next item
         const res = executeLambda(func as any, [item], ctx);
         if (res instanceof Promise) {
           return res.then((res) => {
@@ -515,8 +517,9 @@ const listFilter_ = defineFullOpcode<[list: readonly unknown[], lambda: unknown]
       const result: unknown[] = [];
       let idx = 0;
       const next = (): unknown[] | Promise<unknown[]> => {
-        for (; idx < list.length; idx += 1) {
+        for (; idx < list.length; ) {
           const item = list[idx];
+          idx += 1; // Increment before async so next() continues from next item
           const res = executeLambda(func as any, [item], ctx);
           if (res instanceof Promise) {
             return res.then((res) => {
@@ -573,8 +576,9 @@ const listReduce_ = defineFullOpcode<
     let acc = init;
     let idx = 0;
     const next = (): unknown => {
-      for (; idx < list.length; idx += 1) {
+      for (; idx < list.length; ) {
         const item = list[idx];
+        idx += 1; // Increment before async so next() continues from next item
         const res = executeLambda(func as any, [acc, item], ctx);
         if (res instanceof Promise) {
           return res.then((res) => {
@@ -637,8 +641,9 @@ const listFlatMap_ = defineFullOpcode<[list: readonly unknown[], lambda: unknown
       const result: unknown[] = [];
       let idx = 0;
       const next = (): unknown[] | Promise<unknown[]> => {
-        for (; idx < list.length; idx += 1) {
+        for (; idx < list.length; ) {
           const item = list[idx];
+          idx += 1; // Increment before async so next() continues from next item
           const res = executeLambda(func as any, [item], ctx);
           if (res instanceof Promise) {
             return res.then((res) => {
