@@ -1,26 +1,27 @@
 /**
- * Wikilink utilities using mdast/hast.
+ * Markdown rendering with wikilinks using remark/rehype.
  */
-import { fromMarkdown } from "mdast-util-from-markdown";
-import { toHast } from "mdast-util-to-hast";
-import { toHtml } from "hast-util-to-html";
-// @ts-expect-error - no types available
-import { syntax } from "micromark-extension-wiki-link";
-// @ts-expect-error - no types available
-import { fromMarkdown as wikiFromMarkdown } from "mdast-util-wiki-link";
+import { unified } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+import remarkWikiLink from "remark-wiki-link";
+import remarkRehype from "remark-rehype";
+import rehypeRaw from "rehype-raw";
+import rehypeStringify from "rehype-stringify";
 
 /**
  * Extract wikilinks from markdown content.
  * Returns array of unique link targets.
  */
 export function extractWikilinks(content: string): string[] {
-  const tree = fromMarkdown(content, {
-    extensions: [syntax()],
-    mdastExtensions: [wikiFromMarkdown()],
-  });
-
   const links: string[] = [];
   const seen = new Set<string>();
+
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkWikiLink, { aliasDivider: "|" });
+
+  const tree = processor.parse(content);
 
   function visit(node: unknown) {
     if (node && typeof node === "object" && "type" in node) {
@@ -53,45 +54,23 @@ export function renderMarkdown(
   content: string,
   resolver: (target: string) => string | null,
 ): string {
-  const tree = fromMarkdown(content, {
-    extensions: [syntax()],
-    mdastExtensions: [wikiFromMarkdown()],
-  });
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkWikiLink, {
+      aliasDivider: "|",
+      hrefTemplate: (permalink: string) => `#note:${permalink}`,
+      wikiLinkClassName: "wikilink",
+      newClassName: "wikilink--missing",
+      pageResolver: (name: string) => {
+        const noteId = resolver(name);
+        return noteId ? [noteId] : [];
+      },
+    })
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
+    .use(rehypeStringify);
 
-  // Convert mdast to hast with custom handler for wikiLinks
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const hast = toHast(tree, {
-    unknownHandler(_state: unknown, node: unknown) {
-      const n = node as { type: string; value?: string; data?: { alias?: string } };
-      if (n.type !== "wikiLink") return undefined;
-
-      const target = n.value ?? "";
-      const display = n.data?.alias ?? target;
-      const noteId = resolver(target);
-
-      if (noteId) {
-        return {
-          type: "element",
-          tagName: "a",
-          properties: {
-            href: "#",
-            className: ["wikilink"],
-            "data-note-id": noteId,
-          },
-          children: [{ type: "text", value: display }],
-        };
-      }
-
-      return {
-        type: "element",
-        tagName: "span",
-        properties: {
-          className: ["wikilink", "wikilink--missing"],
-        },
-        children: [{ type: "text", value: display }],
-      };
-    },
-  } as Parameters<typeof toHast>[1]);
-
-  return toHtml(hast);
+  const result = processor.processSync(content);
+  return String(result);
 }

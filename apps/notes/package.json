@@ -13,12 +13,14 @@
   "dependencies": {
     "@viwo/client": "workspace:*",
     "@viwo/shared": "workspace:*",
-    "hast-util-to-html": "^9.0.0",
-    "mdast-util-from-markdown": "^2.0.0",
-    "mdast-util-to-hast": "^13.0.0",
-    "micromark-extension-wiki-link": "^0.0.4",
-    "mdast-util-wiki-link": "^0.0.2",
-    "solid-js": "^1.8.15"
+    "rehype-raw": "^7.0.0",
+    "rehype-stringify": "^10.0.0",
+    "remark-gfm": "^4.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.0.0",
+    "remark-wiki-link": "^2.0.1",
+    "solid-js": "^1.8.15",
+    "unified": "^11.0.0"
   },
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
