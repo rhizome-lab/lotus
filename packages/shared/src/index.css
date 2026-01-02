@@ -2449,8 +2449,30 @@ body {
 
 .fb__main {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 180px 1fr 280px;
   flex: 1;
+  overflow: hidden;
+}
+
+.fb__left-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
+  background: var(--bg-panel);
+  overflow: hidden;
+}
+
+.fb__content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fb__right-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-color);
+  background: var(--bg-panel);
   overflow: hidden;
 }
 
@@ -2592,4 +2614,205 @@ body {
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+/* Toolbar */
+.fb-toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-element);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.fb-toolbar__btn {
+  padding: 6px 12px;
+  background: var(--bg-element);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.fb-toolbar__btn:hover {
+  background: var(--bg-element-hover);
+}
+
+.fb-toolbar__btn--danger {
+  color: var(--error-color);
+  border-color: var(--error-color);
+}
+
+.fb-toolbar__btn--danger:hover {
+  background: var(--error-color);
+  color: white;
+}
+
+.fb-toolbar__btn--confirm {
+  background: var(--status-online);
+  color: white;
+  border-color: var(--status-online);
+}
+
+.fb-toolbar__btn--cancel {
+  background: var(--bg-element);
+}
+
+.fb-toolbar__input-group {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.fb-toolbar__input {
+  flex: 1;
+  padding: 6px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.fb-toolbar__input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+/* Entry selection */
+.fb-entry--selected {
+  background: var(--bg-element-active);
+  border-left: 3px solid var(--link-color);
+}
+
+/* Bookmarks */
+.fb-bookmarks {
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.fb-bookmarks__header {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.fb-bookmarks__empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.fb-bookmarks__item {
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: var(--link-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-bookmarks__item:hover {
+  background: var(--bg-element-hover);
+}
+
+/* Tags Panel */
+.fb-tags {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.fb-tags__header {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.fb-tags__empty {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.fb-tags__path {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-tags__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.fb-tags__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--bg-element);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.fb-tags__remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.fb-tags__remove:hover {
+  color: var(--error-color);
+}
+
+.fb-tags__add {
+  display: flex;
+  gap: 8px;
+}
+
+.fb-tags__input {
+  flex: 1;
+  padding: 4px 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.fb-tags__input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.fb-tags__btn {
+  padding: 4px 12px;
+  background: var(--bg-element);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.fb-tags__btn:hover {
+  background: var(--bg-element-hover);
 }
