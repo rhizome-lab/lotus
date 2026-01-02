@@ -41,6 +41,20 @@ Self-evaluate constantly: note friction points and areas for improvement in TODO
 
 Commit after each logical unit of work. Each commit = one logical change.
 
+## Before Finishing
+
+Run checks before wrapping up a session:
+
+```bash
+bun check:readmes      # Verify READMEs and docs exist
+bun check:types        # Type check all packages
+bun test               # Run tests
+```
+
+When adding new apps/packages, remember to add:
+- `apps/<name>/README.md`
+- `docs/apps/<name>.md`
+
 ## Code Style
 
 - Avoid one-letter names: `i` → `idx`, `e` → `event`, `a, b` → `left, right`
