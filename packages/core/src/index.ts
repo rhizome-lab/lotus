@@ -48,12 +48,20 @@ export {
   getVerb,
 } from "./repo";
 export { checkCapability } from "./runtime/utils";
+export { loadEntityDefinition } from "./seeds/loader";
+
+// Path to shared entity definitions (EntityBase, etc.)
+import { resolve as pathResolve } from "node:path";
+export const CORE_DEFINITIONS_PATH = pathResolve(__dirname, "seeds/definitions");
 export {
   BaseCapability,
   registerCapabilityClass,
   type CapabilityRegistry,
 } from "./runtime/capabilities";
 export { KernelLib };
+
+// Opcodes for testing
+export { GameOpcodes, registerGameLibrary } from "./runtime/opcodes";
 
 // Scheduler is started by the application (server/client)
 export { scheduler } from "./scheduler";

@@ -1,15 +1,12 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
 import { createScriptContext, evaluate } from "@viwo/scripting";
-import { getEntity, getVerb } from "../repo";
+import { db, GameOpcodes, getEntity, getVerb, registerGameLibrary } from "@viwo/core";
 import type { Entity } from "@viwo/shared/jsonrpc";
-import { GameOpcodes, registerGameLibrary } from "../runtime/opcodes";
-import { db } from "../db";
-import { seedFileBrowser } from "./filebrowser";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-// Import FsLib directly from the relative path since it's not a core dependency
-import * as FsLib from "../../../../plugins/fs/src/lib";
+import { FsLib } from "@viwo/plugin-fs";
+import { seedFileBrowser } from "./seed";
 
 describe("File Browser Seed", () => {
   let testDir: string;
@@ -18,8 +15,8 @@ describe("File Browser Seed", () => {
   let sentMessages: Array<{ type: string; payload: unknown }> = [];
 
   beforeAll(async () => {
-    // Register FS library for capability methods
-    registerGameLibrary(FsLib);
+// Type assertion needed because FsLib exports capability classes, not opcode builders
+    registerGameLibrary(FsLib as any);
 
     // Create temp test directory structure
     testDir = join(tmpdir(), `viwo-fb-test-${Date.now()}`);
@@ -367,8 +364,8 @@ describe("File Browser Seed (writable)", () => {
   let sentMessages: Array<{ type: string; payload: unknown }> = [];
 
   beforeAll(async () => {
-    // Register FS library for capability methods
-    registerGameLibrary(FsLib);
+// Type assertion needed because FsLib exports capability classes, not opcode builders
+    registerGameLibrary(FsLib as any);
 
     // Create temp test directory structure
     testDir = join(tmpdir(), `viwo-fb-write-test-${Date.now()}`);

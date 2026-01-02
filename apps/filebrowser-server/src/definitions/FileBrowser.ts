@@ -1,6 +1,6 @@
 // oxlint-disable-next-line no-unassigned-import
-import "../../generated_types";
-import { EntityBase } from "./EntityBase";
+import "@viwo/core/generated_types";
+import { EntityBase } from "@viwo/core/seeds/definitions/EntityBase";
 
 // Declare FS capability types for type checking
 declare class FsRead {
@@ -121,8 +121,8 @@ export class FileBrowserBase extends EntityBase {
     const user = std.caller() as FileBrowserUserProps;
     const cwd = user.cwd ?? user.fs_root ?? "/";
     return {
-      type: "where",
       path: cwd,
+      type: "where",
     };
   }
 
@@ -173,14 +173,17 @@ export class FileBrowserBase extends EntityBase {
    */
   _make_entry(cwd: string, name: string) {
     const cap = get_capability("fs.read", {});
+    if (!cap) {
+      std.throw_("No filesystem access.");
+    }
     const fullPath = cwd === "/" ? str.concat("/", name) : str.concat(cwd, "/", name);
     const stats = cap.stat(fullPath);
     return {
+      isDirectory: stats.isDirectory,
+      mtime: stats.mtime,
       name: name,
       path: fullPath,
-      isDirectory: stats.isDirectory,
       size: stats.size,
-      mtime: stats.mtime,
     };
   }
 
@@ -203,9 +206,9 @@ export class FileBrowserBase extends EntityBase {
     );
 
     const result: DirectoryListing = {
-      type: "directory_listing",
-      path: cwd,
       entries: entries,
+      path: cwd,
+      type: "directory_listing",
     };
 
     return result;
@@ -241,11 +244,11 @@ export class FileBrowserBase extends EntityBase {
     const fileName = list.get(parts, list.len(parts) - 1) ?? name;
 
     const result: FileContent = {
-      type: "file_content",
-      path: resolved,
-      name: fileName,
       content: content,
+      name: fileName,
+      path: resolved,
       size: stats.size,
+      type: "file_content",
     };
 
     return result;
@@ -268,8 +271,8 @@ export class FileBrowserBase extends EntityBase {
     cap.write(resolved, content ?? "");
 
     return {
-      type: "write_success",
       path: resolved,
+      type: "write_success",
     };
   }
 
@@ -290,8 +293,8 @@ export class FileBrowserBase extends EntityBase {
     cap.mkdir(resolved);
 
     return {
-      type: "dir_created",
       path: resolved,
+      type: "dir_created",
     };
   }
 
@@ -319,8 +322,8 @@ export class FileBrowserBase extends EntityBase {
     cap.write(resolved, "");
 
     return {
-      type: "file_created",
       path: resolved,
+      type: "file_created",
     };
   }
 
@@ -348,8 +351,8 @@ export class FileBrowserBase extends EntityBase {
     cap.remove(resolved);
 
     return {
-      type: "removed",
       path: resolved,
+      type: "removed",
     };
   }
 }
@@ -386,9 +389,9 @@ export class FileBrowserUser extends FileBrowserBase {
     }
 
     return {
-      type: "bookmark_created",
       name: name,
       path: targetPath,
+      type: "bookmark_created",
     };
   }
 
@@ -400,8 +403,8 @@ export class FileBrowserUser extends FileBrowserBase {
     const bookmarks = user.bookmarks ?? {};
 
     return {
-      type: "bookmarks",
       bookmarks: bookmarks,
+      type: "bookmarks",
     };
   }
 
@@ -445,7 +448,7 @@ export class FileBrowserUser extends FileBrowserBase {
 
     const fileData = obj.has(metadata, resolved)
       ? obj.get(metadata, resolved)
-      : { tags: [], annotations: [] };
+      : { annotations: [], tags: [] };
     const tags = fileData.tags ?? [];
 
     if (!list.includes(tags, tagName)) {
@@ -461,9 +464,9 @@ export class FileBrowserUser extends FileBrowserBase {
     }
 
     return {
-      type: "tag_added",
       path: resolved,
       tag: tagName,
+      type: "tag_added",
     };
   }
 
@@ -480,7 +483,7 @@ export class FileBrowserUser extends FileBrowserBase {
     const metadata = user.file_metadata ?? {};
 
     if (!obj.has(metadata, resolved)) {
-      return { type: "untag_noop", path: resolved };
+      return { path: resolved, type: "untag_noop" };
     }
     const fileData = obj.get(metadata, resolved);
 
@@ -495,9 +498,9 @@ export class FileBrowserUser extends FileBrowserBase {
     }
 
     return {
-      type: "tag_removed",
       path: resolved,
       tag: tagName,
+      type: "tag_removed",
     };
   }
 
@@ -513,13 +516,13 @@ export class FileBrowserUser extends FileBrowserBase {
     const metadata = user.file_metadata ?? {};
     const fileData = obj.has(metadata, resolved)
       ? obj.get(metadata, resolved)
-      : { tags: [], annotations: [] };
+      : { annotations: [], tags: [] };
     const tags = fileData.tags ?? [];
 
     return {
-      type: "tags",
       path: resolved,
       tags: tags,
+      type: "tags",
     };
   }
 
@@ -537,7 +540,7 @@ export class FileBrowserUser extends FileBrowserBase {
 
     const fileData = obj.has(metadata, resolved)
       ? obj.get(metadata, resolved)
-      : { tags: [], annotations: [] };
+      : { annotations: [], tags: [] };
     const annotations = fileData.annotations ?? [];
 
     list.push(annotations, note);
@@ -550,9 +553,9 @@ export class FileBrowserUser extends FileBrowserBase {
     }
 
     return {
-      type: "annotation_added",
-      path: resolved,
       note: note,
+      path: resolved,
+      type: "annotation_added",
     };
   }
 }

@@ -1,7 +1,13 @@
-import { addVerb, createCapability, createEntity, updateEntity } from "../repo";
-import { db } from "../db";
-import { loadEntityDefinition } from "./loader";
-import { resolve } from "node:path";
+import {
+  addVerb,
+  CORE_DEFINITIONS_PATH,
+  createCapability,
+  createEntity,
+  db,
+  loadEntityDefinition,
+  updateEntity,
+} from "@viwo/core";
+import { join } from "node:path";
 
 export interface FileBrowserSeedConfig {
   /** The root path for the file browser (sandbox root) */
@@ -36,9 +42,9 @@ export function seedFileBrowser(config: FileBrowserSeedConfig) {
     name: "File System",
   });
 
-  // 2. Load EntityBase for core verbs
+  // 2. Load EntityBase for core verbs (from core package)
   const entityBaseDef = loadEntityDefinition(
-    resolve(__dirname, "definitions/EntityBase.ts"),
+    join(CORE_DEFINITIONS_PATH, "EntityBase.ts"),
     "EntityBase",
   );
   const entityBaseId = createEntity({
@@ -53,9 +59,9 @@ export function seedFileBrowser(config: FileBrowserSeedConfig) {
   // Set Void prototype to EntityBase
   updateEntity({ id: voidId, prototype_id: entityBaseId });
 
-  // 3. Create FileBrowserBase prototype
+  // 3. Create FileBrowserBase prototype (from local definitions)
   const fbBaseDef = loadEntityDefinition(
-    resolve(__dirname, "definitions/FileBrowser.ts"),
+    join(__dirname, "definitions/FileBrowser.ts"),
     "FileBrowserBase",
   );
   const fbBaseId = createEntity(
@@ -72,7 +78,7 @@ export function seedFileBrowser(config: FileBrowserSeedConfig) {
 
   // 4. Create FileBrowserUser prototype
   const fbUserDef = loadEntityDefinition(
-    resolve(__dirname, "definitions/FileBrowser.ts"),
+    join(__dirname, "definitions/FileBrowser.ts"),
     "FileBrowserUser",
   );
   const fbUserProtoId = createEntity(
@@ -90,13 +96,12 @@ export function seedFileBrowser(config: FileBrowserSeedConfig) {
   // 5. Create the actual user instance
   const userId = createEntity(
     {
-      name: "Browser",
-      description: "A file browser instance.",
-      location: voidId,
-      cwd: rootPath,
-      fs_root: rootPath,
       bookmarks: {},
+      cwd: rootPath,
+      description: "A file browser instance.",
       file_metadata: {},
+      fs_root: rootPath,
+      name: "Browser",
     },
     fbUserProtoId,
   );
@@ -115,10 +120,10 @@ export function seedFileBrowser(config: FileBrowserSeedConfig) {
   }
 
   return {
-    voidId,
     entityBaseId,
     fbBaseId,
     fbUserProtoId,
     userId,
+    voidId,
   };
 }

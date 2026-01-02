@@ -1,7 +1,7 @@
 import { pluginManager, scheduler, startServer } from "@viwo/core";
-import { seedFileBrowser } from "@viwo/core/seeds/filebrowser";
 import { FsPlugin } from "@viwo/plugin-fs";
 import { resolve } from "node:path";
+import { seedFileBrowser } from "./seed";
 
 async function main() {
   // Get root path from CLI arg or use current directory

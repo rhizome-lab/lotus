@@ -4,7 +4,8 @@
   "module": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./seeds/filebrowser": "./src/seeds/filebrowser.ts"
+    "./generated_types": "./src/generated_types.d.ts",
+    "./seeds/definitions/EntityBase": "./src/seeds/definitions/EntityBase.ts"
   },
   "type": "module",
   "scripts": {
