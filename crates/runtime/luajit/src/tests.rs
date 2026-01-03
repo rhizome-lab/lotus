@@ -211,3 +211,226 @@ fn test_compile_unknown_opcode() {
     // Unknown opcodes become function calls
     assert_eq!(compile(&expr).unwrap(), "return custom_opcode(1, 2)");
 }
+
+// ============================================================================
+// Execution tests - actually run generated Lua code
+// ============================================================================
+
+use crate::execute;
+use serde_json::json;
+
+#[test]
+fn test_execute_literal_number() {
+    let result = execute(&SExpr::number(42)).unwrap();
+    assert_eq!(result, json!(42));
+}
+
+#[test]
+fn test_execute_literal_string() {
+    let result = execute(&SExpr::string("hello")).unwrap();
+    assert_eq!(result, json!("hello"));
+}
+
+#[test]
+fn test_execute_literal_bool() {
+    let result = execute(&SExpr::bool(true)).unwrap();
+    assert_eq!(result, json!(true));
+
+    let result = execute(&SExpr::bool(false)).unwrap();
+    assert_eq!(result, json!(false));
+}
+
+#[test]
+fn test_execute_literal_null() {
+    let result = execute(&SExpr::null()).unwrap();
+    assert_eq!(result, serde_json::Value::Null);
+}
+
+#[test]
+fn test_execute_arithmetic() {
+    // 2 + 3
+    let expr = SExpr::call("+", vec![SExpr::number(2), SExpr::number(3)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(5));
+
+    // 10 - 4
+    let expr = SExpr::call("-", vec![SExpr::number(10), SExpr::number(4)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(6));
+
+    // 6 * 7
+    let expr = SExpr::call("*", vec![SExpr::number(6), SExpr::number(7)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(42));
+
+    // 15 / 3
+    let expr = SExpr::call("/", vec![SExpr::number(15), SExpr::number(3)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(5));
+}
+
+#[test]
+fn test_execute_comparison() {
+    // 1 == 1
+    let expr = SExpr::call("==", vec![SExpr::number(1), SExpr::number(1)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(true));
+
+    // 1 != 2
+    let expr = SExpr::call("!=", vec![SExpr::number(1), SExpr::number(2)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(true));
+
+    // 5 > 3
+    let expr = SExpr::call(">", vec![SExpr::number(5), SExpr::number(3)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(true));
+
+    // 2 < 2
+    let expr = SExpr::call("<", vec![SExpr::number(2), SExpr::number(2)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(false));
+}
+
+#[test]
+fn test_execute_logical() {
+    // true && false
+    let expr = SExpr::call("&&", vec![SExpr::bool(true), SExpr::bool(false)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(false));
+
+    // true || false
+    let expr = SExpr::call("||", vec![SExpr::bool(true), SExpr::bool(false)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(true));
+
+    // !true
+    let expr = SExpr::call("!", vec![SExpr::bool(true)]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!(false));
+}
+
+#[test]
+fn test_execute_string_concat() {
+    let expr = SExpr::call(
+        "str.concat",
+        vec![SExpr::string("Hello"), SExpr::string(", "), SExpr::string("World!")],
+    );
+    let result = execute(&expr).unwrap();
+    assert_eq!(result, json!("Hello, World!"));
+}
+
+#[test]
+fn test_execute_string_len() {
+    let expr = SExpr::call("str.len", vec![SExpr::string("hello")]);
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(5));
+}
+
+#[test]
+fn test_execute_if_true() {
+    // if true then 1 else 2
+    let expr = SExpr::call(
+        "std.if",
+        vec![SExpr::bool(true), SExpr::number(1), SExpr::number(2)],
+    );
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(1));
+}
+
+#[test]
+fn test_execute_if_false() {
+    // if false then 1 else 2
+    let expr = SExpr::call(
+        "std.if",
+        vec![SExpr::bool(false), SExpr::number(1), SExpr::number(2)],
+    );
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(2));
+}
+
+#[test]
+fn test_execute_seq_with_let_and_var() {
+    // { let x = 10; x }
+    let expr = SExpr::call(
+        "std.seq",
+        vec![
+            SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10)]),
+            SExpr::call("std.var", vec![SExpr::string("x")]),
+        ],
+    );
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(10));
+}
+
+#[test]
+fn test_execute_nested_arithmetic() {
+    // (1 + 2) * (3 + 4) = 3 * 7 = 21
+    let expr = SExpr::call(
+        "*",
+        vec![
+            SExpr::call("+", vec![SExpr::number(1), SExpr::number(2)]),
+            SExpr::call("+", vec![SExpr::number(3), SExpr::number(4)]),
+        ],
+    );
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(21));
+}
+
+#[test]
+fn test_execute_list_new() {
+    let expr = SExpr::call(
+        "list.new",
+        vec![SExpr::number(1), SExpr::number(2), SExpr::number(3)],
+    );
+    let result = execute(&expr).unwrap();
+    // Result should be an array (Lua tables with integer keys become arrays)
+    assert!(result.is_array());
+    assert_eq!(result.as_array().unwrap().len(), 3);
+}
+
+#[test]
+fn test_execute_lambda_call() {
+    // Create and call lambda using the Runtime directly
+    use crate::Runtime;
+    let runtime = Runtime::new().unwrap();
+    let code = r#"
+        local add = function(x, y)
+            return x + y
+        end
+        return add(3, 4)
+    "#;
+    let result = runtime.execute_lua(code).unwrap();
+    assert_eq!(result.as_i64(), Some(7));
+}
+
+#[test]
+fn test_execute_complex_expression() {
+    // let x = 5; let y = 10; if x < y then x + y else x - y
+    let expr = SExpr::call(
+        "std.seq",
+        vec![
+            SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(5)]),
+            SExpr::call("std.let", vec![SExpr::string("y"), SExpr::number(10)]),
+            SExpr::call(
+                "std.if",
+                vec![
+                    SExpr::call("<", vec![
+                        SExpr::call("std.var", vec![SExpr::string("x")]),
+                        SExpr::call("std.var", vec![SExpr::string("y")]),
+                    ]),
+                    SExpr::call("+", vec![
+                        SExpr::call("std.var", vec![SExpr::string("x")]),
+                        SExpr::call("std.var", vec![SExpr::string("y")]),
+                    ]),
+                    SExpr::call("-", vec![
+                        SExpr::call("std.var", vec![SExpr::string("x")]),
+                        SExpr::call("std.var", vec![SExpr::string("y")]),
+                    ]),
+                ],
+            ),
+        ],
+    );
+    let result = execute(&expr).unwrap();
+    assert_eq!(result.as_i64(), Some(15)); // 5 + 10 = 15
+}
