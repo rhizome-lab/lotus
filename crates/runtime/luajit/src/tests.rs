@@ -1,0 +1,213 @@
+//! Tests for viwo-runtime-luajit.
+
+use crate::codegen::compile;
+use viwo_ir::SExpr;
+
+#[test]
+fn test_compile_literals() {
+    assert_eq!(compile(&SExpr::Null).unwrap(), "return nil");
+    assert_eq!(compile(&SExpr::Bool(true)).unwrap(), "return true");
+    assert_eq!(compile(&SExpr::Bool(false)).unwrap(), "return false");
+    assert_eq!(compile(&SExpr::Number(42.0)).unwrap(), "return 42");
+    assert_eq!(compile(&SExpr::Number(3.14)).unwrap(), "return 3.14");
+    assert_eq!(
+        compile(&SExpr::String("hello".into())).unwrap(),
+        "return \"hello\""
+    );
+}
+
+#[test]
+fn test_compile_string_escaping() {
+    assert_eq!(
+        compile(&SExpr::String("line1\nline2".into())).unwrap(),
+        "return [[line1\nline2]]"
+    );
+    assert_eq!(
+        compile(&SExpr::String("with \"quotes\"".into())).unwrap(),
+        "return \"with \\\"quotes\\\"\""
+    );
+}
+
+#[test]
+fn test_compile_let() {
+    let expr = SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10)]);
+    assert_eq!(compile(&expr).unwrap(), "local x = 10");
+}
+
+#[test]
+fn test_compile_var() {
+    let expr = SExpr::call("std.var", vec![SExpr::string("x")]);
+    assert_eq!(compile(&expr).unwrap(), "return x");
+}
+
+#[test]
+fn test_compile_seq() {
+    let expr = SExpr::call(
+        "std.seq",
+        vec![
+            SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10)]),
+            SExpr::call("std.var", vec![SExpr::string("x")]),
+        ],
+    );
+    let code = compile(&expr).unwrap();
+    assert!(code.contains("local x = 10"));
+    assert!(code.contains("return x"));
+}
+
+#[test]
+fn test_compile_if() {
+    let expr = SExpr::call(
+        "std.if",
+        vec![
+            SExpr::Bool(true),
+            SExpr::number(1),
+            SExpr::number(2),
+        ],
+    );
+    let code = compile(&expr).unwrap();
+    assert!(code.contains("if true then"));
+    assert!(code.contains("return 1"));
+    assert!(code.contains("else"));
+    assert!(code.contains("return 2"));
+    assert!(code.contains("end"));
+}
+
+#[test]
+fn test_compile_while() {
+    let expr = SExpr::call(
+        "std.while",
+        vec![
+            SExpr::Bool(true),
+            SExpr::call("std.break", vec![]),
+        ],
+    );
+    let code = compile(&expr).unwrap();
+    assert!(code.contains("while true do"));
+    assert!(code.contains("break"));
+    assert!(code.contains("end"));
+}
+
+#[test]
+fn test_compile_for() {
+    let expr = SExpr::call(
+        "std.for",
+        vec![
+            SExpr::string("item"),
+            SExpr::call("list.new", vec![SExpr::number(1), SExpr::number(2)]),
+            SExpr::call("std.var", vec![SExpr::string("item")]),
+        ],
+    );
+    let code = compile(&expr).unwrap();
+    assert!(code.contains("for _, item in ipairs"));
+    assert!(code.contains("end"));
+}
+
+#[test]
+fn test_compile_arithmetic() {
+    let expr = SExpr::call(
+        "+",
+        vec![SExpr::number(1), SExpr::number(2)],
+    );
+    assert_eq!(compile(&expr).unwrap(), "return (1 + 2)");
+
+    let expr = SExpr::call(
+        "*",
+        vec![SExpr::number(3), SExpr::number(4)],
+    );
+    assert_eq!(compile(&expr).unwrap(), "return (3 * 4)");
+}
+
+#[test]
+fn test_compile_comparison() {
+    let expr = SExpr::call(
+        "==",
+        vec![SExpr::number(1), SExpr::number(1)],
+    );
+    assert_eq!(compile(&expr).unwrap(), "return (1 == 1)");
+
+    let expr = SExpr::call(
+        "!=",
+        vec![SExpr::number(1), SExpr::number(2)],
+    );
+    assert_eq!(compile(&expr).unwrap(), "return (1 ~= 2)");
+}
+
+#[test]
+fn test_compile_logical() {
+    let expr = SExpr::call(
+        "&&",
+        vec![SExpr::Bool(true), SExpr::Bool(false)],
+    );
+    assert_eq!(compile(&expr).unwrap(), "return (true and false)");
+
+    let expr = SExpr::call(
+        "!",
+        vec![SExpr::Bool(true)],
+    );
+    assert_eq!(compile(&expr).unwrap(), "return not true");
+}
+
+#[test]
+fn test_compile_string_ops() {
+    let expr = SExpr::call(
+        "str.concat",
+        vec![SExpr::string("hello"), SExpr::string(" "), SExpr::string("world")],
+    );
+    assert_eq!(
+        compile(&expr).unwrap(),
+        "return \"hello\" .. \" \" .. \"world\""
+    );
+
+    let expr = SExpr::call("str.len", vec![SExpr::string("test")]);
+    assert_eq!(compile(&expr).unwrap(), "return #\"test\"");
+}
+
+#[test]
+fn test_compile_list_ops() {
+    let expr = SExpr::call("list.new", vec![SExpr::number(1), SExpr::number(2), SExpr::number(3)]);
+    assert_eq!(compile(&expr).unwrap(), "return { 1, 2, 3 }");
+
+    let expr = SExpr::call(
+        "list.get",
+        vec![
+            SExpr::call("list.new", vec![SExpr::number(10), SExpr::number(20)]),
+            SExpr::number(0),
+        ],
+    );
+    // Lua is 1-indexed, so we add 1
+    assert!(compile(&expr).unwrap().contains("[0 + 1]"));
+}
+
+#[test]
+fn test_compile_lambda() {
+    let expr = SExpr::call(
+        "std.lambda",
+        vec![
+            SExpr::List(vec![SExpr::string("a"), SExpr::string("b")]),
+            SExpr::call("+", vec![
+                SExpr::call("std.var", vec![SExpr::string("a")]),
+                SExpr::call("std.var", vec![SExpr::string("b")]),
+            ]),
+        ],
+    );
+    let code = compile(&expr).unwrap();
+    assert!(code.contains("function(a, b)"));
+    assert!(code.contains("return (a + b)"));
+}
+
+#[test]
+fn test_compile_keyword_escaping() {
+    // 'end' is a Lua keyword
+    let expr = SExpr::call("std.let", vec![SExpr::string("end"), SExpr::number(1)]);
+    assert_eq!(compile(&expr).unwrap(), "local _end = 1");
+
+    let expr = SExpr::call("std.let", vec![SExpr::string("local"), SExpr::number(2)]);
+    assert_eq!(compile(&expr).unwrap(), "local _local = 2");
+}
+
+#[test]
+fn test_compile_unknown_opcode() {
+    let expr = SExpr::call("custom.opcode", vec![SExpr::number(1), SExpr::number(2)]);
+    // Unknown opcodes become function calls
+    assert_eq!(compile(&expr).unwrap(), "return custom_opcode(1, 2)");
+}
