@@ -24,6 +24,10 @@ impl ExecutionContext {
         // Create a Lua runtime
         let runtime = LuaRuntime::new()?;
 
+        // TODO: Inject kernel functions as Lua globals
+        // This requires mlua async support or blocking calls
+        // For now, kernel functions need to be compiled into the generated Lua
+
         // Compile to Lua code first
         let lua_code = viwo_runtime_luajit::compile(expr)?;
 

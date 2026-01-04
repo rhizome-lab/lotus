@@ -5,8 +5,10 @@ use tokio::sync::Mutex;
 use viwo_core::{EntityId, WorldStorage};
 
 pub mod context;
+pub mod kernel;
 
 pub use context::ExecutionContext;
+pub use kernel::KernelOps;
 
 /// The main Viwo runtime.
 pub struct ViwoRuntime {
