@@ -100,6 +100,22 @@ pub fn compile_game(
             format!("{}__viwo_schedule({}, {}, {})", prefix, verb, args_list, delay)
         }
 
+        // Mint a new capability
+        "mint" => {
+            if args.len() < 3 {
+                return Err(CompileError::InvalidArgCount {
+                    opcode: op.to_string(),
+                    expected: 3,
+                    got: args.len(),
+                });
+            }
+            let authority = compile_value(&args[0], false)?;
+            let cap_type = compile_value(&args[1], false)?;
+            let params = compile_value(&args[2], false)?;
+
+            format!("{}__viwo_mint({}, {}, {})", prefix, authority, cap_type, params)
+        }
+
         _ => return Ok(None),
     };
 

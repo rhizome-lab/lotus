@@ -198,6 +198,59 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_schedule", schedule_fn)?;
 
+        // mint opcode - create new capability with authority
+        let storage_clone = storage.clone();
+        let this_id = self.this.id;
+        let mint_fn = lua.create_function(move |lua_ctx, (authority, cap_type, params): (mlua::Value, String, mlua::Value)| {
+            // Convert authority to capability ID
+            let auth_json: serde_json::Value = lua_ctx.from_value(authority)?;
+            let auth_id = auth_json["id"].as_str()
+                .ok_or_else(|| mlua::Error::external("mint: authority missing id"))?;
+
+            // Validate authority
+            let storage = storage_clone.lock().unwrap();
+            let auth_cap = storage.get_capability(auth_id)
+                .map_err(mlua::Error::external)?
+                .ok_or_else(|| mlua::Error::external("mint: authority capability not found"))?;
+
+            if auth_cap.owner_id != this_id {
+                return Err(mlua::Error::external("mint: authority does not belong to this entity"));
+            }
+
+            if auth_cap.cap_type != "sys.mint" {
+                return Err(mlua::Error::external("mint: authority must be sys.mint"));
+            }
+
+            // Check namespace
+            let allowed_ns = auth_cap.params.get("namespace")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| mlua::Error::external("mint: authority namespace must be string"))?;
+
+            if allowed_ns != "*" && !cap_type.starts_with(allowed_ns) {
+                return Err(mlua::Error::external(format!(
+                    "mint: authority namespace '{}' does not cover '{}'",
+                    allowed_ns, cap_type
+                )));
+            }
+
+            // Create new capability
+            let params_json: serde_json::Value = lua_ctx.from_value(params)?;
+            let new_id = storage.create_capability(this_id, &cap_type, params_json)
+                .map_err(mlua::Error::external)?;
+
+            // Return capability object
+            let cap = storage.get_capability(&new_id)
+                .map_err(mlua::Error::external)?
+                .ok_or_else(|| mlua::Error::external("mint: failed to retrieve new capability"))?;
+
+            lua_ctx.to_value(&serde_json::json!({
+                "id": cap.id,
+                "type": cap.cap_type,
+                "params": cap.params,
+            }))
+        })?;
+        lua.globals().set("__viwo_mint", mint_fn)?;
+
         Ok(())
     }
 
