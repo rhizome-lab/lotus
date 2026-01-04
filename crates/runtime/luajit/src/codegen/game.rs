@@ -25,6 +25,19 @@ pub fn compile_game(
             format!("{}__viwo_entity({})", prefix, id)
         }
 
+        // Get capability by ID
+        "capability" => {
+            if args.is_empty() {
+                return Err(CompileError::InvalidArgCount {
+                    opcode: op.to_string(),
+                    expected: 1,
+                    got: 0,
+                });
+            }
+            let id = compile_value(&args[0], false)?;
+            format!("{}__viwo_capability({})", prefix, id)
+        }
+
         // Update entity properties
         "update" => {
             if args.len() < 2 {

@@ -5,10 +5,31 @@ use viwo_core::WorldStorage;
 use viwo_ir::SExpr;
 use viwo_runtime::ViwoRuntime;
 
+/// Helper to get the plugin path for a given plugin name
+fn get_plugin_path(plugin_name: &str) -> std::path::PathBuf {
+    let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.pop(); // Go to crates/
+    path.pop(); // Go to workspace root
+    path.push("target/debug");
+
+    if cfg!(target_os = "macos") {
+        path.push(format!("libviwo_plugin_{}.dylib", plugin_name));
+    } else if cfg!(target_os = "windows") {
+        path.push(format!("viwo_plugin_{}.dll", plugin_name));
+    } else {
+        path.push(format!("libviwo_plugin_{}.so", plugin_name));
+    }
+    path
+}
+
 #[test]
 fn test_procgen_seed() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load procgen plugin
+    let plugin_path = get_plugin_path("procgen");
+    runtime.load_plugin(&plugin_path, "procgen").unwrap();
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
@@ -46,6 +67,10 @@ fn test_procgen_seed() {
 fn test_procgen_noise() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load procgen plugin
+    let plugin_path = get_plugin_path("procgen");
+    runtime.load_plugin(&plugin_path, "procgen").unwrap();
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
@@ -86,6 +111,10 @@ fn test_procgen_between() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
 
+    // Load procgen plugin
+    let plugin_path = get_plugin_path("procgen");
+    runtime.load_plugin(&plugin_path, "procgen").unwrap();
+
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
         storage.create_entity(json!({"name": "Test"}), None).unwrap()
@@ -117,6 +146,10 @@ fn test_procgen_between() {
 fn test_procgen_random_range() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load procgen plugin
+    let plugin_path = get_plugin_path("procgen");
+    runtime.load_plugin(&plugin_path, "procgen").unwrap();
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();

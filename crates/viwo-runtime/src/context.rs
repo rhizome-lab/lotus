@@ -18,6 +18,8 @@ pub struct ExecutionContext {
     pub storage: Arc<Mutex<WorldStorage>>,
     /// Task scheduler.
     pub scheduler: Arc<Scheduler>,
+    /// Plugin registry.
+    pub plugins: Arc<Mutex<crate::plugin_loader::PluginRegistry>>,
 }
 
 impl ExecutionContext {
@@ -109,6 +111,24 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_entity", entity_fn)?;
 
+        // capability opcode - get capability by ID
+        let storage_clone = storage.clone();
+        let capability_fn = lua.create_function(move |lua_ctx, cap_id: String| {
+            let storage = storage_clone.lock().unwrap();
+            let cap = storage.get_capability(&cap_id)
+                .map_err(mlua::Error::external)?
+                .ok_or_else(|| mlua::Error::external(format!("capability not found: {}", cap_id)))?;
+
+            // Return capability as an object with owner_id, type, params
+            lua_ctx.to_value(&serde_json::json!({
+                "id": cap.id,
+                "owner_id": cap.owner_id,
+                "type": cap.cap_type,
+                "params": cap.params,
+            }))
+        })?;
+        lua.globals().set("__viwo_capability", capability_fn)?;
+
         // update opcode - persist entity changes
         let storage_clone = storage.clone();
         let update_fn = lua.create_function(move |_lua_ctx, (entity_id, updates): (i64, mlua::Value)| {
@@ -136,6 +156,7 @@ return {{ result = __result, this = __this }}
         // call opcode - call a verb on an entity
         let storage_clone = storage.clone();
         let scheduler_clone = self.scheduler.clone();
+        let plugins_clone = self.plugins.clone();
         let caller_id = self.this.id;
         let call_fn = lua.create_function(move |lua_ctx, (target_entity, verb_name, args): (mlua::Value, String, mlua::Value)| {
             // Convert entity to get ID
@@ -172,6 +193,7 @@ return {{ result = __result, this = __this }}
                 args: args_vec,
                 storage: storage_clone.clone(),
                 scheduler: scheduler_clone.clone(),
+                plugins: plugins_clone.clone(),
             };
 
             // Execute the verb
@@ -318,32 +340,131 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_delegate", delegate_fn)?;
 
-        // Register procgen plugin opcodes
-        let procgen_seed_fn = lua.create_function(|_lua_ctx, seed: u64| {
-            viwo_plugin_procgen::procgen_seed(seed);
+        // fs.read opcode - read file with capability
+        let this_id = self.this.id;
+        let fs_read_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            let content = viwo_plugin_fs::fs_read(&cap_json, this_id, &path)
+                .map_err(mlua::Error::external)?;
+            Ok(content)
+        })?;
+        lua.globals().set("__viwo_fs_read", fs_read_fn)?;
+
+        // fs.write opcode - write file with capability
+        let this_id = self.this.id;
+        let fs_write_fn = lua.create_function(move |lua_ctx, (capability, path, content): (mlua::Value, String, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            viwo_plugin_fs::fs_write(&cap_json, this_id, &path, &content)
+                .map_err(mlua::Error::external)?;
             Ok(())
         })?;
-        lua.globals().set("__viwo_procgen_seed", procgen_seed_fn)?;
+        lua.globals().set("__viwo_fs_write", fs_write_fn)?;
 
-        let procgen_noise_fn = lua.create_function(|_lua_ctx, (x, y): (f64, f64)| {
-            Ok(viwo_plugin_procgen::procgen_noise(x, y))
+        // fs.list opcode - list directory with capability
+        let this_id = self.this.id;
+        let fs_list_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            let files = viwo_plugin_fs::fs_list(&cap_json, this_id, &path)
+                .map_err(mlua::Error::external)?;
+            lua_ctx.to_value(&files)
         })?;
-        lua.globals().set("__viwo_procgen_noise", procgen_noise_fn)?;
+        lua.globals().set("__viwo_fs_list", fs_list_fn)?;
 
-        let procgen_random_fn = lua.create_function(|_lua_ctx, ()| {
-            Ok(viwo_plugin_procgen::procgen_random())
+        // fs.stat opcode - get file stats with capability
+        let this_id = self.this.id;
+        let fs_stat_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            let stats = viwo_plugin_fs::fs_stat(&cap_json, this_id, &path)
+                .map_err(mlua::Error::external)?;
+            lua_ctx.to_value(&stats)
         })?;
-        lua.globals().set("__viwo_procgen_random", procgen_random_fn)?;
+        lua.globals().set("__viwo_fs_stat", fs_stat_fn)?;
 
-        let procgen_random_range_fn = lua.create_function(|_lua_ctx, (min, max): (f64, f64)| {
-            Ok(viwo_plugin_procgen::procgen_random_range(min, max))
+        // fs.exists opcode - check if file exists with capability
+        let this_id = self.this.id;
+        let fs_exists_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            let exists = viwo_plugin_fs::fs_exists(&cap_json, this_id, &path)
+                .map_err(mlua::Error::external)?;
+            Ok(exists)
         })?;
-        lua.globals().set("__viwo_procgen_random_range", procgen_random_range_fn)?;
+        lua.globals().set("__viwo_fs_exists", fs_exists_fn)?;
 
-        let procgen_between_fn = lua.create_function(|_lua_ctx, (min, max): (i64, i64)| {
-            Ok(viwo_plugin_procgen::procgen_between(min, max))
+        // fs.mkdir opcode - create directory with capability
+        let this_id = self.this.id;
+        let fs_mkdir_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            viwo_plugin_fs::fs_mkdir(&cap_json, this_id, &path)
+                .map_err(mlua::Error::external)?;
+            Ok(())
         })?;
-        lua.globals().set("__viwo_procgen_between", procgen_between_fn)?;
+        lua.globals().set("__viwo_fs_mkdir", fs_mkdir_fn)?;
+
+        // fs.remove opcode - remove file/directory with capability
+        let this_id = self.this.id;
+        let fs_remove_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            viwo_plugin_fs::fs_remove(&cap_json, this_id, &path)
+                .map_err(mlua::Error::external)?;
+            Ok(())
+        })?;
+        lua.globals().set("__viwo_fs_remove", fs_remove_fn)?;
+
+        // Register procgen plugin opcodes (if loaded)
+        let plugins = self.plugins.lock().unwrap();
+        if plugins.get_plugin("procgen").is_some() {
+            unsafe {
+                // Get function pointers
+                let seed_fn: extern "C" fn(u64) =
+                    plugins.get_function_ptr("procgen", b"procgen_seed")
+                        .map_err(mlua::Error::external)?;
+                let noise_fn: extern "C" fn(f64, f64) -> f64 =
+                    plugins.get_function_ptr("procgen", b"procgen_noise")
+                        .map_err(mlua::Error::external)?;
+                let random_fn: extern "C" fn() -> f64 =
+                    plugins.get_function_ptr("procgen", b"procgen_random")
+                        .map_err(mlua::Error::external)?;
+                let random_range_fn: extern "C" fn(f64, f64) -> f64 =
+                    plugins.get_function_ptr("procgen", b"procgen_random_range")
+                        .map_err(mlua::Error::external)?;
+                let between_fn: extern "C" fn(i64, i64) -> i64 =
+                    plugins.get_function_ptr("procgen", b"procgen_between")
+                        .map_err(mlua::Error::external)?;
+
+                // Register Lua functions
+                lua.globals().set("__viwo_procgen_seed",
+                    lua.create_function(move |_, seed: u64| {
+                        seed_fn(seed);
+                        Ok(())
+                    })?
+                )?;
+
+                lua.globals().set("__viwo_procgen_noise",
+                    lua.create_function(move |_, (x, y): (f64, f64)| {
+                        Ok(noise_fn(x, y))
+                    })?
+                )?;
+
+                lua.globals().set("__viwo_procgen_random",
+                    lua.create_function(move |_, ()| {
+                        Ok(random_fn())
+                    })?
+                )?;
+
+                lua.globals().set("__viwo_procgen_random_range",
+                    lua.create_function(move |_, (min, max): (f64, f64)| {
+                        Ok(random_range_fn(min, max))
+                    })?
+                )?;
+
+                lua.globals().set("__viwo_procgen_between",
+                    lua.create_function(move |_, (min, max): (i64, i64)| {
+                        Ok(between_fn(min, max))
+                    })?
+                )?;
+            }
+        }
+        drop(plugins); // Release lock
 
         Ok(())
     }

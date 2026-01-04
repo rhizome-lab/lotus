@@ -1,6 +1,7 @@
 //! S-expression to Lua code generation.
 
 mod bool;
+mod fs;
 mod game;
 mod json;
 mod list;
@@ -29,6 +30,9 @@ pub enum CompileError {
 
     #[error("invalid argument: {0}")]
     InvalidArgument(String),
+
+    #[error("invalid arguments: {0}")]
+    InvalidArguments(String),
 }
 
 /// Lua reserved keywords that need escaping.
@@ -165,6 +169,9 @@ fn compile_opcode(op: &str, args: &[SExpr], should_return: bool) -> Result<Strin
         return Ok(result);
     }
     if let Some(result) = procgen::compile_procgen(op, args, prefix)? {
+        return Ok(result);
+    }
+    if let Some(result) = fs::compile_fs(op, args, prefix)? {
         return Ok(result);
     }
 

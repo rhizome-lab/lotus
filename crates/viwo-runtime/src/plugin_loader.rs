@@ -1,21 +1,32 @@
-//! Plugin loading system for Viwo.
-//!
-//! Loads dynamic libraries (.so, .dll, .dylib) and registers their opcodes.
+//! Dynamic plugin loading system for Viwo.
 
-use std::os::raw::c_int;
 use libloading::{Library, Symbol};
+use std::os::raw::c_int;
+use std::path::Path;
 
-/// A loaded plugin with its opcode symbols
+/// Plugin registry that manages loaded plugins
+pub struct PluginRegistry {
+    plugins: Vec<LoadedPlugin>,
+}
+
+/// A dynamically loaded plugin
 pub struct LoadedPlugin {
-    _lib: Library,
+    _lib: Library, // Keep library alive
     name: String,
 }
 
-impl LoadedPlugin {
-    /// Load a plugin from a dynamic library path
-    pub fn load(path: &str, name: &str) -> Result<Self, String> {
+impl PluginRegistry {
+    /// Create a new empty registry
+    pub fn new() -> Self {
+        Self {
+            plugins: Vec::new(),
+        }
+    }
+
+    /// Load a plugin from a .so/.dll/.dylib file
+    pub fn load_plugin(&mut self, path: impl AsRef<Path>, name: &str) -> Result<(), String> {
         unsafe {
-            let lib = Library::new(path)
+            let lib = Library::new(path.as_ref())
                 .map_err(|e| format!("Failed to load plugin {}: {}", name, e))?;
 
             // Call plugin_init
@@ -28,24 +39,53 @@ impl LoadedPlugin {
                 return Err(format!("Plugin {} init failed with code {}", name, result));
             }
 
-            Ok(Self {
+            self.plugins.push(LoadedPlugin {
                 _lib: lib,
                 name: name.to_string(),
-            })
+            });
+
+            Ok(())
         }
     }
 
-    pub fn name(&self) -> &str {
-        &self.name
+    /// Get a plugin by name
+    pub fn get_plugin(&self, name: &str) -> Option<&LoadedPlugin> {
+        self.plugins.iter().find(|p| p.name == name)
+    }
+
+    /// Get a function symbol from a loaded plugin
+    pub unsafe fn get_symbol<T>(&self, plugin_name: &str, symbol_name: &[u8]) -> Result<Symbol<'_, T>, String> {
+        let plugin = self.get_plugin(plugin_name)
+            .ok_or_else(|| format!("Plugin {} not loaded", plugin_name))?;
+
+        unsafe {
+            plugin._lib.get(symbol_name)
+                .map_err(|e| format!("Symbol {:?} not found in plugin {}: {}",
+                    std::str::from_utf8(symbol_name).unwrap_or("???"),
+                    plugin_name,
+                    e
+                ))
+        }
+    }
+
+    /// Get a raw function pointer from a loaded plugin
+    /// The pointer is valid as long as the plugin remains loaded
+    pub unsafe fn get_function_ptr<T: Copy>(&self, plugin_name: &str, symbol_name: &[u8]) -> Result<T, String> {
+        unsafe {
+            let symbol: Symbol<T> = self.get_symbol(plugin_name, symbol_name)?;
+            Ok(*symbol) // Deref to get raw function pointer
+        }
     }
 }
 
-impl Drop for LoadedPlugin {
+impl Drop for PluginRegistry {
     fn drop(&mut self) {
-        unsafe {
-            // Call plugin_cleanup if it exists
-            if let Ok(cleanup_fn) = self._lib.get::<Symbol<extern "C" fn()>>(b"plugin_cleanup") {
-                cleanup_fn();
+        // Call plugin_cleanup for each plugin
+        for plugin in &self.plugins {
+            unsafe {
+                if let Ok(cleanup_fn) = plugin._lib.get::<Symbol<extern "C" fn()>>(b"plugin_cleanup") {
+                    cleanup_fn();
+                }
             }
         }
     }
@@ -65,9 +105,9 @@ mod tests {
 
         assert!(status.success());
 
-        // Try to load it - use absolute path from project root
+        // Get plugin path
         let mut plugin_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        plugin_path.pop(); // Go to workspace root
+        plugin_path.pop();
         plugin_path.pop();
         plugin_path.push("target/debug");
 
@@ -79,10 +119,18 @@ mod tests {
             plugin_path.push("libviwo_plugin_procgen.so");
         }
 
-        let plugin = LoadedPlugin::load(plugin_path.to_str().unwrap(), "procgen");
-        if let Err(e) = &plugin {
+        // Load plugin
+        let mut registry = PluginRegistry::new();
+        let result = registry.load_plugin(&plugin_path, "procgen");
+        if let Err(e) = &result {
             eprintln!("Plugin loading error: {}", e);
         }
-        assert!(plugin.is_ok());
+        assert!(result.is_ok());
+
+        // Test getting a symbol
+        unsafe {
+            let seed_fn = registry.get_symbol::<extern "C" fn(u64)>("procgen", b"procgen_seed");
+            assert!(seed_fn.is_ok());
+        }
     }
 }

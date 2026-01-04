@@ -16,17 +16,28 @@ pub use kernel::KernelOps;
 pub struct ViwoRuntime {
     storage: Arc<Mutex<WorldStorage>>,
     scheduler: Arc<viwo_core::Scheduler>,
+    plugins: Arc<Mutex<plugin_loader::PluginRegistry>>,
 }
 
 impl ViwoRuntime {
     /// Create a new runtime with the given storage.
     pub fn new(storage: WorldStorage) -> Self {
-        // Initialize procgen plugin
-        viwo_plugin_procgen::plugin_init();
-
         let storage = Arc::new(Mutex::new(storage));
         let scheduler = Arc::new(viwo_core::Scheduler::new(storage.clone()));
-        Self { storage, scheduler }
+        let plugins = Arc::new(Mutex::new(plugin_loader::PluginRegistry::new()));
+
+        Self { storage, scheduler, plugins }
+    }
+
+    /// Load a plugin from a dynamic library
+    pub fn load_plugin(&self, path: impl AsRef<std::path::Path>, name: &str) -> Result<(), String> {
+        let mut plugins = self.plugins.lock().unwrap();
+        plugins.load_plugin(path, name)
+    }
+
+    /// Get reference to plugin registry
+    pub fn plugins(&self) -> &Arc<Mutex<plugin_loader::PluginRegistry>> {
+        &self.plugins
     }
 
     /// Get a reference to the storage.
@@ -66,6 +77,7 @@ impl ViwoRuntime {
             args,
             storage: self.storage.clone(),
             scheduler: self.scheduler.clone(),
+            plugins: self.plugins.clone(),
         };
 
         // Execute in Lua
