@@ -6,7 +6,6 @@ use viwo_ir::SExpr;
 use viwo_runtime::ViwoRuntime;
 
 #[test]
-#[ignore] // TODO: Implement obj.set for updating __this
 fn test_update_entity_from_verb() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);

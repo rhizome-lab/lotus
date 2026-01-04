@@ -37,12 +37,16 @@ impl ExecutionContext {
 
         // Wrap in function that sets up context variables
         // Use json.decode to parse the JSON strings
+        // Wrap the result to also return __this for mutation detection
         let wrapped_code = format!(
             r#"
 local __this = json.decode('{}')
 local __caller = json.decode('{}')
 local __args = json.decode('{}')
+local __result = (function()
 {}
+end)()
+return {{ result = __result, this = __this }}
 "#,
             serde_json::to_string(&flattened_this).unwrap().replace('\\', "\\\\").replace('\'', "\\'"),
             serde_json::to_string(&self.caller_id).unwrap().replace('\\', "\\\\").replace('\'', "\\'"),
@@ -51,14 +55,42 @@ local __args = json.decode('{}')
         );
 
         // Execute the wrapped code
-        let result = runtime.execute_lua(&wrapped_code)?;
+        let result_and_this = runtime.execute_lua(&wrapped_code)?;
 
-        // TODO: Check if __this was modified and persist changes
-        // For now, mutations are not persisted back to storage
-        // This requires either:
-        // 1. Explicit update opcode
-        // 2. Post-execution diff of __this
-        // 3. Proxy/metatable tracking
+        // Extract result and __this from the returned table
+        let result = result_and_this["result"].clone();
+        let this_after_json = result_and_this["this"].clone();
+
+        // Compare with original __this to see if it changed
+        if this_after_json != flattened_this {
+            // Extract only the property changes (not id/prototype_id)
+            if let serde_json::Value::Object(after_map) = &this_after_json {
+                let mut updates = serde_json::Map::new();
+                let flattened_map = flattened_this.as_object().unwrap();
+
+                for (key, value) in after_map {
+                    // Skip metadata fields
+                    if key == "id" || key == "prototype_id" {
+                        continue;
+                    }
+                    // Only include changed or new properties
+                    if flattened_map.get(key) != Some(value) {
+                        updates.insert(key.clone(), value.clone());
+                    }
+                }
+
+                // Persist changes if any
+                if !updates.is_empty() {
+                    crate::opcodes::opcode_update(
+                        self.this.id,
+                        serde_json::Value::Object(updates),
+                        &self.storage
+                    ).map_err(|e| crate::ExecutionError::Runtime(
+                        viwo_runtime_luajit::ExecutionError::Lua(mlua::Error::external(e))
+                    ))?;
+                }
+            }
+        }
 
         Ok(result)
     }
