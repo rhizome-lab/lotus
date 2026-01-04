@@ -1,0 +1,19 @@
+[package]
+name = "viwo-runtime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Integrated runtime combining storage and script execution"
+
+[dependencies]
+viwo-core.workspace = true
+viwo-ir.workspace = true
+viwo-runtime-luajit.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio = { version = "1", features = ["sync"] }
+mlua = { version = "0.10", features = ["luajit", "serialize"] }
+thiserror.workspace = true
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

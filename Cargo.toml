@@ -4,6 +4,7 @@ default-members = ["crates/viwo-cli"]
 members = [
     "crates/viwo-ir",
     "crates/viwo-core",
+    "crates/viwo-runtime",
     "crates/viwo-plugin-abi",
     "crates/viwo-cli",
     "crates/syntax/typescript",
@@ -53,6 +54,7 @@ libloading = "0.8"
 # Workspace crates
 viwo-ir = { path = "crates/viwo-ir" }
 viwo-core = { path = "crates/viwo-core" }
+viwo-runtime = { path = "crates/viwo-runtime" }
 viwo-plugin-abi = { path = "crates/viwo-plugin-abi" }
 viwo-transport-websocket-jsonrpc = { path = "crates/transport/websocket-jsonrpc" }
 viwo-syntax-typescript = { path = "crates/syntax/typescript" }
