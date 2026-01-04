@@ -3,6 +3,7 @@
 use std::sync::{Arc, Mutex};
 use viwo_core::{EntityId, WorldStorage};
 
+pub mod capability_validation;
 pub mod context;
 pub mod kernel;
 pub mod opcodes;

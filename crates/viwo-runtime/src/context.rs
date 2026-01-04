@@ -251,6 +251,73 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_mint", mint_fn)?;
 
+        // delegate opcode - create restricted version of a capability
+        let storage_clone = storage.clone();
+        let this_id = self.this.id;
+        let delegate_fn = lua.create_function(move |lua_ctx, (parent_cap, restrictions): (mlua::Value, mlua::Value)| {
+            // Convert parent capability
+            let parent_json: serde_json::Value = lua_ctx.from_value(parent_cap)?;
+            let parent_id = parent_json["id"].as_str()
+                .ok_or_else(|| mlua::Error::external("delegate: parent capability missing id"))?;
+
+            // Get parent capability from storage
+            let storage = storage_clone.lock().unwrap();
+            let parent = storage.get_capability(parent_id)
+                .map_err(mlua::Error::external)?
+                .ok_or_else(|| mlua::Error::external("delegate: parent capability not found"))?;
+
+            // Verify ownership
+            if parent.owner_id != this_id {
+                return Err(mlua::Error::external("delegate: parent capability does not belong to this entity"));
+            }
+
+            // Convert restrictions
+            let restrictions_json: serde_json::Value = lua_ctx.from_value(restrictions)?;
+            let restrictions_obj = restrictions_json.as_object()
+                .ok_or_else(|| mlua::Error::external("delegate: restrictions must be an object"))?;
+
+            // Validate each restriction parameter
+            for (key, child_value) in restrictions_obj {
+                if let Some(parent_value) = parent.params.get(key) {
+                    if !crate::capability_validation::is_valid_restriction(parent_value, child_value, key) {
+                        return Err(mlua::Error::external(format!(
+                            "delegate: invalid restriction for '{}': child value {:?} is not more restrictive than parent {:?}",
+                            key, child_value, parent_value
+                        )));
+                    }
+                } else {
+                    // Child adds a new restriction not in parent - this is always valid (more restrictive)
+                }
+            }
+
+            // Merge parameters: start with parent params, override with restrictions
+            let mut merged_params = if let serde_json::Value::Object(map) = &parent.params {
+                map.clone()
+            } else {
+                serde_json::Map::new()
+            };
+
+            for (key, value) in restrictions_obj {
+                merged_params.insert(key.clone(), value.clone());
+            }
+
+            // Create new capability with same type but restricted params
+            let new_id = storage.create_capability(this_id, &parent.cap_type, serde_json::Value::Object(merged_params.clone()))
+                .map_err(mlua::Error::external)?;
+
+            // Return capability object
+            let cap = storage.get_capability(&new_id)
+                .map_err(mlua::Error::external)?
+                .ok_or_else(|| mlua::Error::external("delegate: failed to retrieve new capability"))?;
+
+            lua_ctx.to_value(&serde_json::json!({
+                "id": cap.id,
+                "type": cap.cap_type,
+                "params": cap.params,
+            }))
+        })?;
+        lua.globals().set("__viwo_delegate", delegate_fn)?;
+
         Ok(())
     }
 

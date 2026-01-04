@@ -116,6 +116,21 @@ pub fn compile_game(
             format!("{}__viwo_mint({}, {}, {})", prefix, authority, cap_type, params)
         }
 
+        // Delegate a capability with additional restrictions
+        "delegate" => {
+            if args.len() < 2 {
+                return Err(CompileError::InvalidArgCount {
+                    opcode: op.to_string(),
+                    expected: 2,
+                    got: args.len(),
+                });
+            }
+            let parent_cap = compile_value(&args[0], false)?;
+            let restrictions = compile_value(&args[1], false)?;
+
+            format!("{}__viwo_delegate({}, {})", prefix, parent_cap, restrictions)
+        }
+
         _ => return Ok(None),
     };
 
