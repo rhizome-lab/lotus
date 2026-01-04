@@ -27,20 +27,27 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **Codegen**: Error handling (`std.throw`, `std.try`)
 - [x] **Codegen**: Logging (`std.log`, `std.warn`)
 
-### Rust Port - Game Engine (IN PROGRESS)
+### Rust Port - Game Engine (IN PROGRESS) 🚀
 
-**Core Infrastructure:**
-- [ ] **viwo-core**: Port entity repository (create, read, update, delete with SQLite)
-- [ ] **viwo-core**: Port verb resolution via prototype chain
-- [ ] **viwo-core**: Port capability enforcement and validation
-- [ ] **viwo-core**: Port kernel opcodes (`send`, `get_capability`, `mint`, `delegate`, etc.)
-- [ ] **viwo-core**: Port scheduler system with task queue
-- [ ] **viwo-core**: Port game opcodes integration with runtime
+**Core Infrastructure: (MAJOR PROGRESS)**
+- [x] **viwo-core**: Port entity repository (create, read, update, delete with SQLite) ✅
+- [x] **viwo-core**: Port verb resolution via prototype chain ✅
+- [x] **viwo-core**: Port capability enforcement and validation ✅
+- [x] **viwo-core**: Port scheduler system with task queue ✅
+- [x] **viwo-runtime**: Create integrated runtime combining storage + LuaJIT ✅
+- [x] **viwo-runtime**: Implement context opcodes (`std.arg`, `std.args`, `std.this`, `std.caller`) ✅
+- [x] **viwo-runtime**: Fix entity flattening to match TypeScript behavior ✅
+- [x] **viwo-runtime**: Implement kernel capability operations (get, has, give) ✅
+- [ ] **viwo-runtime**: Port kernel opcodes to Lua FFI (`mint`, `delegate`)
+- [ ] **viwo-core**: Port game opcodes (`send`, `update`, `create`, `call`)
 - [ ] **viwo-core**: Port seed system (load entities/verbs from TypeScript DSL)
 
-**Tests to Port:**
-- [ ] **Tests**: Port `gameloop.test.ts` (20+ integration tests, 616 lines)
-- [ ] **Tests**: Port `scheduler.test.ts` (task scheduling verification)
+**Tests Ported: (13/20+ tests, 65% complete)**
+- [x] **Tests**: Port basic gameloop tests (state_persistence, verb_inheritance) ✅
+- [x] **Tests**: Port capability tests (get_capability, transfer) ✅
+- [x] **Tests**: Port scheduler integration tests (3 tests) ✅
+- [ ] **Tests**: Port remaining gameloop.test.ts tests (complex workflows, multi-entity)
+- [ ] **Tests**: Port verb calling and message passing tests
 
 **Plugin System:**
 - [ ] **Plugins**: Implement plugin opcode registry in viwo-runtime-luajit
