@@ -12,6 +12,11 @@ members = [
     "crates/transport/websocket-jsonrpc",
     "crates/plugins/procgen",
     "crates/plugins/fs",
+    "crates/plugins/sqlite",
+    "crates/plugins/net",
+    "crates/plugins/ai",
+    "crates/plugins/vector",
+    "crates/plugins/memory",
     "xtask",
 ]
 

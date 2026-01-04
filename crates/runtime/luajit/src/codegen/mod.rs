@@ -7,6 +7,7 @@ mod game;
 mod json;
 mod list;
 mod math;
+mod memory;
 mod net;
 mod obj;
 mod procgen;
@@ -188,6 +189,9 @@ fn compile_opcode(op: &str, args: &[SExpr], should_return: bool) -> Result<Strin
         return Ok(result);
     }
     if let Some(result) = ai::compile_ai(op, args, prefix)? {
+        return Ok(result);
+    }
+    if let Some(result) = memory::compile_memory(op, args, prefix)? {
         return Ok(result);
     }
 

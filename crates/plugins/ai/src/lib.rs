@@ -1,7 +1,7 @@
 //! AI plugin for Viwo using rig for LLM operations.
 
 use rig::completion::Prompt;
-use rig::providers::openai;
+use rig::providers::{anthropic, cohere, openai, perplexity};
 
 /// Validate that a capability grants access to AI operations
 fn validate_capability(
@@ -35,28 +35,61 @@ pub async fn ai_generate_text(
         .as_str()
         .ok_or("ai: capability missing api_key parameter")?;
 
+    let temperature = options["temperature"].as_f64().unwrap_or(0.7);
+    let max_tokens = options["max_tokens"].as_u64().unwrap_or(1000);
+
     match provider {
         "openai" => {
             let client = openai::Client::new(api_key);
-
-            // Get model parameters from options
-            let temperature = options["temperature"].as_f64().unwrap_or(0.7);
-            let max_tokens = options["max_tokens"].as_u64().unwrap_or(1000);
-
             let agent = client
                 .agent(model)
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-
-            let response = agent
-                .prompt(prompt)
-                .await
+            let response = agent.prompt(prompt).await
                 .map_err(|e| format!("ai.generate_text failed: {}", e))?;
-
             Ok(response)
         }
-        _ => Err(format!("ai: unsupported provider '{}'", provider)),
+        "anthropic" => {
+            // Anthropic requires base_url, betas, and version
+            let client = anthropic::Client::new(
+                api_key,
+                "https://api.anthropic.com",
+                None,
+                "2023-06-01"
+            );
+            let agent = client
+                .agent(model)
+                .temperature(temperature)
+                .max_tokens(max_tokens)
+                .build();
+            let response = agent.prompt(prompt).await
+                .map_err(|e| format!("ai.generate_text failed: {}", e))?;
+            Ok(response)
+        }
+        "cohere" => {
+            let client = cohere::Client::new(api_key);
+            let agent = client
+                .agent(model)
+                .temperature(temperature)
+                .max_tokens(max_tokens)
+                .build();
+            let response = agent.prompt(prompt).await
+                .map_err(|e| format!("ai.generate_text failed: {}", e))?;
+            Ok(response)
+        }
+        "perplexity" => {
+            let client = perplexity::Client::new(api_key);
+            let agent = client
+                .agent(model)
+                .temperature(temperature)
+                .max_tokens(max_tokens)
+                .build();
+            let response = agent.prompt(prompt).await
+                .map_err(|e| format!("ai.generate_text failed: {}", e))?;
+            Ok(response)
+        }
+        _ => Err(format!("ai: unsupported provider '{}'. Supported: openai, anthropic, cohere, perplexity", provider)),
     }
 }
 
@@ -111,27 +144,60 @@ pub async fn ai_chat(
         prompt.push_str(&format!("{}: {}\n", role, content));
     }
 
+    let temperature = options["temperature"].as_f64().unwrap_or(0.7);
+    let max_tokens = options["max_tokens"].as_u64().unwrap_or(1000);
+
     match provider {
         "openai" => {
             let client = openai::Client::new(api_key);
-
-            let temperature = options["temperature"].as_f64().unwrap_or(0.7);
-            let max_tokens = options["max_tokens"].as_u64().unwrap_or(1000);
-
             let agent = client
                 .agent(model)
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-
-            let response = agent
-                .prompt(&prompt)
-                .await
+            let response = agent.prompt(&prompt).await
                 .map_err(|e| format!("ai.chat failed: {}", e))?;
-
             Ok(response)
         }
-        _ => Err(format!("ai: unsupported provider '{}'", provider)),
+        "anthropic" => {
+            let client = anthropic::Client::new(
+                api_key,
+                "https://api.anthropic.com",
+                None,
+                "2023-06-01"
+            );
+            let agent = client
+                .agent(model)
+                .temperature(temperature)
+                .max_tokens(max_tokens)
+                .build();
+            let response = agent.prompt(&prompt).await
+                .map_err(|e| format!("ai.chat failed: {}", e))?;
+            Ok(response)
+        }
+        "cohere" => {
+            let client = cohere::Client::new(api_key);
+            let agent = client
+                .agent(model)
+                .temperature(temperature)
+                .max_tokens(max_tokens)
+                .build();
+            let response = agent.prompt(&prompt).await
+                .map_err(|e| format!("ai.chat failed: {}", e))?;
+            Ok(response)
+        }
+        "perplexity" => {
+            let client = perplexity::Client::new(api_key);
+            let agent = client
+                .agent(model)
+                .temperature(temperature)
+                .max_tokens(max_tokens)
+                .build();
+            let response = agent.prompt(&prompt).await
+                .map_err(|e| format!("ai.chat failed: {}", e))?;
+            Ok(response)
+        }
+        _ => Err(format!("ai: unsupported provider '{}'. Supported: openai, anthropic, cohere, perplexity", provider)),
     }
 }
 
