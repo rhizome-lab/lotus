@@ -7,6 +7,7 @@ pub mod capability_validation;
 pub mod context;
 pub mod kernel;
 pub mod opcodes;
+pub mod plugin_loader;
 
 pub use context::ExecutionContext;
 pub use kernel::KernelOps;
