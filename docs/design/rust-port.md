@@ -18,7 +18,7 @@ Design document for porting Viwo to a Rust-based runtime with LuaJIT execution.
 └─────────────────────────┬───────────────────────────────────┘
                           │ WebSocket / JSON-RPC
 ┌─────────────────────────▼───────────────────────────────────┐
-│                     viwo-server                             │
+│               transport/websocket-jsonrpc                   │
 │            (tokio + tungstenite, plugin loader)             │
 └─────────────────────────┬───────────────────────────────────┘
                           │
@@ -28,7 +28,7 @@ Design document for porting Viwo to a Rust-based runtime with LuaJIT execution.
 └─────────────────────────┬───────────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────────┐
-│                   target/luajit                             │
+│                   runtime/luajit                            │
 │        (S-expr → Lua codegen + mlua/LuaJIT execution)       │
 └─────────────────────────┬───────────────────────────────────┘
                           │
@@ -46,16 +46,16 @@ crates/
 ├── viwo-ir/              # S-expression types, validation, spec
 ├── viwo-core/            # Entity, Verb, Capability, SQLite storage
 ├── viwo-plugin-abi/      # Plugin trait, OpcodeRegistry, Value types
+├── viwo-cli/             # Binary entrypoint (serve, transpile, compile, exec)
 │
 ├── syntax/
-│   └── typescript/       # TS → S-expr (arborium-typescript)
+│   └── typescript/       # TS → S-expr (tree-sitter-typescript)
 │
-├── target/
-│   ├── luajit/           # S-expr → Lua + mlua runtime
-│   └── javascript/       # S-expr → JS (lower priority, browser)
+├── runtime/
+│   └── luajit/           # S-expr → Lua + mlua execution
 │
-├── viwo-server/          # WebSocket server, sessions, plugin loader
-└── viwo-cli/             # Binary entrypoint
+└── transport/
+    └── websocket-jsonrpc/  # WebSocket server, sessions, plugin loader
 ```
 
 ## S-Expression IR
@@ -122,9 +122,9 @@ send("message", str.concat("Hello, ", name, "!"))
 
 ## TypeScript Syntax Frontend
 
-Uses arborium-typescript (tree-sitter based) for parsing. No type checking in the transpiler - relies on user's IDE/tsconfig.
+Uses tree-sitter-typescript for parsing. No type checking in the transpiler - relies on user's IDE/tsconfig.
 
-**Why tree-sitter (arborium) instead of tsc?**
+**Why tree-sitter instead of tsc?**
 - Fast, incremental parsing
 - Rust-native (no Node dependency)
 - Single binary toolchain
@@ -259,14 +259,14 @@ Plugins (dynamic):
 | Crate | Purpose |
 |-------|---------|
 | `mlua` | LuaJIT bindings |
-| `arborium-typescript` | TS parsing (tree-sitter) |
-| `capnp` | Binary S-expr serialization |
+| `tree-sitter` / `tree-sitter-typescript` | TS parsing |
+| `capnp` | Binary S-expr serialization (planned) |
 | `rusqlite` | SQLite storage |
 | `tokio` | Async runtime |
 | `tokio-tungstenite` | WebSocket |
 | `abi_stable` | Plugin ABI |
 | `libloading` | Dynamic library loading |
-| `serde` / `serde_json` | JSON S-expr (debug/compat) |
+| `serde` / `serde_json` | JSON S-expr |
 
 ## Decisions Log
 
@@ -276,7 +276,7 @@ Plugins (dynamic):
 | Plugin loading | Dynamic libraries | Need full system access, WASM too restrictive |
 | Plugin ABI | abi_stable | Stable ABI without raw C FFI |
 | Binary format | Cap'n Proto | Cross-language, zerocopy, schema evolution |
-| TS parsing | arborium (tree-sitter) | Fast, Rust-native, no Node dependency |
+| TS parsing | tree-sitter-typescript | Fast, Rust-native, no Node dependency |
 | Keep JS target? | Yes (low priority) | Browser execution without server |
 
 ## Migration Path
