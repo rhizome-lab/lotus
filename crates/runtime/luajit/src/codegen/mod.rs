@@ -1,5 +1,6 @@
 //! S-expression to Lua code generation.
 
+mod ai;
 mod bool;
 mod fs;
 mod game;
@@ -184,6 +185,9 @@ fn compile_opcode(op: &str, args: &[SExpr], should_return: bool) -> Result<Strin
         return Ok(result);
     }
     if let Some(result) = vector::compile_vector(op, args, prefix)? {
+        return Ok(result);
+    }
+    if let Some(result) = ai::compile_ai(op, args, prefix)? {
         return Ok(result);
     }
 

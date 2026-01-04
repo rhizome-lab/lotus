@@ -522,6 +522,57 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_vector_delete", vector_delete_fn)?;
 
+        // ai.generate_text opcode - LLM text generation with capability
+        let this_id = self.this.id;
+        let ai_generate_text_fn = lua.create_function(move |lua_ctx, (capability, provider, model, prompt, options): (mlua::Value, String, String, String, mlua::Value)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            let options_json: serde_json::Value = lua_ctx.from_value(options)?;
+
+            // Block on async operation
+            let result = tokio::runtime::Handle::try_current()
+                .map_err(|_| mlua::Error::external("ai.generate_text: no tokio runtime found"))?
+                .block_on(viwo_plugin_ai::ai_generate_text(&cap_json, this_id, &provider, &model, &prompt, &options_json))
+                .map_err(mlua::Error::external)?;
+
+            Ok(result)
+        })?;
+        lua.globals().set("__viwo_ai_generate_text", ai_generate_text_fn)?;
+
+        // ai.embed opcode - generate embeddings with capability
+        let this_id = self.this.id;
+        let ai_embed_fn = lua.create_function(move |lua_ctx, (capability, provider, model, text): (mlua::Value, String, String, String)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+
+            // Block on async operation
+            let result = tokio::runtime::Handle::try_current()
+                .map_err(|_| mlua::Error::external("ai.embed: no tokio runtime found"))?
+                .block_on(viwo_plugin_ai::ai_embed(&cap_json, this_id, &provider, &model, &text))
+                .map_err(mlua::Error::external)?;
+
+            lua_ctx.to_value(&result)
+        })?;
+        lua.globals().set("__viwo_ai_embed", ai_embed_fn)?;
+
+        // ai.chat opcode - chat completion with message history
+        let this_id = self.this.id;
+        let ai_chat_fn = lua.create_function(move |lua_ctx, (capability, provider, model, messages, options): (mlua::Value, String, String, mlua::Value, mlua::Value)| {
+            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+            let messages_json: serde_json::Value = lua_ctx.from_value(messages)?;
+            let options_json: serde_json::Value = lua_ctx.from_value(options)?;
+
+            let messages_array = messages_json.as_array()
+                .ok_or_else(|| mlua::Error::external("ai.chat: messages must be an array"))?;
+
+            // Block on async operation
+            let result = tokio::runtime::Handle::try_current()
+                .map_err(|_| mlua::Error::external("ai.chat: no tokio runtime found"))?
+                .block_on(viwo_plugin_ai::ai_chat(&cap_json, this_id, &provider, &model, messages_array, &options_json))
+                .map_err(mlua::Error::external)?;
+
+            Ok(result)
+        })?;
+        lua.globals().set("__viwo_ai_chat", ai_chat_fn)?;
+
         // Register procgen plugin opcodes (if loaded)
         let plugins = self.plugins.lock().unwrap();
         if plugins.get_plugin("procgen").is_some() {

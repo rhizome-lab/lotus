@@ -9,6 +9,7 @@ description = "Integrated runtime combining storage and script execution"
 viwo-core.workspace = true
 viwo-ir.workspace = true
 viwo-runtime-luajit.workspace = true
+viwo-plugin-ai = { path = "../plugins/ai" }
 viwo-plugin-fs = { path = "../plugins/fs" }
 viwo-plugin-net = { path = "../plugins/net" }
 viwo-plugin-sqlite = { path = "../plugins/sqlite" }
