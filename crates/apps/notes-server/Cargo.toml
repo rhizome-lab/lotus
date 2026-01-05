@@ -1,0 +1,19 @@
+[package]
+name = "viwo-notes-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Wiki-style notes server with wikilinks and backlinks"
+
+[[bin]]
+name = "notes-server"
+path = "src/main.rs"
+
+[dependencies]
+viwo-core.workspace = true
+viwo-runtime = { path = "../../viwo-runtime" }
+viwo-transport-websocket-jsonrpc = { path = "../../transport/websocket-jsonrpc" }
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+serde_json.workspace = true

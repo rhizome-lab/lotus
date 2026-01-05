@@ -17,6 +17,7 @@ members = [
     "crates/plugins/ai",
     "crates/plugins/vector",
     "crates/plugins/memory",
+    "crates/apps/notes-server",
     "xtask",
 ]
 
