@@ -21,8 +21,10 @@ mod sexpr;
 mod opcodes;
 mod validation;
 pub mod schema;
+pub mod codegen;
+pub mod builders;
 
-pub use sexpr::SExpr;
+pub use sexpr::{SExpr, Any, Str, Num, Bool, Obj, Arr, Null};
 pub use opcodes::CORE_LIBRARIES;
 pub use validation::{validate, ValidationError};
 

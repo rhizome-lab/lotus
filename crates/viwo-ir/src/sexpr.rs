@@ -141,6 +141,17 @@ impl SExpr<Any> {
             _phantom: PhantomData,
         }
     }
+
+    /// Casts this SExpr to a specific type.
+    ///
+    /// This is safe because the type parameter is only a compile-time marker
+    /// and doesn't affect the runtime representation.
+    pub fn cast_type<T>(self) -> SExpr<T> {
+        SExpr {
+            inner: self.inner,
+            _phantom: PhantomData,
+        }
+    }
 }
 
 // Methods available on any SExpr type
