@@ -247,8 +247,8 @@ mod tests {
         let expr = SExpr::call(
             "obj.get",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("o")]),
-                SExpr::string("key"),
+                SExpr::call("std.var", vec![SExpr::string("o").erase_type()]),
+                SExpr::string("key").erase_type(),
             ],
         );
         assert_eq!(compile(&expr).unwrap(), "return (o)[\"key\"]");
@@ -259,8 +259,8 @@ mod tests {
         let expr = SExpr::call(
             "obj.new",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]),
-                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type(),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]).erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -272,7 +272,7 @@ mod tests {
     fn test_keys() {
         let expr = SExpr::call(
             "obj.keys",
-            vec![SExpr::call("std.var", vec![SExpr::string("o")])],
+            vec![SExpr::call("std.var", vec![SExpr::string("o").erase_type()])],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("for k in pairs"));
@@ -282,7 +282,7 @@ mod tests {
     fn test_values() {
         let expr = SExpr::call(
             "obj.values",
-            vec![SExpr::call("std.var", vec![SExpr::string("o")])],
+            vec![SExpr::call("std.var", vec![SExpr::string("o").erase_type()])],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("for _, v in pairs"));
@@ -293,8 +293,8 @@ mod tests {
         let expr = SExpr::call(
             "obj.has",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("o")]),
-                SExpr::string("key"),
+                SExpr::call("std.var", vec![SExpr::string("o").erase_type()]),
+                SExpr::string("key").erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();

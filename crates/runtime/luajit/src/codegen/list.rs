@@ -358,7 +358,7 @@ mod tests {
     fn test_new() {
         let expr = SExpr::call(
             "list.new",
-            vec![SExpr::number(1), SExpr::number(2), SExpr::number(3)],
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
         );
         assert_eq!(
             compile(&expr).unwrap(),
@@ -380,8 +380,8 @@ mod tests {
         let expr = SExpr::call(
             "list.get",
             vec![
-                SExpr::call("list.new", vec![SExpr::number(10), SExpr::number(20)]),
-                SExpr::number(0),
+                SExpr::call("list.new", vec![SExpr::number(10).erase_type(), SExpr::number(20).erase_type()]),
+                SExpr::number(0).erase_type(),
             ],
         );
         // Lua is 1-indexed, so we add 1
@@ -394,7 +394,7 @@ mod tests {
             "list.len",
             vec![SExpr::call(
                 "list.new",
-                vec![SExpr::number(1), SExpr::number(2)],
+                vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
             )],
         );
         assert!(compile(&expr).unwrap().starts_with("return #"));
@@ -405,8 +405,8 @@ mod tests {
         let expr = SExpr::call(
             "list.push",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("arr")]),
-                SExpr::number(5),
+                SExpr::call("std.var", vec![SExpr::string("arr").erase_type()]),
+                SExpr::number(5).erase_type(),
             ],
         );
         assert!(compile(&expr).unwrap().contains("table.insert"));

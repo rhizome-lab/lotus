@@ -10,35 +10,35 @@ fn assert_transpile(source: &str, expected: SExpr) {
 
 #[test]
 fn test_number_literals() {
-    assert_transpile("42", SExpr::number(42.0));
-    assert_transpile("3.14", SExpr::number(3.14));
-    assert_transpile("0", SExpr::number(0.0));
+    assert_transpile("42", SExpr::number(42.0).erase_type());
+    assert_transpile("3.14", SExpr::number(3.14).erase_type());
+    assert_transpile("0", SExpr::number(0.0).erase_type());
 }
 
 #[test]
 fn test_string_literals() {
-    assert_transpile("\"hello\"", SExpr::string("hello"));
-    assert_transpile("'world'", SExpr::string("world"));
+    assert_transpile("\"hello\"", SExpr::string("hello").erase_type());
+    assert_transpile("'world'", SExpr::string("world").erase_type());
 }
 
 #[test]
 fn test_boolean_literals() {
-    assert_transpile("true", SExpr::bool(true));
-    assert_transpile("false", SExpr::bool(false));
+    assert_transpile("true", SExpr::bool(true).erase_type());
+    assert_transpile("false", SExpr::bool(false).erase_type());
 }
 
 #[test]
 fn test_null_undefined() {
-    assert_transpile("null", SExpr::null());
-    assert_transpile("undefined", SExpr::null());
+    assert_transpile("null", SExpr::null().erase_type());
+    assert_transpile("undefined", SExpr::null().erase_type());
 }
 
 #[test]
 fn test_variable_reference() {
-    assert_transpile("x", SExpr::call("std.var", vec![SExpr::string("x")]));
+    assert_transpile("x", SExpr::call("std.var", vec![SExpr::string("x").erase_type()]));
     assert_transpile(
         "myVar",
-        SExpr::call("std.var", vec![SExpr::string("myVar")]),
+        SExpr::call("std.var", vec![SExpr::string("myVar").erase_type()]),
     );
 }
 
@@ -123,11 +123,11 @@ fn test_nested_expressions() {
 fn test_variable_declaration() {
     assert_transpile(
         "let x = 10",
-        SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10.0).erase_type()]),
+        SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10.0).erase_type()]),
     );
     assert_transpile(
         "const y = 20",
-        SExpr::call("std.let", vec![SExpr::string("y"), SExpr::number(20.0).erase_type()]),
+        SExpr::call("std.let", vec![SExpr::string("y").erase_type(), SExpr::number(20.0).erase_type()]),
     );
 }
 
@@ -153,7 +153,7 @@ fn test_namespaced_call() {
         "str.concat(\"a\", \"b\")",
         SExpr::call(
             "str.concat",
-            vec![SExpr::string("a"), SExpr::string("b")],
+            vec![SExpr::string("a").erase_type(), SExpr::string("b").erase_type()],
         ),
     );
 }
@@ -164,7 +164,7 @@ fn test_array_literal() {
         "[1, 2, 3]",
         SExpr::call(
             "list.new",
-            vec![SExpr::Number(1.0), SExpr::Number(2.0), SExpr::Number(3.0)],
+            vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type(), SExpr::number(3.0).erase_type()],
         ),
     );
     assert_transpile("[]", SExpr::call("list.new", vec![]));
@@ -176,7 +176,7 @@ fn test_object_literal() {
         "{ x: 1 }",
         SExpr::call(
             "obj.new",
-            vec![SExpr::List(vec![SExpr::string("x"), SExpr::Number(1.0)])],
+            vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1.0).erase_type()]).erase_type()],
         ),
     );
     assert_transpile(
@@ -184,8 +184,8 @@ fn test_object_literal() {
         SExpr::call(
             "obj.new",
             vec![
-                SExpr::List(vec![SExpr::string("a"), SExpr::Number(1.0)]),
-                SExpr::List(vec![SExpr::string("b"), SExpr::Number(2.0)]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1.0).erase_type()]).erase_type(),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2.0).erase_type()]).erase_type(),
             ],
         ),
     );
@@ -198,8 +198,8 @@ fn test_member_access() {
         SExpr::call(
             "obj.get",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("obj")]),
-                SExpr::string("prop"),
+                SExpr::call("std.var", vec![SExpr::string("obj").erase_type()]),
+                SExpr::string("prop").erase_type(),
             ],
         ),
     );
@@ -212,8 +212,8 @@ fn test_subscript_access() {
         SExpr::call(
             "list.get",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("arr")]),
-                SExpr::Number(0.0),
+                SExpr::call("std.var", vec![SExpr::string("arr").erase_type()]),
+                SExpr::number(0.0).erase_type(),
             ],
         ),
     );
@@ -227,12 +227,12 @@ fn test_arrow_function() {
         SExpr::call(
             "std.lambda",
             vec![
-                SExpr::List(vec![SExpr::string("x")]),
+                SExpr::list(vec![SExpr::string("x").erase_type()]).erase_type(),
                 SExpr::call(
                     "math.add",
                     vec![
-                        SExpr::call("std.var", vec![SExpr::string("x")]),
-                        SExpr::Number(1.0),
+                        SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                        SExpr::number(1.0).erase_type(),
                     ],
                 ),
             ],
@@ -247,9 +247,9 @@ fn test_ternary_expression() {
         SExpr::call(
             "std.if",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("x")]),
-                SExpr::Number(1.0),
-                SExpr::Number(2.0),
+                SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                SExpr::number(1.0).erase_type(),
+                SExpr::number(2.0).erase_type(),
             ],
         ),
     );
@@ -262,8 +262,8 @@ fn test_if_statement() {
         SExpr::call(
             "std.if",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("x")]),
-                SExpr::call("std.var", vec![SExpr::string("y")]),
+                SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                SExpr::call("std.var", vec![SExpr::string("y").erase_type()]),
             ],
         ),
     );
@@ -276,9 +276,9 @@ fn test_if_else_statement() {
         SExpr::call(
             "std.if",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("x")]),
-                SExpr::Number(1.0),
-                SExpr::Number(2.0),
+                SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                SExpr::number(1.0).erase_type(),
+                SExpr::number(2.0).erase_type(),
             ],
         ),
     );
@@ -291,8 +291,8 @@ fn test_multiple_statements() {
         SExpr::call(
             "std.seq",
             vec![
-                SExpr::call("std.let", vec![SExpr::string("x"), SExpr::Number(1.0)]),
-                SExpr::call("std.let", vec![SExpr::string("y"), SExpr::Number(2.0)]),
+                SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(1.0).erase_type()]),
+                SExpr::call("std.let", vec![SExpr::string("y").erase_type(), SExpr::number(2.0).erase_type()]),
             ],
         ),
     );
@@ -305,12 +305,12 @@ fn test_block_statement() {
         SExpr::call(
             "std.seq",
             vec![
-                SExpr::call("std.let", vec![SExpr::string("x"), SExpr::Number(1.0)]),
+                SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(1.0).erase_type()]),
                 SExpr::call(
                     "math.add",
                     vec![
-                        SExpr::call("std.var", vec![SExpr::string("x")]),
-                        SExpr::Number(1.0),
+                        SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                        SExpr::number(1.0).erase_type(),
                     ],
                 ),
             ],

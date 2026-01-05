@@ -398,13 +398,13 @@ mod tests {
 
     #[test]
     fn test_let() {
-        let expr = SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10)]);
+        let expr = SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "local x = 10");
     }
 
     #[test]
     fn test_var() {
-        let expr = SExpr::call("std.var", vec![SExpr::string("x")]);
+        let expr = SExpr::call("std.var", vec![SExpr::string("x").erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return x");
     }
 
@@ -413,8 +413,8 @@ mod tests {
         let expr = SExpr::call(
             "std.seq",
             vec![
-                SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10)]),
-                SExpr::call("std.var", vec![SExpr::string("x")]),
+                SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10).erase_type()]),
+                SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -453,9 +453,9 @@ mod tests {
         let expr = SExpr::call(
             "std.for",
             vec![
-                SExpr::string("item"),
-                SExpr::call("list.new", vec![SExpr::number(1), SExpr::number(2)]),
-                SExpr::call("std.var", vec![SExpr::string("item")]),
+                SExpr::string("item").erase_type(),
+                SExpr::call("list.new", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::call("std.var", vec![SExpr::string("item").erase_type()]),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -468,12 +468,12 @@ mod tests {
         let expr = SExpr::call(
             "std.lambda",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::string("b").erase_type()]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::string("b").erase_type()]).erase_type(),
                 SExpr::call(
                     "+",
                     vec![
-                        SExpr::call("std.var", vec![SExpr::string("a")]),
-                        SExpr::call("std.var", vec![SExpr::string("b")]),
+                        SExpr::call("std.var", vec![SExpr::string("a").erase_type()]),
+                        SExpr::call("std.var", vec![SExpr::string("b").erase_type()]),
                     ],
                 ),
             ],
@@ -485,10 +485,10 @@ mod tests {
 
     #[test]
     fn test_keyword_escaping() {
-        let expr = SExpr::call("std.let", vec![SExpr::string("end"), SExpr::number(1)]);
+        let expr = SExpr::call("std.let", vec![SExpr::string("end").erase_type(), SExpr::number(1).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "local _end = 1");
 
-        let expr = SExpr::call("std.let", vec![SExpr::string("local"), SExpr::number(2)]);
+        let expr = SExpr::call("std.let", vec![SExpr::string("local").erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "local _local = 2");
     }
 
@@ -498,17 +498,17 @@ mod tests {
         let lambda = SExpr::call(
             "std.lambda",
             vec![
-                SExpr::list(vec![SExpr::string("x").erase_type()]),
+                SExpr::list(vec![SExpr::string("x").erase_type()]).erase_type(),
                 SExpr::call(
                     "+",
                     vec![
-                        SExpr::call("std.var", vec![SExpr::string("x")]),
-                        SExpr::number(1),
+                        SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                        SExpr::number(1).erase_type(),
                     ],
                 ),
             ],
         );
-        let expr = SExpr::call("std.apply", vec![lambda, SExpr::number(5)]);
+        let expr = SExpr::call("std.apply", vec![lambda, SExpr::number(5).erase_type()]);
         let code = compile(&expr).unwrap();
         assert!(code.contains("(function(x)"));
         assert!(code.contains(")(5)"));
@@ -520,8 +520,8 @@ mod tests {
         let expr = SExpr::call(
             "std.apply",
             vec![
-                SExpr::call("std.var", vec![SExpr::string("f")]),
-                SExpr::number(5),
+                SExpr::call("std.var", vec![SExpr::string("f").erase_type()]),
+                SExpr::number(5).erase_type(),
             ],
         );
         assert_eq!(compile(&expr).unwrap(), "return (f)(5)");

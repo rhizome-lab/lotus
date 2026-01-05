@@ -85,13 +85,13 @@ mod tests {
 
     #[test]
     fn test_eq() {
-        let expr = SExpr::call("==", vec![SExpr::number(1), SExpr::number(1)]);
+        let expr = SExpr::call("==", vec![SExpr::number(1).erase_type(), SExpr::number(1).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (1 == 1)");
     }
 
     #[test]
     fn test_neq() {
-        let expr = SExpr::call("!=", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("!=", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (1 ~= 2)");
     }
 
@@ -115,29 +115,29 @@ mod tests {
 
     #[test]
     fn test_comparisons() {
-        let expr = SExpr::call("<", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("<", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (1 < 2)");
 
-        let expr = SExpr::call("<=", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("<=", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (1 <= 2)");
 
-        let expr = SExpr::call(">", vec![SExpr::number(2), SExpr::number(1)]);
+        let expr = SExpr::call(">", vec![SExpr::number(2).erase_type(), SExpr::number(1).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (2 > 1)");
 
-        let expr = SExpr::call(">=", vec![SExpr::number(2), SExpr::number(1)]);
+        let expr = SExpr::call(">=", vec![SExpr::number(2).erase_type(), SExpr::number(1).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (2 >= 1)");
     }
 
     #[test]
     fn test_nullish() {
-        let expr = SExpr::call("??", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("??", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         let code = compile(&expr).unwrap();
         assert!(code.contains("l ~= nil and l ~= null"));
     }
 
     #[test]
     fn test_guard() {
-        let expr = SExpr::call("bool.guard", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("bool.guard", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         let code = compile(&expr).unwrap();
         assert!(code.contains("l == nil or l == null"));
     }

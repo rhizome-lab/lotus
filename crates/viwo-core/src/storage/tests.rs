@@ -95,7 +95,7 @@ fn test_add_and_get_verb() {
     let storage = WorldStorage::in_memory().unwrap();
 
     let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    let code = SExpr::call("std.return", vec![SExpr::number(42)]);
+    let code = SExpr::call("std.return", vec![SExpr::number(42).erase_type()]);
 
     storage.add_verb(id, "test_verb", &code).unwrap();
 
@@ -122,7 +122,7 @@ fn test_verb_inheritance() {
     let proto_id = storage.create_entity(json!({"name": "Proto"}), None).unwrap();
     let instance_id = storage.create_entity(json!({"name": "Instance"}), Some(proto_id)).unwrap();
 
-    let proto_code = SExpr::call("std.return", vec![SExpr::string("proto")]);
+    let proto_code = SExpr::call("std.return", vec![SExpr::string("proto").erase_type()]);
     storage.add_verb(proto_id, "inherited", &proto_code).unwrap();
 
     // Instance should inherit verb from prototype
@@ -138,8 +138,8 @@ fn test_verb_override() {
     let proto_id = storage.create_entity(json!({"name": "Proto"}), None).unwrap();
     let instance_id = storage.create_entity(json!({"name": "Instance"}), Some(proto_id)).unwrap();
 
-    let proto_code = SExpr::call("std.return", vec![SExpr::string("proto")]);
-    let instance_code = SExpr::call("std.return", vec![SExpr::string("instance")]);
+    let proto_code = SExpr::call("std.return", vec![SExpr::string("proto").erase_type()]);
+    let instance_code = SExpr::call("std.return", vec![SExpr::string("instance").erase_type()]);
 
     storage.add_verb(proto_id, "method", &proto_code).unwrap();
     storage.add_verb(instance_id, "method", &instance_code).unwrap();
@@ -161,10 +161,10 @@ fn test_get_all_verbs() {
     let proto_id = storage.create_entity(json!({"name": "Proto"}), None).unwrap();
     let instance_id = storage.create_entity(json!({"name": "Instance"}), Some(proto_id)).unwrap();
 
-    storage.add_verb(proto_id, "proto_only", &SExpr::number(1)).unwrap();
-    storage.add_verb(proto_id, "overridden", &SExpr::number(2)).unwrap();
-    storage.add_verb(instance_id, "overridden", &SExpr::number(3)).unwrap();
-    storage.add_verb(instance_id, "instance_only", &SExpr::number(4)).unwrap();
+    storage.add_verb(proto_id, "proto_only", &SExpr::number(1).erase_type()).unwrap();
+    storage.add_verb(proto_id, "overridden", &SExpr::number(2).erase_type()).unwrap();
+    storage.add_verb(instance_id, "overridden", &SExpr::number(3).erase_type()).unwrap();
+    storage.add_verb(instance_id, "instance_only", &SExpr::number(4).erase_type()).unwrap();
 
     let verbs = storage.get_verbs(instance_id).unwrap();
     assert_eq!(verbs.len(), 3);
@@ -184,13 +184,13 @@ fn test_update_verb() {
     let storage = WorldStorage::in_memory().unwrap();
 
     let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    storage.add_verb(id, "verb", &SExpr::number(1)).unwrap();
+    storage.add_verb(id, "verb", &SExpr::number(1).erase_type()).unwrap();
 
     let verb = storage.get_verb(id, "verb").unwrap().unwrap();
-    storage.update_verb(verb.id, &SExpr::number(2)).unwrap();
+    storage.update_verb(verb.id, &SExpr::number(2).erase_type()).unwrap();
 
     let updated = storage.get_verb(id, "verb").unwrap().unwrap();
-    assert_eq!(updated.code, SExpr::number(2));
+    assert_eq!(updated.code, SExpr::number(2).erase_type());
 }
 
 #[test]
@@ -198,7 +198,7 @@ fn test_delete_verb() {
     let storage = WorldStorage::in_memory().unwrap();
 
     let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    storage.add_verb(id, "verb", &SExpr::number(1)).unwrap();
+    storage.add_verb(id, "verb", &SExpr::number(1).erase_type()).unwrap();
 
     let verb = storage.get_verb(id, "verb").unwrap().unwrap();
     storage.delete_verb(verb.id).unwrap();
@@ -232,8 +232,8 @@ fn test_delete_entity_cascades_verbs() {
     let storage = WorldStorage::in_memory().unwrap();
 
     let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    storage.add_verb(id, "verb1", &SExpr::number(1)).unwrap();
-    storage.add_verb(id, "verb2", &SExpr::number(2)).unwrap();
+    storage.add_verb(id, "verb1", &SExpr::number(1).erase_type()).unwrap();
+    storage.add_verb(id, "verb2", &SExpr::number(2).erase_type()).unwrap();
 
     storage.delete_entity(id).unwrap();
 

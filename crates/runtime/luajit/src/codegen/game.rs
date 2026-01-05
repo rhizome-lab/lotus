@@ -158,20 +158,20 @@ mod tests {
 
     #[test]
     fn test_entity() {
-        let expr = SExpr::call("entity", vec![SExpr::number(42)]);
+        let expr = SExpr::call("entity", vec![SExpr::number(42).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return __viwo_entity(42)");
     }
 
     #[test]
     fn test_update() {
         let mut props = HashMap::new();
-        props.insert("name".to_string(), SExpr::string("Updated"));
+        props.insert("name".to_string(), SExpr::string("Updated").erase_type());
 
         let expr = SExpr::call(
             "update",
             vec![
                 SExpr::number(1).erase_type(),
-                SExpr::object(props),
+                SExpr::object(props).erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -182,9 +182,9 @@ mod tests {
     #[test]
     fn test_create() {
         let mut props = HashMap::new();
-        props.insert("name".to_string(), SExpr::string("New Entity"));
+        props.insert("name".to_string(), SExpr::string("New Entity").erase_type());
 
-        let expr = SExpr::call("create", vec![SExpr::object(props)]);
+        let expr = SExpr::call("create", vec![SExpr::object(props).erase_type()]);
         let code = compile(&expr).unwrap();
         assert!(code.contains("__viwo_create"));
         assert!(code.contains("nil")); // No prototype
@@ -193,12 +193,12 @@ mod tests {
     #[test]
     fn test_create_with_prototype() {
         let mut props = HashMap::new();
-        props.insert("name".to_string(), SExpr::string("New Entity"));
+        props.insert("name".to_string(), SExpr::string("New Entity").erase_type());
 
         let expr = SExpr::call(
             "create",
             vec![
-                SExpr::object(props),
+                SExpr::object(props).erase_type(),
                 SExpr::number(10).erase_type(),
             ],
         );
@@ -213,7 +213,7 @@ mod tests {
             "call",
             vec![
                 SExpr::call("std.this", vec![]),
-                SExpr::string("helper"),
+                SExpr::string("helper").erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -227,9 +227,9 @@ mod tests {
             "call",
             vec![
                 SExpr::call("std.this", vec![]),
-                SExpr::string("greet"),
-                SExpr::string("Alice"),
-                SExpr::number(42),
+                SExpr::string("greet").erase_type(),
+                SExpr::string("Alice").erase_type(),
+                SExpr::number(42).erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -244,8 +244,8 @@ mod tests {
         let expr = SExpr::call(
             "schedule",
             vec![
-                SExpr::string("tick"),
-                SExpr::list(vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::string("tick").erase_type(),
+                SExpr::list(vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]).erase_type(),
                 SExpr::number(1000).erase_type(),
             ],
         );

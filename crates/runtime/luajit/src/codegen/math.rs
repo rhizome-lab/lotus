@@ -313,82 +313,82 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let expr = SExpr::call("+", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("+", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (1 + 2)");
     }
 
     #[test]
     fn test_mul() {
-        let expr = SExpr::call("*", vec![SExpr::number(3), SExpr::number(4)]);
+        let expr = SExpr::call("*", vec![SExpr::number(3).erase_type(), SExpr::number(4).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (3 * 4)");
     }
 
     #[test]
     fn test_neg() {
-        let expr = SExpr::call("math.neg", vec![SExpr::number(5)]);
+        let expr = SExpr::call("math.neg", vec![SExpr::number(5).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (-(5))");
     }
 
     #[test]
     fn test_abs() {
-        let expr = SExpr::call("math.abs", vec![SExpr::number(-5)]);
+        let expr = SExpr::call("math.abs", vec![SExpr::number(-5).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.abs(-5)");
     }
 
     #[test]
     fn test_floor() {
-        let expr = SExpr::call("math.floor", vec![SExpr::number(3.7)]);
+        let expr = SExpr::call("math.floor", vec![SExpr::number(3.7).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.floor(3.7)");
     }
 
     #[test]
     fn test_ceil() {
-        let expr = SExpr::call("math.ceil", vec![SExpr::number(3.2)]);
+        let expr = SExpr::call("math.ceil", vec![SExpr::number(3.2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.ceil(3.2)");
     }
 
     #[test]
     fn test_sqrt() {
-        let expr = SExpr::call("math.sqrt", vec![SExpr::number(9)]);
+        let expr = SExpr::call("math.sqrt", vec![SExpr::number(9).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.sqrt(9)");
     }
 
     #[test]
     fn test_min_max() {
-        let expr = SExpr::call("math.min", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("math.min", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.min(1, 2)");
 
-        let expr = SExpr::call("math.max", vec![SExpr::number(1), SExpr::number(2)]);
+        let expr = SExpr::call("math.max", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.max(1, 2)");
     }
 
     #[test]
     fn test_trunc() {
-        let expr = SExpr::call("math.trunc", vec![SExpr::number(1.7)]);
+        let expr = SExpr::call("math.trunc", vec![SExpr::number(1.7).erase_type()]);
         assert!(compile(&expr).unwrap().contains("math.modf"));
     }
 
     #[test]
     fn test_round() {
-        let expr = SExpr::call("math.round", vec![SExpr::number(1.5)]);
+        let expr = SExpr::call("math.round", vec![SExpr::number(1.5).erase_type()]);
         assert!(compile(&expr).unwrap().contains("+ 0.5"));
     }
 
     #[test]
     fn test_trig() {
-        let expr = SExpr::call("math.sin", vec![SExpr::number(0)]);
+        let expr = SExpr::call("math.sin", vec![SExpr::number(0).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.sin(0)");
 
-        let expr = SExpr::call("math.cos", vec![SExpr::number(0)]);
+        let expr = SExpr::call("math.cos", vec![SExpr::number(0).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.cos(0)");
     }
 
     #[test]
     fn test_log_exp() {
-        let expr = SExpr::call("math.log", vec![SExpr::number(1)]);
+        let expr = SExpr::call("math.log", vec![SExpr::number(1).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.log(1)");
 
-        let expr = SExpr::call("math.exp", vec![SExpr::number(0)]);
+        let expr = SExpr::call("math.exp", vec![SExpr::number(0).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return math.exp(0)");
     }
 
@@ -396,14 +396,14 @@ mod tests {
     fn test_clamp() {
         let expr = SExpr::call(
             "math.clamp",
-            vec![SExpr::number(5), SExpr::number(0), SExpr::number(10)],
+            vec![SExpr::number(5).erase_type(), SExpr::number(0).erase_type(), SExpr::number(10).erase_type()],
         );
         assert!(compile(&expr).unwrap().contains("math.min(math.max"));
     }
 
     #[test]
     fn test_sign() {
-        let expr = SExpr::call("math.sign", vec![SExpr::number(5)]);
+        let expr = SExpr::call("math.sign", vec![SExpr::number(5).erase_type()]);
         assert!(compile(&expr).unwrap().contains("x > 0"));
     }
 }

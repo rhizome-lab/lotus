@@ -79,14 +79,14 @@ mod tests {
 
     #[test]
     fn test_procgen_seed() {
-        let expr = SExpr::call("procgen.seed", vec![SExpr::number(42)]);
+        let expr = SExpr::call("procgen.seed", vec![SExpr::number(42).erase_type()]);
         let lua = compile(&expr).unwrap();
         assert_eq!(lua, "return __viwo_procgen_seed(42)");
     }
 
     #[test]
     fn test_procgen_noise() {
-        let expr = SExpr::call("procgen.noise", vec![SExpr::number(1.0), SExpr::number(2.0)]);
+        let expr = SExpr::call("procgen.noise", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]);
         let lua = compile(&expr).unwrap();
         assert_eq!(lua, "return __viwo_procgen_noise(1, 2)");
     }
@@ -100,14 +100,14 @@ mod tests {
 
     #[test]
     fn test_procgen_random_range() {
-        let expr = SExpr::call("procgen.random", vec![SExpr::number(0), SExpr::number(10)]);
+        let expr = SExpr::call("procgen.random", vec![SExpr::number(0).erase_type(), SExpr::number(10).erase_type()]);
         let lua = compile(&expr).unwrap();
         assert_eq!(lua, "return __viwo_procgen_random_range(0, 10)");
     }
 
     #[test]
     fn test_procgen_between() {
-        let expr = SExpr::call("procgen.between", vec![SExpr::number(1), SExpr::number(10)]);
+        let expr = SExpr::call("procgen.between", vec![SExpr::number(1).erase_type(), SExpr::number(10).erase_type()]);
         let lua = compile(&expr).unwrap();
         assert_eq!(lua, "return __viwo_procgen_between(1, 10)");
     }

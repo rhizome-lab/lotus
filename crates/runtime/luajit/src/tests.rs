@@ -12,13 +12,13 @@ use viwo_ir::SExpr;
 
 #[test]
 fn test_compile_literals() {
-    assert_eq!(compile(&SExpr::null()).unwrap(), "return null");
-    assert_eq!(compile(&SExpr::bool(true)).unwrap(), "return true");
-    assert_eq!(compile(&SExpr::bool(false)).unwrap(), "return false");
-    assert_eq!(compile(&SExpr::number(42.0)).unwrap(), "return 42");
-    assert_eq!(compile(&SExpr::number(3.14)).unwrap(), "return 3.14");
+    assert_eq!(compile(&SExpr::null().erase_type()).unwrap(), "return null");
+    assert_eq!(compile(&SExpr::bool(true).erase_type()).unwrap(), "return true");
+    assert_eq!(compile(&SExpr::bool(false).erase_type()).unwrap(), "return false");
+    assert_eq!(compile(&SExpr::number(42.0).erase_type()).unwrap(), "return 42");
+    assert_eq!(compile(&SExpr::number(3.14).erase_type()).unwrap(), "return 3.14");
     assert_eq!(
-        compile(&SExpr::string("hello")).unwrap(),
+        compile(&SExpr::string("hello").erase_type()).unwrap(),
         "return \"hello\""
     );
 }
@@ -26,18 +26,18 @@ fn test_compile_literals() {
 #[test]
 fn test_compile_string_escaping() {
     assert_eq!(
-        compile(&SExpr::string("line1\nline2")).unwrap(),
+        compile(&SExpr::string("line1\nline2").erase_type()).unwrap(),
         "return [[line1\nline2]]"
     );
     assert_eq!(
-        compile(&SExpr::string("with \"quotes\"")).unwrap(),
+        compile(&SExpr::string("with \"quotes\"").erase_type()).unwrap(),
         "return \"with \\\"quotes\\\"\""
     );
 }
 
 #[test]
 fn test_compile_unknown_opcode() {
-    let expr = SExpr::call("custom.opcode", vec![SExpr::number(1), SExpr::number(2)]);
+    let expr = SExpr::call("custom.opcode", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
     // Unknown opcodes become function calls
     assert_eq!(compile(&expr).unwrap(), "return custom_opcode(1, 2)");
 }
@@ -51,50 +51,50 @@ use serde_json::json;
 
 #[test]
 fn test_execute_literal_number() {
-    let result = execute(&SExpr::number(42)).unwrap();
+    let result = execute(&SExpr::number(42).erase_type()).unwrap();
     assert_eq!(result, json!(42));
 }
 
 #[test]
 fn test_execute_literal_string() {
-    let result = execute(&SExpr::string("hello")).unwrap();
+    let result = execute(&SExpr::string("hello").erase_type()).unwrap();
     assert_eq!(result, json!("hello"));
 }
 
 #[test]
 fn test_execute_literal_bool() {
-    let result = execute(&SExpr::bool(true)).unwrap();
+    let result = execute(&SExpr::bool(true).erase_type()).unwrap();
     assert_eq!(result, json!(true));
 
-    let result = execute(&SExpr::bool(false)).unwrap();
+    let result = execute(&SExpr::bool(false).erase_type()).unwrap();
     assert_eq!(result, json!(false));
 }
 
 #[test]
 fn test_execute_literal_null() {
-    let result = execute(&SExpr::null()).unwrap();
+    let result = execute(&SExpr::null().erase_type()).unwrap();
     assert_eq!(result, serde_json::Value::Null);
 }
 
 #[test]
 fn test_execute_arithmetic() {
     // 2 + 3
-    let expr = SExpr::call("+", vec![SExpr::number(2), SExpr::number(3)]);
+    let expr = SExpr::call("+", vec![SExpr::number(2).erase_type(), SExpr::number(3).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(5));
 
     // 10 - 4
-    let expr = SExpr::call("-", vec![SExpr::number(10), SExpr::number(4)]);
+    let expr = SExpr::call("-", vec![SExpr::number(10).erase_type(), SExpr::number(4).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(6));
 
     // 6 * 7
-    let expr = SExpr::call("*", vec![SExpr::number(6), SExpr::number(7)]);
+    let expr = SExpr::call("*", vec![SExpr::number(6).erase_type(), SExpr::number(7).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(42));
 
     // 15 / 3
-    let expr = SExpr::call("/", vec![SExpr::number(15), SExpr::number(3)]);
+    let expr = SExpr::call("/", vec![SExpr::number(15).erase_type(), SExpr::number(3).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(5));
 }
@@ -102,22 +102,22 @@ fn test_execute_arithmetic() {
 #[test]
 fn test_execute_comparison() {
     // 1 == 1
-    let expr = SExpr::call("==", vec![SExpr::number(1), SExpr::number(1)]);
+    let expr = SExpr::call("==", vec![SExpr::number(1).erase_type(), SExpr::number(1).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // 1 != 2
-    let expr = SExpr::call("!=", vec![SExpr::number(1), SExpr::number(2)]);
+    let expr = SExpr::call("!=", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // 5 > 3
-    let expr = SExpr::call(">", vec![SExpr::number(5), SExpr::number(3)]);
+    let expr = SExpr::call(">", vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // 2 < 2
-    let expr = SExpr::call("<", vec![SExpr::number(2), SExpr::number(2)]);
+    let expr = SExpr::call("<", vec![SExpr::number(2).erase_type(), SExpr::number(2).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(false));
 }
@@ -125,17 +125,17 @@ fn test_execute_comparison() {
 #[test]
 fn test_execute_logical() {
     // true && false
-    let expr = SExpr::call("&&", vec![SExpr::bool(true), SExpr::bool(false)]);
+    let expr = SExpr::call("&&", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(false));
 
     // true || false
-    let expr = SExpr::call("||", vec![SExpr::bool(true), SExpr::bool(false)]);
+    let expr = SExpr::call("||", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // !true
-    let expr = SExpr::call("!", vec![SExpr::bool(true)]);
+    let expr = SExpr::call("!", vec![SExpr::bool(true).erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(false));
 }
@@ -145,9 +145,9 @@ fn test_execute_string_concat() {
     let expr = SExpr::call(
         "str.concat",
         vec![
-            SExpr::string("Hello"),
-            SExpr::string(", "),
-            SExpr::string("World!"),
+            SExpr::string("Hello").erase_type(),
+            SExpr::string(", ").erase_type(),
+            SExpr::string("World!").erase_type(),
         ],
     );
     let result = execute(&expr).unwrap();
@@ -156,7 +156,7 @@ fn test_execute_string_concat() {
 
 #[test]
 fn test_execute_string_len() {
-    let expr = SExpr::call("str.len", vec![SExpr::string("hello")]);
+    let expr = SExpr::call("str.len", vec![SExpr::string("hello").erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(5));
 }
@@ -166,7 +166,7 @@ fn test_execute_if_true() {
     // if true then 1 else 2
     let expr = SExpr::call(
         "std.if",
-        vec![SExpr::bool(true), SExpr::number(1), SExpr::number(2)],
+        vec![SExpr::bool(true).erase_type(), SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
     );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(1));
@@ -177,7 +177,7 @@ fn test_execute_if_false() {
     // if false then 1 else 2
     let expr = SExpr::call(
         "std.if",
-        vec![SExpr::bool(false), SExpr::number(1), SExpr::number(2)],
+        vec![SExpr::bool(false).erase_type(), SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
     );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(2));
@@ -189,8 +189,8 @@ fn test_execute_seq_with_let_and_var() {
     let expr = SExpr::call(
         "std.seq",
         vec![
-            SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10)]),
-            SExpr::call("std.var", vec![SExpr::string("x")]),
+            SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10).erase_type()]),
+            SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
         ],
     );
     let result = execute(&expr).unwrap();
@@ -203,8 +203,8 @@ fn test_execute_nested_arithmetic() {
     let expr = SExpr::call(
         "*",
         vec![
-            SExpr::call("+", vec![SExpr::number(1), SExpr::number(2)]),
-            SExpr::call("+", vec![SExpr::number(3), SExpr::number(4)]),
+            SExpr::call("+", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
+            SExpr::call("+", vec![SExpr::number(3).erase_type(), SExpr::number(4).erase_type()]),
         ],
     );
     let result = execute(&expr).unwrap();
@@ -215,7 +215,7 @@ fn test_execute_nested_arithmetic() {
 fn test_execute_list_new() {
     let expr = SExpr::call(
         "list.new",
-        vec![SExpr::number(1), SExpr::number(2), SExpr::number(3)],
+        vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
     );
     let result = execute(&expr).unwrap();
     assert!(result.is_array());
@@ -234,7 +234,7 @@ fn test_execute_list_empty() {
 fn test_execute_list_with_null() {
     let expr = SExpr::call(
         "list.new",
-        vec![SExpr::number(1), SExpr::null(), SExpr::number(3)],
+        vec![SExpr::number(1).erase_type(), SExpr::null().erase_type(), SExpr::number(3).erase_type()],
     );
     let result = execute(&expr).unwrap();
     let arr = result.as_array().unwrap();
@@ -262,30 +262,30 @@ fn test_execute_complex_expression() {
     let expr = SExpr::call(
         "std.seq",
         vec![
-            SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(5)]),
-            SExpr::call("std.let", vec![SExpr::string("y"), SExpr::number(10)]),
+            SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(5).erase_type()]),
+            SExpr::call("std.let", vec![SExpr::string("y").erase_type(), SExpr::number(10).erase_type()]),
             SExpr::call(
                 "std.if",
                 vec![
                     SExpr::call(
                         "<",
                         vec![
-                            SExpr::call("std.var", vec![SExpr::string("x")]),
-                            SExpr::call("std.var", vec![SExpr::string("y")]),
+                            SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                            SExpr::call("std.var", vec![SExpr::string("y").erase_type()]),
                         ],
                     ),
                     SExpr::call(
                         "+",
                         vec![
-                            SExpr::call("std.var", vec![SExpr::string("x")]),
-                            SExpr::call("std.var", vec![SExpr::string("y")]),
+                            SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                            SExpr::call("std.var", vec![SExpr::string("y").erase_type()]),
                         ],
                     ),
                     SExpr::call(
                         "-",
                         vec![
-                            SExpr::call("std.var", vec![SExpr::string("x")]),
-                            SExpr::call("std.var", vec![SExpr::string("y")]),
+                            SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                            SExpr::call("std.var", vec![SExpr::string("y").erase_type()]),
                         ],
                     ),
                 ],
@@ -302,37 +302,37 @@ fn test_execute_complex_expression() {
 
 #[test]
 fn test_execute_math_abs() {
-    let expr = SExpr::call("math.abs", vec![SExpr::number(-5)]);
+    let expr = SExpr::call("math.abs", vec![SExpr::number(-5).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(5));
 
-    let expr = SExpr::call("math.abs", vec![SExpr::number(5)]);
+    let expr = SExpr::call("math.abs", vec![SExpr::number(5).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(5));
 }
 
 #[test]
 fn test_execute_math_floor() {
-    let expr = SExpr::call("math.floor", vec![SExpr::number(3.7)]);
+    let expr = SExpr::call("math.floor", vec![SExpr::number(3.7).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
 
-    let expr = SExpr::call("math.floor", vec![SExpr::number(-1.5)]);
+    let expr = SExpr::call("math.floor", vec![SExpr::number(-1.5).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(-2));
 }
 
 #[test]
 fn test_execute_math_ceil() {
-    let expr = SExpr::call("math.ceil", vec![SExpr::number(3.2)]);
+    let expr = SExpr::call("math.ceil", vec![SExpr::number(3.2).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(4));
 
-    let expr = SExpr::call("math.ceil", vec![SExpr::number(-1.5)]);
+    let expr = SExpr::call("math.ceil", vec![SExpr::number(-1.5).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(-1));
 }
 
 #[test]
 fn test_execute_math_sqrt() {
-    let expr = SExpr::call("math.sqrt", vec![SExpr::number(9)]);
+    let expr = SExpr::call("math.sqrt", vec![SExpr::number(9).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
 
-    let expr = SExpr::call("math.sqrt", vec![SExpr::number(2)]);
+    let expr = SExpr::call("math.sqrt", vec![SExpr::number(2).erase_type()]);
     let result = execute(&expr).unwrap().as_f64().unwrap();
     assert!((result - 1.414).abs() < 0.01);
 }
@@ -341,23 +341,23 @@ fn test_execute_math_sqrt() {
 fn test_execute_math_min_max() {
     let expr = SExpr::call(
         "math.min",
-        vec![SExpr::number(5), SExpr::number(3), SExpr::number(8)],
+        vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type(), SExpr::number(8).erase_type()],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
 
     let expr = SExpr::call(
         "math.max",
-        vec![SExpr::number(5), SExpr::number(3), SExpr::number(8)],
+        vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type(), SExpr::number(8).erase_type()],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(8));
 }
 
 #[test]
 fn test_execute_math_neg() {
-    let expr = SExpr::call("math.neg", vec![SExpr::number(5)]);
+    let expr = SExpr::call("math.neg", vec![SExpr::number(5).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(-5));
 
-    let expr = SExpr::call("math.neg", vec![SExpr::number(-3)]);
+    let expr = SExpr::call("math.neg", vec![SExpr::number(-3).erase_type()]);
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
 }
 
@@ -367,19 +367,19 @@ fn test_execute_math_neg() {
 
 #[test]
 fn test_execute_str_lower() {
-    let expr = SExpr::call("str.lower", vec![SExpr::string("HELLO")]);
+    let expr = SExpr::call("str.lower", vec![SExpr::string("HELLO").erase_type()]);
     assert_eq!(execute(&expr).unwrap(), json!("hello"));
 }
 
 #[test]
 fn test_execute_str_upper() {
-    let expr = SExpr::call("str.upper", vec![SExpr::string("hello")]);
+    let expr = SExpr::call("str.upper", vec![SExpr::string("hello").erase_type()]);
     assert_eq!(execute(&expr).unwrap(), json!("HELLO"));
 }
 
 #[test]
 fn test_execute_str_trim() {
-    let expr = SExpr::call("str.trim", vec![SExpr::string("  hello  ")]);
+    let expr = SExpr::call("str.trim", vec![SExpr::string("  hello  ").erase_type()]);
     assert_eq!(execute(&expr).unwrap(), json!("hello"));
 }
 
@@ -393,7 +393,7 @@ fn test_execute_list_len() {
         "list.len",
         vec![SExpr::call(
             "list.new",
-            vec![SExpr::number(1), SExpr::number(2), SExpr::number(3)],
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
         )],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
@@ -406,9 +406,9 @@ fn test_execute_list_get() {
         vec![
             SExpr::call(
                 "list.new",
-                vec![SExpr::number(10), SExpr::number(20), SExpr::number(30)],
+                vec![SExpr::number(10).erase_type(), SExpr::number(20).erase_type(), SExpr::number(30).erase_type()],
             ),
-            SExpr::number(1),
+            SExpr::number(1).erase_type(),
         ],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(20));
@@ -422,20 +422,20 @@ fn test_execute_list_push() {
             SExpr::call(
                 "std.let",
                 vec![
-                    SExpr::string("arr"),
-                    SExpr::call("list.new", vec![SExpr::number(1), SExpr::number(2)]),
+                    SExpr::string("arr").erase_type(),
+                    SExpr::call("list.new", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
                 ],
             ),
             SExpr::call(
                 "list.push",
                 vec![
-                    SExpr::call("std.var", vec![SExpr::string("arr")]),
-                    SExpr::number(3),
+                    SExpr::call("std.var", vec![SExpr::string("arr").erase_type()]),
+                    SExpr::number(3).erase_type(),
                 ],
             ),
             SExpr::call(
                 "list.len",
-                vec![SExpr::call("std.var", vec![SExpr::string("arr")])],
+                vec![SExpr::call("std.var", vec![SExpr::string("arr").erase_type()])],
             ),
         ],
     );
@@ -454,11 +454,11 @@ fn test_execute_obj_get() {
             SExpr::call(
                 "obj.new",
                 vec![
-                    SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(42).erase_type()]),
-                    SExpr::list(vec![SExpr::string("y").erase_type(), SExpr::number(10).erase_type()]),
+                    SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(42).erase_type()]).erase_type(),
+                    SExpr::list(vec![SExpr::string("y").erase_type(), SExpr::number(10).erase_type()]).erase_type(),
                 ],
             ),
-            SExpr::string("x"),
+            SExpr::string("x").erase_type(),
         ],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(42));
@@ -471,8 +471,8 @@ fn test_execute_obj_keys() {
         vec![SExpr::call(
             "obj.new",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]),
-                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type(),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]).erase_type(),
             ],
         )],
     );
@@ -488,8 +488,8 @@ fn test_execute_obj_values() {
         vec![SExpr::call(
             "obj.new",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]),
-                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type(),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]).erase_type(),
             ],
         )],
     );
@@ -503,7 +503,7 @@ fn test_execute_obj_values() {
 fn test_execute_typeof_array() {
     let expr = SExpr::call(
         "std.typeof",
-        vec![SExpr::call("list.new", vec![SExpr::number(1), SExpr::number(2)])],
+        vec![SExpr::call("list.new", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()])],
     );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!("array"));
@@ -511,7 +511,7 @@ fn test_execute_typeof_array() {
 
 #[test]
 fn test_execute_typeof_null() {
-    let expr = SExpr::call("std.typeof", vec![SExpr::null()]);
+    let expr = SExpr::call("std.typeof", vec![SExpr::null().erase_type()]);
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!("null"));
 }
@@ -584,9 +584,9 @@ fn test_execute_obj_has() {
         vec![
             SExpr::call(
                 "obj.new",
-                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()])],
+                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()]).erase_type()],
             ),
-            SExpr::string("x"),
+            SExpr::string("x").erase_type(),
         ],
     );
     assert_eq!(execute(&expr).unwrap(), json!(true));
@@ -596,9 +596,9 @@ fn test_execute_obj_has() {
         vec![
             SExpr::call(
                 "obj.new",
-                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()])],
+                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()]).erase_type()],
             ),
-            SExpr::string("y"),
+            SExpr::string("y").erase_type(),
         ],
     );
     assert_eq!(execute(&expr).unwrap(), json!(false));

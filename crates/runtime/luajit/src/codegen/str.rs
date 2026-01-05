@@ -242,9 +242,9 @@ mod tests {
         let expr = SExpr::call(
             "str.concat",
             vec![
-                SExpr::string("hello"),
-                SExpr::string(" "),
-                SExpr::string("world"),
+                SExpr::string("hello").erase_type(),
+                SExpr::string(" ").erase_type(),
+                SExpr::string("world").erase_type(),
             ],
         );
         assert_eq!(
@@ -255,25 +255,25 @@ mod tests {
 
     #[test]
     fn test_len() {
-        let expr = SExpr::call("str.len", vec![SExpr::string("test")]);
+        let expr = SExpr::call("str.len", vec![SExpr::string("test").erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return #\"test\"");
     }
 
     #[test]
     fn test_lower() {
-        let expr = SExpr::call("str.lower", vec![SExpr::string("HELLO")]);
+        let expr = SExpr::call("str.lower", vec![SExpr::string("HELLO").erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return string.lower(\"HELLO\")");
     }
 
     #[test]
     fn test_upper() {
-        let expr = SExpr::call("str.upper", vec![SExpr::string("hello")]);
+        let expr = SExpr::call("str.upper", vec![SExpr::string("hello").erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return string.upper(\"hello\")");
     }
 
     #[test]
     fn test_trim() {
-        let expr = SExpr::call("str.trim", vec![SExpr::string("  hi  ")]);
+        let expr = SExpr::call("str.trim", vec![SExpr::string("  hi  ").erase_type()]);
         assert!(compile(&expr).unwrap().contains("string.match"));
     }
 }

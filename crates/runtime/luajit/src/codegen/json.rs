@@ -51,7 +51,7 @@ mod tests {
             "json.stringify",
             vec![SExpr::call(
                 "obj.new",
-                vec![SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()])],
+                vec![SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type()],
             )],
         );
         let code = compile(&expr).unwrap();
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_parse() {
-        let expr = SExpr::call("json.parse", vec![SExpr::string(r#"{"a":1}"#)]);
+        let expr = SExpr::call("json.parse", vec![SExpr::string(r#"{"a":1}"#).erase_type()]);
         let code = compile(&expr).unwrap();
         assert!(code.contains("json.decode"));
     }
