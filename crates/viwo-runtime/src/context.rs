@@ -229,9 +229,11 @@ return {{ result = __result, this = __this }}
             // Convert args to JSON
             let args_json: serde_json::Value = lua_ctx.from_value(args)?;
 
-            // Schedule the task
-            scheduler_clone.schedule(this_id, &verb_name, args_json, delay_ms)
-                .map_err(mlua::Error::external)?;
+            // Schedule the task (block on async call since we're in sync context)
+            let handle = tokio::runtime::Handle::current();
+            handle.block_on(async {
+                scheduler_clone.schedule(this_id, &verb_name, args_json, delay_ms as u64).await
+            }).map_err(mlua::Error::external)?;
 
             Ok(lua_ctx.null())
         })?;

@@ -34,14 +34,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Get path to TypeScript entity definitions
     // Relative to workspace root: apps/notes-server/src/definitions/
-    let workspace_root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let workspace_root = manifest_dir
         .parent() // crates/apps
         .and_then(|p| p.parent()) // crates
         .and_then(|p| p.parent()) // workspace root
         .expect("Failed to find workspace root");
 
-    let definitions_path = workspace_root
-        .join("apps/notes-server/src/definitions");
+    let definitions_path = workspace_root.join("apps/notes-server/src/definitions");
 
     tracing::info!("Entity definitions path: {}", definitions_path.display());
 
