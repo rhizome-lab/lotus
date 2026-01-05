@@ -88,15 +88,15 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [ ] **Server**: Hook scheduler into server tick loop
 
 **Rust Server Applications:**
-- [ ] **notes-server**: Port notes server to Rust
-  - [ ] Create `crates/apps/notes-server` with main.rs
-  - [ ] Bootstrap: load plugins → seed world → start WebSocket server
-  - [ ] Reuse existing TypeScript entity definitions (`apps/notes-server/src/definitions/Notes.ts`)
+- [x] **notes-server**: Port notes server to Rust ✅
+  - [x] Create `crates/apps/notes-server` with main.rs ✅
+  - [x] Bootstrap: load plugins → seed world → start WebSocket server ✅
+  - [x] Reuse existing TypeScript entity definitions (`apps/notes-server/src/definitions/Notes.ts`) ✅
   - [ ] Test: CRUD operations, backlinks, search
-- [ ] **filebrowser-server**: Port file browser server to Rust
-  - [ ] Create `crates/apps/filebrowser-server` with main.rs
-  - [ ] Bootstrap: load fs plugin → seed world → start WebSocket server
-  - [ ] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`)
+- [x] **filebrowser-server**: Port file browser server to Rust ✅
+  - [x] Create `crates/apps/filebrowser-server` with main.rs ✅
+  - [x] Bootstrap: load fs plugin → seed world → start WebSocket server ✅
+  - [x] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`) ✅
   - [ ] Test: navigation, file reading, bookmarks
 
 ## 1. Deep Simulation (Sandbox)
