@@ -82,51 +82,68 @@ pub fn compile(expr: &SExpr) -> Result<String, CompileError> {
 pub(crate) fn compile_value(node: &SExpr, should_return: bool) -> Result<String, CompileError> {
     let prefix = if should_return { "return " } else { "" };
 
-    match node {
-        // Use null sentinel so null values serialize correctly in arrays
-        SExpr::Null => Ok(format!("{}null", prefix)),
-        SExpr::Bool(b) => Ok(format!("{}{}", prefix, if *b { "true" } else { "false" })),
-        SExpr::Number(n) => {
-            // Handle special float values
-            if n.is_nan() {
-                Ok(format!("{}(0/0)", prefix))
-            } else if n.is_infinite() {
-                if *n > 0.0 {
-                    Ok(format!("{}(1/0)", prefix))
-                } else {
-                    Ok(format!("{}(-1/0)", prefix))
-                }
-            } else {
-                Ok(format!("{}{}", prefix, n))
-            }
-        }
-        SExpr::String(s) => Ok(format!("{}{}", prefix, lua_string_literal(s))),
-        SExpr::Object(map) => {
-            let mut pairs = Vec::new();
-            for (key, value) in map {
-                let val_code = compile_value(value, false)?;
-                pairs.push(format!("[{}] = {}", lua_string_literal(key), val_code));
-            }
-            Ok(format!("{}{{ {} }}", prefix, pairs.join(", ")))
-        }
-        SExpr::List(items) => {
-            if items.is_empty() {
-                return Ok(format!("{}{{}}", prefix));
-            }
+    // Check null
+    if node.is_null() {
+        return Ok(format!("{}null", prefix));
+    }
 
-            // Check if this is an opcode call
-            if let SExpr::String(op) = &items[0] {
-                compile_opcode(op, &items[1..], should_return)
+    // Check bool
+    if let Some(b) = node.as_bool() {
+        return Ok(format!("{}{}", prefix, if b { "true" } else { "false" }));
+    }
+
+    // Check number
+    if let Some(n) = node.as_number() {
+        // Handle special float values
+        if n.is_nan() {
+            return Ok(format!("{}(0/0)", prefix));
+        } else if n.is_infinite() {
+            if n > 0.0 {
+                return Ok(format!("{}(1/0)", prefix));
             } else {
-                // Literal array
-                let elements: Result<Vec<_>, _> = items
-                    .iter()
-                    .map(|item| compile_value(item, false))
-                    .collect();
-                Ok(format!("{}{{ {} }}", prefix, elements?.join(", ")))
+                return Ok(format!("{}(-1/0)", prefix));
             }
+        } else {
+            return Ok(format!("{}{}", prefix, n));
         }
     }
+
+    // Check string
+    if let Some(s) = node.as_str() {
+        return Ok(format!("{}{}", prefix, lua_string_literal(s)));
+    }
+
+    // Check object
+    if let Some(map) = node.as_object() {
+        let mut pairs = Vec::new();
+        for (key, value) in map {
+            let val_code = compile_value(value, false)?;
+            pairs.push(format!("[{}] = {}", lua_string_literal(key), val_code));
+        }
+        return Ok(format!("{}{{ {} }}", prefix, pairs.join(", ")));
+    }
+
+    // Check list
+    if let Some(items) = node.as_list() {
+        if items.is_empty() {
+            return Ok(format!("{}{{}}", prefix));
+        }
+
+        // Check if this is an opcode call
+        if let Some(op) = items[0].as_str() {
+            return compile_opcode(op, &items[1..], should_return);
+        } else {
+            // Literal array
+            let elements: Result<Vec<_>, _> = items
+                .iter()
+                .map(|item| compile_value(item, false))
+                .collect();
+            return Ok(format!("{}{{ {} }}", prefix, elements?.join(", ")));
+        }
+    }
+
+    // This should never happen if SExpr is properly constructed
+    Ok(format!("{}null", prefix))
 }
 
 pub(crate) fn lua_string_literal(s: &str) -> String {
@@ -220,49 +237,58 @@ pub(crate) fn compile_infix_op(
 
 /// Check if an S-expression compiles to a Lua statement (not needing prefix).
 pub(crate) fn is_statement_opcode(expr: &SExpr) -> bool {
-    if let SExpr::List(items) = expr {
-        if let Some(SExpr::String(op)) = items.first() {
-            return matches!(
-                op.as_str(),
-                "std.let"
-                    | "std.set"
-                    | "std.if"
-                    | "std.while"
-                    | "std.for"
-                    | "std.break"
-                    | "std.continue"
-                    | "std.return"
-                    | "std.seq"
-                    | "obj.set"
-                    | "obj.delete"
-                    | "list.set"
-                    | "list.push"
-            );
+    if let Some(items) = expr.as_list() {
+        if let Some(first) = items.first() {
+            if let Some(op) = first.as_str() {
+                return matches!(
+                    op,
+                    "std.let"
+                        | "std.set"
+                        | "std.if"
+                        | "std.while"
+                        | "std.for"
+                        | "std.break"
+                        | "std.continue"
+                        | "std.return"
+                        | "std.seq"
+                        | "obj.set"
+                        | "obj.delete"
+                        | "list.set"
+                        | "list.push"
+                );
+            }
         }
     }
     false
 }
 
 pub(crate) fn sexpr_to_lua_table(expr: &SExpr, prefix: &str) -> Result<String, CompileError> {
-    match expr {
-        SExpr::Null => Ok(format!("{}nil", prefix)),
-        SExpr::Bool(b) => Ok(format!("{}{}", prefix, b)),
-        SExpr::Number(n) => Ok(format!("{}{}", prefix, n)),
-        SExpr::String(s) => Ok(format!("{}{}", prefix, lua_string_literal(s))),
-        SExpr::List(items) => {
-            let elements: Result<Vec<_>, _> = items
-                .iter()
-                .map(|item| sexpr_to_lua_table(item, ""))
-                .collect();
-            Ok(format!("{}{{ {} }}", prefix, elements?.join(", ")))
-        }
-        SExpr::Object(map) => {
-            let mut pairs = Vec::new();
-            for (key, value) in map {
-                let val = sexpr_to_lua_table(value, "")?;
-                pairs.push(format!("[{}] = {}", lua_string_literal(key), val));
-            }
-            Ok(format!("{}{{ {} }}", prefix, pairs.join(", ")))
-        }
+    if expr.is_null() {
+        return Ok(format!("{}nil", prefix));
     }
+    if let Some(b) = expr.as_bool() {
+        return Ok(format!("{}{}", prefix, b));
+    }
+    if let Some(n) = expr.as_number() {
+        return Ok(format!("{}{}", prefix, n));
+    }
+    if let Some(s) = expr.as_str() {
+        return Ok(format!("{}{}", prefix, lua_string_literal(s)));
+    }
+    if let Some(items) = expr.as_list() {
+        let elements: Result<Vec<_>, _> = items
+            .iter()
+            .map(|item| sexpr_to_lua_table(item, ""))
+            .collect();
+        return Ok(format!("{}{{ {} }}", prefix, elements?.join(", ")));
+    }
+    if let Some(map) = expr.as_object() {
+        let mut pairs = Vec::new();
+        for (key, value) in map {
+            let val = sexpr_to_lua_table(value, "")?;
+            pairs.push(format!("[{}] = {}", lua_string_literal(key), val));
+        }
+        return Ok(format!("{}{{ {} }}", prefix, pairs.join(", ")));
+    }
+    Ok(format!("{}nil", prefix))
 }

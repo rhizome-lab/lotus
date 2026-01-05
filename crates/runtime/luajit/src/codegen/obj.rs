@@ -259,8 +259,8 @@ mod tests {
         let expr = SExpr::call(
             "obj.new",
             vec![
-                SExpr::List(vec![SExpr::string("a"), SExpr::number(1)]),
-                SExpr::List(vec![SExpr::string("b"), SExpr::number(2)]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]),
             ],
         );
         let code = compile(&expr).unwrap();

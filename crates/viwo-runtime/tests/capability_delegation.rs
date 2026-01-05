@@ -33,11 +33,11 @@ fn test_mint_capability() {
     let mint_verb = SExpr::call(
         "mint",
         vec![
-            SExpr::Object(
+            SExpr::object(
                 [
                     ("id".to_string(), SExpr::string(&mint_authority_id)),
                     ("type".to_string(), SExpr::string("sys.mint")),
-                    ("params".to_string(), SExpr::Object(
+                    ("params".to_string(), SExpr::object(
                         [("namespace".to_string(), SExpr::string("*"))]
                             .into_iter()
                             .collect(),
@@ -47,7 +47,7 @@ fn test_mint_capability() {
                 .collect(),
             ),
             SExpr::string("fs.write"),
-            SExpr::Object(
+            SExpr::object(
                 [("path".to_string(), SExpr::string("/tmp/test"))]
                     .into_iter()
                     .collect(),
@@ -110,13 +110,13 @@ fn test_delegate_capability_valid_restriction() {
     let delegate_verb = SExpr::call(
         "delegate",
         vec![
-            SExpr::Object(
+            SExpr::object(
                 [
                     ("id".to_string(), SExpr::string(&parent_cap_id)),
                     ("type".to_string(), SExpr::string("fs.write")),
                     (
                         "params".to_string(),
-                        SExpr::Object(
+                        SExpr::object(
                             [
                                 ("path".to_string(), SExpr::string("/home/user")),
                                 (
@@ -137,7 +137,7 @@ fn test_delegate_capability_valid_restriction() {
                 .into_iter()
                 .collect(),
             ),
-            SExpr::Object(
+            SExpr::object(
                 [
                     ("path".to_string(), SExpr::string("/home/user/docs")),
                     (
@@ -203,13 +203,13 @@ fn test_delegate_capability_invalid_path_restriction() {
     let delegate_verb = SExpr::call(
         "delegate",
         vec![
-            SExpr::Object(
+            SExpr::object(
                 [
                     ("id".to_string(), SExpr::string(&parent_cap_id)),
                     ("type".to_string(), SExpr::string("fs.write")),
                     (
                         "params".to_string(),
-                        SExpr::Object(
+                        SExpr::object(
                             [("path".to_string(), SExpr::string("/home/user"))]
                                 .into_iter()
                                 .collect(),
@@ -219,7 +219,7 @@ fn test_delegate_capability_invalid_path_restriction() {
                 .into_iter()
                 .collect(),
             ),
-            SExpr::Object(
+            SExpr::object(
                 [("path".to_string(), SExpr::string("/home"))]
                     .into_iter()
                     .collect(),
@@ -270,13 +270,13 @@ fn test_delegate_capability_invalid_array_superset() {
     let delegate_verb = SExpr::call(
         "delegate",
         vec![
-            SExpr::Object(
+            SExpr::object(
                 [
                     ("id".to_string(), SExpr::string(&parent_cap_id)),
                     ("type".to_string(), SExpr::string("http.request")),
                     (
                         "params".to_string(),
-                        SExpr::Object(
+                        SExpr::object(
                             [(
                                 "methods".to_string(),
                                 SExpr::call("list.new", vec![SExpr::string("GET"), SExpr::string("POST")]),
@@ -289,7 +289,7 @@ fn test_delegate_capability_invalid_array_superset() {
                 .into_iter()
                 .collect(),
             ),
-            SExpr::Object(
+            SExpr::object(
                 [(
                     "methods".to_string(),
                     SExpr::call("list.new", vec![
@@ -343,13 +343,13 @@ fn test_delegate_namespace_restriction() {
     let delegate_verb = SExpr::call(
         "delegate",
         vec![
-            SExpr::Object(
+            SExpr::object(
                 [
                     ("id".to_string(), SExpr::string(&parent_cap_id)),
                     ("type".to_string(), SExpr::string("custom.cap")),
                     (
                         "params".to_string(),
-                        SExpr::Object(
+                        SExpr::object(
                             [("namespace".to_string(), SExpr::string("user"))]
                                 .into_iter()
                                 .collect(),
@@ -359,7 +359,7 @@ fn test_delegate_namespace_restriction() {
                 .into_iter()
                 .collect(),
             ),
-            SExpr::Object(
+            SExpr::object(
                 [("namespace".to_string(), SExpr::string("user.admin"))]
                     .into_iter()
                     .collect(),

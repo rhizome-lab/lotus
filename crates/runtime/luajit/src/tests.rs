@@ -12,13 +12,13 @@ use viwo_ir::SExpr;
 
 #[test]
 fn test_compile_literals() {
-    assert_eq!(compile(&SExpr::Null).unwrap(), "return null");
-    assert_eq!(compile(&SExpr::Bool(true)).unwrap(), "return true");
-    assert_eq!(compile(&SExpr::Bool(false)).unwrap(), "return false");
-    assert_eq!(compile(&SExpr::Number(42.0)).unwrap(), "return 42");
-    assert_eq!(compile(&SExpr::Number(3.14)).unwrap(), "return 3.14");
+    assert_eq!(compile(&SExpr::null()).unwrap(), "return null");
+    assert_eq!(compile(&SExpr::bool(true)).unwrap(), "return true");
+    assert_eq!(compile(&SExpr::bool(false)).unwrap(), "return false");
+    assert_eq!(compile(&SExpr::number(42.0)).unwrap(), "return 42");
+    assert_eq!(compile(&SExpr::number(3.14)).unwrap(), "return 3.14");
     assert_eq!(
-        compile(&SExpr::String("hello".into())).unwrap(),
+        compile(&SExpr::string("hello")).unwrap(),
         "return \"hello\""
     );
 }
@@ -26,11 +26,11 @@ fn test_compile_literals() {
 #[test]
 fn test_compile_string_escaping() {
     assert_eq!(
-        compile(&SExpr::String("line1\nline2".into())).unwrap(),
+        compile(&SExpr::string("line1\nline2")).unwrap(),
         "return [[line1\nline2]]"
     );
     assert_eq!(
-        compile(&SExpr::String("with \"quotes\"".into())).unwrap(),
+        compile(&SExpr::string("with \"quotes\"")).unwrap(),
         "return \"with \\\"quotes\\\"\""
     );
 }
@@ -454,8 +454,8 @@ fn test_execute_obj_get() {
             SExpr::call(
                 "obj.new",
                 vec![
-                    SExpr::List(vec![SExpr::string("x"), SExpr::number(42)]),
-                    SExpr::List(vec![SExpr::string("y"), SExpr::number(10)]),
+                    SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(42).erase_type()]),
+                    SExpr::list(vec![SExpr::string("y").erase_type(), SExpr::number(10).erase_type()]),
                 ],
             ),
             SExpr::string("x"),
@@ -471,8 +471,8 @@ fn test_execute_obj_keys() {
         vec![SExpr::call(
             "obj.new",
             vec![
-                SExpr::List(vec![SExpr::string("a"), SExpr::number(1)]),
-                SExpr::List(vec![SExpr::string("b"), SExpr::number(2)]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]),
             ],
         )],
     );
@@ -488,8 +488,8 @@ fn test_execute_obj_values() {
         vec![SExpr::call(
             "obj.new",
             vec![
-                SExpr::List(vec![SExpr::string("a"), SExpr::number(1)]),
-                SExpr::List(vec![SExpr::string("b"), SExpr::number(2)]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]),
+                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]),
             ],
         )],
     );
@@ -584,7 +584,7 @@ fn test_execute_obj_has() {
         vec![
             SExpr::call(
                 "obj.new",
-                vec![SExpr::List(vec![SExpr::string("x"), SExpr::number(1)])],
+                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()])],
             ),
             SExpr::string("x"),
         ],
@@ -596,7 +596,7 @@ fn test_execute_obj_has() {
         vec![
             SExpr::call(
                 "obj.new",
-                vec![SExpr::List(vec![SExpr::string("x"), SExpr::number(1)])],
+                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()])],
             ),
             SExpr::string("y"),
         ],

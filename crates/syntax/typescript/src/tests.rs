@@ -10,27 +10,27 @@ fn assert_transpile(source: &str, expected: SExpr) {
 
 #[test]
 fn test_number_literals() {
-    assert_transpile("42", SExpr::Number(42.0));
-    assert_transpile("3.14", SExpr::Number(3.14));
-    assert_transpile("0", SExpr::Number(0.0));
+    assert_transpile("42", SExpr::number(42.0));
+    assert_transpile("3.14", SExpr::number(3.14));
+    assert_transpile("0", SExpr::number(0.0));
 }
 
 #[test]
 fn test_string_literals() {
-    assert_transpile("\"hello\"", SExpr::String("hello".into()));
-    assert_transpile("'world'", SExpr::String("world".into()));
+    assert_transpile("\"hello\"", SExpr::string("hello"));
+    assert_transpile("'world'", SExpr::string("world"));
 }
 
 #[test]
 fn test_boolean_literals() {
-    assert_transpile("true", SExpr::Bool(true));
-    assert_transpile("false", SExpr::Bool(false));
+    assert_transpile("true", SExpr::bool(true));
+    assert_transpile("false", SExpr::bool(false));
 }
 
 #[test]
 fn test_null_undefined() {
-    assert_transpile("null", SExpr::Null);
-    assert_transpile("undefined", SExpr::Null);
+    assert_transpile("null", SExpr::null());
+    assert_transpile("undefined", SExpr::null());
 }
 
 #[test]
@@ -46,23 +46,23 @@ fn test_variable_reference() {
 fn test_binary_arithmetic() {
     assert_transpile(
         "1 + 2",
-        SExpr::call("math.add", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
+        SExpr::call("math.add", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
     assert_transpile(
         "5 - 3",
-        SExpr::call("math.sub", vec![SExpr::Number(5.0), SExpr::Number(3.0)]),
+        SExpr::call("math.sub", vec![SExpr::number(5.0).erase_type(), SExpr::number(3.0).erase_type()]),
     );
     assert_transpile(
         "4 * 2",
-        SExpr::call("math.mul", vec![SExpr::Number(4.0), SExpr::Number(2.0)]),
+        SExpr::call("math.mul", vec![SExpr::number(4.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
     assert_transpile(
         "10 / 2",
-        SExpr::call("math.div", vec![SExpr::Number(10.0), SExpr::Number(2.0)]),
+        SExpr::call("math.div", vec![SExpr::number(10.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
     assert_transpile(
         "7 % 3",
-        SExpr::call("math.mod", vec![SExpr::Number(7.0), SExpr::Number(3.0)]),
+        SExpr::call("math.mod", vec![SExpr::number(7.0).erase_type(), SExpr::number(3.0).erase_type()]),
     );
 }
 
@@ -70,19 +70,19 @@ fn test_binary_arithmetic() {
 fn test_binary_comparison() {
     assert_transpile(
         "1 == 2",
-        SExpr::call("bool.eq", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
+        SExpr::call("bool.eq", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
     assert_transpile(
         "1 === 2",
-        SExpr::call("bool.eq", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
+        SExpr::call("bool.eq", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
     assert_transpile(
         "1 < 2",
-        SExpr::call("bool.lt", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
+        SExpr::call("bool.lt", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
     assert_transpile(
         "1 > 2",
-        SExpr::call("bool.gt", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
+        SExpr::call("bool.gt", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
 }
 
@@ -90,18 +90,18 @@ fn test_binary_comparison() {
 fn test_logical_operators() {
     assert_transpile(
         "true && false",
-        SExpr::call("bool.and", vec![SExpr::Bool(true), SExpr::Bool(false)]),
+        SExpr::call("bool.and", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]),
     );
     assert_transpile(
         "true || false",
-        SExpr::call("bool.or", vec![SExpr::Bool(true), SExpr::Bool(false)]),
+        SExpr::call("bool.or", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]),
     );
 }
 
 #[test]
 fn test_unary_operators() {
-    assert_transpile("!true", SExpr::call("bool.not", vec![SExpr::Bool(true)]));
-    assert_transpile("-5", SExpr::call("math.neg", vec![SExpr::Number(5.0)]));
+    assert_transpile("!true", SExpr::call("bool.not", vec![SExpr::bool(true).erase_type()]));
+    assert_transpile("-5", SExpr::call("math.neg", vec![SExpr::number(5.0).erase_type()]));
 }
 
 #[test]
@@ -112,8 +112,8 @@ fn test_nested_expressions() {
         SExpr::call(
             "math.mul",
             vec![
-                SExpr::call("math.add", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
-                SExpr::Number(3.0),
+                SExpr::call("math.add", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
+                SExpr::number(3.0).erase_type(),
             ],
         ),
     );
@@ -123,11 +123,11 @@ fn test_nested_expressions() {
 fn test_variable_declaration() {
     assert_transpile(
         "let x = 10",
-        SExpr::call("std.let", vec![SExpr::string("x"), SExpr::Number(10.0)]),
+        SExpr::call("std.let", vec![SExpr::string("x"), SExpr::number(10.0).erase_type()]),
     );
     assert_transpile(
         "const y = 20",
-        SExpr::call("std.let", vec![SExpr::string("y"), SExpr::Number(20.0)]),
+        SExpr::call("std.let", vec![SExpr::string("y"), SExpr::number(20.0).erase_type()]),
     );
 }
 
@@ -139,7 +139,7 @@ fn test_function_call() {
     );
     assert_transpile(
         "add(1, 2)",
-        SExpr::call("add", vec![SExpr::Number(1.0), SExpr::Number(2.0)]),
+        SExpr::call("add", vec![SExpr::number(1.0).erase_type(), SExpr::number(2.0).erase_type()]),
     );
 }
 
@@ -147,7 +147,7 @@ fn test_function_call() {
 fn test_namespaced_call() {
     assert_transpile(
         "math.sqrt(4)",
-        SExpr::call("math.sqrt", vec![SExpr::Number(4.0)]),
+        SExpr::call("math.sqrt", vec![SExpr::number(4.0).erase_type()]),
     );
     assert_transpile(
         "str.concat(\"a\", \"b\")",

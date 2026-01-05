@@ -426,7 +426,7 @@ mod tests {
     fn test_if() {
         let expr = SExpr::call(
             "std.if",
-            vec![SExpr::Bool(true), SExpr::number(1), SExpr::number(2)],
+            vec![SExpr::bool(true).erase_type(), SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("if true then"));
@@ -440,7 +440,7 @@ mod tests {
     fn test_while() {
         let expr = SExpr::call(
             "std.while",
-            vec![SExpr::Bool(true), SExpr::call("std.break", vec![])],
+            vec![SExpr::bool(true).erase_type(), SExpr::call("std.break", vec![])],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("while true do"));
@@ -468,7 +468,7 @@ mod tests {
         let expr = SExpr::call(
             "std.lambda",
             vec![
-                SExpr::List(vec![SExpr::string("a"), SExpr::string("b")]),
+                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::string("b").erase_type()]),
                 SExpr::call(
                     "+",
                     vec![
@@ -498,7 +498,7 @@ mod tests {
         let lambda = SExpr::call(
             "std.lambda",
             vec![
-                SExpr::List(vec![SExpr::string("x")]),
+                SExpr::list(vec![SExpr::string("x").erase_type()]),
                 SExpr::call(
                     "+",
                     vec![

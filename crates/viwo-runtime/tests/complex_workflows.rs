@@ -231,7 +231,7 @@ fn test_lambda_in_verb() {
                         SExpr::call(
                             "std.lambda",
                             vec![
-                                SExpr::List(vec![SExpr::string("x")]),
+                                SExpr::list(vec![SExpr::string("x").erase_type()]).erase_type(),
                                 SExpr::call(
                                     "math.mul",
                                     vec![

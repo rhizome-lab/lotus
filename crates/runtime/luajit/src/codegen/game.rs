@@ -170,8 +170,8 @@ mod tests {
         let expr = SExpr::call(
             "update",
             vec![
-                SExpr::number(1),
-                SExpr::Object(props),
+                SExpr::number(1).erase_type(),
+                SExpr::object(props),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -184,7 +184,7 @@ mod tests {
         let mut props = HashMap::new();
         props.insert("name".to_string(), SExpr::string("New Entity"));
 
-        let expr = SExpr::call("create", vec![SExpr::Object(props)]);
+        let expr = SExpr::call("create", vec![SExpr::object(props)]);
         let code = compile(&expr).unwrap();
         assert!(code.contains("__viwo_create"));
         assert!(code.contains("nil")); // No prototype
@@ -198,8 +198,8 @@ mod tests {
         let expr = SExpr::call(
             "create",
             vec![
-                SExpr::Object(props),
-                SExpr::number(10),
+                SExpr::object(props),
+                SExpr::number(10).erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -245,8 +245,8 @@ mod tests {
             "schedule",
             vec![
                 SExpr::string("tick"),
-                SExpr::List(vec![SExpr::number(1), SExpr::number(2)]),
-                SExpr::number(1000),
+                SExpr::list(vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::number(1000).erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();

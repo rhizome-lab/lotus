@@ -75,13 +75,13 @@ impl<'a> TranspileContext<'a> {
             // Literals
             "number" => self.transpile_number(node),
             "string" => self.transpile_string(node),
-            "true" => Ok(SExpr::Bool(true)),
-            "false" => Ok(SExpr::Bool(false)),
-            "null" => Ok(SExpr::Null),
-            "undefined" => Ok(SExpr::Null),
+            "true" => Ok(SExpr::bool(true).erase_type()),
+            "false" => Ok(SExpr::bool(false).erase_type()),
+            "null" => Ok(SExpr::null().erase_type()),
+            "undefined" => Ok(SExpr::null().erase_type()),
 
             // Expressions
-            "identifier" => Ok(SExpr::call("std.var", vec![SExpr::string(self.node_text(node))])),
+            "identifier" => Ok(SExpr::call("std.var", vec![SExpr::string(self.node_text(node)).erase_type()])),
             "binary_expression" => self.transpile_binary_expr(node),
             "unary_expression" => self.transpile_unary_expr(node),
             "parenthesized_expression" => self.transpile_parenthesized(node),
@@ -107,8 +107,8 @@ impl<'a> TranspileContext<'a> {
             "statement_block" => self.transpile_block(node),
 
             // Comments and empty statements (skip)
-            "comment" => Ok(SExpr::Null),
-            "empty_statement" => Ok(SExpr::Null),
+            "comment" => Ok(SExpr::null().erase_type()),
+            "empty_statement" => Ok(SExpr::null().erase_type()),
 
             // else_clause: extract the body
             "else_clause" => self.transpile_else_clause(node),
@@ -126,7 +126,7 @@ impl<'a> TranspileContext<'a> {
         let value: f64 = text
             .parse()
             .map_err(|_| TranspileError::Parse(format!("invalid number: {}", text)))?;
-        Ok(SExpr::Number(value))
+        Ok(SExpr::number(value).erase_type())
     }
 
     fn transpile_string(&self, node: Node) -> Result<SExpr, TranspileError> {
@@ -148,7 +148,7 @@ impl<'a> TranspileContext<'a> {
             .replace("\\\"", "\"")
             .replace("\\'", "'")
             .replace("\\\\", "\\");
-        Ok(SExpr::String(unescaped))
+        Ok(SExpr::string(unescaped).erase_type())
     }
 
     fn transpile_binary_expr(&self, node: Node) -> Result<SExpr, TranspileError> {
@@ -257,7 +257,7 @@ impl<'a> TranspileContext<'a> {
                 let var_name = self.node_text(left);
                 Ok(SExpr::call(
                     "std.set",
-                    vec![SExpr::string(var_name), right_expr],
+                    vec![SExpr::string(var_name).erase_type(), right_expr],
                 ))
             }
             "member_expression" => {
@@ -272,7 +272,7 @@ impl<'a> TranspileContext<'a> {
                 let prop_name = self.node_text(prop);
                 Ok(SExpr::call(
                     "obj.set",
-                    vec![obj_expr, SExpr::string(prop_name), right_expr],
+                    vec![obj_expr, SExpr::string(prop_name).erase_type(), right_expr],
                 ))
             }
             "subscript_expression" => {
@@ -364,7 +364,7 @@ impl<'a> TranspileContext<'a> {
 
         Ok(SExpr::call(
             "obj.get",
-            vec![obj_expr, SExpr::string(prop_name)],
+            vec![obj_expr, SExpr::string(prop_name).erase_type()],
         ))
     }
 
@@ -424,17 +424,17 @@ impl<'a> TranspileContext<'a> {
                 };
 
                 // Generate pair as [key, value]
-                pairs.push(SExpr::List(vec![
-                    SExpr::string(key_str),
+                pairs.push(SExpr::list(vec![
+                    SExpr::string(key_str).erase_type(),
                     self.transpile_node(value)?,
-                ]));
+                ]).erase_type());
             } else if child.kind() == "shorthand_property_identifier" {
                 // { foo } is shorthand for { foo: foo }
                 let name = self.node_text(child);
-                pairs.push(SExpr::List(vec![
-                    SExpr::string(name),
-                    SExpr::call("std.var", vec![SExpr::string(name)]),
-                ]));
+                pairs.push(SExpr::list(vec![
+                    SExpr::string(name).erase_type(),
+                    SExpr::call("std.var", vec![SExpr::string(name).erase_type()]),
+                ]).erase_type());
             }
         }
 
@@ -451,7 +451,7 @@ impl<'a> TranspileContext<'a> {
         // Try "parameter" field (for single unparenthesized param: x => ...)
         if let Some(param) = node.child_by_field_name("parameter") {
             if param.kind() == "identifier" {
-                param_names.push(SExpr::string(self.node_text(param)));
+                param_names.push(SExpr::string(self.node_text(param)).erase_type());
             }
         }
 
@@ -465,23 +465,23 @@ impl<'a> TranspileContext<'a> {
         // Create std.lambda: ["std.lambda", [...params], body]
         Ok(SExpr::call(
             "std.lambda",
-            vec![SExpr::List(param_names), body_expr],
+            vec![SExpr::list(param_names).erase_type(), body_expr],
         ))
     }
 
     fn collect_params(&self, params: Node, param_names: &mut Vec<SExpr>) {
         match params.kind() {
             "identifier" => {
-                param_names.push(SExpr::string(self.node_text(params)));
+                param_names.push(SExpr::string(self.node_text(params)).erase_type());
             }
             "formal_parameters" => {
                 let mut cursor = params.walk();
                 for child in params.children(&mut cursor) {
                     if child.kind() == "identifier" {
-                        param_names.push(SExpr::string(self.node_text(child)));
+                        param_names.push(SExpr::string(self.node_text(child)).erase_type());
                     } else if child.kind() == "required_parameter" {
                         if let Some(pattern) = child.child_by_field_name("pattern") {
-                            param_names.push(SExpr::string(self.node_text(pattern)));
+                            param_names.push(SExpr::string(self.node_text(pattern)).erase_type());
                         }
                     }
                 }
@@ -518,7 +518,7 @@ impl<'a> TranspileContext<'a> {
                 return self.transpile_node(child);
             }
         }
-        Ok(SExpr::Null)
+        Ok(SExpr::null().erase_type())
     }
 
     fn transpile_lexical_declaration(&self, node: Node) -> Result<SExpr, TranspileError> {
@@ -554,12 +554,12 @@ impl<'a> TranspileContext<'a> {
         let value_expr = if let Some(val) = value {
             self.transpile_node(val)?
         } else {
-            SExpr::Null
+            SExpr::null().erase_type()
         };
 
         Ok(SExpr::call(
             "std.let",
-            vec![SExpr::string(name_str), value_expr],
+            vec![SExpr::string(name_str).erase_type(), value_expr],
         ))
     }
 
@@ -592,7 +592,7 @@ impl<'a> TranspileContext<'a> {
                 return self.transpile_node(child);
             }
         }
-        Ok(SExpr::Null)
+        Ok(SExpr::null().erase_type())
     }
 
     fn transpile_while_statement(&self, node: Node) -> Result<SExpr, TranspileError> {
@@ -630,7 +630,7 @@ impl<'a> TranspileContext<'a> {
 
         Ok(SExpr::call(
             "std.for",
-            vec![SExpr::string(var_name), iter_expr, body_expr],
+            vec![SExpr::string(var_name).erase_type(), iter_expr, body_expr],
         ))
     }
 
@@ -685,7 +685,7 @@ impl<'a> TranspileContext<'a> {
         }
 
         if statements.is_empty() {
-            Ok(SExpr::Null)
+            Ok(SExpr::null().erase_type())
         } else if statements.len() == 1 {
             Ok(statements.remove(0))
         } else {

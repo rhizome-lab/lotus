@@ -51,7 +51,7 @@ mod tests {
             "json.stringify",
             vec![SExpr::call(
                 "obj.new",
-                vec![SExpr::List(vec![SExpr::string("a"), SExpr::number(1)])],
+                vec![SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()])],
             )],
         );
         let code = compile(&expr).unwrap();

@@ -97,19 +97,19 @@ mod tests {
 
     #[test]
     fn test_and() {
-        let expr = SExpr::call("&&", vec![SExpr::Bool(true), SExpr::Bool(false)]);
+        let expr = SExpr::call("&&", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (true and false)");
     }
 
     #[test]
     fn test_or() {
-        let expr = SExpr::call("||", vec![SExpr::Bool(true), SExpr::Bool(false)]);
+        let expr = SExpr::call("||", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return (true or false)");
     }
 
     #[test]
     fn test_not() {
-        let expr = SExpr::call("!", vec![SExpr::Bool(true)]);
+        let expr = SExpr::call("!", vec![SExpr::bool(true).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return not true");
     }
 

@@ -1093,7 +1093,7 @@ fn test_std_try_success() {
         "std.try",
         vec![SExpr::call(
             "+",
-            vec![SExpr::number(1), SExpr::number(2)],
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
         )],
     );
     assert_num(eval_sexpr(&expr), 3.0);
@@ -1105,12 +1105,12 @@ fn test_std_try_with_catch() {
     let expr = SExpr::call(
         "std.try",
         vec![
-            SExpr::call("std.throw", vec![SExpr::string("oops")]),
+            SExpr::call("std.throw", vec![SExpr::string("oops").erase_type()]),
             SExpr::call(
                 "std.lambda",
                 vec![
-                    SExpr::List(vec![SExpr::string("err")]),
-                    SExpr::string("caught"),
+                    SExpr::list(vec![SExpr::string("err").erase_type()]).erase_type(),
+                    SExpr::string("caught").erase_type(),
                 ],
             ),
         ],
@@ -1123,7 +1123,7 @@ fn test_std_try_without_catch() {
     // When try body throws and no catch handler, return nil
     let expr = SExpr::call(
         "std.try",
-        vec![SExpr::call("std.throw", vec![SExpr::string("error")])],
+        vec![SExpr::call("std.throw", vec![SExpr::string("error").erase_type()])],
     );
     assert_eq!(eval_sexpr(&expr), serde_json::Value::Null);
 }
