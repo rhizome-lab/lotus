@@ -42,7 +42,10 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **viwo-runtime**: Implement entity mutation tracking (obj.set auto-persists) ✅
 - [x] **viwo-runtime**: Convert to sync Mutex for simpler Lua integration ✅
 - [x] **viwo-runtime**: Port kernel capability opcodes (`mint`, `delegate`) ✅
-- [ ] **viwo-core**: Port seed system (load entities/verbs from TypeScript DSL)
+- [x] **viwo-core**: Port seed system (load entities/verbs from TypeScript DSL) ✅
+  - [x] **viwo-syntax-typescript**: Entity definition parser (tree-sitter based) ✅
+  - [x] **viwo-core**: SeedSystem for loading TypeScript entity classes ✅
+  - [x] **Tests**: Entity parsing (properties, methods, verbs) ✅
 
 **Tests Ported: (20/20+ tests, 95% complete, 331 passing)**
 - [x] **Tests**: Port basic gameloop tests (state_persistence, verb_inheritance) ✅
@@ -76,11 +79,25 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [ ] **Plugins**: Port `diffusers` plugin (image generation - LOW PRIORITY, waiting on Rust diffusion impls)
 
 **Server & Transport:**
+- [ ] **viwo-core**: Port scheduler system (periodic task execution from database queue)
+- [ ] **viwo-transport-websocket-jsonrpc**: Integrate runtime with verb execution
 - [ ] **Server**: Expand JSON-RPC handlers (look, create, dig, go, set, teleport, etc.)
 - [ ] **Server**: Implement authentication system
 - [ ] **Server**: Session management with player entity association
 - [ ] **Server**: Broadcast system for multi-client updates
 - [ ] **Server**: Hook scheduler into server tick loop
+
+**Rust Server Applications:**
+- [ ] **notes-server**: Port notes server to Rust
+  - [ ] Create `crates/apps/notes-server` with main.rs
+  - [ ] Bootstrap: load plugins → seed world → start WebSocket server
+  - [ ] Reuse existing TypeScript entity definitions (`apps/notes-server/src/definitions/Notes.ts`)
+  - [ ] Test: CRUD operations, backlinks, search
+- [ ] **filebrowser-server**: Port file browser server to Rust
+  - [ ] Create `crates/apps/filebrowser-server` with main.rs
+  - [ ] Bootstrap: load fs plugin → seed world → start WebSocket server
+  - [ ] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`)
+  - [ ] Test: navigation, file reading, bookmarks
 
 ## 1. Deep Simulation (Sandbox)
 
