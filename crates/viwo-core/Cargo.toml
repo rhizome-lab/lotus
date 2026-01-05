@@ -7,6 +7,7 @@ description = "Entity system, capabilities, and storage for Viwo"
 
 [dependencies]
 viwo-ir.workspace = true
+viwo-syntax-typescript.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 rusqlite.workspace = true
