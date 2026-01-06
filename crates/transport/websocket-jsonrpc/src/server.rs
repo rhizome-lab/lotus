@@ -69,7 +69,9 @@ impl Server {
             let broadcast_tx = self.broadcast_tx.clone();
 
             tokio::spawn(async move {
-                if let Err(err) = handle_connection(stream, addr, runtime, sessions, broadcast_tx).await {
+                if let Err(err) =
+                    handle_connection(stream, addr, runtime, sessions, broadcast_tx).await
+                {
                     error!("Connection error from {}: {}", addr, err);
                 }
             });
@@ -131,23 +133,21 @@ async fn handle_connection(
     // Handle incoming messages
     while let Some(msg) = ws_receiver.next().await {
         match msg {
-            Ok(Message::Text(text)) => {
-                match handle_message(text.as_ref(), &runtime, &tx).await {
-                    Ok(()) => {}
-                    Err(err) => {
-                        warn!("Error handling message from {}: {}", addr, err);
-                        let error_response = serde_json::json!({
-                            "jsonrpc": "2.0",
-                            "error": {
-                                "code": -32000,
-                                "message": err.to_string()
-                            },
-                            "id": null
-                        });
-                        let _ = tx.send(error_response.to_string());
-                    }
+            Ok(Message::Text(text)) => match handle_message(text.as_ref(), &runtime, &tx).await {
+                Ok(()) => {}
+                Err(err) => {
+                    warn!("Error handling message from {}: {}", addr, err);
+                    let error_response = serde_json::json!({
+                        "jsonrpc": "2.0",
+                        "error": {
+                            "code": -32000,
+                            "message": err.to_string()
+                        },
+                        "id": null
+                    });
+                    let _ = tx.send(error_response.to_string());
                 }
-            }
+            },
             Ok(Message::Close(_)) => {
                 info!("Client {} disconnected", addr);
                 break;
@@ -184,7 +184,8 @@ async fn handle_message(
     let request: serde_json::Value = serde_json::from_str(text)?;
 
     // Extract JSON-RPC fields
-    let method = request.get("method")
+    let method = request
+        .get("method")
         .and_then(|m| m.as_str())
         .ok_or("Missing method")?;
     let params = request.get("params");
@@ -192,9 +193,8 @@ async fn handle_message(
 
     // Route to handler
     let result: Result<serde_json::Value, Box<dyn std::error::Error + Send + Sync>> = match method {
-        "ping" => {
-            Ok(serde_json::json!("pong"))
-        }
+        "ping" => Ok(serde_json::json!("pong")),
+
         "get_entity" => {
             let entity_id = params
                 .and_then(|p| p.get("id"))
@@ -208,6 +208,25 @@ async fn handle_message(
                 Err(err) => Err(err.to_string().into()),
             }
         }
+
+        "get_entities" => {
+            let ids = params
+                .and_then(|p| p.get("ids"))
+                .and_then(|ids| ids.as_array())
+                .ok_or("Missing ids array")?;
+
+            let entity_ids: Vec<i64> = ids.iter().filter_map(|id| id.as_i64()).collect();
+
+            let storage = runtime.storage().lock().unwrap();
+            let mut entities = Vec::new();
+            for id in entity_ids {
+                if let Ok(Some(entity)) = storage.get_entity(id) {
+                    entities.push(serde_json::to_value(&entity)?);
+                }
+            }
+            Ok(serde_json::json!({ "entities": entities }))
+        }
+
         "create_entity" => {
             let props = params
                 .and_then(|p| p.get("props"))
@@ -223,6 +242,37 @@ async fn handle_message(
                 Err(err) => Err(err.to_string().into()),
             }
         }
+
+        "update_entity" => {
+            let entity_id = params
+                .and_then(|p| p.get("id"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing entity id")?;
+            let props = params
+                .and_then(|p| p.get("props"))
+                .cloned()
+                .ok_or("Missing props")?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.update_entity(entity_id, props) {
+                Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
+                Err(err) => Err(err.to_string().into()),
+            }
+        }
+
+        "delete_entity" => {
+            let entity_id = params
+                .and_then(|p| p.get("id"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing entity id")?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.delete_entity(entity_id) {
+                Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
+                Err(err) => Err(err.to_string().into()),
+            }
+        }
+
         "call_verb" => {
             let entity_id = params
                 .and_then(|p| p.get("entity_id"))
@@ -246,9 +296,112 @@ async fn handle_message(
                 Err(err) => Err(err.to_string().into()),
             }
         }
-        _ => {
-            Err(format!("Unknown method: {}", method).into())
+
+        "get_verb" => {
+            let entity_id = params
+                .and_then(|p| p.get("entityId"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing entityId")?;
+            let name = params
+                .and_then(|p| p.get("name"))
+                .and_then(|n| n.as_str())
+                .ok_or("Missing name")?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.get_verb(entity_id, name) {
+                Ok(Some(verb)) => {
+                    // Return the verb code as JSON (S-expression)
+                    Ok(serde_json::json!({
+                        "id": verb.id,
+                        "name": verb.name,
+                        "code": verb.code,
+                        "source": verb.source
+                    }))
+                }
+                Ok(None) => Err("Verb not found".into()),
+                Err(err) => Err(err.to_string().into()),
+            }
         }
+
+        "get_verbs" => {
+            let entity_id = params
+                .and_then(|p| p.get("entityId"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing entityId")?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.get_verbs(entity_id) {
+                Ok(verbs) => {
+                    let verb_list: Vec<_> = verbs
+                        .iter()
+                        .map(|v| {
+                            serde_json::json!({
+                                "id": v.id,
+                                "name": v.name,
+                                "source": v.source
+                            })
+                        })
+                        .collect();
+                    Ok(serde_json::json!({ "verbs": verb_list }))
+                }
+                Err(err) => Err(err.to_string().into()),
+            }
+        }
+
+        "add_verb" => {
+            let entity_id = params
+                .and_then(|p| p.get("entityId"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing entityId")?;
+            let name = params
+                .and_then(|p| p.get("name"))
+                .and_then(|n| n.as_str())
+                .ok_or("Missing name")?;
+            let code = params.and_then(|p| p.get("code")).ok_or("Missing code")?;
+
+            // Parse code as SExpr
+            let sexpr: viwo_ir::SExpr =
+                serde_json::from_value(code.clone()).map_err(|e| format!("Invalid code: {}", e))?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.add_verb(entity_id, name, &sexpr) {
+                Ok(id) => Ok(serde_json::json!({ "id": id })),
+                Err(err) => Err(err.to_string().into()),
+            }
+        }
+
+        "update_verb" => {
+            let verb_id = params
+                .and_then(|p| p.get("id"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing verb id")?;
+            let code = params.and_then(|p| p.get("code")).ok_or("Missing code")?;
+
+            // Parse code as SExpr
+            let sexpr: viwo_ir::SExpr =
+                serde_json::from_value(code.clone()).map_err(|e| format!("Invalid code: {}", e))?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.update_verb(verb_id, &sexpr) {
+                Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
+                Err(err) => Err(err.to_string().into()),
+            }
+        }
+
+        "delete_verb" => {
+            let verb_id = params
+                .and_then(|p| p.get("id"))
+                .and_then(|id| id.as_i64())
+                .ok_or("Missing verb id")?;
+
+            let storage = runtime.storage().lock().unwrap();
+            match storage.delete_verb(verb_id) {
+                Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
+                Err(err) => Err(err.to_string().into()),
+            }
+        }
+
+        _ => Err(format!("Unknown method: {}", method).into()),
     };
 
     // Build response

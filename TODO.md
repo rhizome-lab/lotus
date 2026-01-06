@@ -68,9 +68,9 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 
 ## Next Up
 
-1. **Server**: Compare Rust JSON-RPC handlers against TypeScript reference implementation
-2. **Testing**: Port remaining runtime integration tests from TypeScript (edge cases, error handling)
-3. **Server**: Expand JSON-RPC handlers to match TypeScript completeness
+1. **Testing**: Port remaining runtime integration tests from TypeScript (edge cases, error handling)
+2. **Server**: Add session-based login handler (associate session with player entity)
+3. **Server**: Add execute handler (verb discovery + command execution)
 
 ---
 
@@ -93,10 +93,11 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **viwo-core**: Port scheduler system (periodic task execution from database queue) ✅
 - [x] **viwo-transport-websocket-jsonrpc**: Integrate runtime with verb execution ✅
 - [x] **Testing**: WebSocket integration tests (notes-server: 5 tests passing) ✅
-- [ ] **Server**: Compare Rust handlers against TypeScript reference implementation
-- [ ] **Server**: Expand JSON-RPC handlers to match TypeScript (look, create, dig, go, set, teleport, etc.)
-- [ ] **Server**: Implement authentication system
-- [ ] **Server**: Session management with player entity association
+- [x] **Server**: Compare Rust handlers against TypeScript reference implementation ✅
+- [x] **Server**: Add entity CRUD handlers (get_entities, update_entity, delete_entity) ✅
+- [x] **Server**: Add verb CRUD handlers (get_verb, get_verbs, add_verb, update_verb, delete_verb) ✅
+- [ ] **Server**: Session-based login handler (associate session with player entity)
+- [ ] **Server**: Execute handler (verb discovery + command execution)
 - [ ] **Server**: Broadcast system for multi-client updates
 - [ ] **Server**: Hook scheduler into server tick loop
 
