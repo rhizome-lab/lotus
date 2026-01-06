@@ -81,6 +81,7 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 **Server & Transport:**
 - [x] **viwo-core**: Port scheduler system (periodic task execution from database queue) ✅
 - [x] **viwo-transport-websocket-jsonrpc**: Integrate runtime with verb execution ✅
+- [x] **Testing**: WebSocket integration tests (notes-server: 5 tests passing) ✅
 - [ ] **Server**: Expand JSON-RPC handlers (look, create, dig, go, set, teleport, etc.)
 - [ ] **Server**: Implement authentication system
 - [ ] **Server**: Session management with player entity association
@@ -92,12 +93,14 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
   - [x] Create `crates/apps/notes-server` with main.rs ✅
   - [x] Bootstrap: load plugins → seed world → start WebSocket server ✅
   - [x] Reuse existing TypeScript entity definitions (`apps/notes-server/src/definitions/Notes.ts`) ✅
-  - [ ] Test: CRUD operations, backlinks, search
+  - [x] Integration tests: WebSocket, JSON-RPC, entity CRUD ✅
+  - [ ] Test: Notes-specific verbs, backlinks, search (requires TypeScript transpiler fixes)
 - [x] **filebrowser-server**: Port file browser server to Rust ✅
   - [x] Create `crates/apps/filebrowser-server` with main.rs ✅
   - [x] Bootstrap: load fs plugin → seed world → start WebSocket server ✅
   - [x] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`) ✅
-  - [ ] Test: navigation, file reading, bookmarks
+  - [ ] Implement fs plugin ABI (plugin_init for dynamic loading)
+  - [ ] Test: navigation, file reading, bookmarks (blocked by plugin ABI)
 
 ## 1. Deep Simulation (Sandbox)
 
