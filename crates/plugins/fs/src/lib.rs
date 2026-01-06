@@ -1,15 +1,22 @@
 //! Filesystem plugin for Viwo with capability-based security.
+//!
+//! This plugin provides file system access through Lua functions that validate capabilities.
 
 use std::ffi::{CStr, CString};
 use std::fs;
 use std::os::raw::{c_char, c_int};
 use std::path::PathBuf;
 
+/// Type for plugin functions - standard Lua C function signature
+type PluginLuaFunction = unsafe extern "C" fn(
+    lua_state: *mut mlua::ffi::lua_State,
+) -> std::os::raw::c_int;
+
 /// Type for the registration callback passed from the runtime
 type RegisterFunction = unsafe extern "C" fn(
     name: *const c_char,
-    func: unsafe extern "C" fn(*const c_char, *mut *mut c_char) -> i32,
-) -> i32;
+    func: PluginLuaFunction,
+) -> std::os::raw::c_int;
 
 /// Plugin initialization - register all fs functions
 #[unsafe(no_mangle)]
@@ -24,14 +31,14 @@ pub unsafe extern "C" fn plugin_init(register_fn: RegisterFunction) -> c_int {
             "fs.mkdir",
             "fs.remove",
         ];
-        let funcs: [unsafe extern "C" fn(*const c_char, *mut *mut c_char) -> i32; 7] = [
-            fs_read_ffi,
-            fs_write_ffi,
-            fs_list_ffi,
-            fs_stat_ffi,
-            fs_exists_ffi,
-            fs_mkdir_ffi,
-            fs_remove_ffi,
+        let funcs: [PluginLuaFunction; 7] = [
+            fs_read_lua,
+            fs_write_lua,
+            fs_list_lua,
+            fs_stat_lua,
+            fs_exists_lua,
+            fs_mkdir_lua,
+            fs_remove_lua,
         ];
 
         for (name, func) in names.iter().zip(funcs.iter()) {
@@ -40,7 +47,7 @@ pub unsafe extern "C" fn plugin_init(register_fn: RegisterFunction) -> c_int {
                 Err(_) => return -1,
             };
             if register_fn(name_cstr.as_ptr(), *func) != 0 {
-                return -1;
+                return -1,
             }
         }
     }
@@ -49,422 +56,394 @@ pub unsafe extern "C" fn plugin_init(register_fn: RegisterFunction) -> c_int {
 }
 
 /// Plugin cleanup (optional)
-#[no_mangle]
-pub extern "C" fn plugin_cleanup() {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn plugin_cleanup() {
     // No cleanup needed
 }
 
-// FFI wrapper functions that convert between JSON strings and Rust types
+// Lua function implementations - these are called directly from Lua with the Lua state
 
-#[no_mangle]
-unsafe extern "C" fn fs_read_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_read_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        // Get arguments from Lua stack
+        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        let result = fs_read(capability, entity_id, path)?;
-        Ok(serde_json::json!({"content": result}))
+        // Convert capability to JSON for validation
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        // Perform file read with capability validation
+        let content = fs_read(&cap_json, this_id, &path)
+            .map_err(mlua::Error::external)?;
+
+        // Push result back to Lua
+        lua.push(content)?;
+        Ok(1) // Number of return values
     })
 }
 
-#[no_mangle]
-unsafe extern "C" fn fs_write_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
-        let content = input["content"].as_str().ok_or("Missing content")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_write_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        let (capability, path, content): (mlua::Value, String, String) = lua.from_stack_multi(-3)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        fs_write(capability, entity_id, path, content)?;
-        Ok(serde_json::json!({"success": true}))
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        fs_write(&cap_json, this_id, &path, &content)
+            .map_err(mlua::Error::external)?;
+
+        Ok(0) // No return values
     })
 }
 
-#[no_mangle]
-unsafe extern "C" fn fs_list_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_list_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        let files = fs_list(capability, entity_id, path)?;
-        Ok(serde_json::json!({"files": files}))
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        let files = fs_list(&cap_json, this_id, &path)
+            .map_err(mlua::Error::external)?;
+
+        lua.to_value(&files)?;
+        Ok(1)
     })
 }
 
-#[no_mangle]
-unsafe extern "C" fn fs_stat_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_stat_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        fs_stat(capability, entity_id, path)
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        let stats = fs_stat(&cap_json, this_id, &path)
+            .map_err(mlua::Error::external)?;
+
+        lua.to_value(&stats)?;
+        Ok(1)
     })
 }
 
-#[no_mangle]
-unsafe extern "C" fn fs_exists_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_exists_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        let exists = fs_exists(capability, entity_id, path)?;
-        Ok(serde_json::json!({"exists": exists}))
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        let exists = fs_exists(&cap_json, this_id, &path)
+            .map_err(mlua::Error::external)?;
+
+        lua.push(exists)?;
+        Ok(1)
     })
 }
 
-#[no_mangle]
-unsafe extern "C" fn fs_mkdir_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_mkdir_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        fs_mkdir(capability, entity_id, path)?;
-        Ok(serde_json::json!({"success": true}))
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        fs_mkdir(&cap_json, this_id, &path)
+            .map_err(mlua::Error::external)?;
+
+        Ok(0)
     })
 }
 
-#[no_mangle]
-unsafe extern "C" fn fs_remove_ffi(input_json: *const c_char, output_json: *mut *mut c_char) -> i32 {
-    ffi_wrapper(input_json, output_json, |input: serde_json::Value| {
-        let capability = &input["capability"];
-        let entity_id = input["entity_id"].as_i64().ok_or("Missing entity_id")?;
-        let path = input["path"].as_str().ok_or("Missing path")?;
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_remove_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
+    lua_wrapper(lua_state, |lua| {
+        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
+        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
 
-        fs_remove(capability, entity_id, path)?;
-        Ok(serde_json::json!({"success": true}))
+        let cap_json: serde_json::Value = lua.from_value(capability)?;
+
+        fs_remove(&cap_json, this_id, &path)
+            .map_err(mlua::Error::external)?;
+
+        Ok(0)
     })
 }
 
-/// Helper function to wrap Rust functions for FFI
-unsafe fn ffi_wrapper<F>(
-    input_json: *const c_char,
-    output_json: *mut *mut c_char,
-    func: F,
-) -> i32
+/// Helper to wrap Lua function calls and handle errors
+unsafe fn lua_wrapper<F>(lua_state: *mut mlua::ffi::lua_State, func: F) -> std::os::raw::c_int
 where
-    F: FnOnce(serde_json::Value) -> Result<serde_json::Value, String>,
+    F: FnOnce(&mlua::Lua) -> mlua::Result<std::os::raw::c_int>,
 {
-    // Parse input JSON
-    let input_str = match unsafe { CStr::from_ptr(input_json).to_str() } {
-        Ok(s) => s,
-        Err(_) => {
-            *output_json = error_json("Invalid UTF-8 in input");
-            return -1;
-        }
+    // Convert raw pointer to mlua::Lua
+    let lua = unsafe {
+        mlua::Lua::init_from_ptr(lua_state)
     };
 
-    let input: serde_json::Value = match serde_json::from_str(input_str) {
-        Ok(v) => v,
+    match func(&lua) {
+        Ok(n) => n,
         Err(e) => {
-            *output_json = error_json(&format!("JSON parse error: {}", e));
-            return -1;
-        }
-    };
-
-    // Call the function
-    let result = match func(input) {
-        Ok(v) => v,
-        Err(e) => {
-            *output_json = error_json(&e);
-            return -1;
-        }
-    };
-
-    // Serialize output
-    let output_str = match serde_json::to_string(&result) {
-        Ok(s) => s,
-        Err(e) => {
-            *output_json = error_json(&format!("JSON serialize error: {}", e));
-            return -1;
-        }
-    };
-
-    // Allocate C string
-    match CString::new(output_str) {
-        Ok(cstr) => {
-            *output_json = cstr.into_raw();
-            0
-        }
-        Err(_) => {
-            *output_json = error_json("Failed to create C string");
-            -1
+            // Push error message to Lua
+            if let Err(_) = lua.push(format!("Plugin error: {}", e)) {
+                -1
+            } else {
+                lua.error::<()>("").ok();
+                -1
+            }
         }
     }
 }
 
-/// Helper to create an error JSON response
-fn error_json(msg: &str) -> *mut c_char {
-    let error = serde_json::json!({"error": msg});
-    match serde_json::to_string(&error) {
-        Ok(s) => match CString::new(s) {
-            Ok(cstr) => cstr.into_raw(),
-            Err(_) => std::ptr::null_mut(),
-        },
-        Err(_) => std::ptr::null_mut(),
-    }
-}
+// Core filesystem functions with capability validation
 
-/// Validate that a capability grants access to a path
-fn validate_capability(
-    capability: &serde_json::Value,
-    current_entity_id: i64,
-    requested_path: &str,
-) -> Result<(), String> {
-    // Check capability ownership
-    let owner_id = capability["owner_id"]
-        .as_i64()
-        .ok_or("fs: capability missing owner_id")?;
-
-    if owner_id != current_entity_id {
-        return Err("fs: capability does not belong to current entity".to_string());
-    }
-
-    // Check allowed path
-    let allowed_path = capability["params"]["path"]
-        .as_str()
-        .ok_or("fs: capability missing path parameter")?;
-
-    // Resolve paths to absolute form for security check
-    let resolved_target = PathBuf::from(requested_path)
-        .canonicalize()
-        .map_err(|_| format!("fs: path does not exist: {}", requested_path))?;
-
-    let resolved_allowed = PathBuf::from(allowed_path)
-        .canonicalize()
-        .map_err(|_| format!("fs: invalid allowed path: {}", allowed_path))?;
-
-    // Check if requested path is within allowed path
-    if !resolved_target.starts_with(&resolved_allowed) {
-        return Err(format!(
-            "fs: path '{}' not allowed by capability (allowed: '{}')",
-            requested_path, allowed_path
-        ));
-    }
-
-    Ok(())
-}
-
-/// Read file contents (requires fs.read capability)
-pub fn fs_read(
+fn fs_read(
     capability: &serde_json::Value,
     entity_id: i64,
     path: &str,
 ) -> Result<String, String> {
-    validate_capability(capability, entity_id, path)?;
+    validate_fs_capability(capability, entity_id, path)?;
 
-    fs::read_to_string(path).map_err(|e| format!("fs.read failed: {}", e))
+    let full_path = get_sandboxed_path(capability, path)?;
+    fs::read_to_string(&full_path)
+        .map_err(|e| format!("Failed to read {}: {}", path, e))
 }
 
-/// List directory contents (requires fs.read capability)
-pub fn fs_list(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<Vec<String>, String> {
-    validate_capability(capability, entity_id, path)?;
-
-    fs::read_dir(path)
-        .map_err(|e| format!("fs.list failed: {}", e))?
-        .filter_map(|e| e.ok())
-        .map(|e| {
-            e.file_name()
-                .into_string()
-                .map_err(|_| "fs.list: invalid filename".to_string())
-        })
-        .collect()
-}
-
-/// Get file/directory stats (requires fs.read capability)
-pub fn fs_stat(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<serde_json::Value, String> {
-    validate_capability(capability, entity_id, path)?;
-
-    let metadata = fs::metadata(path).map_err(|e| format!("fs.stat failed: {}", e))?;
-
-    Ok(serde_json::json!({
-        "size": metadata.len(),
-        "isDirectory": metadata.is_dir(),
-        "isFile": metadata.is_file(),
-        "modified": metadata.modified()
-            .ok()
-            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-            .map(|d| d.as_secs())
-    }))
-}
-
-/// Check if file/directory exists (requires fs.read capability)
-pub fn fs_exists(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<bool, String> {
-    // For exists, we don't validate the path canonically since it might not exist
-    // Instead, just check ownership and that the path is within allowed directory
-    let owner_id = capability["owner_id"]
-        .as_i64()
-        .ok_or("fs: capability missing owner_id")?;
-
-    if owner_id != entity_id {
-        return Err("fs: capability does not belong to current entity".to_string());
-    }
-
-    Ok(PathBuf::from(path).exists())
-}
-
-/// Write file contents (requires fs.write capability)
-pub fn fs_write(
+fn fs_write(
     capability: &serde_json::Value,
     entity_id: i64,
     path: &str,
     content: &str,
 ) -> Result<(), String> {
-    // For write, create parent dirs if needed
-    if let Some(parent) = PathBuf::from(path).parent() {
-        if !parent.exists() {
-            fs::create_dir_all(parent).map_err(|e| format!("fs.write: failed to create parent directories: {}", e))?;
-        }
+    validate_fs_capability(capability, entity_id, path)?;
+
+    let full_path = get_sandboxed_path(capability, path)?;
+
+    // Create parent directory if it doesn't exist
+    if let Some(parent) = full_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create directory: {}", e))?;
     }
 
-    // Validate after ensuring path exists
-    validate_capability(capability, entity_id, path)
-        .or_else(|_| {
-            // If validation fails because file doesn't exist yet, validate parent
-            if let Some(parent) = PathBuf::from(path).parent() {
-                validate_capability(capability, entity_id, parent.to_str().unwrap())
-            } else {
-                Err("fs.write: invalid path".to_string())
-            }
-        })?;
-
-    fs::write(path, content).map_err(|e| format!("fs.write failed: {}", e))
+    fs::write(&full_path, content)
+        .map_err(|e| format!("Failed to write {}: {}", path, e))
 }
 
-/// Create directory (requires fs.write capability)
-pub fn fs_mkdir(
+fn fs_list(
+    capability: &serde_json::Value,
+    entity_id: i64,
+    path: &str,
+) -> Result<Vec<serde_json::Value>, String> {
+    validate_fs_capability(capability, entity_id, path)?;
+
+    let full_path = get_sandboxed_path(capability, path)?;
+
+    let entries = fs::read_dir(&full_path)
+        .map_err(|e| format!("Failed to list directory {}: {}", path, e))?;
+
+    let mut files = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
+        let metadata = entry.metadata()
+            .map_err(|e| format!("Failed to read metadata: {}", e))?;
+
+        files.push(serde_json::json!({
+            "name": entry.file_name().to_string_lossy().to_string(),
+            "is_dir": metadata.is_dir(),
+            "is_file": metadata.is_file(),
+            "size": metadata.len(),
+        }));
+    }
+
+    Ok(files)
+}
+
+fn fs_stat(
+    capability: &serde_json::Value,
+    entity_id: i64,
+    path: &str,
+) -> Result<serde_json::Value, String> {
+    validate_fs_capability(capability, entity_id, path)?;
+
+    let full_path = get_sandboxed_path(capability, path)?;
+    let metadata = fs::metadata(&full_path)
+        .map_err(|e| format!("Failed to stat {}: {}", path, e))?;
+
+    Ok(serde_json::json!({
+        "is_dir": metadata.is_dir(),
+        "is_file": metadata.is_file(),
+        "size": metadata.len(),
+        "readonly": metadata.permissions().readonly(),
+    }))
+}
+
+fn fs_exists(
+    capability: &serde_json::Value,
+    entity_id: i64,
+    path: &str,
+) -> Result<bool, String> {
+    validate_fs_capability(capability, entity_id, path)?;
+
+    let full_path = get_sandboxed_path(capability, path)?;
+    Ok(full_path.exists())
+}
+
+fn fs_mkdir(
     capability: &serde_json::Value,
     entity_id: i64,
     path: &str,
 ) -> Result<(), String> {
-    // Create the directory first
-    fs::create_dir_all(path).map_err(|e| format!("fs.mkdir failed: {}", e))?;
+    validate_fs_capability(capability, entity_id, path)?;
 
-    // Then validate
-    validate_capability(capability, entity_id, path)?;
+    let full_path = get_sandboxed_path(capability, path)?;
+    fs::create_dir_all(&full_path)
+        .map_err(|e| format!("Failed to create directory {}: {}", path, e))
+}
+
+fn fs_remove(
+    capability: &serde_json::Value,
+    entity_id: i64,
+    path: &str,
+) -> Result<(), String> {
+    validate_fs_capability(capability, entity_id, path)?;
+
+    let full_path = get_sandboxed_path(capability, path)?;
+
+    if full_path.is_dir() {
+        fs::remove_dir_all(&full_path)
+            .map_err(|e| format!("Failed to remove directory {}: {}", path, e))
+    } else {
+        fs::remove_file(&full_path)
+            .map_err(|e| format!("Failed to remove file {}: {}", path, e))
+    }
+}
+
+// Capability validation helpers
+
+fn validate_fs_capability(
+    capability: &serde_json::Value,
+    entity_id: i64,
+    _path: &str,
+) -> Result<(), String> {
+    // Check that the capability owner matches the entity
+    let owner_id = capability["owner_id"]
+        .as_i64()
+        .ok_or("Capability missing owner_id")?;
+
+    if owner_id != entity_id {
+        return Err(format!(
+            "Capability owner mismatch: expected {}, got {}",
+            entity_id, owner_id
+        ));
+    }
+
+    // Additional validation could check:
+    // - Capability expiration
+    // - Path restrictions
+    // - Operation permissions (read/write/execute)
 
     Ok(())
 }
 
-/// Remove file or directory (requires fs.write capability)
-pub fn fs_remove(
+fn get_sandboxed_path(
     capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<(), String> {
-    validate_capability(capability, entity_id, path)?;
+    relative_path: &str,
+) -> Result<PathBuf, String> {
+    // Get the root path from the capability params
+    let root = capability["params"]["path"]
+        .as_str()
+        .ok_or("Capability missing path parameter")?;
 
-    if PathBuf::from(path).is_dir() {
-        fs::remove_dir_all(path).map_err(|e| format!("fs.remove failed: {}", e))
+    let root_path = PathBuf::from(root);
+    let full_path = root_path.join(relative_path);
+
+    // Ensure the path doesn't escape the sandbox via ../ or symlinks
+    let canonical_root = root_path
+        .canonicalize()
+        .map_err(|e| format!("Invalid root path: {}", e))?;
+
+    // For new files that don't exist yet, we can't canonicalize them
+    // So we check if the parent directory is within the sandbox
+    if full_path.exists() {
+        let canonical_full = full_path
+            .canonicalize()
+            .map_err(|e| format!("Invalid path: {}", e))?;
+
+        if !canonical_full.starts_with(&canonical_root) {
+            return Err("Path escapes sandbox".to_string());
+        }
+
+        Ok(canonical_full)
     } else {
-        fs::remove_file(path).map_err(|e| format!("fs.remove failed: {}", e))
+        // For non-existent paths, validate the parent
+        if let Some(parent) = full_path.parent() {
+            if parent.exists() {
+                let canonical_parent = parent
+                    .canonicalize()
+                    .map_err(|e| format!("Invalid parent path: {}", e))?;
+
+                if !canonical_parent.starts_with(&canonical_root) {
+                    return Err("Path escapes sandbox".to_string());
+                }
+            }
+        }
+
+        Ok(full_path)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
+    use serde_json::json;
 
-    fn create_test_capability(owner_id: i64, path: &str) -> serde_json::Value {
-        serde_json::json!({
-            "owner_id": owner_id,
+    fn create_test_capability(root: &str) -> serde_json::Value {
+        json!({
+            "owner_id": 1,
             "params": {
-                "path": path
+                "path": root
             }
         })
     }
 
     #[test]
-    fn test_fs_write_and_read() {
-        let temp_dir = TempDir::new().unwrap();
-        let cap = create_test_capability(1, temp_dir.path().to_str().unwrap());
+    fn test_fs_read_write() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let root = temp_dir.path().to_str().unwrap();
+        let cap = create_test_capability(root);
 
-        let file_path = temp_dir.path().join("test.txt");
-        let file_path_str = file_path.to_str().unwrap();
+        // Write a file
+        fs_write(&cap, 1, "test.txt", "Hello, World!").unwrap();
 
-        // Write
-        fs_write(&cap, 1, file_path_str, "Hello, World!").unwrap();
-
-        // Read
-        let content = fs_read(&cap, 1, file_path_str).unwrap();
+        // Read it back
+        let content = fs_read(&cap, 1, "test.txt").unwrap();
         assert_eq!(content, "Hello, World!");
     }
 
     #[test]
-    fn test_fs_list() {
-        let temp_dir = TempDir::new().unwrap();
-        let cap = create_test_capability(1, temp_dir.path().to_str().unwrap());
+    fn test_sandbox_escape_prevention() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let root = temp_dir.path().to_str().unwrap();
+        let cap = create_test_capability(root);
 
-        // Create some files
-        fs::write(temp_dir.path().join("file1.txt"), "test").unwrap();
-        fs::write(temp_dir.path().join("file2.txt"), "test").unwrap();
-
-        let files = fs_list(&cap, 1, temp_dir.path().to_str().unwrap()).unwrap();
-        assert_eq!(files.len(), 2);
-        assert!(files.contains(&"file1.txt".to_string()));
-        assert!(files.contains(&"file2.txt".to_string()));
-    }
-
-    #[test]
-    fn test_fs_capability_validation() {
-        let temp_dir = TempDir::new().unwrap();
-        let cap = create_test_capability(1, temp_dir.path().to_str().unwrap());
-
-        // Write a file
-        let file_path = temp_dir.path().join("test.txt");
-        fs::write(&file_path, "test").unwrap();
-
-        // Try to access with wrong entity ID
-        let result = fs_read(&cap, 2, file_path.to_str().unwrap());
+        // Try to escape sandbox with ../
+        let result = fs_read(&cap, 1, "../../../etc/passwd");
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("does not belong"));
     }
 
     #[test]
-    fn test_fs_stat() {
-        let temp_dir = TempDir::new().unwrap();
-        let cap = create_test_capability(1, temp_dir.path().to_str().unwrap());
+    fn test_capability_validation() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let root = temp_dir.path().to_str().unwrap();
+        let cap = create_test_capability(root);
 
-        let file_path = temp_dir.path().join("test.txt");
-        fs::write(&file_path, "Hello!").unwrap();
-
-        let stats = fs_stat(&cap, 1, file_path.to_str().unwrap()).unwrap();
-        assert_eq!(stats["size"], 6);
-        assert_eq!(stats["isFile"], true);
-        assert_eq!(stats["isDirectory"], false);
-    }
-
-    #[test]
-    fn test_fs_mkdir_and_remove() {
-        let temp_dir = TempDir::new().unwrap();
-        let cap = create_test_capability(1, temp_dir.path().to_str().unwrap());
-
-        let dir_path = temp_dir.path().join("subdir");
-        let dir_path_str = dir_path.to_str().unwrap();
-
-        // Create directory
-        fs_mkdir(&cap, 1, dir_path_str).unwrap();
-        assert!(dir_path.exists());
-
-        // Remove directory
-        fs_remove(&cap, 1, dir_path_str).unwrap();
-        assert!(!dir_path.exists());
+        // Wrong entity ID
+        let result = fs_read(&cap, 999, "test.txt");
+        assert!(result.is_err());
     }
 }

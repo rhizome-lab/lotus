@@ -359,118 +359,67 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_delegate", delegate_fn)?;
 
-        // fs.read opcode - read file with capability
-        let this_id = self.this.id;
-        let fs_read_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path
-            });
-            let result = crate::plugin_registry::call_plugin_function("fs.read", &input)
-                .map_err(mlua::Error::external)?;
-            let content = result["content"].as_str()
-                .ok_or_else(|| mlua::Error::external("fs.read: missing content in response"))?
-                .to_string();
-            Ok(content)
-        })?;
-        lua.globals().set("__viwo_fs_read", fs_read_fn)?;
+        // fs.read opcode - delegate to plugin
+        // Store this_id in globals for plugin to access
+        lua.globals().set("__viwo_this_id", self.this.id)?;
 
-        // fs.write opcode - write file with capability
-        let this_id = self.this.id;
-        let fs_write_fn = lua.create_function(move |lua_ctx, (capability, path, content): (mlua::Value, String, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path,
-                "content": content
-            });
-            crate::plugin_registry::call_plugin_function("fs.write", &input)
-                .map_err(mlua::Error::external)?;
-            Ok(())
-        })?;
-        lua.globals().set("__viwo_fs_write", fs_write_fn)?;
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.read") {
+            // Register the plugin function directly as a Lua C function
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_read\0".as_ptr() as *const _);
+            }
+        }
 
-        // fs.list opcode - list directory with capability
-        let this_id = self.this.id;
-        let fs_list_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path
-            });
-            let result = crate::plugin_registry::call_plugin_function("fs.list", &input)
-                .map_err(mlua::Error::external)?;
-            let files = result["files"].as_array()
-                .ok_or_else(|| mlua::Error::external("fs.list: missing files in response"))?;
-            lua_ctx.to_value(&files)
-        })?;
-        lua.globals().set("__viwo_fs_list", fs_list_fn)?;
+        // Register remaining fs plugin functions
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.write") {
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_write\0".as_ptr() as *const _);
+            }
+        }
 
-        // fs.stat opcode - get file stats with capability
-        let this_id = self.this.id;
-        let fs_stat_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path
-            });
-            let stats = crate::plugin_registry::call_plugin_function("fs.stat", &input)
-                .map_err(mlua::Error::external)?;
-            lua_ctx.to_value(&stats)
-        })?;
-        lua.globals().set("__viwo_fs_stat", fs_stat_fn)?;
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.list") {
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_list\0".as_ptr() as *const _);
+            }
+        }
 
-        // fs.exists opcode - check if file exists with capability
-        let this_id = self.this.id;
-        let fs_exists_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path
-            });
-            let result = crate::plugin_registry::call_plugin_function("fs.exists", &input)
-                .map_err(mlua::Error::external)?;
-            let exists = result["exists"].as_bool()
-                .ok_or_else(|| mlua::Error::external("fs.exists: missing exists in response"))?;
-            Ok(exists)
-        })?;
-        lua.globals().set("__viwo_fs_exists", fs_exists_fn)?;
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.stat") {
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_stat\0".as_ptr() as *const _);
+            }
+        }
 
-        // fs.mkdir opcode - create directory with capability
-        let this_id = self.this.id;
-        let fs_mkdir_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path
-            });
-            crate::plugin_registry::call_plugin_function("fs.mkdir", &input)
-                .map_err(mlua::Error::external)?;
-            Ok(())
-        })?;
-        lua.globals().set("__viwo_fs_mkdir", fs_mkdir_fn)?;
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.exists") {
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_exists\0".as_ptr() as *const _);
+            }
+        }
 
-        // fs.remove opcode - remove file/directory with capability
-        let this_id = self.this.id;
-        let fs_remove_fn = lua.create_function(move |lua_ctx, (capability, path): (mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let input = serde_json::json!({
-                "capability": cap_json,
-                "entity_id": this_id,
-                "path": path
-            });
-            crate::plugin_registry::call_plugin_function("fs.remove", &input)
-                .map_err(mlua::Error::external)?;
-            Ok(())
-        })?;
-        lua.globals().set("__viwo_fs_remove", fs_remove_fn)?;
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.mkdir") {
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_mkdir\0".as_ptr() as *const _);
+            }
+        }
+
+        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.remove") {
+            unsafe {
+                let lua_state = lua.state();
+                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
+                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_remove\0".as_ptr() as *const _);
+            }
+        }
 
         // sqlite.query opcode - execute SQL query with capability
         let this_id = self.this.id;

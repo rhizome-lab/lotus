@@ -24,16 +24,18 @@ impl PluginRegistry {
     }
 
     /// Load a plugin from a .so/.dll/.dylib file
+    ///
+    /// The plugin's `plugin_init` function will be called with the registration callback.
     pub fn load_plugin(&mut self, path: impl AsRef<Path>, name: &str) -> Result<(), String> {
         unsafe {
             let lib = Library::new(path.as_ref())
                 .map_err(|e| format!("Failed to load plugin {}: {}", name, e))?;
 
-            // Get the registration function to pass to plugin_init
+            // Type for the registration callback
             type RegisterFunction = unsafe extern "C" fn(
                 name: *const std::os::raw::c_char,
-                func: unsafe extern "C" fn(*const std::os::raw::c_char, *mut *mut std::os::raw::c_char) -> i32,
-            ) -> i32;
+                func: crate::plugin_registry::PluginLuaFunction,
+            ) -> c_int;
 
             // Call plugin_init with the registration callback
             let init_fn: Symbol<extern "C" fn(RegisterFunction) -> c_int> = lib
