@@ -1,7 +1,21 @@
 //! Filesystem plugin for Viwo with capability-based security.
 
 use std::fs;
+use std::os::raw::c_int;
 use std::path::PathBuf;
+
+/// Plugin initialization
+#[no_mangle]
+pub extern "C" fn plugin_init() -> c_int {
+    // No special initialization needed for fs plugin
+    0 // Success
+}
+
+/// Plugin cleanup (optional)
+#[no_mangle]
+pub extern "C" fn plugin_cleanup() {
+    // No cleanup needed
+}
 
 /// Validate that a capability grants access to a path
 fn validate_capability(
