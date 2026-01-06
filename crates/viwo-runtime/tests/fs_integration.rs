@@ -5,10 +5,31 @@ use viwo_core::WorldStorage;
 use viwo_ir::SExpr;
 use viwo_runtime::ViwoRuntime;
 
+/// Helper to get the plugin path for a given plugin name
+fn get_plugin_path(plugin_name: &str) -> std::path::PathBuf {
+    let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    path.pop(); // Go to crates/
+    path.pop(); // Go to workspace root
+    path.push("target/debug");
+
+    if cfg!(target_os = "macos") {
+        path.push(format!("libviwo_plugin_{}.dylib", plugin_name));
+    } else if cfg!(target_os = "windows") {
+        path.push(format!("viwo_plugin_{}.dll", plugin_name));
+    } else {
+        path.push(format!("libviwo_plugin_{}.so", plugin_name));
+    }
+    path
+}
+
 #[test]
 fn test_fs_write_and_read() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load fs plugin
+    let plugin_path = get_plugin_path("fs");
+    runtime.load_plugin(&plugin_path, "fs").unwrap();
 
     // Create a test directory
     let temp_dir = tempfile::tempdir().unwrap();
@@ -47,12 +68,12 @@ fn test_fs_write_and_read() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("write_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("write_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(file_path_str.to_string()),
-            SExpr::String("Hello, Viwo!".to_string()),
+            SExpr::string(file_path_str).erase_type(),
+            SExpr::string("Hello, Viwo!").erase_type(),
         ],
     );
 
@@ -89,11 +110,11 @@ fn test_fs_write_and_read() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("read_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(file_path_str.to_string()),
+            SExpr::string(file_path_str).erase_type(),
         ],
     );
 
@@ -113,6 +134,10 @@ fn test_fs_write_and_read() {
 fn test_fs_list() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load fs plugin
+    let plugin_path = get_plugin_path("fs");
+    runtime.load_plugin(&plugin_path, "fs").unwrap();
 
     let temp_dir = tempfile::tempdir().unwrap();
     let temp_path = temp_dir.path().to_str().unwrap();
@@ -141,11 +166,11 @@ fn test_fs_list() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("read_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(temp_path.to_string()),
+            SExpr::string(temp_path).erase_type(),
         ],
     );
 
@@ -170,6 +195,10 @@ fn test_fs_list() {
 fn test_fs_stat() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load fs plugin
+    let plugin_path = get_plugin_path("fs");
+    runtime.load_plugin(&plugin_path, "fs").unwrap();
 
     let temp_dir = tempfile::tempdir().unwrap();
     let temp_path = temp_dir.path().to_str().unwrap();
@@ -197,11 +226,11 @@ fn test_fs_stat() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("read_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(file_path.to_str().unwrap().to_string()),
+            SExpr::string(file_path.to_str().unwrap()).erase_type(),
         ],
     );
 
@@ -223,6 +252,10 @@ fn test_fs_stat() {
 fn test_fs_capability_validation() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load fs plugin
+    let plugin_path = get_plugin_path("fs");
+    runtime.load_plugin(&plugin_path, "fs").unwrap();
 
     let temp_dir = tempfile::tempdir().unwrap();
     let restricted_dir = tempfile::tempdir().unwrap();
@@ -256,11 +289,11 @@ fn test_fs_capability_validation() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("read_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(restricted_file.to_str().unwrap().to_string()),
+            SExpr::string(restricted_file.to_str().unwrap()).erase_type(),
         ],
     );
 
@@ -279,6 +312,10 @@ fn test_fs_capability_validation() {
 fn test_fs_mkdir_and_remove() {
     let storage = WorldStorage::in_memory().unwrap();
     let runtime = ViwoRuntime::new(storage);
+
+    // Load fs plugin
+    let plugin_path = get_plugin_path("fs");
+    runtime.load_plugin(&plugin_path, "fs").unwrap();
 
     let temp_dir = tempfile::tempdir().unwrap();
     let temp_path = temp_dir.path().to_str().unwrap();
@@ -305,11 +342,11 @@ fn test_fs_mkdir_and_remove() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("write_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("write_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(new_dir.to_str().unwrap().to_string()),
+            SExpr::string(new_dir.to_str().unwrap()).erase_type(),
         ],
     );
 
@@ -334,11 +371,11 @@ fn test_fs_mkdir_and_remove() {
                 vec![
                     SExpr::call(
                         "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::String("write_cap_id".to_string())],
+                        vec![SExpr::call("std.this", vec![]), SExpr::string("write_cap_id").erase_type()],
                     ),
                 ],
             ),
-            SExpr::String(new_dir.to_str().unwrap().to_string()),
+            SExpr::string(new_dir.to_str().unwrap()).erase_type(),
         ],
     );
 

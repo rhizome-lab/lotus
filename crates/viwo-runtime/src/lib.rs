@@ -49,6 +49,9 @@ impl ViwoRuntime {
     /// Create a new runtime with the given storage (legacy API).
     #[deprecated(note = "Use ViwoRuntime::open() instead")]
     pub fn new(storage: WorldStorage) -> Self {
+        // Initialize plugin registry
+        plugin_registry::init_registry();
+
         // This is a workaround - we can't open a second connection without the path
         // So we just use in-memory for the scheduler storage
         let scheduler_storage = WorldStorage::in_memory().expect("Failed to create in-memory storage");
