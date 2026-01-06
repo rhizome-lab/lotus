@@ -66,23 +66,26 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **viwo-ir**: Rust keyword escaping in generated code (else → r#else) ✅
 - [ ] **viwo-ir**: Extract remaining opcode definitions from TypeScript to schema
 
-**Plugin System: (COMPLETE ✅ - 7/8 plugins ported)**
+**Plugin System: (IN PROGRESS - Native Lua C API refactor)**
 - [x] **Plugins**: Implement plugin opcode registry in viwo-runtime-luajit ✅
 - [x] **Plugins**: Complete plugin loader (dynamic loading with libloading) ✅
-- [x] **Plugins**: Port `fs` plugin (filesystem access with capability enforcement) ✅
-- [x] **Plugins**: Port `net` plugin (HTTP client with reqwest) ✅
-- [x] **Plugins**: Port `sqlite` plugin (direct SQL access with rusqlite) ✅
-- [x] **Plugins**: Port `procgen` plugin (seeded random, simplex noise) ✅
-- [x] **Plugins**: Port `ai` plugin (multi-provider LLM via rig: OpenAI, Anthropic, Cohere, Perplexity) ✅
-- [x] **Plugins**: Port `vector` plugin (sqlite-vec embeddings for semantic search) ✅
-- [x] **Plugins**: Port `memory` plugin (RAG with vector search + AI embeddings) ✅
+- [x] **Plugins**: Refactor to native Lua C API (removed JSON serialization, full capabilities) ✅
+- [x] **Plugins**: Port `fs` plugin with native Lua C API (7 functions: read, write, list, stat, exists, mkdir, remove) ✅
+- [ ] **Plugins**: Add runtime integration tests for fs plugin
+- [ ] **Plugins**: Refactor `net` plugin to native Lua C API
+- [ ] **Plugins**: Refactor `sqlite` plugin to native Lua C API
+- [ ] **Plugins**: Refactor `procgen` plugin to native Lua C API
+- [ ] **Plugins**: Refactor `ai` plugin to native Lua C API
+- [ ] **Plugins**: Refactor `vector` plugin to native Lua C API
+- [ ] **Plugins**: Refactor `memory` plugin to native Lua C API
 - [ ] **Plugins**: Port `diffusers` plugin (image generation - LOW PRIORITY, waiting on Rust diffusion impls)
 
 **Server & Transport:**
 - [x] **viwo-core**: Port scheduler system (periodic task execution from database queue) ✅
 - [x] **viwo-transport-websocket-jsonrpc**: Integrate runtime with verb execution ✅
 - [x] **Testing**: WebSocket integration tests (notes-server: 5 tests passing) ✅
-- [ ] **Server**: Expand JSON-RPC handlers (look, create, dig, go, set, teleport, etc.)
+- [ ] **Server**: Compare Rust handlers against TypeScript reference implementation
+- [ ] **Server**: Expand JSON-RPC handlers to match TypeScript (look, create, dig, go, set, teleport, etc.)
 - [ ] **Server**: Implement authentication system
 - [ ] **Server**: Session management with player entity association
 - [ ] **Server**: Broadcast system for multi-client updates
@@ -99,8 +102,8 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
   - [x] Create `crates/apps/filebrowser-server` with main.rs ✅
   - [x] Bootstrap: load fs plugin → seed world → start WebSocket server ✅
   - [x] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`) ✅
-  - [ ] Implement fs plugin ABI (plugin_init for dynamic loading)
-  - [ ] Test: navigation, file reading, bookmarks (blocked by plugin ABI)
+  - [x] Implement fs plugin ABI with native Lua C API ✅
+  - [ ] Test: navigation, file reading, bookmarks (fs plugin ready, need integration tests)
 
 ## 1. Deep Simulation (Sandbox)
 
