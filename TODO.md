@@ -74,7 +74,7 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **Plugins**: Add runtime integration tests for fs plugin ✅
 - [x] **Plugins**: Refactor `net` plugin to native Lua C API (2 functions: get, post) ✅
 - [x] **Plugins**: Refactor `sqlite` plugin to native Lua C API (2 functions: query, execute) ✅
-- [ ] **Plugins**: Refactor `procgen` plugin to native Lua C API
+- [x] **Plugins**: Refactor `procgen` plugin to native Lua C API (5 functions: seed, noise, random, randomRange, between) ✅
 - [ ] **Plugins**: Refactor `ai` plugin to native Lua C API
 - [ ] **Plugins**: Refactor `vector` plugin to native Lua C API
 - [ ] **Plugins**: Refactor `memory` plugin to native Lua C API

@@ -10,5 +10,6 @@ crate-type = ["cdylib", "rlib"]
 rand = "0.8"
 rand_xoshiro = "0.6"
 noise = "0.9"
+mlua = { version = "0.10", features = ["luajit", "serialize"] }
 
 [dev-dependencies]
