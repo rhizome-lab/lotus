@@ -268,13 +268,69 @@ Plugins (dynamic):
 | `libloading` | Dynamic library loading |
 | `serde` / `serde_json` | JSON S-expr |
 
+## Plugin Interface Architecture
+
+### Decision: Native Lua C API (Jan 2026)
+
+**Context:** Plugins need to expose functions callable from LuaJIT scripts. Two approaches were considered:
+
+1. **JSON Serialization**: Plugin functions accept/return `serde_json::Value`
+   - ✅ Simple, high-level mlua API
+   - ❌ Serialization overhead on every call
+   - ❌ Cannot return Lua userdata (handles, file descriptors, native objects)
+   - ❌ If limited to JSON, pure LuaJIT would be faster than Rust+FFI+JSON
+
+2. **Native Lua C API**: Plugin functions use raw `lua_State` pointer
+   - ✅ Full Lua capabilities (userdata, metatables, handles)
+   - ✅ No serialization overhead
+   - ✅ Justifies Rust plugins over pure LuaJIT
+   - ❌ Verbose stack manipulation code
+
+**Decision:** Committed to native Lua C API (approach 2).
+
+**Rationale:**
+- **Correctness over convenience**: Accept verbosity for full capabilities
+- **Performance**: No JSON serialization on hot paths
+- **Justify Rust plugins**: If JSON is the limit, LuaJIT native would be faster
+- **Future flexibility**: Can return userdata (file handles, GPU contexts, etc.)
+
+**Implementation:**
+```rust
+// Plugin function signature
+type PluginLuaFunction = unsafe extern "C" fn(
+    lua_state: *mut mlua::ffi::lua_State,
+) -> std::os::raw::c_int;
+
+// Example: fs.read implementation
+unsafe extern "C" fn fs_read_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    // Get arguments from stack
+    let cap_json = lua_value_to_json(L, 1)?;
+    let path = lua_tolstring(L, 2, &mut len);
+
+    // Perform operation
+    let content = fs_read(&cap_json, this_id, path)?;
+
+    // Push result to stack
+    lua_pushstring(L, c_content.as_ptr());
+    1 // Return value count
+}
+```
+
+**Trade-offs accepted:**
+- Manual stack manipulation (`lua_pushstring`, `lua_tolstring`, etc.)
+- Type conversions between Lua and Rust done explicitly
+- More unsafe code, but contained within plugin boundary
+
+**Alternative considered and rejected:** Supporting both JSON and native APIs was dismissed as unnecessary complexity.
+
 ## Decisions Log
 
 | Decision | Choice | Reasoning |
 |----------|--------|-----------|
 | Execution target | LuaJIT | Tracing JIT, FFI, table shapes, small, iOS-compatible |
 | Plugin loading | Dynamic libraries | Need full system access, WASM too restrictive |
-| Plugin ABI | abi_stable | Stable ABI without raw C FFI |
+| Plugin ABI | abi_stable → Native C | Stable ABI (abi_stable dropped, using extern "C" with function registry) |
+| Plugin interface | Native Lua C API | Full capabilities, no serialization, justifies Rust over LuaJIT |
 | Binary format | Cap'n Proto | Cross-language, zerocopy, schema evolution |
 | TS parsing | tree-sitter-typescript | Fast, Rust-native, no Node dependency |
 | Keep JS target? | Yes (low priority) | Browser execution without server |
