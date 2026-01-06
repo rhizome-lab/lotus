@@ -111,6 +111,31 @@ impl Runtime {
         let json = self.lua.from_value(result)?;
         Ok(json)
     }
+
+    /// Execute a callback with access to the raw lua_State pointer.
+    ///
+    /// # Safety
+    /// The callback must not invalidate any existing Lua references or call lua_close.
+    /// The state pointer is only valid during the callback execution.
+    ///
+    /// Note: This uses unsafe transmute to access mlua's internal state pointer.
+    /// This relies on mlua's internal structure which could change between versions.
+    pub unsafe fn with_state<F, R>(&self, callback: F) -> R
+    where
+        F: FnOnce(*mut mlua::ffi::lua_State) -> R,
+    {
+        // Use mlua's internals via transmute (unsafe but works with mlua 0.10)
+        // The Lua struct starts with a pointer to lua_State
+        #[repr(C)]
+        struct LuaInternals {
+            state: *mut mlua::ffi::lua_State,
+            // ... other fields we don't care about
+        }
+
+        let lua_ptr = &self.lua as *const Lua as *const LuaInternals;
+        let state = unsafe { (*lua_ptr).state };
+        callback(state)
+    }
 }
 
 impl Default for Runtime {

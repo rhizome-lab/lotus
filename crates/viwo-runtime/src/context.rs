@@ -359,66 +359,38 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_delegate", delegate_fn)?;
 
-        // fs.read opcode - delegate to plugin
+        // fs plugin functions - delegate to plugin
         // Store this_id in globals for plugin to access
         lua.globals().set("__viwo_this_id", self.this.id)?;
 
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.read") {
-            // Register the plugin function directly as a Lua C function
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_read\0".as_ptr() as *const _);
-            }
-        }
+        // Register all fs plugin functions using runtime's with_state method
+        unsafe {
+            runtime.with_state(|lua_state| {
+                use std::ffi::CString;
 
-        // Register remaining fs plugin functions
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.write") {
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_write\0".as_ptr() as *const _);
-            }
-        }
+                let functions = [
+                    ("fs.read", "__viwo_fs_read"),
+                    ("fs.write", "__viwo_fs_write"),
+                    ("fs.list", "__viwo_fs_list"),
+                    ("fs.stat", "__viwo_fs_stat"),
+                    ("fs.exists", "__viwo_fs_exists"),
+                    ("fs.mkdir", "__viwo_fs_mkdir"),
+                    ("fs.remove", "__viwo_fs_remove"),
+                ];
 
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.list") {
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_list\0".as_ptr() as *const _);
-            }
-        }
-
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.stat") {
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_stat\0".as_ptr() as *const _);
-            }
-        }
-
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.exists") {
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_exists\0".as_ptr() as *const _);
-            }
-        }
-
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.mkdir") {
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_mkdir\0".as_ptr() as *const _);
-            }
-        }
-
-        if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function("fs.remove") {
-            unsafe {
-                let lua_state = lua.state();
-                mlua::ffi::lua_pushcclosure(lua_state, Some(plugin_fn), 0);
-                mlua::ffi::lua_setglobal(lua_state, b"__viwo_fs_remove\0".as_ptr() as *const _);
-            }
+                for (plugin_name, global_name) in &functions {
+                    if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function(plugin_name) {
+                        let name_cstr = CString::new(*global_name).unwrap();
+                        // Transmute the function pointer to match the calling convention expected by lua_pushcclosure
+                        // Our plugins use "C" but Lua expects "C-unwind"
+                        let lua_cfunc: unsafe extern "C-unwind" fn(*mut mlua::ffi::lua_State) -> std::os::raw::c_int = unsafe {
+                            std::mem::transmute(plugin_fn)
+                        };
+                        mlua::ffi::lua_pushcclosure(lua_state, lua_cfunc, 0);
+                        mlua::ffi::lua_setglobal(lua_state, name_cstr.as_ptr());
+                    }
+                }
+            });
         }
 
         // sqlite.query opcode - execute SQL query with capability

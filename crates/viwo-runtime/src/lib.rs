@@ -13,7 +13,7 @@ pub mod plugin_registry;
 
 pub use context::ExecutionContext;
 pub use kernel::KernelOps;
-pub use plugin_registry::{call_plugin_function, init_registry};
+pub use plugin_registry::init_registry;
 
 /// The main Viwo runtime.
 pub struct ViwoRuntime {

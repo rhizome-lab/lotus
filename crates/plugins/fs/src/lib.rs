@@ -2,7 +2,7 @@
 //!
 //! This plugin provides file system access through Lua functions that validate capabilities.
 
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::fs;
 use std::os::raw::{c_char, c_int};
 use std::path::PathBuf;
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn plugin_init(register_fn: RegisterFunction) -> c_int {
                 Err(_) => return -1,
             };
             if register_fn(name_cstr.as_ptr(), *func) != 0 {
-                return -1,
+                return -1;
             }
         }
     }
@@ -61,142 +61,460 @@ pub unsafe extern "C" fn plugin_cleanup() {
     // No cleanup needed
 }
 
+// Lua C API helper functions for type conversion
+
+/// Convert a Lua value at the given stack index to JSON
+unsafe fn lua_value_to_json(
+    L: *mut mlua::ffi::lua_State,
+    index: c_int,
+) -> Result<serde_json::Value, String> {
+    use mlua::ffi::*;
+
+    let lua_type = lua_type(L, index);
+    match lua_type {
+        LUA_TNIL => Ok(serde_json::Value::Null),
+        LUA_TBOOLEAN => Ok(serde_json::Value::Bool(lua_toboolean(L, index) != 0)),
+        LUA_TNUMBER => Ok(serde_json::json!(lua_tonumber(L, index))),
+        LUA_TSTRING => {
+            let mut len = 0;
+            let ptr = lua_tolstring(L, index, &mut len);
+            if ptr.is_null() {
+                return Err("Failed to get string".to_string());
+            }
+            let slice = std::slice::from_raw_parts(ptr as *const u8, len);
+            let s = std::str::from_utf8(slice)
+                .map_err(|_| "Invalid UTF-8 in string")?;
+            Ok(serde_json::Value::String(s.to_string()))
+        }
+        LUA_TTABLE => lua_table_to_json(L, index),
+        _ => Err(format!("Unsupported Lua type {} for JSON conversion", lua_type)),
+    }
+}
+
+/// Convert a Lua table at the given stack index to a JSON object
+unsafe fn lua_table_to_json(
+    L: *mut mlua::ffi::lua_State,
+    index: c_int,
+) -> Result<serde_json::Value, String> {
+    use mlua::ffi::*;
+
+    if lua_type(L, index) != LUA_TTABLE {
+        return Err("Expected table".to_string());
+    }
+
+    // Normalize index to absolute (in case it's relative like -1)
+    let abs_index = if index < 0 && index > LUA_REGISTRYINDEX {
+        lua_gettop(L) + index + 1
+    } else {
+        index
+    };
+
+    let mut map = serde_json::Map::new();
+
+    // Push nil as first key
+    lua_pushnil(L);
+
+    // lua_next pops a key and pushes key-value pair
+    while lua_next(L, abs_index) != 0 {
+        // Stack: ... table ... key value
+
+        // Get key (must be string for JSON object)
+        let mut len = 0;
+        let key_ptr = lua_tolstring(L, -2, &mut len);
+        if !key_ptr.is_null() {
+            let key_slice = std::slice::from_raw_parts(key_ptr as *const u8, len);
+            if let Ok(key_str) = std::str::from_utf8(key_slice) {
+                // Get value and convert to JSON
+                if let Ok(value) = lua_value_to_json(L, -1) {
+                    map.insert(key_str.to_string(), value);
+                }
+            }
+        }
+
+        // Pop value, keep key for next iteration
+        lua_pop(L, 1);
+    }
+
+    Ok(serde_json::Value::Object(map))
+}
+
+/// Push an error message and return lua_error()
+unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
+    let c_msg = CString::new(msg).unwrap_or_else(|_| CString::new("Error").unwrap());
+    mlua::ffi::lua_pushstring(L, c_msg.as_ptr());
+    mlua::ffi::lua_error(L)
+}
+
 // Lua function implementations - these are called directly from Lua with the Lua state
 
 #[unsafe(no_mangle)]
-unsafe extern "C" fn fs_read_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        // Get arguments from Lua stack
-        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
+unsafe extern "C" fn fs_read_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
 
-        // Convert capability to JSON for validation
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 2 {
+        return lua_push_error(L, "fs.read requires 2 arguments (capability, path)");
+    }
 
-        // Perform file read with capability validation
-        let content = fs_read(&cap_json, this_id, &path)
-            .map_err(mlua::Error::external)?;
-
-        // Push result back to Lua
-        lua.push(content)?;
-        Ok(1) // Number of return values
-    })
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn fs_write_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        let (capability, path, content): (mlua::Value, String, String) = lua.from_stack_multi(-3)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
-
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
-
-        fs_write(&cap_json, this_id, &path, &content)
-            .map_err(mlua::Error::external)?;
-
-        Ok(0) // No return values
-    })
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn fs_list_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
-
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
-
-        let files = fs_list(&cap_json, this_id, &path)
-            .map_err(mlua::Error::external)?;
-
-        lua.to_value(&files)?;
-        Ok(1)
-    })
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn fs_stat_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
-
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
-
-        let stats = fs_stat(&cap_json, this_id, &path)
-            .map_err(mlua::Error::external)?;
-
-        lua.to_value(&stats)?;
-        Ok(1)
-    })
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn fs_exists_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
-
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
-
-        let exists = fs_exists(&cap_json, this_id, &path)
-            .map_err(mlua::Error::external)?;
-
-        lua.push(exists)?;
-        Ok(1)
-    })
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn fs_mkdir_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
-
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
-
-        fs_mkdir(&cap_json, this_id, &path)
-            .map_err(mlua::Error::external)?;
-
-        Ok(0)
-    })
-}
-
-#[unsafe(no_mangle)]
-unsafe extern "C" fn fs_remove_lua(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int {
-    lua_wrapper(lua_state, |lua| {
-        let (capability, path): (mlua::Value, String) = lua.from_stack_multi(-2)?;
-        let this_id = lua.globals().get::<i64>("__viwo_this_id")?;
-
-        let cap_json: serde_json::Value = lua.from_value(capability)?;
-
-        fs_remove(&cap_json, this_id, &path)
-            .map_err(mlua::Error::external)?;
-
-        Ok(0)
-    })
-}
-
-/// Helper to wrap Lua function calls and handle errors
-unsafe fn lua_wrapper<F>(lua_state: *mut mlua::ffi::lua_State, func: F) -> std::os::raw::c_int
-where
-    F: FnOnce(&mlua::Lua) -> mlua::Result<std::os::raw::c_int>,
-{
-    // Convert raw pointer to mlua::Lua
-    let lua = unsafe {
-        mlua::Lua::init_from_ptr(lua_state)
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
     };
 
-    match func(&lua) {
-        Ok(n) => n,
-        Err(e) => {
-            // Push error message to Lua
-            if let Err(_) = lua.push(format!("Plugin error: {}", e)) {
-                -1
-            } else {
-                lua.error::<()>("").ok();
-                -1
-            }
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.read: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.read: path contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Perform file read with capability validation
+    match fs_read(&cap_json, this_id, path) {
+        Ok(content) => {
+            let c_content = match CString::new(content) {
+                Ok(s) => s,
+                Err(_) => return lua_push_error(L, "File content contains null bytes"),
+            };
+            lua_pushstring(L, c_content.as_ptr());
+            1 // Return 1 value
         }
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_write_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 3 {
+        return lua_push_error(L, "fs.write requires 3 arguments (capability, path, content)");
+    }
+
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.write: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.write: path contains invalid UTF-8"),
+    };
+
+    // Get content from argument 3 (string)
+    let content_ptr = lua_tolstring(L, 3, &mut len);
+    if content_ptr.is_null() {
+        return lua_push_error(L, "fs.write: content must be a string");
+    }
+    let content_slice = std::slice::from_raw_parts(content_ptr as *const u8, len);
+    let content = match std::str::from_utf8(content_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.write: content contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Perform file write with capability validation
+    match fs_write(&cap_json, this_id, path, content) {
+        Ok(()) => 0, // No return values
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_list_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 2 {
+        return lua_push_error(L, "fs.list requires 2 arguments (capability, path)");
+    }
+
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.list: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.list: path contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Perform directory listing
+    let files = match fs_list(&cap_json, this_id, path) {
+        Ok(f) => f,
+        Err(e) => return lua_push_error(L, &e),
+    };
+
+    // Create result table (array of file info tables)
+    lua_createtable(L, files.len() as c_int, 0);
+
+    for (i, file_info) in files.iter().enumerate() {
+        // Create table for this file
+        lua_createtable(L, 0, 4);
+
+        // Set name field
+        if let Some(name) = file_info.get("name").and_then(|v| v.as_str()) {
+            let c_name = match CString::new(name) {
+                Ok(s) => s,
+                Err(_) => continue,
+            };
+            lua_pushstring(L, c_name.as_ptr());
+            lua_setfield(L, -2, b"name\0".as_ptr() as *const c_char);
+        }
+
+        // Set is_dir field
+        if let Some(is_dir) = file_info.get("is_dir").and_then(|v| v.as_bool()) {
+            lua_pushboolean(L, is_dir as c_int);
+            lua_setfield(L, -2, b"is_dir\0".as_ptr() as *const c_char);
+        }
+
+        // Set is_file field
+        if let Some(is_file) = file_info.get("is_file").and_then(|v| v.as_bool()) {
+            lua_pushboolean(L, is_file as c_int);
+            lua_setfield(L, -2, b"is_file\0".as_ptr() as *const c_char);
+        }
+
+        // Set size field
+        if let Some(size) = file_info.get("size").and_then(|v| v.as_u64()) {
+            lua_pushinteger(L, size as i64);
+            lua_setfield(L, -2, b"size\0".as_ptr() as *const c_char);
+        }
+
+        // Add to array at index i+1 (Lua arrays are 1-indexed)
+        lua_rawseti(L, -2, (i + 1) as i64);
+    }
+
+    1 // Return 1 value (the table)
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_stat_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 2 {
+        return lua_push_error(L, "fs.stat requires 2 arguments (capability, path)");
+    }
+
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.stat: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.stat: path contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Get file stats
+    let stats = match fs_stat(&cap_json, this_id, path) {
+        Ok(s) => s,
+        Err(e) => return lua_push_error(L, &e),
+    };
+
+    // Create result table
+    lua_createtable(L, 0, 4);
+
+    // Set is_dir field
+    if let Some(is_dir) = stats.get("is_dir").and_then(|v| v.as_bool()) {
+        lua_pushboolean(L, is_dir as c_int);
+        lua_setfield(L, -2, b"is_dir\0".as_ptr() as *const c_char);
+    }
+
+    // Set is_file field
+    if let Some(is_file) = stats.get("is_file").and_then(|v| v.as_bool()) {
+        lua_pushboolean(L, is_file as c_int);
+        lua_setfield(L, -2, b"is_file\0".as_ptr() as *const c_char);
+    }
+
+    // Set size field
+    if let Some(size) = stats.get("size").and_then(|v| v.as_u64()) {
+        lua_pushinteger(L, size as i64);
+        lua_setfield(L, -2, b"size\0".as_ptr() as *const c_char);
+    }
+
+    // Set readonly field
+    if let Some(readonly) = stats.get("readonly").and_then(|v| v.as_bool()) {
+        lua_pushboolean(L, readonly as c_int);
+        lua_setfield(L, -2, b"readonly\0".as_ptr() as *const c_char);
+    }
+
+    1 // Return 1 value (the table)
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_exists_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 2 {
+        return lua_push_error(L, "fs.exists requires 2 arguments (capability, path)");
+    }
+
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.exists: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.exists: path contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Check if file exists
+    match fs_exists(&cap_json, this_id, path) {
+        Ok(exists) => {
+            lua_pushboolean(L, exists as c_int);
+            1 // Return 1 value
+        }
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_mkdir_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 2 {
+        return lua_push_error(L, "fs.mkdir requires 2 arguments (capability, path)");
+    }
+
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.mkdir: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.mkdir: path contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Create directory
+    match fs_mkdir(&cap_json, this_id, path) {
+        Ok(()) => 0, // No return values
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+#[unsafe(no_mangle)]
+unsafe extern "C" fn fs_remove_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    // Check argument count
+    let nargs = lua_gettop(L);
+    if nargs != 2 {
+        return lua_push_error(L, "fs.remove requires 2 arguments (capability, path)");
+    }
+
+    // Get capability from argument 1 (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get path from argument 2 (string)
+    let mut len = 0;
+    let path_ptr = lua_tolstring(L, 2, &mut len);
+    if path_ptr.is_null() {
+        return lua_push_error(L, "fs.remove: path must be a string");
+    }
+    let path_slice = std::slice::from_raw_parts(path_ptr as *const u8, len);
+    let path = match std::str::from_utf8(path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "fs.remove: path contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Remove file or directory
+    match fs_remove(&cap_json, this_id, path) {
+        Ok(()) => 0, // No return values
+        Err(e) => lua_push_error(L, &e),
     }
 }
 
