@@ -556,39 +556,9 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_ai_chat", ai_chat_fn)?;
 
-        // memory.add opcode - add memory with embedding
-        let this_id = self.this.id;
-        let memory_add_fn = lua.create_function(move |lua_ctx, (db_capability, ai_capability, db_path, provider, model, content, metadata): (mlua::Value, mlua::Value, String, String, String, String, mlua::Value)| {
-            let db_cap_json: serde_json::Value = lua_ctx.from_value(db_capability)?;
-            let ai_cap_json: serde_json::Value = lua_ctx.from_value(ai_capability)?;
-            let metadata_json: serde_json::Value = lua_ctx.from_value(metadata)?;
-
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("memory.add: no tokio runtime found"))?
-                .block_on(viwo_plugin_memory::memory_add(&db_cap_json, &ai_cap_json, this_id, &db_path, &provider, &model, &content, &metadata_json))
-                .map_err(mlua::Error::external)?;
-
-            Ok(result)
-        })?;
-        lua.globals().set("__viwo_memory_add", memory_add_fn)?;
-
-        // memory.search opcode - search memories by query
-        let this_id = self.this.id;
-        let memory_search_fn = lua.create_function(move |lua_ctx, (db_capability, ai_capability, db_path, provider, model, query, options): (mlua::Value, mlua::Value, String, String, String, String, mlua::Value)| {
-            let db_cap_json: serde_json::Value = lua_ctx.from_value(db_capability)?;
-            let ai_cap_json: serde_json::Value = lua_ctx.from_value(ai_capability)?;
-            let options_json: serde_json::Value = lua_ctx.from_value(options)?;
-
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("memory.search: no tokio runtime found"))?
-                .block_on(viwo_plugin_memory::memory_search(&db_cap_json, &ai_cap_json, this_id, &db_path, &provider, &model, &query, &options_json))
-                .map_err(mlua::Error::external)?;
-
-            lua_ctx.to_value(&result)
-        })?;
-        lua.globals().set("__viwo_memory_search", memory_search_fn)?;
+        // Note: memory plugin is loaded as a dynamic cdylib plugin (like fs)
+        // and exposes memory.add/memory.search directly through Lua C API.
+        // It orchestrates by calling __viwo_ai_embed and __viwo_vector_* globals.
 
         // Register procgen plugin opcodes (if loaded)
         let plugins = self.plugins.lock().unwrap();
