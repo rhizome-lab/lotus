@@ -2,8 +2,13 @@
 
 use rusqlite::Connection;
 use std::collections::HashMap;
+use std::ffi::{CStr, CString};
+use std::os::raw::{c_char, c_int};
 use std::path::PathBuf;
 use std::sync::Mutex;
+
+type RegisterFunction = unsafe extern "C" fn(*const c_char, PluginLuaFunction) -> c_int;
+type PluginLuaFunction = unsafe extern "C" fn(*mut mlua::ffi::lua_State) -> c_int;
 
 /// Global connection pool indexed by database path
 static CONNECTIONS: Mutex<Option<HashMap<String, Connection>>> = Mutex::new(None);
@@ -216,6 +221,390 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     }
 
     dot_product / (magnitude_a * magnitude_b)
+}
+
+// ============================================================================
+// Lua C API Integration
+// ============================================================================
+
+/// Helper: Convert Lua value at index to JSON
+unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+    use mlua::ffi::*;
+
+    let lua_type = lua_type(L, idx);
+    match lua_type {
+        LUA_TNIL => Ok(serde_json::Value::Null),
+        LUA_TBOOLEAN => {
+            let b = lua_toboolean(L, idx);
+            Ok(serde_json::Value::Bool(b != 0))
+        }
+        LUA_TNUMBER => {
+            let n = lua_tonumber(L, idx);
+            Ok(serde_json::json!(n))
+        }
+        LUA_TSTRING => {
+            let mut len = 0;
+            let ptr = lua_tolstring(L, idx, &mut len);
+            if ptr.is_null() {
+                return Err("Invalid string".to_string());
+            }
+            let slice = std::slice::from_raw_parts(ptr as *const u8, len);
+            let s = std::str::from_utf8(slice).map_err(|_| "Invalid UTF-8")?;
+            Ok(serde_json::Value::String(s.to_string()))
+        }
+        LUA_TTABLE => lua_table_to_json(L, idx),
+        _ => Err(format!("Unsupported Lua type: {}", lua_type)),
+    }
+}
+
+/// Helper: Convert Lua table at index to JSON (object or array)
+unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+    use mlua::ffi::*;
+
+    let abs_idx = if idx < 0 && idx > LUA_REGISTRYINDEX {
+        lua_gettop(L) + idx + 1
+    } else {
+        idx
+    };
+
+    let mut map = serde_json::Map::new();
+    let mut array = Vec::new();
+    let mut is_array = true;
+    let mut expected_idx = 1;
+
+    lua_pushnil(L);
+    while lua_next(L, abs_idx) != 0 {
+        let key_type = lua_type(L, -2);
+
+        if key_type == LUA_TNUMBER {
+            let key_num = lua_tointeger(L, -2);
+            if key_num == expected_idx {
+                let value = lua_value_to_json(L, -1)?;
+                array.push(value);
+                expected_idx += 1;
+            } else {
+                is_array = false;
+            }
+        } else {
+            is_array = false;
+        }
+
+        let key = match key_type {
+            LUA_TSTRING => {
+                let mut len = 0;
+                let ptr = lua_tolstring(L, -2, &mut len);
+                let slice = std::slice::from_raw_parts(ptr as *const u8, len);
+                String::from_utf8_lossy(slice).to_string()
+            }
+            LUA_TNUMBER => {
+                let n = lua_tointeger(L, -2);
+                n.to_string()
+            }
+            _ => {
+                lua_pop(L, 1);
+                continue;
+            }
+        };
+
+        let value = lua_value_to_json(L, -1)?;
+        map.insert(key, value);
+
+        lua_pop(L, 1);
+    }
+
+    if is_array && !array.is_empty() {
+        Ok(serde_json::Value::Array(array))
+    } else {
+        Ok(serde_json::Value::Object(map))
+    }
+}
+
+/// Helper: Convert Lua table to f32 array
+unsafe fn lua_table_to_f32_array(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<Vec<f32>, String> {
+    use mlua::ffi::*;
+
+    if lua_type(L, idx) != LUA_TTABLE {
+        return Err("Expected table".to_string());
+    }
+
+    let abs_idx = if idx < 0 && idx > LUA_REGISTRYINDEX {
+        lua_gettop(L) + idx + 1
+    } else {
+        idx
+    };
+
+    let mut result = Vec::new();
+    let mut i = 1;
+
+    loop {
+        lua_rawgeti(L, abs_idx, i);
+        if lua_type(L, -1) == LUA_TNIL {
+            lua_pop(L, 1);
+            break;
+        }
+        let val = lua_tonumber(L, -1) as f32;
+        result.push(val);
+        lua_pop(L, 1);
+        i += 1;
+    }
+
+    Ok(result)
+}
+
+/// Helper: Push error message to Lua stack
+unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
+    use mlua::ffi::*;
+    let c_msg = CString::new(msg).unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
+    lua_pushstring(L, c_msg.as_ptr());
+    lua_error(L)
+}
+
+/// Helper: Push JSON value to Lua stack
+unsafe fn json_to_lua(L: *mut mlua::ffi::lua_State, value: &serde_json::Value) -> Result<(), String> {
+    use mlua::ffi::*;
+
+    match value {
+        serde_json::Value::Null => lua_pushnil(L),
+        serde_json::Value::Bool(b) => lua_pushboolean(L, if *b { 1 } else { 0 }),
+        serde_json::Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                lua_pushinteger(L, i);
+            } else if let Some(f) = n.as_f64() {
+                lua_pushnumber(L, f);
+            } else {
+                return Err("Invalid number".to_string());
+            }
+        }
+        serde_json::Value::String(s) => {
+            let c_str = CString::new(s.as_str()).map_err(|_| "String contains null byte")?;
+            lua_pushstring(L, c_str.as_ptr());
+        }
+        serde_json::Value::Array(arr) => {
+            lua_createtable(L, arr.len() as c_int, 0);
+            for (i, item) in arr.iter().enumerate() {
+                json_to_lua(L, item)?;
+                lua_rawseti(L, -2, (i + 1) as i64);
+            }
+        }
+        serde_json::Value::Object(obj) => {
+            lua_createtable(L, 0, obj.len() as c_int);
+            for (key, value) in obj {
+                let c_key = CString::new(key.as_str()).map_err(|_| "Key contains null byte")?;
+                json_to_lua(L, value)?;
+                lua_setfield(L, -2, c_key.as_ptr());
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Lua wrapper for vector.insert
+#[unsafe(no_mangle)]
+unsafe extern "C" fn vector_insert_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    let nargs = lua_gettop(L);
+    if nargs != 5 {
+        return lua_push_error(L, "vector.insert requires 5 arguments (capability, db_path, key, embedding, metadata)");
+    }
+
+    // Get capability (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get db_path (string)
+    let mut len = 0;
+    let db_path_ptr = lua_tolstring(L, 2, &mut len);
+    if db_path_ptr.is_null() {
+        return lua_push_error(L, "vector.insert: db_path must be a string");
+    }
+    let db_path_slice = std::slice::from_raw_parts(db_path_ptr as *const u8, len);
+    let db_path = match std::str::from_utf8(db_path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "vector.insert: db_path contains invalid UTF-8"),
+    };
+
+    // Get key (string)
+    let key_ptr = lua_tolstring(L, 3, &mut len);
+    if key_ptr.is_null() {
+        return lua_push_error(L, "vector.insert: key must be a string");
+    }
+    let key_slice = std::slice::from_raw_parts(key_ptr as *const u8, len);
+    let key = match std::str::from_utf8(key_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "vector.insert: key contains invalid UTF-8"),
+    };
+
+    // Get embedding (array of numbers)
+    let embedding = match lua_table_to_f32_array(L, 4) {
+        Ok(arr) => arr,
+        Err(e) => return lua_push_error(L, &format!("Invalid embedding: {}", e)),
+    };
+
+    // Get metadata (table/object)
+    let metadata = match lua_value_to_json(L, 5) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid metadata: {}", e)),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Execute insert
+    let result = vector_insert(&cap_json, this_id, db_path, key, &embedding, &metadata);
+
+    match result {
+        Ok(id) => {
+            lua_pushinteger(L, id);
+            1
+        }
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+/// Lua wrapper for vector.search
+#[unsafe(no_mangle)]
+unsafe extern "C" fn vector_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    let nargs = lua_gettop(L);
+    if nargs != 4 {
+        return lua_push_error(L, "vector.search requires 4 arguments (capability, db_path, query_embedding, limit)");
+    }
+
+    // Get capability (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get db_path (string)
+    let mut len = 0;
+    let db_path_ptr = lua_tolstring(L, 2, &mut len);
+    if db_path_ptr.is_null() {
+        return lua_push_error(L, "vector.search: db_path must be a string");
+    }
+    let db_path_slice = std::slice::from_raw_parts(db_path_ptr as *const u8, len);
+    let db_path = match std::str::from_utf8(db_path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "vector.search: db_path contains invalid UTF-8"),
+    };
+
+    // Get query_embedding (array of numbers)
+    let query_embedding = match lua_table_to_f32_array(L, 3) {
+        Ok(arr) => arr,
+        Err(e) => return lua_push_error(L, &format!("Invalid query_embedding: {}", e)),
+    };
+
+    // Get limit (number)
+    let limit = lua_tointeger(L, 4) as usize;
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Execute search
+    let result = vector_search(&cap_json, this_id, db_path, &query_embedding, limit);
+
+    match result {
+        Ok(results) => {
+            let results_json = serde_json::Value::Array(results);
+            if let Err(e) = json_to_lua(L, &results_json) {
+                return lua_push_error(L, &format!("Failed to convert results: {}", e));
+            }
+            1
+        }
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+/// Lua wrapper for vector.delete
+#[unsafe(no_mangle)]
+unsafe extern "C" fn vector_delete_lua(L: *mut mlua::ffi::lua_State) -> c_int {
+    use mlua::ffi::*;
+
+    let nargs = lua_gettop(L);
+    if nargs != 3 {
+        return lua_push_error(L, "vector.delete requires 3 arguments (capability, db_path, key)");
+    }
+
+    // Get capability (table)
+    let cap_json = match lua_value_to_json(L, 1) {
+        Ok(json) => json,
+        Err(e) => return lua_push_error(L, &format!("Invalid capability: {}", e)),
+    };
+
+    // Get db_path (string)
+    let mut len = 0;
+    let db_path_ptr = lua_tolstring(L, 2, &mut len);
+    if db_path_ptr.is_null() {
+        return lua_push_error(L, "vector.delete: db_path must be a string");
+    }
+    let db_path_slice = std::slice::from_raw_parts(db_path_ptr as *const u8, len);
+    let db_path = match std::str::from_utf8(db_path_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "vector.delete: db_path contains invalid UTF-8"),
+    };
+
+    // Get key (string)
+    let key_ptr = lua_tolstring(L, 3, &mut len);
+    if key_ptr.is_null() {
+        return lua_push_error(L, "vector.delete: key must be a string");
+    }
+    let key_slice = std::slice::from_raw_parts(key_ptr as *const u8, len);
+    let key = match std::str::from_utf8(key_slice) {
+        Ok(s) => s,
+        Err(_) => return lua_push_error(L, "vector.delete: key contains invalid UTF-8"),
+    };
+
+    // Get __viwo_this_id from globals
+    lua_getglobal(L, b"__viwo_this_id\0".as_ptr() as *const c_char);
+    let this_id = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+
+    // Execute delete
+    let result = vector_delete(&cap_json, this_id, db_path, key);
+
+    match result {
+        Ok(rows_affected) => {
+            lua_pushinteger(L, rows_affected);
+            1
+        }
+        Err(e) => lua_push_error(L, &e),
+    }
+}
+
+/// Plugin initialization - register all functions
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn plugin_init(register_fn: RegisterFunction) -> c_int {
+    unsafe {
+        let names = ["vector.insert", "vector.search", "vector.delete"];
+        let funcs: [PluginLuaFunction; 3] = [vector_insert_lua, vector_search_lua, vector_delete_lua];
+
+        for (name, func) in names.iter().zip(funcs.iter()) {
+            let name_cstr = match CString::new(*name) {
+                Ok(s) => s,
+                Err(_) => return -1,
+            };
+            if register_fn(name_cstr.as_ptr(), *func) != 0 {
+                return -1;
+            }
+        }
+    }
+    0 // Success
+}
+
+/// Plugin cleanup - called when unloading
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn plugin_cleanup() -> c_int {
+    let mut conns = CONNECTIONS.lock().unwrap();
+    *conns = None;
+    0 // Success
 }
 
 #[cfg(test)]
