@@ -68,14 +68,13 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 
 ## Next Up
 
-1. **Plugins**: Refactor `memory` plugin to native Lua C API (RAG with cross-plugin dependency on ai+vector)
-2. **Server**: Compare Rust JSON-RPC handlers against TypeScript reference implementation
-3. **Testing**: Port remaining runtime integration tests from TypeScript (edge cases, error handling)
-4. **Server**: Expand JSON-RPC handlers to match TypeScript completeness
+1. **Server**: Compare Rust JSON-RPC handlers against TypeScript reference implementation
+2. **Testing**: Port remaining runtime integration tests from TypeScript (edge cases, error handling)
+3. **Server**: Expand JSON-RPC handlers to match TypeScript completeness
 
 ---
 
-**Plugin System: (6/7 complete - memory plugin remaining)**
+**Plugin System: (7/7 complete ✅)**
 - [x] **Plugins**: Implement plugin opcode registry in viwo-runtime-luajit ✅
 - [x] **Plugins**: Complete plugin loader (dynamic loading with libloading) ✅
 - [x] **Plugins**: Refactor to native Lua C API (removed JSON serialization, full capabilities) ✅
@@ -86,7 +85,8 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **Plugins**: Refactor `procgen` plugin to native Lua C API (5 functions: seed, noise, random, randomRange, between) ✅
 - [x] **Plugins**: Refactor `vector` plugin to native Lua C API (3 functions: insert, search, delete) ✅
 - [x] **Plugins**: Refactor `ai` plugin to native Lua C API (3 functions: generateText, embed, chat) ✅
-- [ ] **Plugins**: Refactor `memory` plugin to native Lua C API (depends on ai+vector plugins)
+- [x] **Plugins**: Refactor `memory` plugin to native Lua C API (orchestrates sqlite+ai+vector) ✅
+- [x] **Plugins**: Generic plugin registration via `register_all_to_lua()` (no special-casing) ✅
 - [ ] **Plugins**: Port `diffusers` plugin (image generation - LOW PRIORITY, waiting on Rust diffusion impls)
 
 **Server & Transport:**

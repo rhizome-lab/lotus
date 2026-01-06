@@ -1,8 +1,8 @@
 //! Execution context for running scripts with access to storage.
 
-use std::sync::{Arc, Mutex};
 use mlua::LuaSerdeExt;
-use viwo_core::{Entity, EntityId, WorldStorage, Scheduler};
+use std::sync::{Arc, Mutex};
+use viwo_core::{Entity, EntityId, Scheduler, WorldStorage};
 use viwo_ir::SExpr;
 use viwo_runtime_luajit::Runtime as LuaRuntime;
 
@@ -50,9 +50,18 @@ local __result = (function()
 end)()
 return {{ result = __result, this = __this }}
 "#,
-            serde_json::to_string(&flattened_this).unwrap().replace('\\', "\\\\").replace('\'', "\\'"),
-            serde_json::to_string(&self.caller_id).unwrap().replace('\\', "\\\\").replace('\'', "\\'"),
-            serde_json::to_string(&self.args).unwrap().replace('\\', "\\\\").replace('\'', "\\'"),
+            serde_json::to_string(&flattened_this)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('\'', "\\'"),
+            serde_json::to_string(&self.caller_id)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('\'', "\\'"),
+            serde_json::to_string(&self.args)
+                .unwrap()
+                .replace('\\', "\\\\")
+                .replace('\'', "\\'"),
             lua_code
         );
 
@@ -86,10 +95,13 @@ return {{ result = __result, this = __this }}
                     crate::opcodes::opcode_update(
                         self.this.id,
                         serde_json::Value::Object(updates),
-                        &self.storage
-                    ).map_err(|e| crate::ExecutionError::Runtime(
-                        viwo_runtime_luajit::ExecutionError::Lua(mlua::Error::external(e))
-                    ))?;
+                        &self.storage,
+                    )
+                    .map_err(|e| {
+                        crate::ExecutionError::Runtime(viwo_runtime_luajit::ExecutionError::Lua(
+                            mlua::Error::external(e),
+                        ))
+                    })?;
                 }
             }
         }
@@ -125,16 +137,20 @@ return {{ result = __result, this = __this }}
                     ));
                 }
                 _ => {
-                    return Err(mlua::Error::external(
-                        format!("capability opcode: expected string or number, got {:?}", cap_id.type_name())
-                    ));
+                    return Err(mlua::Error::external(format!(
+                        "capability opcode: expected string or number, got {:?}",
+                        cap_id.type_name()
+                    )));
                 }
             };
 
             let storage = storage_clone.lock().unwrap();
-            let cap = storage.get_capability(&cap_id_str)
+            let cap = storage
+                .get_capability(&cap_id_str)
                 .map_err(mlua::Error::external)?
-                .ok_or_else(|| mlua::Error::external(format!("capability not found: {}", cap_id_str)))?;
+                .ok_or_else(|| {
+                    mlua::Error::external(format!("capability not found: {}", cap_id_str))
+                })?;
 
             // Return capability as an object with owner_id, type, params
             lua_ctx.to_value(&serde_json::json!({
@@ -148,26 +164,30 @@ return {{ result = __result, this = __this }}
 
         // update opcode - persist entity changes
         let storage_clone = storage.clone();
-        let update_fn = lua.create_function(move |_lua_ctx, (entity_id, updates): (i64, mlua::Value)| {
-            // Convert Lua value to serde_json::Value
-            let updates_json: serde_json::Value = _lua_ctx.from_value(updates)?;
-            crate::opcodes::opcode_update(entity_id as EntityId, updates_json, &storage_clone)
-                .map_err(mlua::Error::external)?;
-            Ok(())
-        })?;
+        let update_fn =
+            lua.create_function(move |_lua_ctx, (entity_id, updates): (i64, mlua::Value)| {
+                // Convert Lua value to serde_json::Value
+                let updates_json: serde_json::Value = _lua_ctx.from_value(updates)?;
+                crate::opcodes::opcode_update(entity_id as EntityId, updates_json, &storage_clone)
+                    .map_err(mlua::Error::external)?;
+                Ok(())
+            })?;
         lua.globals().set("__viwo_update", update_fn)?;
 
         // create opcode - create new entity
         let storage_clone = storage.clone();
-        let create_fn = lua.create_function(move |_lua_ctx, (props, prototype_id): (mlua::Value, Option<i64>)| {
-            let props_json: serde_json::Value = _lua_ctx.from_value(props)?;
-            let new_id = crate::opcodes::opcode_create(
-                props_json,
-                prototype_id.map(|id| id as EntityId),
-                &storage_clone
-            ).map_err(mlua::Error::external)?;
-            Ok(new_id)
-        })?;
+        let create_fn = lua.create_function(
+            move |_lua_ctx, (props, prototype_id): (mlua::Value, Option<i64>)| {
+                let props_json: serde_json::Value = _lua_ctx.from_value(props)?;
+                let new_id = crate::opcodes::opcode_create(
+                    props_json,
+                    prototype_id.map(|id| id as EntityId),
+                    &storage_clone,
+                )
+                .map_err(mlua::Error::external)?;
+                Ok(new_id)
+            },
+        )?;
         lua.globals().set("__viwo_create", create_fn)?;
 
         // call opcode - call a verb on an entity
@@ -175,121 +195,152 @@ return {{ result = __result, this = __this }}
         let scheduler_clone = self.scheduler.clone();
         let plugins_clone = self.plugins.clone();
         let caller_id = self.this.id;
-        let call_fn = lua.create_function(move |lua_ctx, (target_entity, verb_name, args): (mlua::Value, String, mlua::Value)| {
-            // Convert entity to get ID
-            let target: serde_json::Value = lua_ctx.from_value(target_entity)?;
-            let target_id = target["id"].as_i64()
-                .ok_or_else(|| mlua::Error::external("call: target entity missing id"))?
-                as EntityId;
+        let call_fn = lua.create_function(
+            move |lua_ctx, (target_entity, verb_name, args): (mlua::Value, String, mlua::Value)| {
+                // Convert entity to get ID
+                let target: serde_json::Value = lua_ctx.from_value(target_entity)?;
+                let target_id = target["id"]
+                    .as_i64()
+                    .ok_or_else(|| mlua::Error::external("call: target entity missing id"))?
+                    as EntityId;
 
-            // Convert args array to Vec<serde_json::Value>
-            let args_json: serde_json::Value = lua_ctx.from_value(args)?;
-            let args_vec = match &args_json {
-                serde_json::Value::Array(arr) => arr.clone(),
-                // Empty table {} might be deserialized as object, treat as empty array
-                serde_json::Value::Object(obj) if obj.is_empty() => Vec::new(),
-                _ => return Err(mlua::Error::external("call: args must be an array")),
-            };
+                // Convert args array to Vec<serde_json::Value>
+                let args_json: serde_json::Value = lua_ctx.from_value(args)?;
+                let args_vec = match &args_json {
+                    serde_json::Value::Array(arr) => arr.clone(),
+                    // Empty table {} might be deserialized as object, treat as empty array
+                    serde_json::Value::Object(obj) if obj.is_empty() => Vec::new(),
+                    _ => return Err(mlua::Error::external("call: args must be an array")),
+                };
 
-            // Get entity and verb from storage
-            let (target_entity_full, verb) = {
-                let storage = storage_clone.lock().unwrap();
-                let entity = storage.get_entity(target_id)
-                    .map_err(mlua::Error::external)?
-                    .ok_or_else(|| mlua::Error::external(format!("call: entity {} not found", target_id)))?;
-                let verb = storage.get_verb(target_id, &verb_name)
-                    .map_err(mlua::Error::external)?
-                    .ok_or_else(|| mlua::Error::external(format!("call: verb '{}' not found on entity {}", verb_name, target_id)))?;
-                (entity, verb)
-            };
+                // Get entity and verb from storage
+                let (target_entity_full, verb) = {
+                    let storage = storage_clone.lock().unwrap();
+                    let entity = storage
+                        .get_entity(target_id)
+                        .map_err(mlua::Error::external)?
+                        .ok_or_else(|| {
+                            mlua::Error::external(format!("call: entity {} not found", target_id))
+                        })?;
+                    let verb = storage
+                        .get_verb(target_id, &verb_name)
+                        .map_err(mlua::Error::external)?
+                        .ok_or_else(|| {
+                            mlua::Error::external(format!(
+                                "call: verb '{}' not found on entity {}",
+                                verb_name, target_id
+                            ))
+                        })?;
+                    (entity, verb)
+                };
 
-            // Create new execution context for the verb
-            let ctx = ExecutionContext {
-                this: target_entity_full,
-                caller_id: Some(caller_id),
-                args: args_vec,
-                storage: storage_clone.clone(),
-                scheduler: scheduler_clone.clone(),
-                plugins: plugins_clone.clone(),
-            };
+                // Create new execution context for the verb
+                let ctx = ExecutionContext {
+                    this: target_entity_full,
+                    caller_id: Some(caller_id),
+                    args: args_vec,
+                    storage: storage_clone.clone(),
+                    scheduler: scheduler_clone.clone(),
+                    plugins: plugins_clone.clone(),
+                };
 
-            // Execute the verb
-            let result = ctx.execute(&verb.code)
-                .map_err(mlua::Error::external)?;
+                // Execute the verb
+                let result = ctx.execute(&verb.code).map_err(mlua::Error::external)?;
 
-            // Convert result back to Lua
-            lua_ctx.to_value(&result)
-        })?;
+                // Convert result back to Lua
+                lua_ctx.to_value(&result)
+            },
+        )?;
         lua.globals().set("__viwo_call", call_fn)?;
 
         // schedule opcode - schedule a verb call for future execution
         let this_id = self.this.id;
         let scheduler_clone = self.scheduler.clone();
-        let schedule_fn = lua.create_function(move |lua_ctx, (verb_name, args, delay_ms): (String, mlua::Value, i64)| {
-            // Convert args to JSON
-            let args_json: serde_json::Value = lua_ctx.from_value(args)?;
+        let schedule_fn = lua.create_function(
+            move |lua_ctx, (verb_name, args, delay_ms): (String, mlua::Value, i64)| {
+                // Convert args to JSON
+                let args_json: serde_json::Value = lua_ctx.from_value(args)?;
 
-            // Schedule the task (block on async call since we're in sync context)
-            let handle = tokio::runtime::Handle::current();
-            handle.block_on(async {
-                scheduler_clone.schedule(this_id, &verb_name, args_json, delay_ms as u64).await
-            }).map_err(mlua::Error::external)?;
+                // Schedule the task (block on async call since we're in sync context)
+                let handle = tokio::runtime::Handle::current();
+                handle
+                    .block_on(async {
+                        scheduler_clone
+                            .schedule(this_id, &verb_name, args_json, delay_ms as u64)
+                            .await
+                    })
+                    .map_err(mlua::Error::external)?;
 
-            Ok(lua_ctx.null())
-        })?;
+                Ok(lua_ctx.null())
+            },
+        )?;
         lua.globals().set("__viwo_schedule", schedule_fn)?;
 
         // mint opcode - create new capability with authority
         let storage_clone = storage.clone();
         let this_id = self.this.id;
-        let mint_fn = lua.create_function(move |lua_ctx, (authority, cap_type, params): (mlua::Value, String, mlua::Value)| {
-            // Convert authority to capability ID
-            let auth_json: serde_json::Value = lua_ctx.from_value(authority)?;
-            let auth_id = auth_json["id"].as_str()
-                .ok_or_else(|| mlua::Error::external("mint: authority missing id"))?;
+        let mint_fn = lua.create_function(
+            move |lua_ctx, (authority, cap_type, params): (mlua::Value, String, mlua::Value)| {
+                // Convert authority to capability ID
+                let auth_json: serde_json::Value = lua_ctx.from_value(authority)?;
+                let auth_id = auth_json["id"]
+                    .as_str()
+                    .ok_or_else(|| mlua::Error::external("mint: authority missing id"))?;
 
-            // Validate authority
-            let storage = storage_clone.lock().unwrap();
-            let auth_cap = storage.get_capability(auth_id)
-                .map_err(mlua::Error::external)?
-                .ok_or_else(|| mlua::Error::external("mint: authority capability not found"))?;
+                // Validate authority
+                let storage = storage_clone.lock().unwrap();
+                let auth_cap = storage
+                    .get_capability(auth_id)
+                    .map_err(mlua::Error::external)?
+                    .ok_or_else(|| mlua::Error::external("mint: authority capability not found"))?;
 
-            if auth_cap.owner_id != this_id {
-                return Err(mlua::Error::external("mint: authority does not belong to this entity"));
-            }
+                if auth_cap.owner_id != this_id {
+                    return Err(mlua::Error::external(
+                        "mint: authority does not belong to this entity",
+                    ));
+                }
 
-            if auth_cap.cap_type != "sys.mint" {
-                return Err(mlua::Error::external("mint: authority must be sys.mint"));
-            }
+                if auth_cap.cap_type != "sys.mint" {
+                    return Err(mlua::Error::external("mint: authority must be sys.mint"));
+                }
 
-            // Check namespace
-            let allowed_ns = auth_cap.params.get("namespace")
-                .and_then(|v| v.as_str())
-                .ok_or_else(|| mlua::Error::external("mint: authority namespace must be string"))?;
+                // Check namespace
+                let allowed_ns = auth_cap
+                    .params
+                    .get("namespace")
+                    .and_then(|v| v.as_str())
+                    .ok_or_else(|| {
+                        mlua::Error::external("mint: authority namespace must be string")
+                    })?;
 
-            if allowed_ns != "*" && !cap_type.starts_with(allowed_ns) {
-                return Err(mlua::Error::external(format!(
-                    "mint: authority namespace '{}' does not cover '{}'",
-                    allowed_ns, cap_type
-                )));
-            }
+                if allowed_ns != "*" && !cap_type.starts_with(allowed_ns) {
+                    return Err(mlua::Error::external(format!(
+                        "mint: authority namespace '{}' does not cover '{}'",
+                        allowed_ns, cap_type
+                    )));
+                }
 
-            // Create new capability
-            let params_json: serde_json::Value = lua_ctx.from_value(params)?;
-            let new_id = storage.create_capability(this_id, &cap_type, params_json)
-                .map_err(mlua::Error::external)?;
+                // Create new capability
+                let params_json: serde_json::Value = lua_ctx.from_value(params)?;
+                let new_id = storage
+                    .create_capability(this_id, &cap_type, params_json)
+                    .map_err(mlua::Error::external)?;
 
-            // Return capability object
-            let cap = storage.get_capability(&new_id)
-                .map_err(mlua::Error::external)?
-                .ok_or_else(|| mlua::Error::external("mint: failed to retrieve new capability"))?;
+                // Return capability object
+                let cap = storage
+                    .get_capability(&new_id)
+                    .map_err(mlua::Error::external)?
+                    .ok_or_else(|| {
+                        mlua::Error::external("mint: failed to retrieve new capability")
+                    })?;
 
-            lua_ctx.to_value(&serde_json::json!({
-                "id": cap.id,
-                "type": cap.cap_type,
-                "params": cap.params,
-            }))
-        })?;
+                lua_ctx.to_value(&serde_json::json!({
+                    "id": cap.id,
+                    "type": cap.cap_type,
+                    "params": cap.params,
+                }))
+            },
+        )?;
         lua.globals().set("__viwo_mint", mint_fn)?;
 
         // delegate opcode - create restricted version of a capability
@@ -359,258 +410,372 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_delegate", delegate_fn)?;
 
-        // fs plugin functions - delegate to plugin
-        // Store this_id in globals for plugin to access
+        // Store this_id in globals for plugins to access
         lua.globals().set("__viwo_this_id", self.this.id)?;
 
-        // Register all fs plugin functions using runtime's with_state method
+        // Register all cdylib plugin functions (fs, memory, etc.) as Lua globals
+        // Each "foo.bar" function becomes "__viwo_foo_bar" global
         unsafe {
             runtime.with_state(|lua_state| {
-                use std::ffi::CString;
-
-                let functions = [
-                    ("fs.read", "__viwo_fs_read"),
-                    ("fs.write", "__viwo_fs_write"),
-                    ("fs.list", "__viwo_fs_list"),
-                    ("fs.stat", "__viwo_fs_stat"),
-                    ("fs.exists", "__viwo_fs_exists"),
-                    ("fs.mkdir", "__viwo_fs_mkdir"),
-                    ("fs.remove", "__viwo_fs_remove"),
-                ];
-
-                for (plugin_name, global_name) in &functions {
-                    if let Some(plugin_fn) = crate::plugin_registry::get_plugin_function(plugin_name) {
-                        let name_cstr = CString::new(*global_name).unwrap();
-                        // Transmute the function pointer to match the calling convention expected by lua_pushcclosure
-                        // Our plugins use "C" but Lua expects "C-unwind"
-                        let lua_cfunc: unsafe extern "C-unwind" fn(*mut mlua::ffi::lua_State) -> std::os::raw::c_int = unsafe {
-                            std::mem::transmute(plugin_fn)
-                        };
-                        mlua::ffi::lua_pushcclosure(lua_state, lua_cfunc, 0);
-                        mlua::ffi::lua_setglobal(lua_state, name_cstr.as_ptr());
-                    }
-                }
+                crate::plugin_registry::register_all_to_lua(lua_state);
             });
         }
 
         // sqlite.query opcode - execute SQL query with capability
         let this_id = self.this.id;
-        let sqlite_query_fn = lua.create_function(move |lua_ctx, (capability, db_path, query, params): (mlua::Value, String, String, mlua::Value)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let params_json: serde_json::Value = lua_ctx.from_value(params)?;
-            let params_array = params_json.as_array()
-                .ok_or_else(|| mlua::Error::external("sqlite.query params must be an array"))?;
+        let sqlite_query_fn = lua.create_function(
+            move |lua_ctx,
+                  (capability, db_path, query, params): (
+                mlua::Value,
+                String,
+                String,
+                mlua::Value,
+            )| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let params_json: serde_json::Value = lua_ctx.from_value(params)?;
+                let params_array = params_json
+                    .as_array()
+                    .ok_or_else(|| mlua::Error::external("sqlite.query params must be an array"))?;
 
-            let results = viwo_plugin_sqlite::sqlite_query(&cap_json, this_id, &db_path, &query, params_array)
+                let results = viwo_plugin_sqlite::sqlite_query(
+                    &cap_json,
+                    this_id,
+                    &db_path,
+                    &query,
+                    params_array,
+                )
                 .map_err(mlua::Error::external)?;
-            lua_ctx.to_value(&results)
-        })?;
+                lua_ctx.to_value(&results)
+            },
+        )?;
         lua.globals().set("__viwo_sqlite_query", sqlite_query_fn)?;
 
         // sqlite.execute opcode - execute SQL statement with capability
         let this_id = self.this.id;
-        let sqlite_execute_fn = lua.create_function(move |lua_ctx, (capability, db_path, query, params): (mlua::Value, String, String, mlua::Value)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let params_json: serde_json::Value = lua_ctx.from_value(params)?;
-            let params_array = params_json.as_array()
-                .ok_or_else(|| mlua::Error::external("sqlite.execute params must be an array"))?;
+        let sqlite_execute_fn = lua.create_function(
+            move |lua_ctx,
+                  (capability, db_path, query, params): (
+                mlua::Value,
+                String,
+                String,
+                mlua::Value,
+            )| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let params_json: serde_json::Value = lua_ctx.from_value(params)?;
+                let params_array = params_json.as_array().ok_or_else(|| {
+                    mlua::Error::external("sqlite.execute params must be an array")
+                })?;
 
-            let rows_affected = viwo_plugin_sqlite::sqlite_execute(&cap_json, this_id, &db_path, &query, params_array)
+                let rows_affected = viwo_plugin_sqlite::sqlite_execute(
+                    &cap_json,
+                    this_id,
+                    &db_path,
+                    &query,
+                    params_array,
+                )
                 .map_err(mlua::Error::external)?;
-            Ok(rows_affected)
-        })?;
-        lua.globals().set("__viwo_sqlite_execute", sqlite_execute_fn)?;
+                Ok(rows_affected)
+            },
+        )?;
+        lua.globals()
+            .set("__viwo_sqlite_execute", sqlite_execute_fn)?;
 
         // net.get opcode - HTTP GET request with capability
         let this_id = self.this.id;
-        let net_get_fn = lua.create_function(move |lua_ctx, (capability, url, headers): (mlua::Value, String, mlua::Value)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let headers_json: serde_json::Value = lua_ctx.from_value(headers)?;
-            let headers_map: std::collections::HashMap<String, String> = serde_json::from_value(headers_json)
-                .map_err(|e| mlua::Error::external(format!("net.get: invalid headers: {}", e)))?;
+        let net_get_fn = lua.create_function(
+            move |lua_ctx, (capability, url, headers): (mlua::Value, String, mlua::Value)| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let headers_json: serde_json::Value = lua_ctx.from_value(headers)?;
+                let headers_map: std::collections::HashMap<String, String> =
+                    serde_json::from_value(headers_json).map_err(|e| {
+                        mlua::Error::external(format!("net.get: invalid headers: {}", e))
+                    })?;
 
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("net.get: no tokio runtime found"))?
-                .block_on(viwo_plugin_net::net_get(&cap_json, this_id, &url, headers_map))
-                .map_err(mlua::Error::external)?;
+                // Block on async operation
+                let result = tokio::runtime::Handle::try_current()
+                    .map_err(|_| mlua::Error::external("net.get: no tokio runtime found"))?
+                    .block_on(viwo_plugin_net::net_get(
+                        &cap_json,
+                        this_id,
+                        &url,
+                        headers_map,
+                    ))
+                    .map_err(mlua::Error::external)?;
 
-            lua_ctx.to_value(&result)
-        })?;
+                lua_ctx.to_value(&result)
+            },
+        )?;
         lua.globals().set("__viwo_net_get", net_get_fn)?;
 
         // net.post opcode - HTTP POST request with capability
         let this_id = self.this.id;
-        let net_post_fn = lua.create_function(move |lua_ctx, (capability, url, headers, body): (mlua::Value, String, mlua::Value, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let headers_json: serde_json::Value = lua_ctx.from_value(headers)?;
-            let headers_map: std::collections::HashMap<String, String> = serde_json::from_value(headers_json)
-                .map_err(|e| mlua::Error::external(format!("net.post: invalid headers: {}", e)))?;
+        let net_post_fn =
+            lua.create_function(
+                move |lua_ctx,
+                      (capability, url, headers, body): (
+                    mlua::Value,
+                    String,
+                    mlua::Value,
+                    String,
+                )| {
+                    let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                    let headers_json: serde_json::Value = lua_ctx.from_value(headers)?;
+                    let headers_map: std::collections::HashMap<String, String> =
+                        serde_json::from_value(headers_json).map_err(|e| {
+                            mlua::Error::external(format!("net.post: invalid headers: {}", e))
+                        })?;
 
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("net.post: no tokio runtime found"))?
-                .block_on(viwo_plugin_net::net_post(&cap_json, this_id, &url, headers_map, &body))
-                .map_err(mlua::Error::external)?;
+                    // Block on async operation
+                    let result = tokio::runtime::Handle::try_current()
+                        .map_err(|_| mlua::Error::external("net.post: no tokio runtime found"))?
+                        .block_on(viwo_plugin_net::net_post(
+                            &cap_json,
+                            this_id,
+                            &url,
+                            headers_map,
+                            &body,
+                        ))
+                        .map_err(mlua::Error::external)?;
 
-            lua_ctx.to_value(&result)
-        })?;
+                    lua_ctx.to_value(&result)
+                },
+            )?;
         lua.globals().set("__viwo_net_post", net_post_fn)?;
 
         // vector.insert opcode - insert vector embedding with capability
         let this_id = self.this.id;
-        let vector_insert_fn = lua.create_function(move |lua_ctx, (capability, db_path, key, embedding, metadata): (mlua::Value, String, String, mlua::Value, mlua::Value)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let embedding_json: serde_json::Value = lua_ctx.from_value(embedding)?;
-            let metadata_json: serde_json::Value = lua_ctx.from_value(metadata)?;
+        let vector_insert_fn = lua.create_function(
+            move |lua_ctx,
+                  (capability, db_path, key, embedding, metadata): (
+                mlua::Value,
+                String,
+                String,
+                mlua::Value,
+                mlua::Value,
+            )| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let embedding_json: serde_json::Value = lua_ctx.from_value(embedding)?;
+                let metadata_json: serde_json::Value = lua_ctx.from_value(metadata)?;
 
-            let embedding_array = embedding_json.as_array()
-                .ok_or_else(|| mlua::Error::external("vector.insert: embedding must be an array"))?;
-            let embedding_f32: Vec<f32> = embedding_array.iter()
-                .map(|v| v.as_f64().unwrap_or(0.0) as f32)
-                .collect();
+                let embedding_array = embedding_json.as_array().ok_or_else(|| {
+                    mlua::Error::external("vector.insert: embedding must be an array")
+                })?;
+                let embedding_f32: Vec<f32> = embedding_array
+                    .iter()
+                    .map(|v| v.as_f64().unwrap_or(0.0) as f32)
+                    .collect();
 
-            let id = viwo_plugin_vector::vector_insert(&cap_json, this_id, &db_path, &key, &embedding_f32, &metadata_json)
+                let id = viwo_plugin_vector::vector_insert(
+                    &cap_json,
+                    this_id,
+                    &db_path,
+                    &key,
+                    &embedding_f32,
+                    &metadata_json,
+                )
                 .map_err(mlua::Error::external)?;
-            Ok(id)
-        })?;
-        lua.globals().set("__viwo_vector_insert", vector_insert_fn)?;
+                Ok(id)
+            },
+        )?;
+        lua.globals()
+            .set("__viwo_vector_insert", vector_insert_fn)?;
 
         // vector.search opcode - search for similar vectors with capability
         let this_id = self.this.id;
-        let vector_search_fn = lua.create_function(move |lua_ctx, (capability, db_path, query_embedding, limit): (mlua::Value, String, mlua::Value, i64)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let embedding_json: serde_json::Value = lua_ctx.from_value(query_embedding)?;
+        let vector_search_fn = lua.create_function(
+            move |lua_ctx,
+                  (capability, db_path, query_embedding, limit): (
+                mlua::Value,
+                String,
+                mlua::Value,
+                i64,
+            )| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let embedding_json: serde_json::Value = lua_ctx.from_value(query_embedding)?;
 
-            let embedding_array = embedding_json.as_array()
-                .ok_or_else(|| mlua::Error::external("vector.search: embedding must be an array"))?;
-            let embedding_f32: Vec<f32> = embedding_array.iter()
-                .map(|v| v.as_f64().unwrap_or(0.0) as f32)
-                .collect();
+                let embedding_array = embedding_json.as_array().ok_or_else(|| {
+                    mlua::Error::external("vector.search: embedding must be an array")
+                })?;
+                let embedding_f32: Vec<f32> = embedding_array
+                    .iter()
+                    .map(|v| v.as_f64().unwrap_or(0.0) as f32)
+                    .collect();
 
-            let results = viwo_plugin_vector::vector_search(&cap_json, this_id, &db_path, &embedding_f32, limit as usize)
+                let results = viwo_plugin_vector::vector_search(
+                    &cap_json,
+                    this_id,
+                    &db_path,
+                    &embedding_f32,
+                    limit as usize,
+                )
                 .map_err(mlua::Error::external)?;
-            lua_ctx.to_value(&results)
-        })?;
-        lua.globals().set("__viwo_vector_search", vector_search_fn)?;
+                lua_ctx.to_value(&results)
+            },
+        )?;
+        lua.globals()
+            .set("__viwo_vector_search", vector_search_fn)?;
 
         // vector.delete opcode - delete vector by key with capability
         let this_id = self.this.id;
-        let vector_delete_fn = lua.create_function(move |lua_ctx, (capability, db_path, key): (mlua::Value, String, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+        let vector_delete_fn = lua.create_function(
+            move |lua_ctx, (capability, db_path, key): (mlua::Value, String, String)| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
 
-            let rows_affected = viwo_plugin_vector::vector_delete(&cap_json, this_id, &db_path, &key)
-                .map_err(mlua::Error::external)?;
-            Ok(rows_affected)
-        })?;
-        lua.globals().set("__viwo_vector_delete", vector_delete_fn)?;
+                let rows_affected =
+                    viwo_plugin_vector::vector_delete(&cap_json, this_id, &db_path, &key)
+                        .map_err(mlua::Error::external)?;
+                Ok(rows_affected)
+            },
+        )?;
+        lua.globals()
+            .set("__viwo_vector_delete", vector_delete_fn)?;
 
         // ai.generate_text opcode - LLM text generation with capability
         let this_id = self.this.id;
-        let ai_generate_text_fn = lua.create_function(move |lua_ctx, (capability, provider, model, prompt, options): (mlua::Value, String, String, String, mlua::Value)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let options_json: serde_json::Value = lua_ctx.from_value(options)?;
+        let ai_generate_text_fn = lua.create_function(
+            move |lua_ctx,
+                  (capability, provider, model, prompt, options): (
+                mlua::Value,
+                String,
+                String,
+                String,
+                mlua::Value,
+            )| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let options_json: serde_json::Value = lua_ctx.from_value(options)?;
 
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("ai.generate_text: no tokio runtime found"))?
-                .block_on(viwo_plugin_ai::ai_generate_text(&cap_json, this_id, &provider, &model, &prompt, &options_json))
-                .map_err(mlua::Error::external)?;
+                // Block on async operation
+                let result = tokio::runtime::Handle::try_current()
+                    .map_err(|_| mlua::Error::external("ai.generate_text: no tokio runtime found"))?
+                    .block_on(viwo_plugin_ai::ai_generate_text(
+                        &cap_json,
+                        this_id,
+                        &provider,
+                        &model,
+                        &prompt,
+                        &options_json,
+                    ))
+                    .map_err(mlua::Error::external)?;
 
-            Ok(result)
-        })?;
-        lua.globals().set("__viwo_ai_generate_text", ai_generate_text_fn)?;
+                Ok(result)
+            },
+        )?;
+        lua.globals()
+            .set("__viwo_ai_generate_text", ai_generate_text_fn)?;
 
         // ai.embed opcode - generate embeddings with capability
         let this_id = self.this.id;
-        let ai_embed_fn = lua.create_function(move |lua_ctx, (capability, provider, model, text): (mlua::Value, String, String, String)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+        let ai_embed_fn =
+            lua.create_function(
+                move |lua_ctx,
+                      (capability, provider, model, text): (
+                    mlua::Value,
+                    String,
+                    String,
+                    String,
+                )| {
+                    let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
 
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("ai.embed: no tokio runtime found"))?
-                .block_on(viwo_plugin_ai::ai_embed(&cap_json, this_id, &provider, &model, &text))
-                .map_err(mlua::Error::external)?;
+                    // Block on async operation
+                    let result = tokio::runtime::Handle::try_current()
+                        .map_err(|_| mlua::Error::external("ai.embed: no tokio runtime found"))?
+                        .block_on(viwo_plugin_ai::ai_embed(
+                            &cap_json, this_id, &provider, &model, &text,
+                        ))
+                        .map_err(mlua::Error::external)?;
 
-            lua_ctx.to_value(&result)
-        })?;
+                    lua_ctx.to_value(&result)
+                },
+            )?;
         lua.globals().set("__viwo_ai_embed", ai_embed_fn)?;
 
         // ai.chat opcode - chat completion with message history
         let this_id = self.this.id;
-        let ai_chat_fn = lua.create_function(move |lua_ctx, (capability, provider, model, messages, options): (mlua::Value, String, String, mlua::Value, mlua::Value)| {
-            let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
-            let messages_json: serde_json::Value = lua_ctx.from_value(messages)?;
-            let options_json: serde_json::Value = lua_ctx.from_value(options)?;
+        let ai_chat_fn = lua.create_function(
+            move |lua_ctx,
+                  (capability, provider, model, messages, options): (
+                mlua::Value,
+                String,
+                String,
+                mlua::Value,
+                mlua::Value,
+            )| {
+                let cap_json: serde_json::Value = lua_ctx.from_value(capability)?;
+                let messages_json: serde_json::Value = lua_ctx.from_value(messages)?;
+                let options_json: serde_json::Value = lua_ctx.from_value(options)?;
 
-            let messages_array = messages_json.as_array()
-                .ok_or_else(|| mlua::Error::external("ai.chat: messages must be an array"))?;
+                let messages_array = messages_json
+                    .as_array()
+                    .ok_or_else(|| mlua::Error::external("ai.chat: messages must be an array"))?;
 
-            // Block on async operation
-            let result = tokio::runtime::Handle::try_current()
-                .map_err(|_| mlua::Error::external("ai.chat: no tokio runtime found"))?
-                .block_on(viwo_plugin_ai::ai_chat(&cap_json, this_id, &provider, &model, messages_array, &options_json))
-                .map_err(mlua::Error::external)?;
+                // Block on async operation
+                let result = tokio::runtime::Handle::try_current()
+                    .map_err(|_| mlua::Error::external("ai.chat: no tokio runtime found"))?
+                    .block_on(viwo_plugin_ai::ai_chat(
+                        &cap_json,
+                        this_id,
+                        &provider,
+                        &model,
+                        messages_array,
+                        &options_json,
+                    ))
+                    .map_err(mlua::Error::external)?;
 
-            Ok(result)
-        })?;
+                Ok(result)
+            },
+        )?;
         lua.globals().set("__viwo_ai_chat", ai_chat_fn)?;
-
-        // Note: memory plugin is loaded as a dynamic cdylib plugin (like fs)
-        // and exposes memory.add/memory.search directly through Lua C API.
-        // It orchestrates by calling __viwo_ai_embed and __viwo_vector_* globals.
 
         // Register procgen plugin opcodes (if loaded)
         let plugins = self.plugins.lock().unwrap();
         if plugins.get_plugin("procgen").is_some() {
             unsafe {
                 // Get function pointers
-                let seed_fn: extern "C" fn(u64) =
-                    plugins.get_function_ptr("procgen", b"procgen_seed")
-                        .map_err(mlua::Error::external)?;
-                let noise_fn: extern "C" fn(f64, f64) -> f64 =
-                    plugins.get_function_ptr("procgen", b"procgen_noise")
-                        .map_err(mlua::Error::external)?;
-                let random_fn: extern "C" fn() -> f64 =
-                    plugins.get_function_ptr("procgen", b"procgen_random")
-                        .map_err(mlua::Error::external)?;
-                let random_range_fn: extern "C" fn(f64, f64) -> f64 =
-                    plugins.get_function_ptr("procgen", b"procgen_random_range")
-                        .map_err(mlua::Error::external)?;
-                let between_fn: extern "C" fn(i64, i64) -> i64 =
-                    plugins.get_function_ptr("procgen", b"procgen_between")
-                        .map_err(mlua::Error::external)?;
+                let seed_fn: extern "C" fn(u64) = plugins
+                    .get_function_ptr("procgen", b"procgen_seed")
+                    .map_err(mlua::Error::external)?;
+                let noise_fn: extern "C" fn(f64, f64) -> f64 = plugins
+                    .get_function_ptr("procgen", b"procgen_noise")
+                    .map_err(mlua::Error::external)?;
+                let random_fn: extern "C" fn() -> f64 = plugins
+                    .get_function_ptr("procgen", b"procgen_random")
+                    .map_err(mlua::Error::external)?;
+                let random_range_fn: extern "C" fn(f64, f64) -> f64 = plugins
+                    .get_function_ptr("procgen", b"procgen_random_range")
+                    .map_err(mlua::Error::external)?;
+                let between_fn: extern "C" fn(i64, i64) -> i64 = plugins
+                    .get_function_ptr("procgen", b"procgen_between")
+                    .map_err(mlua::Error::external)?;
 
                 // Register Lua functions
-                lua.globals().set("__viwo_procgen_seed",
+                lua.globals().set(
+                    "__viwo_procgen_seed",
                     lua.create_function(move |_, seed: u64| {
                         seed_fn(seed);
                         Ok(())
-                    })?
+                    })?,
                 )?;
 
-                lua.globals().set("__viwo_procgen_noise",
-                    lua.create_function(move |_, (x, y): (f64, f64)| {
-                        Ok(noise_fn(x, y))
-                    })?
+                lua.globals().set(
+                    "__viwo_procgen_noise",
+                    lua.create_function(move |_, (x, y): (f64, f64)| Ok(noise_fn(x, y)))?,
                 )?;
 
-                lua.globals().set("__viwo_procgen_random",
-                    lua.create_function(move |_, ()| {
-                        Ok(random_fn())
-                    })?
+                lua.globals().set(
+                    "__viwo_procgen_random",
+                    lua.create_function(move |_, ()| Ok(random_fn()))?,
                 )?;
 
-                lua.globals().set("__viwo_procgen_random_range",
+                lua.globals().set(
+                    "__viwo_procgen_random_range",
                     lua.create_function(move |_, (min, max): (f64, f64)| {
                         Ok(random_range_fn(min, max))
-                    })?
+                    })?,
                 )?;
 
-                lua.globals().set("__viwo_procgen_between",
-                    lua.create_function(move |_, (min, max): (i64, i64)| {
-                        Ok(between_fn(min, max))
-                    })?
+                lua.globals().set(
+                    "__viwo_procgen_between",
+                    lua.create_function(move |_, (min, max): (i64, i64)| Ok(between_fn(min, max)))?,
                 )?;
             }
         }
@@ -624,7 +789,10 @@ return {{ result = __result, this = __this }}
     fn flatten_entity(&self, entity: &Entity) -> serde_json::Value {
         let mut result = serde_json::Map::new();
         result.insert("id".to_string(), serde_json::json!(entity.id));
-        result.insert("prototype_id".to_string(), serde_json::to_value(entity.prototype_id).unwrap());
+        result.insert(
+            "prototype_id".to_string(),
+            serde_json::to_value(entity.prototype_id).unwrap(),
+        );
 
         // Merge props
         if let serde_json::Value::Object(props) = &entity.props {

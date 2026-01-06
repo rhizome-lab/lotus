@@ -13,9 +13,8 @@ use std::sync::Mutex;
 /// The function receives the Lua state and returns the number of return values.
 ///
 /// Returns number of return values pushed to stack (>=0), or negative on error.
-pub type PluginLuaFunction = unsafe extern "C" fn(
-    lua_state: *mut mlua::ffi::lua_State,
-) -> std::os::raw::c_int;
+pub type PluginLuaFunction =
+    unsafe extern "C" fn(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int;
 
 /// Global registry of plugin Lua functions.
 static PLUGIN_REGISTRY: Mutex<Option<HashMap<String, PluginLuaFunction>>> = Mutex::new(None);
@@ -53,4 +52,31 @@ pub unsafe extern "C" fn register_plugin_function(
 pub fn get_plugin_function(name: &str) -> Option<PluginLuaFunction> {
     let registry = PLUGIN_REGISTRY.lock().unwrap();
     registry.as_ref()?.get(name).copied()
+}
+
+/// Register all plugin functions as Lua globals.
+///
+/// Each function registered as "foo.bar" becomes the Lua global "__viwo_foo_bar".
+///
+/// # Safety
+/// The lua_state must be a valid Lua state pointer.
+pub unsafe fn register_all_to_lua(lua_state: *mut mlua::ffi::lua_State) {
+    use std::ffi::CString;
+
+    let registry = PLUGIN_REGISTRY.lock().unwrap();
+    if let Some(ref map) = *registry {
+        for (name, func) in map {
+            // Convert "fs.read" -> "__viwo_fs_read"
+            let global_name = format!("__viwo_{}", name.replace('.', "_"));
+
+            if let Ok(name_cstr) = CString::new(global_name) {
+                // Transmute from extern "C" to extern "C-unwind" for Lua
+                let lua_cfunc: unsafe extern "C-unwind" fn(
+                    *mut mlua::ffi::lua_State,
+                ) -> std::os::raw::c_int = unsafe { std::mem::transmute(*func) };
+                mlua::ffi::lua_pushcclosure(lua_state, lua_cfunc, 0);
+                mlua::ffi::lua_setglobal(lua_state, name_cstr.as_ptr());
+            }
+        }
+    }
 }
