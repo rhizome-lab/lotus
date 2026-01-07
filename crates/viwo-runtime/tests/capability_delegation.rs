@@ -13,21 +13,18 @@ fn test_mint_capability() {
     // Create entity with sys.mint authority
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Admin"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Admin"}), None)
+            .unwrap()
     };
 
     // Create sys.mint authority for this entity
     let mint_authority_id = {
         let storage = runtime.storage().lock().unwrap();
         storage
-            .create_capability(
-                entity_id,
-                "sys.mint",
-                json!({"namespace": "*"}),
-            )
+            .create_capability(entity_id, "sys.mint", json!({"namespace": "*"}))
             .unwrap()
     };
-
 
     // Add a verb that mints a new capability
     let mint_verb = SExpr::call(
@@ -37,11 +34,14 @@ fn test_mint_capability() {
                 [
                     ("id".to_string(), SExpr::string(&mint_authority_id)),
                     ("type".to_string(), SExpr::string("sys.mint")),
-                    ("params".to_string(), SExpr::object(
-                        [("namespace".to_string(), SExpr::string("*"))]
-                            .into_iter()
-                            .collect(),
-                    )),
+                    (
+                        "params".to_string(),
+                        SExpr::object(
+                            [("namespace".to_string(), SExpr::string("*"))]
+                                .into_iter()
+                                .collect(),
+                        ),
+                    ),
                 ]
                 .into_iter()
                 .collect(),
@@ -57,7 +57,9 @@ fn test_mint_capability() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "mint_test", &mint_verb).unwrap();
+        storage
+            .add_verb(entity_id, "mint_test", &mint_verb)
+            .unwrap();
     }
 
     // Execute mint
@@ -88,7 +90,9 @@ fn test_delegate_capability_valid_restriction() {
     // Create entity
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "User"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "User"}), None)
+            .unwrap()
     };
 
     // Create parent capability with broad permissions
@@ -121,12 +125,15 @@ fn test_delegate_capability_valid_restriction() {
                                 ("path".to_string(), SExpr::string("/home/user")),
                                 (
                                     "methods".to_string(),
-                                    SExpr::call("list.new", vec![
-                                        SExpr::string("GET"),
-                                        SExpr::string("POST"),
-                                        SExpr::string("PUT"),
-                                        SExpr::string("DELETE"),
-                                    ]),
+                                    SExpr::call(
+                                        "list.new",
+                                        vec![
+                                            SExpr::string("GET"),
+                                            SExpr::string("POST"),
+                                            SExpr::string("PUT"),
+                                            SExpr::string("DELETE"),
+                                        ],
+                                    ),
                                 ),
                             ]
                             .into_iter()
@@ -142,7 +149,10 @@ fn test_delegate_capability_valid_restriction() {
                     ("path".to_string(), SExpr::string("/home/user/docs")),
                     (
                         "methods".to_string(),
-                        SExpr::call("list.new", vec![SExpr::string("GET"), SExpr::string("POST")]),
+                        SExpr::call(
+                            "list.new",
+                            vec![SExpr::string("GET"), SExpr::string("POST")],
+                        ),
                     ),
                 ]
                 .into_iter()
@@ -188,7 +198,9 @@ fn test_delegate_capability_invalid_path_restriction() {
     // Create entity
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "User"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "User"}), None)
+            .unwrap()
     };
 
     // Create parent capability
@@ -237,10 +249,12 @@ fn test_delegate_capability_invalid_path_restriction() {
     // Execute should fail
     let result = runtime.execute_verb(entity_id, "delegate_invalid", vec![], None);
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("invalid restriction"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("invalid restriction")
+    );
 }
 
 #[test]
@@ -251,7 +265,9 @@ fn test_delegate_capability_invalid_array_superset() {
     // Create entity
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "User"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "User"}), None)
+            .unwrap()
     };
 
     // Create parent capability with limited methods
@@ -279,7 +295,10 @@ fn test_delegate_capability_invalid_array_superset() {
                         SExpr::object(
                             [(
                                 "methods".to_string(),
-                                SExpr::call("list.new", vec![SExpr::string("GET"), SExpr::string("POST")]),
+                                SExpr::call(
+                                    "list.new",
+                                    vec![SExpr::string("GET"), SExpr::string("POST")],
+                                ),
                             )]
                             .into_iter()
                             .collect(),
@@ -292,11 +311,14 @@ fn test_delegate_capability_invalid_array_superset() {
             SExpr::object(
                 [(
                     "methods".to_string(),
-                    SExpr::call("list.new", vec![
-                        SExpr::string("GET"),
-                        SExpr::string("POST"),
-                        SExpr::string("DELETE"),
-                    ]),
+                    SExpr::call(
+                        "list.new",
+                        vec![
+                            SExpr::string("GET"),
+                            SExpr::string("POST"),
+                            SExpr::string("DELETE"),
+                        ],
+                    ),
                 )]
                 .into_iter()
                 .collect(),
@@ -314,10 +336,12 @@ fn test_delegate_capability_invalid_array_superset() {
     // Execute should fail
     let result = runtime.execute_verb(entity_id, "delegate_invalid", vec![], None);
     assert!(result.is_err());
-    assert!(result
-        .unwrap_err()
-        .to_string()
-        .contains("invalid restriction"));
+    assert!(
+        result
+            .unwrap_err()
+            .to_string()
+            .contains("invalid restriction")
+    );
 }
 
 #[test]
@@ -328,7 +352,9 @@ fn test_delegate_namespace_restriction() {
     // Create entity
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "User"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "User"}), None)
+            .unwrap()
     };
 
     // Create parent capability with wildcard namespace

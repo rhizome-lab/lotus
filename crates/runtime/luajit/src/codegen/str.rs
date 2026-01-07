@@ -1,14 +1,10 @@
 //! str.* opcode compilation.
 
-use super::{compile_value, CompileError};
+use super::{CompileError, compile_value};
 use viwo_ir::SExpr;
 
 /// Compile str.* opcodes. Returns None if opcode doesn't match.
-pub fn compile_str(
-    op: &str,
-    args: &[SExpr],
-    prefix: &str,
-) -> Result<Option<String>, CompileError> {
+pub fn compile_str(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<String>, CompileError> {
     let result = match op {
         "str.concat" => {
             let compiled: Result<Vec<_>, _> =

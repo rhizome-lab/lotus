@@ -1,7 +1,7 @@
 //! Test that generated builders work correctly.
 
-use viwo_ir::builders::*;
 use viwo_ir::SExpr;
+use viwo_ir::builders::*;
 
 #[test]
 fn test_math_builders() {
@@ -86,10 +86,7 @@ fn test_builder_type_safety() {
     // This test verifies that the builders have correct type signatures
     // by using them in a type-constrained context
 
-    let _num_expr: SExpr<viwo_ir::Num> = math_sub(
-        SExpr::number(10),
-        SExpr::number(2),
-    );
+    let _num_expr: SExpr<viwo_ir::Num> = math_sub(SExpr::number(10), SExpr::number(2));
 
     // str_length returns a number (length)
     let _len_expr: SExpr<viwo_ir::Num> = str_length(SExpr::string("test"));

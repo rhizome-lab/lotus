@@ -1,6 +1,6 @@
 //! SQLite storage layer.
 
-use rusqlite::{params, Connection, OptionalExtension};
+use rusqlite::{Connection, OptionalExtension, params};
 use thiserror::Error;
 
 use crate::entity::{Entity, EntityId, Verb};
@@ -105,7 +105,11 @@ impl WorldStorage {
                 params![id],
                 |row| {
                     let props_str: String = row.get(2)?;
-                    Ok((row.get::<_, EntityId>(0)?, row.get::<_, Option<EntityId>>(1)?, props_str))
+                    Ok((
+                        row.get::<_, EntityId>(0)?,
+                        row.get::<_, Option<EntityId>>(1)?,
+                        props_str,
+                    ))
                 },
             )
             .optional()?;
@@ -169,7 +173,11 @@ impl WorldStorage {
     }
 
     /// Update an entity's properties.
-    pub fn update_entity(&self, id: EntityId, props: serde_json::Value) -> Result<(), StorageError> {
+    pub fn update_entity(
+        &self,
+        id: EntityId,
+        props: serde_json::Value,
+    ) -> Result<(), StorageError> {
         // Get current props and merge
         let current = self.get_entity_raw(id)?;
         let current = current.ok_or(StorageError::EntityNotFound(id))?;
@@ -194,7 +202,11 @@ impl WorldStorage {
     }
 
     /// Set an entity's prototype.
-    pub fn set_prototype(&self, id: EntityId, prototype_id: Option<EntityId>) -> Result<(), StorageError> {
+    pub fn set_prototype(
+        &self,
+        id: EntityId,
+        prototype_id: Option<EntityId>,
+    ) -> Result<(), StorageError> {
         self.conn.execute(
             "UPDATE entities SET prototype_id = ?1 WHERE id = ?2",
             params![prototype_id, id],
@@ -204,9 +216,12 @@ impl WorldStorage {
 
     /// Delete an entity.
     pub fn delete_entity(&self, id: EntityId) -> Result<(), StorageError> {
-        self.conn.execute("DELETE FROM verbs WHERE entity_id = ?1", params![id])?;
-        self.conn.execute("DELETE FROM capabilities WHERE owner_id = ?1", params![id])?;
-        self.conn.execute("DELETE FROM entities WHERE id = ?1", params![id])?;
+        self.conn
+            .execute("DELETE FROM verbs WHERE entity_id = ?1", params![id])?;
+        self.conn
+            .execute("DELETE FROM capabilities WHERE owner_id = ?1", params![id])?;
+        self.conn
+            .execute("DELETE FROM entities WHERE id = ?1", params![id])?;
         Ok(())
     }
 
@@ -298,7 +313,15 @@ impl WorldStorage {
         let mut verb_map = std::collections::HashMap::new();
         for (id, entity_id, name, code_str) in rows {
             let code: viwo_ir::SExpr = serde_json::from_str(&code_str)?;
-            verb_map.insert(name.clone(), Verb { id, entity_id, name, code });
+            verb_map.insert(
+                name.clone(),
+                Verb {
+                    id,
+                    entity_id,
+                    name,
+                    code,
+                },
+            );
         }
 
         Ok(verb_map.into_values().collect())
@@ -307,13 +330,17 @@ impl WorldStorage {
     /// Update a verb's code.
     pub fn update_verb(&self, id: i64, code: &viwo_ir::SExpr) -> Result<(), StorageError> {
         let code_str = serde_json::to_string(code)?;
-        self.conn.execute("UPDATE verbs SET code = ?1 WHERE id = ?2", params![code_str, id])?;
+        self.conn.execute(
+            "UPDATE verbs SET code = ?1 WHERE id = ?2",
+            params![code_str, id],
+        )?;
         Ok(())
     }
 
     /// Delete a verb.
     pub fn delete_verb(&self, id: i64) -> Result<(), StorageError> {
-        self.conn.execute("DELETE FROM verbs WHERE id = ?1", params![id])?;
+        self.conn
+            .execute("DELETE FROM verbs WHERE id = ?1", params![id])?;
         Ok(())
     }
 
@@ -370,7 +397,10 @@ impl WorldStorage {
     }
 
     /// Get all capabilities owned by an entity.
-    pub fn get_capabilities(&self, owner_id: EntityId) -> Result<Vec<crate::Capability>, StorageError> {
+    pub fn get_capabilities(
+        &self,
+        owner_id: EntityId,
+    ) -> Result<Vec<crate::Capability>, StorageError> {
         let mut stmt = self
             .conn
             .prepare("SELECT id, owner_id, type, params FROM capabilities WHERE owner_id = ?1")?;
@@ -396,7 +426,11 @@ impl WorldStorage {
     }
 
     /// Update the owner of a capability.
-    pub fn update_capability_owner(&self, id: &str, new_owner_id: EntityId) -> Result<(), StorageError> {
+    pub fn update_capability_owner(
+        &self,
+        id: &str,
+        new_owner_id: EntityId,
+    ) -> Result<(), StorageError> {
         self.conn.execute(
             "UPDATE capabilities SET owner_id = ?1 WHERE id = ?2",
             params![new_owner_id, id],
@@ -406,7 +440,8 @@ impl WorldStorage {
 
     /// Delete a capability.
     pub fn delete_capability(&self, id: &str) -> Result<(), StorageError> {
-        self.conn.execute("DELETE FROM capabilities WHERE id = ?1", params![id])?;
+        self.conn
+            .execute("DELETE FROM capabilities WHERE id = ?1", params![id])?;
         Ok(())
     }
 
@@ -438,7 +473,13 @@ impl WorldStorage {
 
         let rows: Vec<(i64, EntityId, String, String, i64)> = stmt
             .query_map(params![now], |row| {
-                Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, row.get(4)?))
+                Ok((
+                    row.get(0)?,
+                    row.get(1)?,
+                    row.get(2)?,
+                    row.get(3)?,
+                    row.get(4)?,
+                ))
             })?
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -459,7 +500,8 @@ impl WorldStorage {
 
     /// Delete a scheduled task.
     pub fn delete_task(&self, id: i64) -> Result<(), StorageError> {
-        self.conn.execute("DELETE FROM scheduled_tasks WHERE id = ?1", params![id])?;
+        self.conn
+            .execute("DELETE FROM scheduled_tasks WHERE id = ?1", params![id])?;
         Ok(())
     }
 }

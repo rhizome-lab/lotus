@@ -107,10 +107,7 @@ pub fn vector_insert(
     let conn = get_connection(db_path)?;
 
     // Convert f32 array to bytes
-    let embedding_bytes: Vec<u8> = embedding
-        .iter()
-        .flat_map(|f| f.to_le_bytes())
-        .collect();
+    let embedding_bytes: Vec<u8> = embedding.iter().flat_map(|f| f.to_le_bytes()).collect();
 
     let metadata_str = serde_json::to_string(metadata)
         .map_err(|e| format!("vector: failed to serialize metadata: {}", e))?;
@@ -159,8 +156,8 @@ pub fn vector_search(
             // Compute cosine similarity
             let similarity = cosine_similarity(query_embedding, &embedding);
 
-            let metadata: serde_json::Value = serde_json::from_str(&metadata_str)
-                .unwrap_or(serde_json::Value::Null);
+            let metadata: serde_json::Value =
+                serde_json::from_str(&metadata_str).unwrap_or(serde_json::Value::Null);
 
             Ok((id, key, similarity, metadata))
         })
@@ -228,7 +225,10 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
 // ============================================================================
 
 /// Helper: Convert Lua value at index to JSON
-unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+unsafe fn lua_value_to_json(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<serde_json::Value, String> {
     use mlua::ffi::*;
 
     let lua_type = lua_type(L, idx);
@@ -258,7 +258,10 @@ unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<
 }
 
 /// Helper: Convert Lua table at index to JSON (object or array)
-unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+unsafe fn lua_table_to_json(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<serde_json::Value, String> {
     use mlua::ffi::*;
 
     let abs_idx = if idx < 0 && idx > LUA_REGISTRYINDEX {
@@ -320,7 +323,10 @@ unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<
 }
 
 /// Helper: Convert Lua table to f32 array
-unsafe fn lua_table_to_f32_array(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<Vec<f32>, String> {
+unsafe fn lua_table_to_f32_array(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<Vec<f32>, String> {
     use mlua::ffi::*;
 
     if lua_type(L, idx) != LUA_TTABLE {
@@ -354,13 +360,17 @@ unsafe fn lua_table_to_f32_array(L: *mut mlua::ffi::lua_State, idx: c_int) -> Re
 /// Helper: Push error message to Lua stack
 unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
     use mlua::ffi::*;
-    let c_msg = CString::new(msg).unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
+    let c_msg = CString::new(msg)
+        .unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
     lua_pushstring(L, c_msg.as_ptr());
     lua_error(L)
 }
 
 /// Helper: Push JSON value to Lua stack
-unsafe fn json_to_lua(L: *mut mlua::ffi::lua_State, value: &serde_json::Value) -> Result<(), String> {
+unsafe fn json_to_lua(
+    L: *mut mlua::ffi::lua_State,
+    value: &serde_json::Value,
+) -> Result<(), String> {
     use mlua::ffi::*;
 
     match value {
@@ -405,7 +415,10 @@ unsafe extern "C" fn vector_insert_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 5 {
-        return lua_push_error(L, "vector.insert requires 5 arguments (capability, db_path, key, embedding, metadata)");
+        return lua_push_error(
+            L,
+            "vector.insert requires 5 arguments (capability, db_path, key, embedding, metadata)",
+        );
     }
 
     // Get capability (table)
@@ -473,7 +486,10 @@ unsafe extern "C" fn vector_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 4 {
-        return lua_push_error(L, "vector.search requires 4 arguments (capability, db_path, query_embedding, limit)");
+        return lua_push_error(
+            L,
+            "vector.search requires 4 arguments (capability, db_path, query_embedding, limit)",
+        );
     }
 
     // Get capability (table)
@@ -530,7 +546,10 @@ unsafe extern "C" fn vector_delete_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 3 {
-        return lua_push_error(L, "vector.delete requires 3 arguments (capability, db_path, key)");
+        return lua_push_error(
+            L,
+            "vector.delete requires 3 arguments (capability, db_path, key)",
+        );
     }
 
     // Get capability (table)
@@ -584,7 +603,8 @@ unsafe extern "C" fn vector_delete_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 pub unsafe extern "C" fn plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = ["vector.insert", "vector.search", "vector.delete"];
-        let funcs: [PluginLuaFunction; 3] = [vector_insert_lua, vector_search_lua, vector_delete_lua];
+        let funcs: [PluginLuaFunction; 3] =
+            [vector_insert_lua, vector_search_lua, vector_delete_lua];
 
         for (name, func) in names.iter().zip(funcs.iter()) {
             let name_cstr = match CString::new(*name) {

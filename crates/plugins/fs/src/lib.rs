@@ -8,15 +8,12 @@ use std::os::raw::{c_char, c_int};
 use std::path::PathBuf;
 
 /// Type for plugin functions - standard Lua C function signature
-type PluginLuaFunction = unsafe extern "C" fn(
-    lua_state: *mut mlua::ffi::lua_State,
-) -> std::os::raw::c_int;
+type PluginLuaFunction =
+    unsafe extern "C" fn(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int;
 
 /// Type for the registration callback passed from the runtime
-type RegisterFunction = unsafe extern "C" fn(
-    name: *const c_char,
-    func: PluginLuaFunction,
-) -> std::os::raw::c_int;
+type RegisterFunction =
+    unsafe extern "C" fn(name: *const c_char, func: PluginLuaFunction) -> std::os::raw::c_int;
 
 /// Plugin initialization - register all fs functions
 #[unsafe(no_mangle)]
@@ -82,12 +79,14 @@ unsafe fn lua_value_to_json(
                 return Err("Failed to get string".to_string());
             }
             let slice = std::slice::from_raw_parts(ptr as *const u8, len);
-            let s = std::str::from_utf8(slice)
-                .map_err(|_| "Invalid UTF-8 in string")?;
+            let s = std::str::from_utf8(slice).map_err(|_| "Invalid UTF-8 in string")?;
             Ok(serde_json::Value::String(s.to_string()))
         }
         LUA_TTABLE => lua_table_to_json(L, index),
-        _ => Err(format!("Unsupported Lua type {} for JSON conversion", lua_type)),
+        _ => Err(format!(
+            "Unsupported Lua type {} for JSON conversion",
+            lua_type
+        )),
     }
 }
 
@@ -201,7 +200,10 @@ unsafe extern "C" fn fs_write_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     // Check argument count
     let nargs = lua_gettop(L);
     if nargs != 3 {
-        return lua_push_error(L, "fs.write requires 3 arguments (capability, path, content)");
+        return lua_push_error(
+            L,
+            "fs.write requires 3 arguments (capability, path, content)",
+        );
     }
 
     // Get capability from argument 1 (table)
@@ -520,16 +522,11 @@ unsafe extern "C" fn fs_remove_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
 // Core filesystem functions with capability validation
 
-fn fs_read(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<String, String> {
+fn fs_read(capability: &serde_json::Value, entity_id: i64, path: &str) -> Result<String, String> {
     validate_fs_capability(capability, entity_id, path)?;
 
     let full_path = get_sandboxed_path(capability, path)?;
-    fs::read_to_string(&full_path)
-        .map_err(|e| format!("Failed to read {}: {}", path, e))
+    fs::read_to_string(&full_path).map_err(|e| format!("Failed to read {}: {}", path, e))
 }
 
 fn fs_write(
@@ -544,12 +541,10 @@ fn fs_write(
 
     // Create parent directory if it doesn't exist
     if let Some(parent) = full_path.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|e| format!("Failed to create directory: {}", e))?;
+        fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {}", e))?;
     }
 
-    fs::write(&full_path, content)
-        .map_err(|e| format!("Failed to write {}: {}", path, e))
+    fs::write(&full_path, content).map_err(|e| format!("Failed to write {}: {}", path, e))
 }
 
 fn fs_list(
@@ -567,7 +562,8 @@ fn fs_list(
     let mut files = Vec::new();
     for entry in entries {
         let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
-        let metadata = entry.metadata()
+        let metadata = entry
+            .metadata()
             .map_err(|e| format!("Failed to read metadata: {}", e))?;
 
         files.push(serde_json::json!({
@@ -589,8 +585,8 @@ fn fs_stat(
     validate_fs_capability(capability, entity_id, path)?;
 
     let full_path = get_sandboxed_path(capability, path)?;
-    let metadata = fs::metadata(&full_path)
-        .map_err(|e| format!("Failed to stat {}: {}", path, e))?;
+    let metadata =
+        fs::metadata(&full_path).map_err(|e| format!("Failed to stat {}: {}", path, e))?;
 
     Ok(serde_json::json!({
         "is_dir": metadata.is_dir(),
@@ -600,22 +596,14 @@ fn fs_stat(
     }))
 }
 
-fn fs_exists(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<bool, String> {
+fn fs_exists(capability: &serde_json::Value, entity_id: i64, path: &str) -> Result<bool, String> {
     validate_fs_capability(capability, entity_id, path)?;
 
     let full_path = get_sandboxed_path(capability, path)?;
     Ok(full_path.exists())
 }
 
-fn fs_mkdir(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<(), String> {
+fn fs_mkdir(capability: &serde_json::Value, entity_id: i64, path: &str) -> Result<(), String> {
     validate_fs_capability(capability, entity_id, path)?;
 
     let full_path = get_sandboxed_path(capability, path)?;
@@ -623,11 +611,7 @@ fn fs_mkdir(
         .map_err(|e| format!("Failed to create directory {}: {}", path, e))
 }
 
-fn fs_remove(
-    capability: &serde_json::Value,
-    entity_id: i64,
-    path: &str,
-) -> Result<(), String> {
+fn fs_remove(capability: &serde_json::Value, entity_id: i64, path: &str) -> Result<(), String> {
     validate_fs_capability(capability, entity_id, path)?;
 
     let full_path = get_sandboxed_path(capability, path)?;
@@ -636,8 +620,7 @@ fn fs_remove(
         fs::remove_dir_all(&full_path)
             .map_err(|e| format!("Failed to remove directory {}: {}", path, e))
     } else {
-        fs::remove_file(&full_path)
-            .map_err(|e| format!("Failed to remove file {}: {}", path, e))
+        fs::remove_file(&full_path).map_err(|e| format!("Failed to remove file {}: {}", path, e))
     }
 }
 

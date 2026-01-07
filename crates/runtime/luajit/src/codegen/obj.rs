@@ -1,14 +1,10 @@
 //! obj.* opcode compilation.
 
-use super::{compile_value, CompileError};
+use super::{CompileError, compile_value};
 use viwo_ir::SExpr;
 
 /// Compile obj.* opcodes. Returns None if opcode doesn't match.
-pub fn compile_obj(
-    op: &str,
-    args: &[SExpr],
-    prefix: &str,
-) -> Result<Option<String>, CompileError> {
+pub fn compile_obj(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<String>, CompileError> {
     let result = match op {
         "obj.get" => {
             if args.len() < 2 {
@@ -42,9 +38,9 @@ pub fn compile_obj(
             // obj.new accepts pairs: ["obj.new", [key1, val1], [key2, val2], ...]
             let mut pairs = Vec::new();
             for arg in args {
-                let pair = arg
-                    .as_list()
-                    .ok_or_else(|| CompileError::InvalidArgument("obj.new arg must be pair".into()))?;
+                let pair = arg.as_list().ok_or_else(|| {
+                    CompileError::InvalidArgument("obj.new arg must be pair".into())
+                })?;
                 if pair.len() < 2 {
                     return Err(CompileError::InvalidArgument(
                         "obj.new pair must have key and value".into(),
@@ -259,8 +255,16 @@ mod tests {
         let expr = SExpr::call(
             "obj.new",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type(),
-                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]).erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("a").erase_type(),
+                    SExpr::number(1).erase_type(),
+                ])
+                .erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("b").erase_type(),
+                    SExpr::number(2).erase_type(),
+                ])
+                .erase_type(),
             ],
         );
         let code = compile(&expr).unwrap();
@@ -272,7 +276,10 @@ mod tests {
     fn test_keys() {
         let expr = SExpr::call(
             "obj.keys",
-            vec![SExpr::call("std.var", vec![SExpr::string("o").erase_type()])],
+            vec![SExpr::call(
+                "std.var",
+                vec![SExpr::string("o").erase_type()],
+            )],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("for k in pairs"));
@@ -282,7 +289,10 @@ mod tests {
     fn test_values() {
         let expr = SExpr::call(
             "obj.values",
-            vec![SExpr::call("std.var", vec![SExpr::string("o").erase_type()])],
+            vec![SExpr::call(
+                "std.var",
+                vec![SExpr::string("o").erase_type()],
+            )],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("for _, v in pairs"));

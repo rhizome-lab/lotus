@@ -1,6 +1,6 @@
 //! math.* opcode compilation.
 
-use super::{compile_infix_op, compile_value, CompileError};
+use super::{CompileError, compile_infix_op, compile_value};
 use viwo_ir::SExpr;
 
 /// Compile math.* opcodes. Returns None if opcode doesn't match.
@@ -313,13 +313,19 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let expr = SExpr::call("+", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
+        let expr = SExpr::call(
+            "+",
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+        );
         assert_eq!(compile(&expr).unwrap(), "return (1 + 2)");
     }
 
     #[test]
     fn test_mul() {
-        let expr = SExpr::call("*", vec![SExpr::number(3).erase_type(), SExpr::number(4).erase_type()]);
+        let expr = SExpr::call(
+            "*",
+            vec![SExpr::number(3).erase_type(), SExpr::number(4).erase_type()],
+        );
         assert_eq!(compile(&expr).unwrap(), "return (3 * 4)");
     }
 
@@ -355,10 +361,16 @@ mod tests {
 
     #[test]
     fn test_min_max() {
-        let expr = SExpr::call("math.min", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
+        let expr = SExpr::call(
+            "math.min",
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+        );
         assert_eq!(compile(&expr).unwrap(), "return math.min(1, 2)");
 
-        let expr = SExpr::call("math.max", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
+        let expr = SExpr::call(
+            "math.max",
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+        );
         assert_eq!(compile(&expr).unwrap(), "return math.max(1, 2)");
     }
 
@@ -396,7 +408,11 @@ mod tests {
     fn test_clamp() {
         let expr = SExpr::call(
             "math.clamp",
-            vec![SExpr::number(5).erase_type(), SExpr::number(0).erase_type(), SExpr::number(10).erase_type()],
+            vec![
+                SExpr::number(5).erase_type(),
+                SExpr::number(0).erase_type(),
+                SExpr::number(10).erase_type(),
+            ],
         );
         assert!(compile(&expr).unwrap().contains("math.min(math.max"));
     }

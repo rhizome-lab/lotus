@@ -31,10 +31,7 @@ fn test_multi_verb_workflow() {
                 ),
                 SExpr::call(
                     "obj.get",
-                    vec![
-                        SExpr::call("std.this", vec![]),
-                        SExpr::string("value"),
-                    ],
+                    vec![SExpr::call("std.this", vec![]), SExpr::string("value")],
                 ),
             ],
         );
@@ -43,10 +40,7 @@ fn test_multi_verb_workflow() {
         // Add a "get_value" verb
         let get_verb = SExpr::call(
             "obj.get",
-            vec![
-                SExpr::call("std.this", vec![]),
-                SExpr::string("value"),
-            ],
+            vec![SExpr::call("std.this", vec![]), SExpr::string("value")],
         );
         storage.add_verb(id, "get_value", &get_verb).unwrap();
 
@@ -56,7 +50,6 @@ fn test_multi_verb_workflow() {
     // Initial value should be 0
     let result = runtime
         .execute_verb(entity_id, "get_value", vec![], None)
-        
         .unwrap();
     assert_eq!(result.as_f64().unwrap(), 0.0);
 
@@ -64,7 +57,6 @@ fn test_multi_verb_workflow() {
     // This test documents current behavior
     let result = runtime
         .execute_verb(entity_id, "set_value", vec![json!(42)], None)
-        
         .unwrap();
     assert_eq!(result.as_f64().unwrap(), 42.0);
 }
@@ -102,13 +94,11 @@ fn test_conditional_verb() {
 
     let result = runtime
         .execute_verb(entity_id, "check_size", vec![json!(5)], None)
-        
         .unwrap();
     assert_eq!(result.as_str().unwrap(), "small");
 
     let result = runtime
         .execute_verb(entity_id, "check_size", vec![json!(15)], None)
-        
         .unwrap();
     assert_eq!(result.as_str().unwrap(), "big");
 }
@@ -129,15 +119,9 @@ fn test_loop_in_verb() {
             "std.seq",
             vec![
                 // let total = 0
-                SExpr::call(
-                    "std.let",
-                    vec![SExpr::string("total"), SExpr::number(0.0)],
-                ),
+                SExpr::call("std.let", vec![SExpr::string("total"), SExpr::number(0.0)]),
                 // let i = 1
-                SExpr::call(
-                    "std.let",
-                    vec![SExpr::string("i"), SExpr::number(1.0)],
-                ),
+                SExpr::call("std.let", vec![SExpr::string("i"), SExpr::number(1.0)]),
                 // while i <= arg0
                 SExpr::call(
                     "std.while",
@@ -160,7 +144,10 @@ fn test_loop_in_verb() {
                                         SExpr::call(
                                             "math.add",
                                             vec![
-                                                SExpr::call("std.var", vec![SExpr::string("total")]),
+                                                SExpr::call(
+                                                    "std.var",
+                                                    vec![SExpr::string("total")],
+                                                ),
                                                 SExpr::call("std.var", vec![SExpr::string("i")]),
                                             ],
                                         ),
@@ -196,14 +183,12 @@ fn test_loop_in_verb() {
     // Sum 1 to 5 = 15
     let result = runtime
         .execute_verb(entity_id, "sum", vec![json!(5)], None)
-        
         .unwrap();
     assert_eq!(result.as_f64().unwrap(), 15.0);
 
     // Sum 1 to 10 = 55
     let result = runtime
         .execute_verb(entity_id, "sum", vec![json!(10)], None)
-        
         .unwrap();
     assert_eq!(result.as_f64().unwrap(), 55.0);
 }
@@ -260,7 +245,6 @@ fn test_lambda_in_verb() {
 
     let result = runtime
         .execute_verb(entity_id, "double", vec![json!(7)], None)
-        
         .unwrap();
     assert_eq!(result.as_f64().unwrap(), 14.0);
 }
@@ -286,11 +270,7 @@ fn test_list_operations_in_verb() {
                         SExpr::string("mylist"),
                         SExpr::call(
                             "list.new",
-                            vec![
-                                SExpr::number(1.0),
-                                SExpr::number(2.0),
-                                SExpr::number(3.0),
-                            ],
+                            vec![SExpr::number(1.0), SExpr::number(2.0), SExpr::number(3.0)],
                         ),
                     ],
                 ),
@@ -307,7 +287,6 @@ fn test_list_operations_in_verb() {
 
     let result = runtime
         .execute_verb(entity_id, "list_len", vec![], None)
-        
         .unwrap();
     assert_eq!(result.as_f64().unwrap(), 3.0);
 }

@@ -30,7 +30,6 @@ fn test_schedule_and_process_task() {
     runtime
         .scheduler()
         .schedule(entity_id, "task", json!([]), 0)
-        
         .unwrap();
 
     // Process should find and delete the task
@@ -52,7 +51,9 @@ fn test_future_task_not_processed() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Test"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap()
     };
 
     {
@@ -66,7 +67,6 @@ fn test_future_task_not_processed() {
     runtime
         .scheduler()
         .schedule(entity_id, "future", json!([]), 3600000)
-        
         .unwrap();
 
     // Should not be processed yet
@@ -81,7 +81,9 @@ fn test_multiple_tasks() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+        let id = storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap();
         storage.add_verb(id, "task1", &SExpr::number(1)).unwrap();
         storage.add_verb(id, "task2", &SExpr::number(2)).unwrap();
         id
@@ -91,12 +93,10 @@ fn test_multiple_tasks() {
     runtime
         .scheduler()
         .schedule(entity_id, "task1", json!([]), 0)
-        
         .unwrap();
     runtime
         .scheduler()
         .schedule(entity_id, "task2", json!([]), 0)
-        
         .unwrap();
 
     // Process should get both

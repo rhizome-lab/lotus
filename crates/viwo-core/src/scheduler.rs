@@ -156,12 +156,7 @@ mod tests {
 
         // Schedule a task for immediate execution
         scheduler
-            .schedule(
-                entity_id,
-                "test_verb",
-                serde_json::json!(["arg1", 42]),
-                0,
-            )
+            .schedule(entity_id, "test_verb", serde_json::json!(["arg1", 42]), 0)
             .await
             .unwrap();
 

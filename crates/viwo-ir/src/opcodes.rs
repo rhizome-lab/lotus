@@ -2,13 +2,13 @@
 
 /// Core opcode libraries that are always available.
 pub const CORE_LIBRARIES: &[&str] = &[
-    "std",   // Control flow, variables, functions
-    "list",  // List/array operations
-    "obj",   // Object/map operations
-    "str",   // String operations
-    "math",  // Math operations
-    "time",  // Time operations
-    "bool",  // Boolean operations
+    "std",  // Control flow, variables, functions
+    "list", // List/array operations
+    "obj",  // Object/map operations
+    "str",  // String operations
+    "math", // Math operations
+    "time", // Time operations
+    "bool", // Boolean operations
 ];
 
 /// Returns true if the opcode belongs to a core library.

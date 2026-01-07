@@ -79,19 +79,16 @@ fn test_prototype_chain_multiple_levels() {
     // Child should inherit all verbs
     let result = runtime
         .execute_verb(child_id, "root_verb", vec![], None)
-        
         .unwrap();
     assert_eq!(result.as_str().unwrap(), "from_root");
 
     let result = runtime
         .execute_verb(child_id, "parent_verb", vec![], None)
-        
         .unwrap();
     assert_eq!(result.as_str().unwrap(), "from_parent");
 
     let result = runtime
         .execute_verb(child_id, "child_verb", vec![], None)
-        
         .unwrap();
     assert_eq!(result.as_str().unwrap(), "from_child");
 }
@@ -145,9 +142,7 @@ fn test_delete_entity_cascade() {
             .unwrap();
 
         // Add verbs and capabilities
-        storage
-            .add_verb(id, "test", &SExpr::null())
-            .unwrap();
+        storage.add_verb(id, "test", &SExpr::null()).unwrap();
         storage
             .create_capability(id, "test.cap", json!({}))
             .unwrap();

@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use thiserror::Error;
-use viwo_syntax_typescript::{parse_entity_definition, EntityDefinition as TsEntityDef};
+use viwo_syntax_typescript::{EntityDefinition as TsEntityDef, parse_entity_definition};
 
 #[derive(Debug, Error)]
 pub enum SeedError {
@@ -68,11 +68,7 @@ impl SeedSystem {
 
         // Read TypeScript source
         let source = fs::read_to_string(&file_path).map_err(|e| {
-            SeedError::LoadError(format!(
-                "Failed to read {}: {}",
-                file_path.display(),
-                e
-            ))
+            SeedError::LoadError(format!("Failed to read {}: {}", file_path.display(), e))
         })?;
 
         // Parse entity definition
@@ -171,19 +167,11 @@ pub fn seed_basic_world(
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     storage
-        .create_capability(
-            system_id,
-            "sys.create",
-            serde_json::json!({}),
-        )
+        .create_capability(system_id, "sys.create", serde_json::json!({}))
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     storage
-        .create_capability(
-            system_id,
-            "sys.sudo",
-            serde_json::json!({}),
-        )
+        .create_capability(system_id, "sys.sudo", serde_json::json!({}))
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     storage
@@ -235,12 +223,11 @@ mod tests {
         );
         assert_eq!(
             def.props.get("description"),
-            Some(&serde_json::Value::String("A simple test entity".to_string()))
+            Some(&serde_json::Value::String(
+                "A simple test entity".to_string()
+            ))
         );
-        assert_eq!(
-            def.props.get("count").and_then(|v| v.as_f64()),
-            Some(42.0)
-        );
+        assert_eq!(def.props.get("count").and_then(|v| v.as_f64()), Some(42.0));
 
         // Check verbs
         assert!(def.verbs.contains_key("greet"));

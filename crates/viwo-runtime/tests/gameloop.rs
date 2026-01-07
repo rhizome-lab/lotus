@@ -42,13 +42,14 @@ fn test_state_persistence() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "get_count", &verb_code).unwrap();
+        storage
+            .add_verb(entity_id, "get_count", &verb_code)
+            .unwrap();
     }
 
     // Execute the verb
     let result = runtime
         .execute_verb(entity_id, "get_count", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_f64().unwrap(), 0.0);
@@ -56,13 +57,14 @@ fn test_state_persistence() {
     // Update the count
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.update_entity(entity_id, json!({"count": 5})).unwrap();
+        storage
+            .update_entity(entity_id, json!({"count": 5}))
+            .unwrap();
     }
 
     // Execute again - should see updated value
     let result = runtime
         .execute_verb(entity_id, "get_count", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_f64().unwrap(), 5.0);
@@ -82,11 +84,7 @@ fn test_verb_inheritance() {
 
         // Add verb to base
         storage
-            .add_verb(
-                base,
-                "greet",
-                &SExpr::string("Hello from base"),
-            )
+            .add_verb(base, "greet", &SExpr::string("Hello from base"))
             .unwrap();
 
         // Create child that inherits from base
@@ -100,7 +98,6 @@ fn test_verb_inheritance() {
     // Child should inherit the verb
     let result = runtime
         .execute_verb(child_id, "greet", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_str().unwrap(), "Hello from base");
@@ -109,18 +106,13 @@ fn test_verb_inheritance() {
     {
         let storage = runtime.storage().lock().unwrap();
         storage
-            .add_verb(
-                child_id,
-                "greet",
-                &SExpr::string("Hello from child"),
-            )
+            .add_verb(child_id, "greet", &SExpr::string("Hello from child"))
             .unwrap();
     }
 
     // Should now use child's version
     let result = runtime
         .execute_verb(child_id, "greet", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_str().unwrap(), "Hello from child");
@@ -128,7 +120,6 @@ fn test_verb_inheritance() {
     // Base should still have original
     let result = runtime
         .execute_verb(base_id, "greet", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_str().unwrap(), "Hello from base");

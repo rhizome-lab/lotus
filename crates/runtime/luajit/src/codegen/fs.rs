@@ -1,17 +1,18 @@
 //! Codegen for filesystem opcodes.
 
-use viwo_ir::SExpr;
-use crate::codegen::compile_value;
 use crate::CompileError;
+use crate::codegen::compile_value;
+use viwo_ir::SExpr;
 
 /// Compile fs.* opcodes to Lua calls
 pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<String>, CompileError> {
     let result = match op {
         "fs.read" => {
             if args.len() != 2 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.read expects 2 arguments (capability, path), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.read expects 2 arguments (capability, path), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
@@ -19,9 +20,10 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
         }
         "fs.write" => {
             if args.len() != 3 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.write expects 3 arguments (capability, path, content), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.write expects 3 arguments (capability, path, content), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
@@ -30,9 +32,10 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
         }
         "fs.list" => {
             if args.len() != 2 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.list expects 2 arguments (capability, path), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.list expects 2 arguments (capability, path), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
@@ -40,9 +43,10 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
         }
         "fs.stat" => {
             if args.len() != 2 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.stat expects 2 arguments (capability, path), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.stat expects 2 arguments (capability, path), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
@@ -50,9 +54,10 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
         }
         "fs.exists" => {
             if args.len() != 2 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.exists expects 2 arguments (capability, path), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.exists expects 2 arguments (capability, path), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
@@ -60,9 +65,10 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
         }
         "fs.mkdir" => {
             if args.len() != 2 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.mkdir expects 2 arguments (capability, path), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.mkdir expects 2 arguments (capability, path), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
@@ -70,9 +76,10 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
         }
         "fs.remove" => {
             if args.len() != 2 {
-                return Err(CompileError::InvalidArguments(
-                    format!("fs.remove expects 2 arguments (capability, path), got {}", args.len())
-                ));
+                return Err(CompileError::InvalidArguments(format!(
+                    "fs.remove expects 2 arguments (capability, path), got {}",
+                    args.len()
+                )));
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;

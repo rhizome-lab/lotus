@@ -21,11 +21,15 @@ use viwo_transport_websocket_jsonrpc::{Server, ServerConfig};
 /// Helper to send a JSON-RPC request and get the response
 async fn send_request(
     ws: &mut futures_util::stream::SplitSink<
-        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+        tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
         Message,
     >,
     ws_rx: &mut futures_util::stream::SplitStream<
-        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+        tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
     >,
     method: &str,
     params: serde_json::Value,
@@ -87,10 +91,7 @@ async fn test_server_basic_operations() -> Result<(), Box<dyn std::error::Error>
         let storage_lock = storage.lock().unwrap();
 
         // Create a base entity
-        let base_id = storage_lock.create_entity(
-            json!({"name": "FileBrowserBase"}),
-            None,
-        )?;
+        let base_id = storage_lock.create_entity(json!({"name": "FileBrowserBase"}), None)?;
 
         // Create user entity with necessary properties
         let user_id = storage_lock.create_entity(

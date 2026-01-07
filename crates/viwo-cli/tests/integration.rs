@@ -264,10 +264,7 @@ fn test_if_with_comparison() {
 
 #[test]
 fn test_while_loop() {
-    assert_num(
-        eval_ts("let i = 0; while (i < 3) { i = i + 1 }; i"),
-        3.0,
-    );
+    assert_num(eval_ts("let i = 0; while (i < 3) { i = i + 1 }; i"), 3.0);
 }
 
 #[test]
@@ -291,7 +288,9 @@ fn test_break_in_while() {
 fn test_continue_in_while() {
     // Skip adding when i is 2
     assert_num(
-        eval_ts("let sum = 0; let i = 0; while (i < 5) { i = i + 1; if (i === 2) { continue }; sum = sum + i }; sum"),
+        eval_ts(
+            "let sum = 0; let i = 0; while (i < 5) { i = i + 1; if (i === 2) { continue }; sum = sum + i }; sum",
+        ),
         // 1 + 3 + 4 + 5 = 13 (skips 2)
         13.0,
     );
@@ -301,7 +300,9 @@ fn test_continue_in_while() {
 fn test_continue_in_for() {
     // Skip adding when x is 2
     assert_num(
-        eval_ts("let sum = 0; for (const x of [1, 2, 3, 4]) { if (x === 2) { continue }; sum = sum + x }; sum"),
+        eval_ts(
+            "let sum = 0; for (const x of [1, 2, 3, 4]) { if (x === 2) { continue }; sum = sum + x }; sum",
+        ),
         // 1 + 3 + 4 = 8 (skips 2)
         8.0,
     );
@@ -378,7 +379,10 @@ fn test_list_filter() {
 
 #[test]
 fn test_list_reduce() {
-    assert_num(eval_ts("list.reduce([1, 2, 3], (acc, x) => acc + x, 0)"), 6.0);
+    assert_num(
+        eval_ts("list.reduce([1, 2, 3], (acc, x) => acc + x, 0)"),
+        6.0,
+    );
 }
 
 // =============================================================================
@@ -397,7 +401,11 @@ fn test_obj_new() {
 fn test_obj_nested() {
     let result = eval_ts("{ a: { b: 1 } }");
     let obj = result.as_object().expect("expected object");
-    let inner = obj.get("a").unwrap().as_object().expect("expected inner object");
+    let inner = obj
+        .get("a")
+        .unwrap()
+        .as_object()
+        .expect("expected inner object");
     assert_num(inner.get("b").unwrap().clone(), 1.0);
 }
 
@@ -614,7 +622,10 @@ fn test_obj_set() {
 #[test]
 fn test_obj_has() {
     assert_eq!(eval_ts("obj.has({ a: 1 }, \"a\")"), serde_json::json!(true));
-    assert_eq!(eval_ts("obj.has({ a: 1 }, \"b\")"), serde_json::json!(false));
+    assert_eq!(
+        eval_ts("obj.has({ a: 1 }, \"b\")"),
+        serde_json::json!(false)
+    );
 }
 
 #[test]
@@ -631,7 +642,10 @@ fn test_obj_merge() {
 
 #[test]
 fn test_str_trim() {
-    assert_eq!(eval_ts("str.trim(\"  hello  \")"), serde_json::json!("hello"));
+    assert_eq!(
+        eval_ts("str.trim(\"  hello  \")"),
+        serde_json::json!("hello")
+    );
 }
 
 // =============================================================================
@@ -642,7 +656,9 @@ fn test_str_trim() {
 fn test_break_in_for_loop() {
     // sum = 0; for x in [1, 2, 3, 4, 5] { if (x > 3) break; sum += x; } return sum;
     assert_num(
-        eval_ts("let sum = 0; for (const x of [1, 2, 3, 4, 5]) { if (x > 3) { break }; sum = sum + x }; sum"),
+        eval_ts(
+            "let sum = 0; for (const x of [1, 2, 3, 4, 5]) { if (x > 3) { break }; sum = sum + x }; sum",
+        ),
         6.0, // 1 + 2 + 3
     );
 }
@@ -659,7 +675,8 @@ fn test_nested_loops_break() {
     // }
     // return sum; // = 1*1 + 2*1 + 3*1 = 6
     assert_num(
-        eval_ts(r#"
+        eval_ts(
+            r#"
             let sum = 0;
             for (const i of [1, 2, 3]) {
                 for (const j of [1, 2, 3]) {
@@ -668,7 +685,8 @@ fn test_nested_loops_break() {
                 }
             };
             sum
-        "#),
+        "#,
+        ),
         6.0,
     );
 }
@@ -750,8 +768,14 @@ fn test_list_after_shift() {
 
 #[test]
 fn test_list_includes() {
-    assert_eq!(eval_ts("list.includes([1, 2, 3], 2)"), serde_json::json!(true));
-    assert_eq!(eval_ts("list.includes([1, 2, 3], 4)"), serde_json::json!(false));
+    assert_eq!(
+        eval_ts("list.includes([1, 2, 3], 2)"),
+        serde_json::json!(true)
+    );
+    assert_eq!(
+        eval_ts("list.includes([1, 2, 3], 4)"),
+        serde_json::json!(false)
+    );
 }
 
 #[test]
@@ -791,8 +815,14 @@ fn test_list_join() {
 
 #[test]
 fn test_str_includes() {
-    assert_eq!(eval_ts("str.includes(\"hello\", \"ell\")"), serde_json::json!(true));
-    assert_eq!(eval_ts("str.includes(\"hello\", \"xyz\")"), serde_json::json!(false));
+    assert_eq!(
+        eval_ts("str.includes(\"hello\", \"ell\")"),
+        serde_json::json!(true)
+    );
+    assert_eq!(
+        eval_ts("str.includes(\"hello\", \"xyz\")"),
+        serde_json::json!(false)
+    );
 }
 
 #[test]
@@ -805,8 +835,14 @@ fn test_str_replace() {
 
 #[test]
 fn test_str_slice() {
-    assert_eq!(eval_ts("str.slice(\"hello\", 1)"), serde_json::json!("ello"));
-    assert_eq!(eval_ts("str.slice(\"hello\", 1, 3)"), serde_json::json!("el"));
+    assert_eq!(
+        eval_ts("str.slice(\"hello\", 1)"),
+        serde_json::json!("ello")
+    );
+    assert_eq!(
+        eval_ts("str.slice(\"hello\", 1, 3)"),
+        serde_json::json!("el")
+    );
 }
 
 #[test]
@@ -819,19 +855,34 @@ fn test_str_join() {
 
 #[test]
 fn test_str_startsWith() {
-    assert_eq!(eval_ts("str.startsWith(\"hello\", \"hel\")"), serde_json::json!(true));
-    assert_eq!(eval_ts("str.startsWith(\"hello\", \"ell\")"), serde_json::json!(false));
+    assert_eq!(
+        eval_ts("str.startsWith(\"hello\", \"hel\")"),
+        serde_json::json!(true)
+    );
+    assert_eq!(
+        eval_ts("str.startsWith(\"hello\", \"ell\")"),
+        serde_json::json!(false)
+    );
 }
 
 #[test]
 fn test_str_endsWith() {
-    assert_eq!(eval_ts("str.endsWith(\"hello\", \"llo\")"), serde_json::json!(true));
-    assert_eq!(eval_ts("str.endsWith(\"hello\", \"hel\")"), serde_json::json!(false));
+    assert_eq!(
+        eval_ts("str.endsWith(\"hello\", \"llo\")"),
+        serde_json::json!(true)
+    );
+    assert_eq!(
+        eval_ts("str.endsWith(\"hello\", \"hel\")"),
+        serde_json::json!(false)
+    );
 }
 
 #[test]
 fn test_str_repeat() {
-    assert_eq!(eval_ts("str.repeat(\"ab\", 3)"), serde_json::json!("ababab"));
+    assert_eq!(
+        eval_ts("str.repeat(\"ab\", 3)"),
+        serde_json::json!("ababab")
+    );
 }
 
 // =============================================================================
@@ -850,12 +901,18 @@ fn test_obj_entries() {
 
 #[test]
 fn test_obj_del() {
-    assert_eq!(eval_ts("let o = { a: 1, b: 2 }; obj.del(o, \"a\")"), serde_json::json!(true));
+    assert_eq!(
+        eval_ts("let o = { a: 1, b: 2 }; obj.del(o, \"a\")"),
+        serde_json::json!(true)
+    );
 }
 
 #[test]
 fn test_obj_del_missing() {
-    assert_eq!(eval_ts("let o = { a: 1 }; obj.del(o, \"b\")"), serde_json::json!(false));
+    assert_eq!(
+        eval_ts("let o = { a: 1 }; obj.del(o, \"b\")"),
+        serde_json::json!(false)
+    );
 }
 
 #[test]
@@ -947,7 +1004,10 @@ fn test_std_typeof_number() {
 
 #[test]
 fn test_std_typeof_string() {
-    assert_eq!(eval_ts("std.typeof(\"hello\")"), serde_json::json!("string"));
+    assert_eq!(
+        eval_ts("std.typeof(\"hello\")"),
+        serde_json::json!("string")
+    );
 }
 
 #[test]
@@ -972,7 +1032,10 @@ fn test_std_typeof_object() {
 
 #[test]
 fn test_std_typeof_function() {
-    assert_eq!(eval_ts("std.typeof((x) => x)"), serde_json::json!("function"));
+    assert_eq!(
+        eval_ts("std.typeof((x) => x)"),
+        serde_json::json!("function")
+    );
 }
 
 // =============================================================================
@@ -1029,12 +1092,14 @@ fn test_json_roundtrip() {
 #[test]
 fn test_std_return_early() {
     // Return early from a sequence - using block for if
-    let result = eval_ts(r#"
+    let result = eval_ts(
+        r#"
         let x = 1;
         if (x === 1) { return 42 }
         x = 99;
         x
-    "#);
+    "#,
+    );
     assert_num(result, 42.0);
 }
 
@@ -1123,7 +1188,10 @@ fn test_std_try_without_catch() {
     // When try body throws and no catch handler, return nil
     let expr = SExpr::call(
         "std.try",
-        vec![SExpr::call("std.throw", vec![SExpr::string("error").erase_type()])],
+        vec![SExpr::call(
+            "std.throw",
+            vec![SExpr::string("error").erase_type()],
+        )],
     );
     assert_eq!(eval_sexpr(&expr), serde_json::Value::Null);
 }
@@ -1136,7 +1204,10 @@ fn test_std_try_without_catch() {
 fn test_nullish_with_value() {
     // Value exists, return it
     assert_num(eval_ts("5 ?? 10"), 5.0);
-    assert_eq!(eval_ts("\"hello\" ?? \"default\""), serde_json::json!("hello"));
+    assert_eq!(
+        eval_ts("\"hello\" ?? \"default\""),
+        serde_json::json!("hello")
+    );
 }
 
 #[test]

@@ -20,10 +20,13 @@ fn test_sexpr_constructors() {
 
 #[test]
 fn test_sexpr_call() {
-    let expr = SExpr::call("std.let", vec![
-        SExpr::string("x").erase_type(),
-        SExpr::number(10).erase_type(),
-    ]);
+    let expr = SExpr::call(
+        "std.let",
+        vec![
+            SExpr::string("x").erase_type(),
+            SExpr::number(10).erase_type(),
+        ],
+    );
 
     assert!(expr.is_call());
     assert_eq!(expr.opcode(), Some("std.let"));
@@ -57,16 +60,25 @@ fn test_sexpr_from_impls() {
 
 #[test]
 fn test_sexpr_json_roundtrip() {
-    let expr = SExpr::call("std.seq", vec![
-        SExpr::call("std.let", vec![
-            SExpr::string("x").erase_type(),
-            SExpr::number(10).erase_type()
-        ]),
-        SExpr::call("math.add", vec![
-            SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
-            SExpr::number(5).erase_type(),
-        ]),
-    ]);
+    let expr = SExpr::call(
+        "std.seq",
+        vec![
+            SExpr::call(
+                "std.let",
+                vec![
+                    SExpr::string("x").erase_type(),
+                    SExpr::number(10).erase_type(),
+                ],
+            ),
+            SExpr::call(
+                "math.add",
+                vec![
+                    SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                    SExpr::number(5).erase_type(),
+                ],
+            ),
+        ],
+    );
 
     let json = serde_json::to_string(&expr).unwrap();
     let parsed: SExpr = serde_json::from_str(&json).unwrap();

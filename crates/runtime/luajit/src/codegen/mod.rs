@@ -43,9 +43,8 @@ pub enum CompileError {
 /// Lua reserved keywords that need escaping.
 fn lua_keywords() -> HashSet<&'static str> {
     [
-        "and", "break", "do", "else", "elseif", "end", "false", "for", "function",
-        "goto", "if", "in", "local", "nil", "not", "or", "repeat", "return",
-        "then", "true", "until", "while",
+        "and", "break", "do", "else", "elseif", "end", "false", "for", "function", "goto", "if",
+        "in", "local", "nil", "not", "or", "repeat", "return", "then", "true", "until", "while",
     ]
     .into_iter()
     .collect()
@@ -58,7 +57,13 @@ pub(crate) fn to_lua_name(name: &str) -> String {
     // Replace invalid characters with _
     let mut safe: String = name
         .chars()
-        .map(|c| if c.is_alphanumeric() || c == '_' { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || c == '_' {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect();
 
     // Cannot start with digit

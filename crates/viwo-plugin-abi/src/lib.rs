@@ -3,9 +3,8 @@
 //! Plugins are dynamic libraries that register opcodes with the runtime.
 
 use abi_stable::{
-    sabi_trait,
+    StableAbi, sabi_trait,
     std_types::{RResult, RStr, RString},
-    StableAbi,
 };
 
 /// Plugin version.
@@ -19,7 +18,11 @@ pub struct Version {
 
 impl Version {
     pub const fn new(major: u32, minor: u32, patch: u32) -> Self {
-        Self { major, minor, patch }
+        Self {
+            major,
+            minor,
+            patch,
+        }
     }
 }
 
@@ -32,7 +35,9 @@ pub struct PluginError {
 
 impl PluginError {
     pub fn new(message: impl Into<RString>) -> Self {
-        Self { message: message.into() }
+        Self {
+            message: message.into(),
+        }
     }
 }
 

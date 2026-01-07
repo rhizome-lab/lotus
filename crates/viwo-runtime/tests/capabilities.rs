@@ -12,7 +12,9 @@ fn test_get_capability_from_entity() {
     // Create entity with capabilities
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+        let id = storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap();
 
         // Add some capabilities
         storage
@@ -31,7 +33,6 @@ fn test_get_capability_from_entity() {
     // Get entity.control capability
     let cap = kernel
         .get_capability(entity_id, "entity.control", None)
-        
         .unwrap();
     assert!(cap.is_some());
     assert_eq!(cap.unwrap().cap_type, "entity.control");
@@ -39,14 +40,12 @@ fn test_get_capability_from_entity() {
     // Get with filter
     let cap = kernel
         .get_capability(entity_id, "entity.control", Some(json!({"target_id": 42})))
-        
         .unwrap();
     assert!(cap.is_some());
 
     // Get with wrong filter
     let cap = kernel
         .get_capability(entity_id, "entity.control", Some(json!({"target_id": 99})))
-        
         .unwrap();
     assert!(cap.is_none());
 }
@@ -69,25 +68,13 @@ fn test_capability_transfer() {
     let kernel = KernelOps::new(runtime.storage().clone());
 
     // Verify e1 has it
-    assert!(kernel
-        .has_capability(e1_id, "test.cap", None)
-        
-        .unwrap());
-    assert!(!kernel
-        .has_capability(e2_id, "test.cap", None)
-        
-        .unwrap());
+    assert!(kernel.has_capability(e1_id, "test.cap", None).unwrap());
+    assert!(!kernel.has_capability(e2_id, "test.cap", None).unwrap());
 
     // Transfer
     kernel.give_capability(&cap_id, e2_id).unwrap();
 
     // Verify transfer
-    assert!(!kernel
-        .has_capability(e1_id, "test.cap", None)
-        
-        .unwrap());
-    assert!(kernel
-        .has_capability(e2_id, "test.cap", None)
-        
-        .unwrap());
+    assert!(!kernel.has_capability(e1_id, "test.cap", None).unwrap());
+    assert!(kernel.has_capability(e2_id, "test.cap", None).unwrap());
 }

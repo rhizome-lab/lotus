@@ -1,7 +1,7 @@
 //! Capability-based authorization.
 
-use serde::{Deserialize, Serialize};
 use crate::entity::EntityId;
+use serde::{Deserialize, Serialize};
 
 /// A capability token granting specific permissions.
 #[derive(Debug, Clone, Serialize, Deserialize)]

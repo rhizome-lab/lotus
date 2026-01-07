@@ -51,24 +51,24 @@ pub async fn ai_generate_text(
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(prompt).await
+            let response = agent
+                .prompt(prompt)
+                .await
                 .map_err(|e| format!("ai.generate_text failed: {}", e))?;
             Ok(response)
         }
         "anthropic" => {
             // Anthropic requires base_url, betas, and version
-            let client = anthropic::Client::new(
-                api_key,
-                "https://api.anthropic.com",
-                None,
-                "2023-06-01"
-            );
+            let client =
+                anthropic::Client::new(api_key, "https://api.anthropic.com", None, "2023-06-01");
             let agent = client
                 .agent(model)
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(prompt).await
+            let response = agent
+                .prompt(prompt)
+                .await
                 .map_err(|e| format!("ai.generate_text failed: {}", e))?;
             Ok(response)
         }
@@ -79,7 +79,9 @@ pub async fn ai_generate_text(
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(prompt).await
+            let response = agent
+                .prompt(prompt)
+                .await
                 .map_err(|e| format!("ai.generate_text failed: {}", e))?;
             Ok(response)
         }
@@ -90,11 +92,16 @@ pub async fn ai_generate_text(
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(prompt).await
+            let response = agent
+                .prompt(prompt)
+                .await
                 .map_err(|e| format!("ai.generate_text failed: {}", e))?;
             Ok(response)
         }
-        _ => Err(format!("ai: unsupported provider '{}'. Supported: openai, anthropic, cohere, perplexity", provider)),
+        _ => Err(format!(
+            "ai: unsupported provider '{}'. Supported: openai, anthropic, cohere, perplexity",
+            provider
+        )),
     }
 }
 
@@ -160,23 +167,23 @@ pub async fn ai_chat(
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(&prompt).await
+            let response = agent
+                .prompt(&prompt)
+                .await
                 .map_err(|e| format!("ai.chat failed: {}", e))?;
             Ok(response)
         }
         "anthropic" => {
-            let client = anthropic::Client::new(
-                api_key,
-                "https://api.anthropic.com",
-                None,
-                "2023-06-01"
-            );
+            let client =
+                anthropic::Client::new(api_key, "https://api.anthropic.com", None, "2023-06-01");
             let agent = client
                 .agent(model)
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(&prompt).await
+            let response = agent
+                .prompt(&prompt)
+                .await
                 .map_err(|e| format!("ai.chat failed: {}", e))?;
             Ok(response)
         }
@@ -187,7 +194,9 @@ pub async fn ai_chat(
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(&prompt).await
+            let response = agent
+                .prompt(&prompt)
+                .await
                 .map_err(|e| format!("ai.chat failed: {}", e))?;
             Ok(response)
         }
@@ -198,11 +207,16 @@ pub async fn ai_chat(
                 .temperature(temperature)
                 .max_tokens(max_tokens)
                 .build();
-            let response = agent.prompt(&prompt).await
+            let response = agent
+                .prompt(&prompt)
+                .await
                 .map_err(|e| format!("ai.chat failed: {}", e))?;
             Ok(response)
         }
-        _ => Err(format!("ai: unsupported provider '{}'. Supported: openai, anthropic, cohere, perplexity", provider)),
+        _ => Err(format!(
+            "ai: unsupported provider '{}'. Supported: openai, anthropic, cohere, perplexity",
+            provider
+        )),
     }
 }
 
@@ -211,7 +225,10 @@ pub async fn ai_chat(
 // ============================================================================
 
 /// Helper: Convert Lua value at index to JSON
-unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+unsafe fn lua_value_to_json(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<serde_json::Value, String> {
     use mlua::ffi::*;
 
     let lua_type = lua_type(L, idx);
@@ -241,7 +258,10 @@ unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<
 }
 
 /// Helper: Convert Lua table at index to JSON (object or array)
-unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+unsafe fn lua_table_to_json(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<serde_json::Value, String> {
     use mlua::ffi::*;
 
     let abs_idx = if idx < 0 && idx > LUA_REGISTRYINDEX {
@@ -305,7 +325,8 @@ unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<
 /// Helper: Push error message to Lua stack
 unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
     use mlua::ffi::*;
-    let c_msg = CString::new(msg).unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
+    let c_msg = CString::new(msg)
+        .unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
     lua_pushstring(L, c_msg.as_ptr());
     lua_error(L)
 }
@@ -317,7 +338,10 @@ unsafe extern "C" fn ai_generate_text_lua(L: *mut mlua::ffi::lua_State) -> c_int
 
     let nargs = lua_gettop(L);
     if nargs != 5 {
-        return lua_push_error(L, "ai.generateText requires 5 arguments (capability, provider, model, prompt, options)");
+        return lua_push_error(
+            L,
+            "ai.generateText requires 5 arguments (capability, provider, model, prompt, options)",
+        );
     }
 
     // Get capability (table)
@@ -375,7 +399,9 @@ unsafe extern "C" fn ai_generate_text_lua(L: *mut mlua::ffi::lua_State) -> c_int
     let result = tokio::runtime::Runtime::new()
         .map_err(|e| format!("Failed to create tokio runtime: {}", e))
         .and_then(|rt| {
-            rt.block_on(ai_generate_text(&cap_json, this_id, provider, model, prompt, &options))
+            rt.block_on(ai_generate_text(
+                &cap_json, this_id, provider, model, prompt, &options,
+            ))
         });
 
     match result {
@@ -398,7 +424,10 @@ unsafe extern "C" fn ai_embed_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 4 {
-        return lua_push_error(L, "ai.embed requires 4 arguments (capability, provider, model, text)");
+        return lua_push_error(
+            L,
+            "ai.embed requires 4 arguments (capability, provider, model, text)",
+        );
     }
 
     // Get capability (table)
@@ -449,9 +478,7 @@ unsafe extern "C" fn ai_embed_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     // Execute async operation
     let result = tokio::runtime::Runtime::new()
         .map_err(|e| format!("Failed to create tokio runtime: {}", e))
-        .and_then(|rt| {
-            rt.block_on(ai_embed(&cap_json, this_id, provider, model, text))
-        });
+        .and_then(|rt| rt.block_on(ai_embed(&cap_json, this_id, provider, model, text)));
 
     match result {
         Ok(embedding) => {
@@ -474,7 +501,10 @@ unsafe extern "C" fn ai_chat_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 5 {
-        return lua_push_error(L, "ai.chat requires 5 arguments (capability, provider, model, messages, options)");
+        return lua_push_error(
+            L,
+            "ai.chat requires 5 arguments (capability, provider, model, messages, options)",
+        );
     }
 
     // Get capability (table)
@@ -532,7 +562,9 @@ unsafe extern "C" fn ai_chat_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     let result = tokio::runtime::Runtime::new()
         .map_err(|e| format!("Failed to create tokio runtime: {}", e))
         .and_then(|rt| {
-            rt.block_on(ai_chat(&cap_json, this_id, provider, model, messages, &options))
+            rt.block_on(ai_chat(
+                &cap_json, this_id, provider, model, messages, &options,
+            ))
         });
 
     match result {

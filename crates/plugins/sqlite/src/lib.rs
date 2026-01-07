@@ -224,7 +224,10 @@ fn base64_encode(data: &[u8]) -> String {
 // ============================================================================
 
 /// Helper: Convert Lua value at index to JSON
-unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+unsafe fn lua_value_to_json(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<serde_json::Value, String> {
     use mlua::ffi::*;
 
     let lua_type = lua_type(L, idx);
@@ -254,7 +257,10 @@ unsafe fn lua_value_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<
 }
 
 /// Helper: Convert Lua table at index to JSON (object or array)
-unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<serde_json::Value, String> {
+unsafe fn lua_table_to_json(
+    L: *mut mlua::ffi::lua_State,
+    idx: c_int,
+) -> Result<serde_json::Value, String> {
     use mlua::ffi::*;
 
     // Normalize index to absolute
@@ -321,13 +327,17 @@ unsafe fn lua_table_to_json(L: *mut mlua::ffi::lua_State, idx: c_int) -> Result<
 /// Helper: Push error message to Lua stack
 unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
     use mlua::ffi::*;
-    let c_msg = CString::new(msg).unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
+    let c_msg = CString::new(msg)
+        .unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
     lua_pushstring(L, c_msg.as_ptr());
     lua_error(L)
 }
 
 /// Helper: Push JSON value to Lua stack
-unsafe fn json_to_lua(L: *mut mlua::ffi::lua_State, value: &serde_json::Value) -> Result<(), String> {
+unsafe fn json_to_lua(
+    L: *mut mlua::ffi::lua_State,
+    value: &serde_json::Value,
+) -> Result<(), String> {
     use mlua::ffi::*;
 
     match value {
@@ -372,7 +382,10 @@ unsafe extern "C" fn sqlite_query_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 4 {
-        return lua_push_error(L, "sqlite.query requires 4 arguments (capability, db_path, query, params)");
+        return lua_push_error(
+            L,
+            "sqlite.query requires 4 arguments (capability, db_path, query, params)",
+        );
     }
 
     // Get capability (table)
@@ -443,7 +456,10 @@ unsafe extern "C" fn sqlite_execute_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 4 {
-        return lua_push_error(L, "sqlite.execute requires 4 arguments (capability, db_path, query, params)");
+        return lua_push_error(
+            L,
+            "sqlite.execute requires 4 arguments (capability, db_path, query, params)",
+        );
     }
 
     // Get capability (table)
@@ -553,8 +569,14 @@ mod tests {
         let cap = create_test_capability(1, db_path);
 
         // Create table
-        sqlite_execute(&cap, 1, db_path, "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)", &[])
-            .unwrap();
+        sqlite_execute(
+            &cap,
+            1,
+            db_path,
+            "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)",
+            &[],
+        )
+        .unwrap();
 
         // Insert data
         sqlite_execute(
@@ -582,8 +604,14 @@ mod tests {
 
         sqlite_execute(&cap, 1, db_path, "CREATE TABLE test (id INTEGER)", &[]).unwrap();
 
-        let rows = sqlite_execute(&cap, 1, db_path, "INSERT INTO test VALUES (1), (2), (3)", &[])
-            .unwrap();
+        let rows = sqlite_execute(
+            &cap,
+            1,
+            db_path,
+            "INSERT INTO test VALUES (1), (2), (3)",
+            &[],
+        )
+        .unwrap();
 
         assert_eq!(rows, 3);
     }
@@ -629,12 +657,22 @@ mod tests {
             1,
             db_path,
             "INSERT INTO test VALUES (?, ?, ?)",
-            &[serde_json::json!(42), serde_json::json!("test"), serde_json::json!(3.14)],
+            &[
+                serde_json::json!(42),
+                serde_json::json!("test"),
+                serde_json::json!(3.14),
+            ],
         )
         .unwrap();
 
-        let results = sqlite_query(&cap, 1, db_path, "SELECT * FROM test WHERE id = ?", &[serde_json::json!(42)])
-            .unwrap();
+        let results = sqlite_query(
+            &cap,
+            1,
+            db_path,
+            "SELECT * FROM test WHERE id = ?",
+            &[serde_json::json!(42)],
+        )
+        .unwrap();
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0]["id"], 42);

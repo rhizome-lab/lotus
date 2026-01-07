@@ -11,12 +11,21 @@ pub fn generate_builders(schema: &OpcodeSchema) -> Result<String, std::fmt::Erro
     let mut output = String::new();
 
     // Module header
-    writeln!(&mut output, "//! Type-safe S-expression builders generated from schema.")?;
+    writeln!(
+        &mut output,
+        "//! Type-safe S-expression builders generated from schema."
+    )?;
     writeln!(&mut output, "//!")?;
-    writeln!(&mut output, "//! This module is auto-generated from opcodes.toml.")?;
+    writeln!(
+        &mut output,
+        "//! This module is auto-generated from opcodes.toml."
+    )?;
     writeln!(&mut output, "//! Do not edit manually.")?;
     writeln!(&mut output)?;
-    writeln!(&mut output, "use crate::{{SExpr, Any, Str, Num, Bool, Obj, Arr, Null}};")?;
+    writeln!(
+        &mut output,
+        "use crate::{{SExpr, Any, Str, Num, Bool, Obj, Arr, Null}};"
+    )?;
     writeln!(&mut output)?;
 
     // Group opcodes by library
@@ -27,9 +36,15 @@ pub fn generate_builders(schema: &OpcodeSchema) -> Result<String, std::fmt::Erro
     for library in libraries {
         let opcodes = &by_library[library];
 
-        writeln!(&mut output, "// ============================================================================")?;
+        writeln!(
+            &mut output,
+            "// ============================================================================"
+        )?;
         writeln!(&mut output, "// {} library", library)?;
-        writeln!(&mut output, "// ============================================================================")?;
+        writeln!(
+            &mut output,
+            "// ============================================================================"
+        )?;
         writeln!(&mut output)?;
 
         for opcode in opcodes {
@@ -50,12 +65,19 @@ fn generate_builder_function(output: &mut String, opcode: &Opcode) -> Result<(),
 
     if !opcode.generics.is_empty() {
         writeln!(output, "///")?;
-        writeln!(output, "/// Generic parameters: `{}`", opcode.generics.join(", "))?;
+        writeln!(
+            output,
+            "/// Generic parameters: `{}`",
+            opcode.generics.join(", ")
+        )?;
     }
 
     if opcode.lazy {
         writeln!(output, "///")?;
-        writeln!(output, "/// Note: This opcode is lazy (defers evaluation of arguments)")?;
+        writeln!(
+            output,
+            "/// Note: This opcode is lazy (defers evaluation of arguments)"
+        )?;
     }
 
     // Function signature
@@ -76,7 +98,12 @@ fn generate_builder_function(output: &mut String, opcode: &Opcode) -> Result<(),
                 write!(output, ", ")?;
             }
             let rust_type = runtime_type_to_builder_type(&param.type_runtime);
-            write!(output, "{}: SExpr<{}>", escape_param_name(&param.name), rust_type)?;
+            write!(
+                output,
+                "{}: SExpr<{}>",
+                escape_param_name(&param.name),
+                rust_type
+            )?;
         }
     }
 
@@ -92,18 +119,28 @@ fn generate_builder_function(output: &mut String, opcode: &Opcode) -> Result<(),
         if needs_cast {
             writeln!(output, "    SExpr::call(")?;
             writeln!(output, "        \"{}\",", opcode.name)?;
-            writeln!(output, "        args.into_iter().map(|a| a.erase_type()).collect(),")?;
+            writeln!(
+                output,
+                "        args.into_iter().map(|a| a.erase_type()).collect(),"
+            )?;
             writeln!(output, "    ).cast_type()")?;
         } else {
             writeln!(output, "    SExpr::call(")?;
             writeln!(output, "        \"{}\",", opcode.name)?;
-            writeln!(output, "        args.into_iter().map(|a| a.erase_type()).collect(),")?;
+            writeln!(
+                output,
+                "        args.into_iter().map(|a| a.erase_type()).collect(),"
+            )?;
             writeln!(output, "    )")?;
         }
     } else if opcode.params.is_empty() {
         // No parameters
         if needs_cast {
-            writeln!(output, "    SExpr::call(\"{}\", vec![]).cast_type()", opcode.name)?;
+            writeln!(
+                output,
+                "    SExpr::call(\"{}\", vec![]).cast_type()",
+                opcode.name
+            )?;
         } else {
             writeln!(output, "    SExpr::call(\"{}\", vec![])", opcode.name)?;
         }
@@ -163,11 +200,11 @@ fn escape_param_name(name: &str) -> String {
     let cleaned = name.replace("...", "");
     match cleaned.as_str() {
         // Rust keywords that need escaping
-        "as" | "break" | "const" | "continue" | "crate" | "else" | "enum" | "extern"
-        | "false" | "fn" | "for" | "if" | "impl" | "in" | "let" | "loop" | "match" | "mod"
-        | "move" | "mut" | "pub" | "ref" | "return" | "self" | "Self" | "static" | "struct"
-        | "super" | "trait" | "true" | "type" | "unsafe" | "use" | "where" | "while"
-        | "async" | "await" | "dyn" => format!("r#{}", cleaned),
+        "as" | "break" | "const" | "continue" | "crate" | "else" | "enum" | "extern" | "false"
+        | "fn" | "for" | "if" | "impl" | "in" | "let" | "loop" | "match" | "mod" | "move"
+        | "mut" | "pub" | "ref" | "return" | "self" | "Self" | "static" | "struct" | "super"
+        | "trait" | "true" | "type" | "unsafe" | "use" | "where" | "while" | "async" | "await"
+        | "dyn" => format!("r#{}", cleaned),
         _ => cleaned,
     }
 }
@@ -182,15 +219,30 @@ mod tests {
         let code = generate_builders(&schema).expect("Failed to generate builders");
 
         // Check that generated code contains expected functions
-        assert!(code.contains("pub fn std_this("), "Should have std_this function");
-        assert!(code.contains("pub fn math_add("), "Should have math_add function");
-        assert!(code.contains("pub fn obj_get("), "Should have obj_get function");
+        assert!(
+            code.contains("pub fn std_this("),
+            "Should have std_this function"
+        );
+        assert!(
+            code.contains("pub fn math_add("),
+            "Should have math_add function"
+        );
+        assert!(
+            code.contains("pub fn obj_get("),
+            "Should have obj_get function"
+        );
 
         // Check that variadic functions are handled
-        assert!(code.contains("args: Vec<SExpr"), "Should have variadic args parameter");
+        assert!(
+            code.contains("args: Vec<SExpr"),
+            "Should have variadic args parameter"
+        );
 
         // Check documentation is included
-        assert!(code.contains("/// Current entity"), "Should include documentation");
+        assert!(
+            code.contains("/// Current entity"),
+            "Should include documentation"
+        );
 
         // Verify it's valid Rust syntax (basic check)
         assert!(code.contains("use crate::"), "Should have use statements");

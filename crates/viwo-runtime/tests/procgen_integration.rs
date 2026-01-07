@@ -33,7 +33,9 @@ fn test_procgen_seed() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Test"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap()
     };
 
     // Add a verb that seeds and returns random value
@@ -51,9 +53,13 @@ fn test_procgen_seed() {
     }
 
     // Execute twice with same seed should give same result
-    let result1 = runtime.execute_verb(entity_id, "test_seed", vec![], None).unwrap();
+    let result1 = runtime
+        .execute_verb(entity_id, "test_seed", vec![], None)
+        .unwrap();
     eprintln!("Result 1: {:?}", result1);
-    let result2 = runtime.execute_verb(entity_id, "test_seed", vec![], None).unwrap();
+    let result2 = runtime
+        .execute_verb(entity_id, "test_seed", vec![], None)
+        .unwrap();
     eprintln!("Result 2: {:?}", result2);
 
     // Note: This test is currently expected to fail because the global PRNG state
@@ -74,7 +80,9 @@ fn test_procgen_noise() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Test"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap()
     };
 
     // Add a verb that generates noise
@@ -82,7 +90,10 @@ fn test_procgen_noise() {
         "std.seq",
         vec![
             SExpr::call("procgen.seed", vec![SExpr::number(100)]),
-            SExpr::call("procgen.noise", vec![SExpr::number(1.0), SExpr::number(2.0)]),
+            SExpr::call(
+                "procgen.noise",
+                vec![SExpr::number(1.0), SExpr::number(2.0)],
+            ),
         ],
     );
 
@@ -91,7 +102,9 @@ fn test_procgen_noise() {
         storage.add_verb(entity_id, "test_noise", &verb).unwrap();
     }
 
-    let result = runtime.execute_verb(entity_id, "test_noise", vec![], None).unwrap();
+    let result = runtime
+        .execute_verb(entity_id, "test_noise", vec![], None)
+        .unwrap();
 
     // Noise should return a number
     assert!(result.is_f64() || result.is_i64() || result.is_number());
@@ -117,7 +130,9 @@ fn test_procgen_between() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Test"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap()
     };
 
     // Add a verb that generates random integer
@@ -136,7 +151,9 @@ fn test_procgen_between() {
 
     // Test multiple times to ensure range is respected
     for _ in 0..20 {
-        let result = runtime.execute_verb(entity_id, "test_between", vec![], None).unwrap();
+        let result = runtime
+            .execute_verb(entity_id, "test_between", vec![], None)
+            .unwrap();
         let val = result.as_i64().unwrap();
         assert!(val >= 1 && val <= 10, "Value {} out of range [1,10]", val);
     }
@@ -153,7 +170,9 @@ fn test_procgen_random_range() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Test"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Test"}), None)
+            .unwrap()
     };
 
     // Test procgen.random with two args (min, max)
@@ -167,7 +186,9 @@ fn test_procgen_random_range() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "test_random_range", &verb).unwrap();
+        storage
+            .add_verb(entity_id, "test_random_range", &verb)
+            .unwrap();
     }
 
     // Test multiple times to ensure range is respected

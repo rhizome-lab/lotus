@@ -20,11 +20,15 @@ use viwo_transport_websocket_jsonrpc::{Server, ServerConfig};
 /// Helper to send a JSON-RPC request and get the response
 async fn send_request(
     ws: &mut futures_util::stream::SplitSink<
-        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+        tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
         Message,
     >,
     ws_rx: &mut futures_util::stream::SplitStream<
-        tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>,
+        tokio_tungstenite::WebSocketStream<
+            tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+        >,
     >,
     method: &str,
     params: serde_json::Value,
@@ -165,7 +169,10 @@ async fn test_notes_server_basic_operations() -> Result<(), Box<dyn std::error::
     assert!(response["result"].is_object());
     let new_entity_id = response["result"]["id"].as_i64().unwrap();
     assert!(new_entity_id > 0);
-    println!("✓ Create entity test passed - new entity ID: {}", new_entity_id);
+    println!(
+        "✓ Create entity test passed - new entity ID: {}",
+        new_entity_id
+    );
 
     // Test 5: Verify the created entity persists
     let response = send_request(

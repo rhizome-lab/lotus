@@ -2,7 +2,7 @@
 //!
 //! These opcodes interact with the game world state (entities, verbs, etc).
 
-use super::{compile_value, CompileError};
+use super::{CompileError, compile_value};
 use viwo_ir::SExpr;
 
 /// Compile game world opcodes. Returns None if opcode doesn't match.
@@ -83,7 +83,8 @@ pub fn compile_game(
             let verb = compile_value(&args[1], false)?;
 
             // Remaining args are passed to the verb
-            let call_args: Result<Vec<_>, _> = args[2..].iter().map(|a| compile_value(a, false)).collect();
+            let call_args: Result<Vec<_>, _> =
+                args[2..].iter().map(|a| compile_value(a, false)).collect();
             let args_list = format!("{{ {} }}", call_args?.join(", "));
 
             format!("{}__viwo_call({}, {}, {})", prefix, target, verb, args_list)
@@ -102,7 +103,8 @@ pub fn compile_game(
 
             // Args can be either a list or individual arguments
             let args_list = if let Some(list) = args[1].as_list() {
-                let call_args: Result<Vec<_>, _> = list.iter().map(|a| compile_value(a, false)).collect();
+                let call_args: Result<Vec<_>, _> =
+                    list.iter().map(|a| compile_value(a, false)).collect();
                 format!("{{ {} }}", call_args?.join(", "))
             } else {
                 compile_value(&args[1], false)?
@@ -110,7 +112,10 @@ pub fn compile_game(
 
             let delay = compile_value(&args[2], false)?;
 
-            format!("{}__viwo_schedule({}, {}, {})", prefix, verb, args_list, delay)
+            format!(
+                "{}__viwo_schedule({}, {}, {})",
+                prefix, verb, args_list, delay
+            )
         }
 
         // Mint a new capability
@@ -126,7 +131,10 @@ pub fn compile_game(
             let cap_type = compile_value(&args[1], false)?;
             let params = compile_value(&args[2], false)?;
 
-            format!("{}__viwo_mint({}, {}, {})", prefix, authority, cap_type, params)
+            format!(
+                "{}__viwo_mint({}, {}, {})",
+                prefix, authority, cap_type, params
+            )
         }
 
         // Delegate a capability with additional restrictions
@@ -141,7 +149,10 @@ pub fn compile_game(
             let parent_cap = compile_value(&args[0], false)?;
             let restrictions = compile_value(&args[1], false)?;
 
-            format!("{}__viwo_delegate({}, {})", prefix, parent_cap, restrictions)
+            format!(
+                "{}__viwo_delegate({}, {})",
+                prefix, parent_cap, restrictions
+            )
         }
 
         _ => return Ok(None),
@@ -245,7 +256,11 @@ mod tests {
             "schedule",
             vec![
                 SExpr::string("tick").erase_type(),
-                SExpr::list(vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]).erase_type(),
+                SExpr::list(vec![
+                    SExpr::number(1).erase_type(),
+                    SExpr::number(2).erase_type(),
+                ])
+                .erase_type(),
                 SExpr::number(1000).erase_type(),
             ],
         );

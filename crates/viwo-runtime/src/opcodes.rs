@@ -52,8 +52,7 @@ mod tests {
     fn test_opcode_create() {
         let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
 
-        let entity_id = opcode_create(json!({"name": "Test"}), None, &storage)
-            .unwrap();
+        let entity_id = opcode_create(json!({"name": "Test"}), None, &storage).unwrap();
 
         assert!(entity_id > 0);
 
@@ -73,8 +72,7 @@ mod tests {
                 .unwrap()
         };
 
-        opcode_update(entity_id, json!({"value": 42}), &storage)
-            .unwrap();
+        opcode_update(entity_id, json!({"value": 42}), &storage).unwrap();
 
         let entity = opcode_entity(entity_id, &storage).unwrap().unwrap();
         assert_eq!(entity.props["value"], 42);

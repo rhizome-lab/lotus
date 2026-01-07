@@ -65,12 +65,13 @@ fn test_fs_write_and_read() {
             // Get capability by ID
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("write_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("write_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(file_path_str).erase_type(),
             SExpr::string("Hello, Viwo!").erase_type(),
@@ -79,7 +80,9 @@ fn test_fs_write_and_read() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "write_file", &write_verb).unwrap();
+        storage
+            .add_verb(entity_id, "write_file", &write_verb)
+            .unwrap();
     }
 
     // Execute the write verb
@@ -107,12 +110,13 @@ fn test_fs_write_and_read() {
         vec![
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("read_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(file_path_str).erase_type(),
         ],
@@ -120,7 +124,9 @@ fn test_fs_write_and_read() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "read_file", &read_verb).unwrap();
+        storage
+            .add_verb(entity_id, "read_file", &read_verb)
+            .unwrap();
     }
 
     let result = runtime
@@ -148,7 +154,9 @@ fn test_fs_list() {
 
     let entity_id = {
         let mut storage = runtime.storage().lock().unwrap();
-        let eid = storage.create_entity(json!({"name": "DirLister"}), None).unwrap();
+        let eid = storage
+            .create_entity(json!({"name": "DirLister"}), None)
+            .unwrap();
         let cap_id = storage
             .create_capability(eid, "fs.read", json!({"path": temp_path}))
             .unwrap();
@@ -163,12 +171,13 @@ fn test_fs_list() {
         vec![
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("read_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(temp_path).erase_type(),
         ],
@@ -208,7 +217,9 @@ fn test_fs_stat() {
 
     let entity_id = {
         let mut storage = runtime.storage().lock().unwrap();
-        let eid = storage.create_entity(json!({"name": "FileStat"}), None).unwrap();
+        let eid = storage
+            .create_entity(json!({"name": "FileStat"}), None)
+            .unwrap();
         let cap_id = storage
             .create_capability(eid, "fs.read", json!({"path": temp_path}))
             .unwrap();
@@ -223,12 +234,13 @@ fn test_fs_stat() {
         vec![
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("read_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(file_path.to_str().unwrap()).erase_type(),
         ],
@@ -236,7 +248,9 @@ fn test_fs_stat() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "stat_file", &stat_verb).unwrap();
+        storage
+            .add_verb(entity_id, "stat_file", &stat_verb)
+            .unwrap();
     }
 
     let result = runtime
@@ -269,7 +283,9 @@ fn test_fs_capability_validation() {
 
     let entity_id = {
         let mut storage = runtime.storage().lock().unwrap();
-        let eid = storage.create_entity(json!({"name": "Reader"}), None).unwrap();
+        let eid = storage
+            .create_entity(json!({"name": "Reader"}), None)
+            .unwrap();
         // Capability only grants access to temp_dir, not restricted_dir
         let cap_id = storage
             .create_capability(eid, "fs.read", json!({"path": temp_path}))
@@ -286,12 +302,13 @@ fn test_fs_capability_validation() {
         vec![
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("read_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("read_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(restricted_file.to_str().unwrap()).erase_type(),
         ],
@@ -299,7 +316,9 @@ fn test_fs_capability_validation() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "read_restricted", &read_verb).unwrap();
+        storage
+            .add_verb(entity_id, "read_restricted", &read_verb)
+            .unwrap();
     }
 
     // This should fail because capability doesn't grant access
@@ -323,7 +342,9 @@ fn test_fs_mkdir_and_remove() {
 
     let entity_id = {
         let mut storage = runtime.storage().lock().unwrap();
-        let eid = storage.create_entity(json!({"name": "DirManager"}), None).unwrap();
+        let eid = storage
+            .create_entity(json!({"name": "DirManager"}), None)
+            .unwrap();
         let cap_id = storage
             .create_capability(eid, "fs.write", json!({"path": temp_path}))
             .unwrap();
@@ -339,12 +360,13 @@ fn test_fs_mkdir_and_remove() {
         vec![
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("write_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("write_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(new_dir.to_str().unwrap()).erase_type(),
         ],
@@ -352,7 +374,9 @@ fn test_fs_mkdir_and_remove() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "make_dir", &mkdir_verb).unwrap();
+        storage
+            .add_verb(entity_id, "make_dir", &mkdir_verb)
+            .unwrap();
     }
 
     runtime
@@ -368,12 +392,13 @@ fn test_fs_mkdir_and_remove() {
         vec![
             SExpr::call(
                 "capability",
-                vec![
-                    SExpr::call(
-                        "obj.get",
-                        vec![SExpr::call("std.this", vec![]), SExpr::string("write_cap_id").erase_type()],
-                    ),
-                ],
+                vec![SExpr::call(
+                    "obj.get",
+                    vec![
+                        SExpr::call("std.this", vec![]),
+                        SExpr::string("write_cap_id").erase_type(),
+                    ],
+                )],
             ),
             SExpr::string(new_dir.to_str().unwrap()).erase_type(),
         ],
@@ -381,7 +406,9 @@ fn test_fs_mkdir_and_remove() {
 
     {
         let storage = runtime.storage().lock().unwrap();
-        storage.add_verb(entity_id, "remove_dir", &remove_verb).unwrap();
+        storage
+            .add_verb(entity_id, "remove_dir", &remove_verb)
+            .unwrap();
     }
 
     runtime

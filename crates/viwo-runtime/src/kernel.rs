@@ -98,7 +98,9 @@ mod tests {
         // Create entity and capability
         let entity_id = {
             let storage = storage.lock().unwrap();
-            let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+            let id = storage
+                .create_entity(json!({"name": "Test"}), None)
+                .unwrap();
             storage
                 .create_capability(id, "test.cap", json!({"level": 5}))
                 .unwrap();
@@ -106,9 +108,7 @@ mod tests {
         };
 
         // Get capability
-        let cap = kernel
-            .get_capability(entity_id, "test.cap", None)
-            .unwrap();
+        let cap = kernel.get_capability(entity_id, "test.cap", None).unwrap();
         assert!(cap.is_some());
 
         // Get with matching filter
@@ -131,7 +131,9 @@ mod tests {
 
         let entity_id = {
             let storage = storage.lock().unwrap();
-            let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+            let id = storage
+                .create_entity(json!({"name": "Test"}), None)
+                .unwrap();
             storage
                 .create_capability(id, "admin", json!({"*": true}))
                 .unwrap();
@@ -164,13 +166,17 @@ mod tests {
         kernel.give_capability(&cap_id, entity2_id).unwrap();
 
         // Verify it moved
-        assert!(kernel
-            .get_capability(entity1_id, "test.cap", None)
-            .unwrap()
-            .is_none());
-        assert!(kernel
-            .get_capability(entity2_id, "test.cap", None)
-            .unwrap()
-            .is_some());
+        assert!(
+            kernel
+                .get_capability(entity1_id, "test.cap", None)
+                .unwrap()
+                .is_none()
+        );
+        assert!(
+            kernel
+                .get_capability(entity2_id, "test.cap", None)
+                .unwrap()
+                .is_some()
+        );
     }
 }

@@ -29,7 +29,8 @@ pub fn is_valid_restriction(parent_value: &Value, child_value: &Value, key: &str
             (Value::Bool(false), Value::Bool(false)) => true, // Neither has wildcard
             _ => false, // Child cannot add wildcard if parent lacks it
         }
-    } else if let (Value::Array(parent_arr), Value::Array(child_arr)) = (parent_value, child_value) {
+    } else if let (Value::Array(parent_arr), Value::Array(child_arr)) = (parent_value, child_value)
+    {
         // Arrays: child must be subset of parent
         child_arr.iter().all(|item| parent_arr.contains(item))
     } else if key == "path" {
@@ -65,10 +66,13 @@ pub fn is_valid_restriction(parent_value: &Value, child_value: &Value, key: &str
             (Some(parent_str), Some(child_str)) => child_str.starts_with(parent_str),
             _ => false,
         }
-    } else if let (Value::Number(parent_num), Value::Number(child_num)) = (parent_value, child_value) {
+    } else if let (Value::Number(parent_num), Value::Number(child_num)) =
+        (parent_value, child_value)
+    {
         // Numbers (like target_id): must match exactly
         parent_num == child_num
-    } else if let (Value::Bool(parent_bool), Value::Bool(child_bool)) = (parent_value, child_value) {
+    } else if let (Value::Bool(parent_bool), Value::Bool(child_bool)) = (parent_value, child_value)
+    {
         // Booleans: for restrictive flags, can only make MORE restrictive
         // If parent is restrictive (true), child cannot be less restrictive (false)
         // If parent is permissive (false), child can be either
@@ -143,7 +147,11 @@ mod tests {
 
     #[test]
     fn test_namespace_restriction() {
-        assert!(is_valid_restriction(&json!("*"), &json!("user.123"), "namespace"));
+        assert!(is_valid_restriction(
+            &json!("*"),
+            &json!("user.123"),
+            "namespace"
+        ));
         assert!(is_valid_restriction(
             &json!("user"),
             &json!("user.123"),
@@ -159,8 +167,16 @@ mod tests {
     #[test]
     fn test_boolean_restriction() {
         // Can make more restrictive
-        assert!(is_valid_restriction(&json!(false), &json!(true), "readonly"));
+        assert!(is_valid_restriction(
+            &json!(false),
+            &json!(true),
+            "readonly"
+        ));
         // Cannot make less restrictive
-        assert!(!is_valid_restriction(&json!(true), &json!(false), "readonly"));
+        assert!(!is_valid_restriction(
+            &json!(true),
+            &json!(false),
+            "readonly"
+        ));
     }
 }

@@ -3,7 +3,7 @@
 //! This module is auto-generated from opcodes.toml.
 //! Do not edit manually.
 
-use crate::{SExpr, Any, Str, Num, Bool, Obj, Arr, Null};
+use crate::{Any, Arr, Bool, Null, Num, Obj, SExpr, Str};
 
 // ============================================================================
 // bool library
@@ -18,7 +18,8 @@ pub fn bool_and(args: Vec<SExpr<Arr>>) -> SExpr<Bool> {
     SExpr::call(
         "bool.and",
         args.into_iter().map(|a| a.erase_type()).collect(),
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Logical OR
@@ -30,17 +31,15 @@ pub fn bool_or(args: Vec<SExpr<Arr>>) -> SExpr<Bool> {
     SExpr::call(
         "bool.or",
         args.into_iter().map(|a| a.erase_type()).collect(),
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Logical NOT
 ///
 /// Opcode: `bool.not`
 pub fn bool_not(value: SExpr<Bool>) -> SExpr<Bool> {
-    SExpr::call(
-        "bool.not",
-        vec![value.erase_type()],
-    ).cast_type()
+    SExpr::call("bool.not", vec![value.erase_type()]).cast_type()
 }
 
 // ============================================================================
@@ -58,7 +57,8 @@ pub fn list_new(args: Vec<SExpr<Arr>>) -> SExpr<Arr> {
     SExpr::call(
         "list.new",
         args.into_iter().map(|a| a.erase_type()).collect(),
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Gets an element from a list by index
@@ -67,20 +67,14 @@ pub fn list_new(args: Vec<SExpr<Arr>>) -> SExpr<Arr> {
 ///
 /// Generic parameters: `T`
 pub fn list_get(list: SExpr<Arr>, index: SExpr<Num>) -> SExpr<Any> {
-    SExpr::call(
-        "list.get",
-        vec![list.erase_type(), index.erase_type()],
-    )
+    SExpr::call("list.get", vec![list.erase_type(), index.erase_type()])
 }
 
 /// Returns the length of a list
 ///
 /// Opcode: `list.length`
 pub fn list_length(list: SExpr<Arr>) -> SExpr<Num> {
-    SExpr::call(
-        "list.length",
-        vec![list.erase_type()],
-    ).cast_type()
+    SExpr::call("list.length", vec![list.erase_type()]).cast_type()
 }
 
 // ============================================================================
@@ -94,17 +88,15 @@ pub fn math_add(args: Vec<SExpr<Arr>>) -> SExpr<Num> {
     SExpr::call(
         "math.add",
         args.into_iter().map(|a| a.erase_type()).collect(),
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Subtracts numbers
 ///
 /// Opcode: `math.sub`
 pub fn math_sub(left: SExpr<Num>, right: SExpr<Num>) -> SExpr<Num> {
-    SExpr::call(
-        "math.sub",
-        vec![left.erase_type(), right.erase_type()],
-    ).cast_type()
+    SExpr::call("math.sub", vec![left.erase_type(), right.erase_type()]).cast_type()
 }
 
 /// Multiplies numbers
@@ -114,17 +106,15 @@ pub fn math_mul(args: Vec<SExpr<Arr>>) -> SExpr<Num> {
     SExpr::call(
         "math.mul",
         args.into_iter().map(|a| a.erase_type()).collect(),
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Divides numbers
 ///
 /// Opcode: `math.div`
 pub fn math_div(left: SExpr<Num>, right: SExpr<Num>) -> SExpr<Num> {
-    SExpr::call(
-        "math.div",
-        vec![left.erase_type(), right.erase_type()],
-    ).cast_type()
+    SExpr::call("math.div", vec![left.erase_type(), right.erase_type()]).cast_type()
 }
 
 // ============================================================================
@@ -137,10 +127,7 @@ pub fn math_div(left: SExpr<Num>, right: SExpr<Num>) -> SExpr<Num> {
 ///
 /// Generic parameters: `Type, Key extends keyof Type`
 pub fn obj_get(object: SExpr<Obj>, key: SExpr<Str>) -> SExpr<Any> {
-    SExpr::call(
-        "obj.get",
-        vec![object.erase_type(), key.erase_type()],
-    )
+    SExpr::call("obj.get", vec![object.erase_type(), key.erase_type()])
 }
 
 /// Sets a property value on an object
@@ -152,7 +139,8 @@ pub fn obj_set(object: SExpr<Obj>, key: SExpr<Str>, value: SExpr<Any>) -> SExpr<
     SExpr::call(
         "obj.set",
         vec![object.erase_type(), key.erase_type(), value.erase_type()],
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Returns an array of a given object's own enumerable property names
@@ -161,10 +149,7 @@ pub fn obj_set(object: SExpr<Obj>, key: SExpr<Str>, value: SExpr<Any>) -> SExpr<
 ///
 /// Generic parameters: `Type`
 pub fn obj_keys(object: SExpr<Obj>) -> SExpr<Arr> {
-    SExpr::call(
-        "obj.keys",
-        vec![object.erase_type()],
-    ).cast_type()
+    SExpr::call("obj.keys", vec![object.erase_type()]).cast_type()
 }
 
 /// Returns an array of a given object's own enumerable property values
@@ -173,10 +158,7 @@ pub fn obj_keys(object: SExpr<Obj>) -> SExpr<Arr> {
 ///
 /// Generic parameters: `Type`
 pub fn obj_values(object: SExpr<Obj>) -> SExpr<Arr> {
-    SExpr::call(
-        "obj.values",
-        vec![object.erase_type()],
-    ).cast_type()
+    SExpr::call("obj.values", vec![object.erase_type()]).cast_type()
 }
 
 // ============================================================================
@@ -215,20 +197,14 @@ pub fn std_seq(args: Vec<SExpr<Arr>>) -> SExpr<Any> {
 ///
 /// Note: This opcode is lazy (defers evaluation of arguments)
 pub fn std_let(name: SExpr<Str>, value: SExpr<Any>) -> SExpr<Null> {
-    SExpr::call(
-        "std.let",
-        vec![name.erase_type(), value.erase_type()],
-    ).cast_type()
+    SExpr::call("std.let", vec![name.erase_type(), value.erase_type()]).cast_type()
 }
 
 /// Reads the value of a variable
 ///
 /// Opcode: `std.var`
 pub fn std_var(name: SExpr<Str>) -> SExpr<Any> {
-    SExpr::call(
-        "std.var",
-        vec![name.erase_type()],
-    )
+    SExpr::call("std.var", vec![name.erase_type()])
 }
 
 /// Sets the value of an existing variable
@@ -237,10 +213,7 @@ pub fn std_var(name: SExpr<Str>) -> SExpr<Any> {
 ///
 /// Note: This opcode is lazy (defers evaluation of arguments)
 pub fn std_set(name: SExpr<Str>, value: SExpr<Any>) -> SExpr<Null> {
-    SExpr::call(
-        "std.set",
-        vec![name.erase_type(), value.erase_type()],
-    ).cast_type()
+    SExpr::call("std.set", vec![name.erase_type(), value.erase_type()]).cast_type()
 }
 
 /// Conditional execution
@@ -251,7 +224,11 @@ pub fn std_set(name: SExpr<Str>, value: SExpr<Any>) -> SExpr<Null> {
 pub fn std_if(condition: SExpr<Bool>, then: SExpr<Any>, r#else: SExpr<Any>) -> SExpr<Any> {
     SExpr::call(
         "std.if",
-        vec![condition.erase_type(), then.erase_type(), r#else.erase_type()],
+        vec![
+            condition.erase_type(),
+            then.erase_type(),
+            r#else.erase_type(),
+        ],
     )
 }
 
@@ -266,17 +243,13 @@ pub fn str_concat(args: Vec<SExpr<Arr>>) -> SExpr<Str> {
     SExpr::call(
         "str.concat",
         args.into_iter().map(|a| a.erase_type()).collect(),
-    ).cast_type()
+    )
+    .cast_type()
 }
 
 /// Returns the length of a string
 ///
 /// Opcode: `str.length`
 pub fn str_length(string: SExpr<Str>) -> SExpr<Num> {
-    SExpr::call(
-        "str.length",
-        vec![string.erase_type()],
-    ).cast_type()
+    SExpr::call("str.length", vec![string.erase_type()]).cast_type()
 }
-
-

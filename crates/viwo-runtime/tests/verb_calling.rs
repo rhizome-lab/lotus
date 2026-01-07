@@ -65,7 +65,6 @@ fn test_update_entity_from_verb() {
     // Execute increment
     let result = runtime
         .execute_verb(entity_id, "increment", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_f64().unwrap(), 1.0);
@@ -98,10 +97,7 @@ fn test_call_another_verb() {
         // Add a verb that calls helper
         let caller_verb = SExpr::call(
             "call",
-            vec![
-                SExpr::call("std.this", vec![]),
-                SExpr::string("helper"),
-            ],
+            vec![SExpr::call("std.this", vec![]), SExpr::string("helper")],
         );
         storage.add_verb(id, "caller", &caller_verb).unwrap();
 
@@ -111,7 +107,6 @@ fn test_call_another_verb() {
     // Execute caller - should return helper's result
     let result = runtime
         .execute_verb(entity_id, "caller", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_str().unwrap(), "helper_result");

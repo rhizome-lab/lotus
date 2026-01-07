@@ -81,7 +81,10 @@ impl<'a> TranspileContext<'a> {
             "undefined" => Ok(SExpr::null().erase_type()),
 
             // Expressions
-            "identifier" => Ok(SExpr::call("std.var", vec![SExpr::string(self.node_text(node)).erase_type()])),
+            "identifier" => Ok(SExpr::call(
+                "std.var",
+                vec![SExpr::string(self.node_text(node)).erase_type()],
+            )),
             "binary_expression" => self.transpile_binary_expr(node),
             "unary_expression" => self.transpile_unary_expr(node),
             "parenthesized_expression" => self.transpile_parenthesized(node),
@@ -190,12 +193,11 @@ impl<'a> TranspileContext<'a> {
 
             // String
             // + is handled above, but for explicit string concat we could check types
-
             _ => {
                 return Err(TranspileError::Unsupported(format!(
                     "operator '{}'",
                     op_text
-                )))
+                )));
             }
         };
 
@@ -221,7 +223,7 @@ impl<'a> TranspileContext<'a> {
                 return Err(TranspileError::Unsupported(format!(
                     "unary operator '{}'",
                     op_text
-                )))
+                )));
             }
         };
 
@@ -352,7 +354,16 @@ impl<'a> TranspileContext<'a> {
             let obj_name = self.node_text(object);
             if matches!(
                 obj_name,
-                "std" | "math" | "str" | "list" | "obj" | "bool" | "time" | "json" | "game" | "kernel"
+                "std"
+                    | "math"
+                    | "str"
+                    | "list"
+                    | "obj"
+                    | "bool"
+                    | "time"
+                    | "json"
+                    | "game"
+                    | "kernel"
             ) {
                 return Ok(None);
             }
@@ -420,14 +431,12 @@ impl<'a> TranspileContext<'a> {
         match node.kind() {
             "identifier" => Ok(self.node_text(node).to_string()),
             "member_expression" => {
-                let object = node
-                    .child_by_field_name("object")
-                    .ok_or_else(|| TranspileError::Parse("member_expression missing object".into()))?;
-                let property = node
-                    .child_by_field_name("property")
-                    .ok_or_else(|| {
-                        TranspileError::Parse("member_expression missing property".into())
-                    })?;
+                let object = node.child_by_field_name("object").ok_or_else(|| {
+                    TranspileError::Parse("member_expression missing object".into())
+                })?;
+                let property = node.child_by_field_name("property").ok_or_else(|| {
+                    TranspileError::Parse("member_expression missing property".into())
+                })?;
 
                 let obj_name = self.get_call_name(object)?;
                 let prop_name = self.node_text(property);
@@ -509,22 +518,28 @@ impl<'a> TranspileContext<'a> {
                         return Err(TranspileError::Unsupported(format!(
                             "object key type '{}'",
                             key.kind()
-                        )))
+                        )));
                     }
                 };
 
                 // Generate pair as [key, value]
-                pairs.push(SExpr::list(vec![
-                    SExpr::string(key_str).erase_type(),
-                    self.transpile_node(value)?,
-                ]).erase_type());
+                pairs.push(
+                    SExpr::list(vec![
+                        SExpr::string(key_str).erase_type(),
+                        self.transpile_node(value)?,
+                    ])
+                    .erase_type(),
+                );
             } else if child.kind() == "shorthand_property_identifier" {
                 // { foo } is shorthand for { foo: foo }
                 let name = self.node_text(child);
-                pairs.push(SExpr::list(vec![
-                    SExpr::string(name).erase_type(),
-                    SExpr::call("std.var", vec![SExpr::string(name).erase_type()]),
-                ]).erase_type());
+                pairs.push(
+                    SExpr::list(vec![
+                        SExpr::string(name).erase_type(),
+                        SExpr::call("std.var", vec![SExpr::string(name).erase_type()]),
+                    ])
+                    .erase_type(),
+                );
             }
         }
 

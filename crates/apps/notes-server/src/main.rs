@@ -64,11 +64,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Load and create NotesUser (Notebook instance)
         let notes_user_def = seed_system.load_definition("Notes.ts", "NotesUser", None)?;
-        let notebook_id = seed_system.create_entity(
-            &storage_lock,
-            &notes_user_def,
-            Some(notes_base_id),
-        )?;
+        let notebook_id =
+            seed_system.create_entity(&storage_lock, &notes_user_def, Some(notes_base_id))?;
         tracing::info!("Notebook created with ID: {}", notebook_id);
     }
 

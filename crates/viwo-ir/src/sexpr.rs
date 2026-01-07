@@ -156,7 +156,6 @@ impl SExpr<Any> {
 
 // Methods available on any SExpr type
 impl<T> SExpr<T> {
-
     /// Erases the type information, converting to SExpr<Any>.
     /// This is needed when mixing different types in collections.
     pub fn erase_type(self) -> SExpr<Any> {
@@ -193,7 +192,9 @@ impl<T> SExpr<T> {
     /// Returns the arguments if this is an opcode call.
     pub fn args(&self) -> Option<&[SExpr]> {
         match &self.inner {
-            SExprInner::List(items) if !items.is_empty() && matches!(&items[0].inner, SExprInner::String(_)) => {
+            SExprInner::List(items)
+                if !items.is_empty() && matches!(&items[0].inner, SExprInner::String(_)) =>
+            {
                 Some(&items[1..])
             }
             _ => None,

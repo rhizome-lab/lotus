@@ -96,7 +96,8 @@ fn procgen_between(min: i64, max: i64) -> Result<i64, String> {
 /// Helper: Push error message to Lua stack
 unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
     use mlua::ffi::*;
-    let c_msg = CString::new(msg).unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
+    let c_msg = CString::new(msg)
+        .unwrap_or_else(|_| CString::new("Error message contains null byte").unwrap());
     lua_pushstring(L, c_msg.as_ptr());
     lua_error(L)
 }

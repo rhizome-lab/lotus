@@ -4,7 +4,7 @@
 
 mod codegen;
 
-pub use codegen::{compile, CompileError};
+pub use codegen::{CompileError, compile};
 
 use mlua::{Lua, LuaSerdeExt, Result as LuaResult};
 use thiserror::Error;
@@ -57,8 +57,8 @@ fn setup_json_interop(lua: &Lua) -> Result<(), mlua::Error> {
 
     // json.decode: JSON string -> Lua value
     let decode = lua.create_function(|lua_ctx, s: String| {
-        let json: serde_json::Value = serde_json::from_str(&s)
-            .map_err(|e| mlua::Error::external(e))?;
+        let json: serde_json::Value =
+            serde_json::from_str(&s).map_err(|e| mlua::Error::external(e))?;
         lua_ctx.to_value(&json)
     })?;
     json_mod.set("decode", decode)?;

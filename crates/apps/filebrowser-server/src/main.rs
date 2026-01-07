@@ -66,12 +66,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tracing::info!("Basic world seeded: {:?}", entity_ids);
 
         // Load and create FileBrowserBase
-        let filebrowser_base_def = seed_system.load_definition("FileBrowser.ts", "FileBrowserBase", None)?;
-        let filebrowser_base_id = seed_system.create_entity(&storage_lock, &filebrowser_base_def, None)?;
+        let filebrowser_base_def =
+            seed_system.load_definition("FileBrowser.ts", "FileBrowserBase", None)?;
+        let filebrowser_base_id =
+            seed_system.create_entity(&storage_lock, &filebrowser_base_def, None)?;
         tracing::info!("FileBrowserBase created with ID: {}", filebrowser_base_id);
 
         // Load and create FileBrowserUser (instance with fs_root set)
-        let filebrowser_user_def = seed_system.load_definition("FileBrowser.ts", "FileBrowserUser", None)?;
+        let filebrowser_user_def =
+            seed_system.load_definition("FileBrowser.ts", "FileBrowserUser", None)?;
         let user_id = seed_system.create_entity(
             &storage_lock,
             &filebrowser_user_def,

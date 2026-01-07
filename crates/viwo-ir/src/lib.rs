@@ -17,16 +17,16 @@
 //! ]
 //! ```
 
-mod sexpr;
-mod opcodes;
-mod validation;
-pub mod schema;
-pub mod codegen;
 pub mod builders;
+pub mod codegen;
+mod opcodes;
+pub mod schema;
+mod sexpr;
+mod validation;
 
-pub use sexpr::{SExpr, Any, Str, Num, Bool, Obj, Arr, Null};
 pub use opcodes::CORE_LIBRARIES;
-pub use validation::{validate, ValidationError};
+pub use sexpr::{Any, Arr, Bool, Null, Num, Obj, SExpr, Str};
+pub use validation::{ValidationError, validate};
 
 #[cfg(test)]
 mod tests;

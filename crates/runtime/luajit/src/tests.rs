@@ -13,10 +13,22 @@ use viwo_ir::SExpr;
 #[test]
 fn test_compile_literals() {
     assert_eq!(compile(&SExpr::null().erase_type()).unwrap(), "return null");
-    assert_eq!(compile(&SExpr::bool(true).erase_type()).unwrap(), "return true");
-    assert_eq!(compile(&SExpr::bool(false).erase_type()).unwrap(), "return false");
-    assert_eq!(compile(&SExpr::number(42.0).erase_type()).unwrap(), "return 42");
-    assert_eq!(compile(&SExpr::number(3.14).erase_type()).unwrap(), "return 3.14");
+    assert_eq!(
+        compile(&SExpr::bool(true).erase_type()).unwrap(),
+        "return true"
+    );
+    assert_eq!(
+        compile(&SExpr::bool(false).erase_type()).unwrap(),
+        "return false"
+    );
+    assert_eq!(
+        compile(&SExpr::number(42.0).erase_type()).unwrap(),
+        "return 42"
+    );
+    assert_eq!(
+        compile(&SExpr::number(3.14).erase_type()).unwrap(),
+        "return 3.14"
+    );
     assert_eq!(
         compile(&SExpr::string("hello").erase_type()).unwrap(),
         "return \"hello\""
@@ -37,7 +49,10 @@ fn test_compile_string_escaping() {
 
 #[test]
 fn test_compile_unknown_opcode() {
-    let expr = SExpr::call("custom.opcode", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
+    let expr = SExpr::call(
+        "custom.opcode",
+        vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+    );
     // Unknown opcodes become function calls
     assert_eq!(compile(&expr).unwrap(), "return custom_opcode(1, 2)");
 }
@@ -79,22 +94,40 @@ fn test_execute_literal_null() {
 #[test]
 fn test_execute_arithmetic() {
     // 2 + 3
-    let expr = SExpr::call("+", vec![SExpr::number(2).erase_type(), SExpr::number(3).erase_type()]);
+    let expr = SExpr::call(
+        "+",
+        vec![SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(5));
 
     // 10 - 4
-    let expr = SExpr::call("-", vec![SExpr::number(10).erase_type(), SExpr::number(4).erase_type()]);
+    let expr = SExpr::call(
+        "-",
+        vec![
+            SExpr::number(10).erase_type(),
+            SExpr::number(4).erase_type(),
+        ],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(6));
 
     // 6 * 7
-    let expr = SExpr::call("*", vec![SExpr::number(6).erase_type(), SExpr::number(7).erase_type()]);
+    let expr = SExpr::call(
+        "*",
+        vec![SExpr::number(6).erase_type(), SExpr::number(7).erase_type()],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(42));
 
     // 15 / 3
-    let expr = SExpr::call("/", vec![SExpr::number(15).erase_type(), SExpr::number(3).erase_type()]);
+    let expr = SExpr::call(
+        "/",
+        vec![
+            SExpr::number(15).erase_type(),
+            SExpr::number(3).erase_type(),
+        ],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(5));
 }
@@ -102,22 +135,34 @@ fn test_execute_arithmetic() {
 #[test]
 fn test_execute_comparison() {
     // 1 == 1
-    let expr = SExpr::call("==", vec![SExpr::number(1).erase_type(), SExpr::number(1).erase_type()]);
+    let expr = SExpr::call(
+        "==",
+        vec![SExpr::number(1).erase_type(), SExpr::number(1).erase_type()],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // 1 != 2
-    let expr = SExpr::call("!=", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]);
+    let expr = SExpr::call(
+        "!=",
+        vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // 5 > 3
-    let expr = SExpr::call(">", vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type()]);
+    let expr = SExpr::call(
+        ">",
+        vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type()],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
     // 2 < 2
-    let expr = SExpr::call("<", vec![SExpr::number(2).erase_type(), SExpr::number(2).erase_type()]);
+    let expr = SExpr::call(
+        "<",
+        vec![SExpr::number(2).erase_type(), SExpr::number(2).erase_type()],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(false));
 }
@@ -125,12 +170,24 @@ fn test_execute_comparison() {
 #[test]
 fn test_execute_logical() {
     // true && false
-    let expr = SExpr::call("&&", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]);
+    let expr = SExpr::call(
+        "&&",
+        vec![
+            SExpr::bool(true).erase_type(),
+            SExpr::bool(false).erase_type(),
+        ],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(false));
 
     // true || false
-    let expr = SExpr::call("||", vec![SExpr::bool(true).erase_type(), SExpr::bool(false).erase_type()]);
+    let expr = SExpr::call(
+        "||",
+        vec![
+            SExpr::bool(true).erase_type(),
+            SExpr::bool(false).erase_type(),
+        ],
+    );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!(true));
 
@@ -166,7 +223,11 @@ fn test_execute_if_true() {
     // if true then 1 else 2
     let expr = SExpr::call(
         "std.if",
-        vec![SExpr::bool(true).erase_type(), SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+        vec![
+            SExpr::bool(true).erase_type(),
+            SExpr::number(1).erase_type(),
+            SExpr::number(2).erase_type(),
+        ],
     );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(1));
@@ -177,7 +238,11 @@ fn test_execute_if_false() {
     // if false then 1 else 2
     let expr = SExpr::call(
         "std.if",
-        vec![SExpr::bool(false).erase_type(), SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+        vec![
+            SExpr::bool(false).erase_type(),
+            SExpr::number(1).erase_type(),
+            SExpr::number(2).erase_type(),
+        ],
     );
     let result = execute(&expr).unwrap();
     assert_eq!(result.as_i64(), Some(2));
@@ -189,7 +254,13 @@ fn test_execute_seq_with_let_and_var() {
     let expr = SExpr::call(
         "std.seq",
         vec![
-            SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10).erase_type()]),
+            SExpr::call(
+                "std.let",
+                vec![
+                    SExpr::string("x").erase_type(),
+                    SExpr::number(10).erase_type(),
+                ],
+            ),
             SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
         ],
     );
@@ -203,8 +274,14 @@ fn test_execute_nested_arithmetic() {
     let expr = SExpr::call(
         "*",
         vec![
-            SExpr::call("+", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
-            SExpr::call("+", vec![SExpr::number(3).erase_type(), SExpr::number(4).erase_type()]),
+            SExpr::call(
+                "+",
+                vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+            ),
+            SExpr::call(
+                "+",
+                vec![SExpr::number(3).erase_type(), SExpr::number(4).erase_type()],
+            ),
         ],
     );
     let result = execute(&expr).unwrap();
@@ -215,7 +292,11 @@ fn test_execute_nested_arithmetic() {
 fn test_execute_list_new() {
     let expr = SExpr::call(
         "list.new",
-        vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
+        vec![
+            SExpr::number(1).erase_type(),
+            SExpr::number(2).erase_type(),
+            SExpr::number(3).erase_type(),
+        ],
     );
     let result = execute(&expr).unwrap();
     assert!(result.is_array());
@@ -234,7 +315,11 @@ fn test_execute_list_empty() {
 fn test_execute_list_with_null() {
     let expr = SExpr::call(
         "list.new",
-        vec![SExpr::number(1).erase_type(), SExpr::null().erase_type(), SExpr::number(3).erase_type()],
+        vec![
+            SExpr::number(1).erase_type(),
+            SExpr::null().erase_type(),
+            SExpr::number(3).erase_type(),
+        ],
     );
     let result = execute(&expr).unwrap();
     let arr = result.as_array().unwrap();
@@ -262,8 +347,20 @@ fn test_execute_complex_expression() {
     let expr = SExpr::call(
         "std.seq",
         vec![
-            SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(5).erase_type()]),
-            SExpr::call("std.let", vec![SExpr::string("y").erase_type(), SExpr::number(10).erase_type()]),
+            SExpr::call(
+                "std.let",
+                vec![
+                    SExpr::string("x").erase_type(),
+                    SExpr::number(5).erase_type(),
+                ],
+            ),
+            SExpr::call(
+                "std.let",
+                vec![
+                    SExpr::string("y").erase_type(),
+                    SExpr::number(10).erase_type(),
+                ],
+            ),
             SExpr::call(
                 "std.if",
                 vec![
@@ -341,13 +438,21 @@ fn test_execute_math_sqrt() {
 fn test_execute_math_min_max() {
     let expr = SExpr::call(
         "math.min",
-        vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type(), SExpr::number(8).erase_type()],
+        vec![
+            SExpr::number(5).erase_type(),
+            SExpr::number(3).erase_type(),
+            SExpr::number(8).erase_type(),
+        ],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
 
     let expr = SExpr::call(
         "math.max",
-        vec![SExpr::number(5).erase_type(), SExpr::number(3).erase_type(), SExpr::number(8).erase_type()],
+        vec![
+            SExpr::number(5).erase_type(),
+            SExpr::number(3).erase_type(),
+            SExpr::number(8).erase_type(),
+        ],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(8));
 }
@@ -393,7 +498,11 @@ fn test_execute_list_len() {
         "list.len",
         vec![SExpr::call(
             "list.new",
-            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
+            vec![
+                SExpr::number(1).erase_type(),
+                SExpr::number(2).erase_type(),
+                SExpr::number(3).erase_type(),
+            ],
         )],
     );
     assert_eq!(execute(&expr).unwrap().as_i64(), Some(3));
@@ -406,7 +515,11 @@ fn test_execute_list_get() {
         vec![
             SExpr::call(
                 "list.new",
-                vec![SExpr::number(10).erase_type(), SExpr::number(20).erase_type(), SExpr::number(30).erase_type()],
+                vec![
+                    SExpr::number(10).erase_type(),
+                    SExpr::number(20).erase_type(),
+                    SExpr::number(30).erase_type(),
+                ],
             ),
             SExpr::number(1).erase_type(),
         ],
@@ -423,7 +536,10 @@ fn test_execute_list_push() {
                 "std.let",
                 vec![
                     SExpr::string("arr").erase_type(),
-                    SExpr::call("list.new", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
+                    SExpr::call(
+                        "list.new",
+                        vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+                    ),
                 ],
             ),
             SExpr::call(
@@ -435,7 +551,10 @@ fn test_execute_list_push() {
             ),
             SExpr::call(
                 "list.len",
-                vec![SExpr::call("std.var", vec![SExpr::string("arr").erase_type()])],
+                vec![SExpr::call(
+                    "std.var",
+                    vec![SExpr::string("arr").erase_type()],
+                )],
             ),
         ],
     );
@@ -454,8 +573,16 @@ fn test_execute_obj_get() {
             SExpr::call(
                 "obj.new",
                 vec![
-                    SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(42).erase_type()]).erase_type(),
-                    SExpr::list(vec![SExpr::string("y").erase_type(), SExpr::number(10).erase_type()]).erase_type(),
+                    SExpr::list(vec![
+                        SExpr::string("x").erase_type(),
+                        SExpr::number(42).erase_type(),
+                    ])
+                    .erase_type(),
+                    SExpr::list(vec![
+                        SExpr::string("y").erase_type(),
+                        SExpr::number(10).erase_type(),
+                    ])
+                    .erase_type(),
                 ],
             ),
             SExpr::string("x").erase_type(),
@@ -471,8 +598,16 @@ fn test_execute_obj_keys() {
         vec![SExpr::call(
             "obj.new",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type(),
-                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]).erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("a").erase_type(),
+                    SExpr::number(1).erase_type(),
+                ])
+                .erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("b").erase_type(),
+                    SExpr::number(2).erase_type(),
+                ])
+                .erase_type(),
             ],
         )],
     );
@@ -488,8 +623,16 @@ fn test_execute_obj_values() {
         vec![SExpr::call(
             "obj.new",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type(),
-                SExpr::list(vec![SExpr::string("b").erase_type(), SExpr::number(2).erase_type()]).erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("a").erase_type(),
+                    SExpr::number(1).erase_type(),
+                ])
+                .erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("b").erase_type(),
+                    SExpr::number(2).erase_type(),
+                ])
+                .erase_type(),
             ],
         )],
     );
@@ -503,7 +646,10 @@ fn test_execute_obj_values() {
 fn test_execute_typeof_array() {
     let expr = SExpr::call(
         "std.typeof",
-        vec![SExpr::call("list.new", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()])],
+        vec![SExpr::call(
+            "list.new",
+            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+        )],
     );
     let result = execute(&expr).unwrap();
     assert_eq!(result, json!("array"));
@@ -543,7 +689,8 @@ fn test_ffi_null_pointer() {
 
     // Try to load FFI and test null pointer comparison
     // Note: FFI might not be available in all mlua builds
-    let result = runtime.execute_lua(r#"
+    let result = runtime.execute_lua(
+        r#"
         local ok, ffi = pcall(require, "ffi")
         if not ok then
             return "ffi_not_available"
@@ -556,7 +703,8 @@ fn test_ffi_null_pointer() {
             is_nil = null_ptr == nil,
             is_falsy = not null_ptr
         }
-    "#);
+    "#,
+    );
 
     match result {
         Ok(v) => {
@@ -565,11 +713,23 @@ fn test_ffi_null_pointer() {
                 return;
             }
             let obj = v.as_object().expect("expected object");
-            assert_eq!(obj.get("type_of_null").unwrap(), "cdata", "FFI null should be cdata");
+            assert_eq!(
+                obj.get("type_of_null").unwrap(),
+                "cdata",
+                "FFI null should be cdata"
+            );
             // In LuaJIT, NULL pointer == nil is true
-            assert_eq!(obj.get("is_nil").unwrap(), true, "FFI NULL should equal nil");
+            assert_eq!(
+                obj.get("is_nil").unwrap(),
+                true,
+                "FFI NULL should equal nil"
+            );
             // NULL is falsy
-            assert_eq!(obj.get("is_falsy").unwrap(), true, "FFI NULL should be falsy");
+            assert_eq!(
+                obj.get("is_falsy").unwrap(),
+                true,
+                "FFI NULL should be falsy"
+            );
         }
         Err(_) => {
             // FFI not available in this build, that's okay
@@ -584,7 +744,13 @@ fn test_execute_obj_has() {
         vec![
             SExpr::call(
                 "obj.new",
-                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()]).erase_type()],
+                vec![
+                    SExpr::list(vec![
+                        SExpr::string("x").erase_type(),
+                        SExpr::number(1).erase_type(),
+                    ])
+                    .erase_type(),
+                ],
             ),
             SExpr::string("x").erase_type(),
         ],
@@ -596,7 +762,13 @@ fn test_execute_obj_has() {
         vec![
             SExpr::call(
                 "obj.new",
-                vec![SExpr::list(vec![SExpr::string("x").erase_type(), SExpr::number(1).erase_type()]).erase_type()],
+                vec![
+                    SExpr::list(vec![
+                        SExpr::string("x").erase_type(),
+                        SExpr::number(1).erase_type(),
+                    ])
+                    .erase_type(),
+                ],
             ),
             SExpr::string("y").erase_type(),
         ],

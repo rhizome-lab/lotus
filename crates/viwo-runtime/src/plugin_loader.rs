@@ -62,23 +62,34 @@ impl PluginRegistry {
     }
 
     /// Get a function symbol from a loaded plugin
-    pub unsafe fn get_symbol<T>(&self, plugin_name: &str, symbol_name: &[u8]) -> Result<Symbol<'_, T>, String> {
-        let plugin = self.get_plugin(plugin_name)
+    pub unsafe fn get_symbol<T>(
+        &self,
+        plugin_name: &str,
+        symbol_name: &[u8],
+    ) -> Result<Symbol<'_, T>, String> {
+        let plugin = self
+            .get_plugin(plugin_name)
             .ok_or_else(|| format!("Plugin {} not loaded", plugin_name))?;
 
         unsafe {
-            plugin._lib.get(symbol_name)
-                .map_err(|e| format!("Symbol {:?} not found in plugin {}: {}",
+            plugin._lib.get(symbol_name).map_err(|e| {
+                format!(
+                    "Symbol {:?} not found in plugin {}: {}",
                     std::str::from_utf8(symbol_name).unwrap_or("???"),
                     plugin_name,
                     e
-                ))
+                )
+            })
         }
     }
 
     /// Get a raw function pointer from a loaded plugin
     /// The pointer is valid as long as the plugin remains loaded
-    pub unsafe fn get_function_ptr<T: Copy>(&self, plugin_name: &str, symbol_name: &[u8]) -> Result<T, String> {
+    pub unsafe fn get_function_ptr<T: Copy>(
+        &self,
+        plugin_name: &str,
+        symbol_name: &[u8],
+    ) -> Result<T, String> {
         unsafe {
             let symbol: Symbol<T> = self.get_symbol(plugin_name, symbol_name)?;
             Ok(*symbol) // Deref to get raw function pointer
@@ -91,7 +102,10 @@ impl Drop for PluginRegistry {
         // Call plugin_cleanup for each plugin
         for plugin in &self.plugins {
             unsafe {
-                if let Ok(cleanup_fn) = plugin._lib.get::<Symbol<extern "C" fn()>>(b"plugin_cleanup") {
+                if let Ok(cleanup_fn) = plugin
+                    ._lib
+                    .get::<Symbol<extern "C" fn()>>(b"plugin_cleanup")
+                {
                     cleanup_fn();
                 }
             }

@@ -30,7 +30,6 @@ fn test_execute_simple_verb() {
     // Execute the verb
     let result = runtime
         .execute_verb(entity_id, "test", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result, json!(42));
@@ -43,7 +42,9 @@ fn test_execute_verb_with_math() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Math"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Math"}), None)
+            .unwrap()
     };
 
     // Add a verb that does 1 + 2
@@ -56,7 +57,6 @@ fn test_execute_verb_with_math() {
 
     let result = runtime
         .execute_verb(entity_id, "add", vec![], None)
-        
         .unwrap();
 
     assert_eq!(result.as_f64().unwrap(), 3.0);
@@ -69,7 +69,9 @@ fn test_execute_verb_with_args() {
 
     let entity_id = {
         let storage = runtime.storage().lock().unwrap();
-        storage.create_entity(json!({"name": "Args"}), None).unwrap()
+        storage
+            .create_entity(json!({"name": "Args"}), None)
+            .unwrap()
     };
 
     // Verb that returns arg 0
@@ -82,7 +84,6 @@ fn test_execute_verb_with_args() {
 
     let result = runtime
         .execute_verb(entity_id, "echo", vec![json!("hello")], None)
-        
         .unwrap();
 
     assert_eq!(result, json!("hello"));

@@ -30,7 +30,10 @@ impl ViwoRuntime {
     }
 
     /// Create a new runtime with a custom scheduler interval.
-    pub fn open_with_interval(db_path: &str, interval_ms: u64) -> Result<Self, viwo_core::StorageError> {
+    pub fn open_with_interval(
+        db_path: &str,
+        interval_ms: u64,
+    ) -> Result<Self, viwo_core::StorageError> {
         // Initialize plugin registry
         plugin_registry::init_registry();
 
@@ -40,10 +43,18 @@ impl ViwoRuntime {
 
         let storage = Arc::new(Mutex::new(storage));
         let scheduler_storage = Arc::new(TokioMutex::new(scheduler_storage));
-        let scheduler = Arc::new(viwo_core::Scheduler::new(scheduler_storage.clone(), interval_ms));
+        let scheduler = Arc::new(viwo_core::Scheduler::new(
+            scheduler_storage.clone(),
+            interval_ms,
+        ));
         let plugins = Arc::new(Mutex::new(plugin_loader::PluginRegistry::new()));
 
-        Ok(Self { storage, scheduler_storage, scheduler, plugins })
+        Ok(Self {
+            storage,
+            scheduler_storage,
+            scheduler,
+            plugins,
+        })
     }
 
     /// Create a new runtime with the given storage (legacy API).
@@ -54,14 +65,20 @@ impl ViwoRuntime {
 
         // This is a workaround - we can't open a second connection without the path
         // So we just use in-memory for the scheduler storage
-        let scheduler_storage = WorldStorage::in_memory().expect("Failed to create in-memory storage");
+        let scheduler_storage =
+            WorldStorage::in_memory().expect("Failed to create in-memory storage");
 
         let storage = Arc::new(Mutex::new(storage));
         let scheduler_storage = Arc::new(TokioMutex::new(scheduler_storage));
         let scheduler = Arc::new(viwo_core::Scheduler::new(scheduler_storage.clone(), 100));
         let plugins = Arc::new(Mutex::new(plugin_loader::PluginRegistry::new()));
 
-        Self { storage, scheduler_storage, scheduler, plugins }
+        Self {
+            storage,
+            scheduler_storage,
+            scheduler,
+            plugins,
+        }
     }
 
     /// Load a plugin from a dynamic library

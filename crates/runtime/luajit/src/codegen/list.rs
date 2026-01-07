@@ -1,6 +1,6 @@
 //! list.* opcode compilation.
 
-use super::{compile_value, CompileError};
+use super::{CompileError, compile_value};
 use viwo_ir::SExpr;
 
 /// Compile list.* opcodes. Returns None if opcode doesn't match.
@@ -286,7 +286,10 @@ pub fn compile_list(
             }
             let list = compile_value(&args[0], false)?;
             // table.sort mutates in place, return the array
-            format!("{}(function(arr) table.sort(arr); return arr end)({})", prefix, list)
+            format!(
+                "{}(function(arr) table.sort(arr); return arr end)({})",
+                prefix, list
+            )
         }
 
         "list.join" => {
@@ -314,16 +317,21 @@ pub fn compile_list(
             let list = compile_value(&args[0], false)?;
             let start = compile_value(&args[1], false)?;
             let delete_count = compile_value(&args[2], false)?;
-            let items: Result<Vec<_>, _> = args[3..]
-                .iter()
-                .map(|a| compile_value(a, false))
-                .collect();
+            let items: Result<Vec<_>, _> =
+                args[3..].iter().map(|a| compile_value(a, false)).collect();
             let items_str = items?.join(", ");
             // Returns removed elements, modifies array in place
             format!(
                 "{}(function(arr, s, d, ...) local r = {{}}; local items = {{...}}; s = s + 1; for i = 1, d do if arr[s] then r[#r+1] = table.remove(arr, s) end end; for i = #items, 1, -1 do table.insert(arr, s, items[i]) end; return setmetatable(r, __array_mt) end)({}, {}, {}{})",
-                prefix, list, start, delete_count,
-                if items_str.is_empty() { String::new() } else { format!(", {}", items_str) }
+                prefix,
+                list,
+                start,
+                delete_count,
+                if items_str.is_empty() {
+                    String::new()
+                } else {
+                    format!(", {}", items_str)
+                }
             )
         }
 
@@ -358,7 +366,11 @@ mod tests {
     fn test_new() {
         let expr = SExpr::call(
             "list.new",
-            vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type(), SExpr::number(3).erase_type()],
+            vec![
+                SExpr::number(1).erase_type(),
+                SExpr::number(2).erase_type(),
+                SExpr::number(3).erase_type(),
+            ],
         );
         assert_eq!(
             compile(&expr).unwrap(),
@@ -380,7 +392,13 @@ mod tests {
         let expr = SExpr::call(
             "list.get",
             vec![
-                SExpr::call("list.new", vec![SExpr::number(10).erase_type(), SExpr::number(20).erase_type()]),
+                SExpr::call(
+                    "list.new",
+                    vec![
+                        SExpr::number(10).erase_type(),
+                        SExpr::number(20).erase_type(),
+                    ],
+                ),
                 SExpr::number(0).erase_type(),
             ],
         );

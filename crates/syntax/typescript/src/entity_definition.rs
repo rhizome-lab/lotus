@@ -102,7 +102,10 @@ impl<'a> EntityDefContext<'a> {
         node.utf8_text(self.source.as_bytes()).unwrap_or("")
     }
 
-    fn extract_entity_definition(&self, class_node: Node) -> Result<EntityDefinition, TranspileError> {
+    fn extract_entity_definition(
+        &self,
+        class_node: Node,
+    ) -> Result<EntityDefinition, TranspileError> {
         let mut props = HashMap::new();
         let mut verbs = HashMap::new();
 
@@ -273,12 +276,12 @@ export class SimpleEntity {
 
         let def = parse_entity_definition(source, "SimpleEntity", None).unwrap();
 
-        assert_eq!(def.props.get("name"), Some(&Value::String("Test Entity".to_string())));
-        // serde_json Number uses f64 internally, so 42 becomes 42.0
         assert_eq!(
-            def.props.get("count").and_then(|v| v.as_f64()),
-            Some(42.0)
+            def.props.get("name"),
+            Some(&Value::String("Test Entity".to_string()))
         );
+        // serde_json Number uses f64 internally, so 42 becomes 42.0
+        assert_eq!(def.props.get("count").and_then(|v| v.as_f64()), Some(42.0));
         assert_eq!(def.props.get("active"), Some(&Value::Bool(true)));
         assert!(def.verbs.contains_key("greet"));
     }
@@ -310,6 +313,11 @@ export class SomeClass {
 
         let result = parse_entity_definition(source, "NonExistent", None);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("class 'NonExistent' not found"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("class 'NonExistent' not found")
+        );
     }
 }

@@ -5,15 +5,12 @@ use std::ffi::CString;
 use std::os::raw::{c_char, c_int};
 
 /// Type for plugin functions - standard Lua C function signature
-type PluginLuaFunction = unsafe extern "C" fn(
-    lua_state: *mut mlua::ffi::lua_State,
-) -> std::os::raw::c_int;
+type PluginLuaFunction =
+    unsafe extern "C" fn(lua_state: *mut mlua::ffi::lua_State) -> std::os::raw::c_int;
 
 /// Type for the registration callback passed from the runtime
-type RegisterFunction = unsafe extern "C" fn(
-    name: *const c_char,
-    func: PluginLuaFunction,
-) -> std::os::raw::c_int;
+type RegisterFunction =
+    unsafe extern "C" fn(name: *const c_char, func: PluginLuaFunction) -> std::os::raw::c_int;
 
 /// Plugin initialization - register all net functions
 #[unsafe(no_mangle)]
@@ -63,12 +60,14 @@ unsafe fn lua_value_to_json(
                 return Err("Failed to get string".to_string());
             }
             let slice = std::slice::from_raw_parts(ptr as *const u8, len);
-            let s = std::str::from_utf8(slice)
-                .map_err(|_| "Invalid UTF-8 in string")?;
+            let s = std::str::from_utf8(slice).map_err(|_| "Invalid UTF-8 in string")?;
             Ok(serde_json::Value::String(s.to_string()))
         }
         LUA_TTABLE => lua_table_to_json(L, index),
-        _ => Err(format!("Unsupported Lua type {} for JSON conversion", lua_type)),
+        _ => Err(format!(
+            "Unsupported Lua type {} for JSON conversion",
+            lua_type
+        )),
     }
 }
 
@@ -117,7 +116,10 @@ unsafe fn lua_push_error(L: *mut mlua::ffi::lua_State, msg: &str) -> c_int {
 }
 
 /// Push a JSON value to the Lua stack
-unsafe fn json_to_lua(L: *mut mlua::ffi::lua_State, value: &serde_json::Value) -> Result<(), String> {
+unsafe fn json_to_lua(
+    L: *mut mlua::ffi::lua_State,
+    value: &serde_json::Value,
+) -> Result<(), String> {
     use mlua::ffi::*;
 
     match value {
@@ -206,9 +208,7 @@ unsafe extern "C" fn net_get_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     // Execute async HTTP request
     let result = tokio::runtime::Runtime::new()
         .map_err(|e| format!("Failed to create tokio runtime: {}", e))
-        .and_then(|rt| {
-            rt.block_on(net_get(&cap_json, this_id, url, headers))
-        });
+        .and_then(|rt| rt.block_on(net_get(&cap_json, this_id, url, headers)));
 
     match result {
         Ok(response) => {
@@ -227,7 +227,10 @@ unsafe extern "C" fn net_post_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
     let nargs = lua_gettop(L);
     if nargs != 4 {
-        return lua_push_error(L, "net.post requires 4 arguments (capability, url, headers, body)");
+        return lua_push_error(
+            L,
+            "net.post requires 4 arguments (capability, url, headers, body)",
+        );
     }
 
     // Get capability (table)
@@ -281,9 +284,7 @@ unsafe extern "C" fn net_post_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     // Execute async HTTP request
     let result = tokio::runtime::Runtime::new()
         .map_err(|e| format!("Failed to create tokio runtime: {}", e))
-        .and_then(|rt| {
-            rt.block_on(net_post(&cap_json, this_id, url, headers, body))
-        });
+        .and_then(|rt| rt.block_on(net_post(&cap_json, this_id, url, headers, body)));
 
     match result {
         Ok(response) => {

@@ -8,7 +8,9 @@ use viwo_ir::SExpr;
 fn test_create_and_get_entity() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Test Entity"}), None).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test Entity"}), None)
+        .unwrap();
     assert!(id > 0);
 
     let entity = storage.get_entity(id).unwrap().unwrap();
@@ -29,8 +31,12 @@ fn test_entity_not_found() {
 fn test_update_entity() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Original"}), None).unwrap();
-    storage.update_entity(id, json!({"description": "Added description"})).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Original"}), None)
+        .unwrap();
+    storage
+        .update_entity(id, json!({"description": "Added description"}))
+        .unwrap();
 
     let entity = storage.get_entity(id).unwrap().unwrap();
     assert_eq!(entity.name(), Some("Original"));
@@ -41,7 +47,9 @@ fn test_update_entity() {
 fn test_delete_entity() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "To Delete"}), None).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "To Delete"}), None)
+        .unwrap();
     storage.delete_entity(id).unwrap();
 
     let entity = storage.get_entity(id).unwrap();
@@ -53,23 +61,33 @@ fn test_prototype_chain() {
     let storage = WorldStorage::in_memory().unwrap();
 
     // Create a prototype
-    let proto_id = storage.create_entity(
-        json!({"name": "Prototype", "inherited_prop": "from_proto"}),
-        None
-    ).unwrap();
+    let proto_id = storage
+        .create_entity(
+            json!({"name": "Prototype", "inherited_prop": "from_proto"}),
+            None,
+        )
+        .unwrap();
 
     // Create an instance
-    let instance_id = storage.create_entity(
-        json!({"name": "Instance", "own_prop": "from_instance"}),
-        Some(proto_id)
-    ).unwrap();
+    let instance_id = storage
+        .create_entity(
+            json!({"name": "Instance", "own_prop": "from_instance"}),
+            Some(proto_id),
+        )
+        .unwrap();
 
     let instance = storage.get_entity(instance_id).unwrap().unwrap();
 
     // Should have both own and inherited props
     assert_eq!(instance.name(), Some("Instance")); // Overrides proto
-    assert_eq!(instance.get_prop("own_prop").and_then(|v| v.as_str()), Some("from_instance"));
-    assert_eq!(instance.get_prop("inherited_prop").and_then(|v| v.as_str()), Some("from_proto"));
+    assert_eq!(
+        instance.get_prop("own_prop").and_then(|v| v.as_str()),
+        Some("from_instance")
+    );
+    assert_eq!(
+        instance.get_prop("inherited_prop").and_then(|v| v.as_str()),
+        Some("from_proto")
+    );
 }
 
 #[test]
@@ -77,24 +95,41 @@ fn test_deep_prototype_chain() {
     let storage = WorldStorage::in_memory().unwrap();
 
     // Create chain: root -> mid -> leaf
-    let root_id = storage.create_entity(json!({"level": "root", "root_only": true}), None).unwrap();
-    let mid_id = storage.create_entity(json!({"level": "mid", "mid_only": true}), Some(root_id)).unwrap();
-    let leaf_id = storage.create_entity(json!({"level": "leaf"}), Some(mid_id)).unwrap();
+    let root_id = storage
+        .create_entity(json!({"level": "root", "root_only": true}), None)
+        .unwrap();
+    let mid_id = storage
+        .create_entity(json!({"level": "mid", "mid_only": true}), Some(root_id))
+        .unwrap();
+    let leaf_id = storage
+        .create_entity(json!({"level": "leaf"}), Some(mid_id))
+        .unwrap();
 
     let leaf = storage.get_entity(leaf_id).unwrap().unwrap();
 
     // Leaf overrides level
-    assert_eq!(leaf.get_prop("level").and_then(|v| v.as_str()), Some("leaf"));
+    assert_eq!(
+        leaf.get_prop("level").and_then(|v| v.as_str()),
+        Some("leaf")
+    );
     // But inherits from ancestors
-    assert_eq!(leaf.get_prop("mid_only").and_then(|v| v.as_bool()), Some(true));
-    assert_eq!(leaf.get_prop("root_only").and_then(|v| v.as_bool()), Some(true));
+    assert_eq!(
+        leaf.get_prop("mid_only").and_then(|v| v.as_bool()),
+        Some(true)
+    );
+    assert_eq!(
+        leaf.get_prop("root_only").and_then(|v| v.as_bool()),
+        Some(true)
+    );
 }
 
 #[test]
 fn test_add_and_get_verb() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test"}), None)
+        .unwrap();
     let code = SExpr::call("std.return", vec![SExpr::number(42).erase_type()]);
 
     storage.add_verb(id, "test_verb", &code).unwrap();
@@ -109,7 +144,9 @@ fn test_add_and_get_verb() {
 fn test_verb_not_found() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test"}), None)
+        .unwrap();
 
     let verb = storage.get_verb(id, "nonexistent").unwrap();
     assert!(verb.is_none());
@@ -119,11 +156,17 @@ fn test_verb_not_found() {
 fn test_verb_inheritance() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let proto_id = storage.create_entity(json!({"name": "Proto"}), None).unwrap();
-    let instance_id = storage.create_entity(json!({"name": "Instance"}), Some(proto_id)).unwrap();
+    let proto_id = storage
+        .create_entity(json!({"name": "Proto"}), None)
+        .unwrap();
+    let instance_id = storage
+        .create_entity(json!({"name": "Instance"}), Some(proto_id))
+        .unwrap();
 
     let proto_code = SExpr::call("std.return", vec![SExpr::string("proto").erase_type()]);
-    storage.add_verb(proto_id, "inherited", &proto_code).unwrap();
+    storage
+        .add_verb(proto_id, "inherited", &proto_code)
+        .unwrap();
 
     // Instance should inherit verb from prototype
     let verb = storage.get_verb(instance_id, "inherited").unwrap().unwrap();
@@ -135,14 +178,20 @@ fn test_verb_inheritance() {
 fn test_verb_override() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let proto_id = storage.create_entity(json!({"name": "Proto"}), None).unwrap();
-    let instance_id = storage.create_entity(json!({"name": "Instance"}), Some(proto_id)).unwrap();
+    let proto_id = storage
+        .create_entity(json!({"name": "Proto"}), None)
+        .unwrap();
+    let instance_id = storage
+        .create_entity(json!({"name": "Instance"}), Some(proto_id))
+        .unwrap();
 
     let proto_code = SExpr::call("std.return", vec![SExpr::string("proto").erase_type()]);
     let instance_code = SExpr::call("std.return", vec![SExpr::string("instance").erase_type()]);
 
     storage.add_verb(proto_id, "method", &proto_code).unwrap();
-    storage.add_verb(instance_id, "method", &instance_code).unwrap();
+    storage
+        .add_verb(instance_id, "method", &instance_code)
+        .unwrap();
 
     // Instance should use its own version
     let verb = storage.get_verb(instance_id, "method").unwrap().unwrap();
@@ -158,13 +207,25 @@ fn test_verb_override() {
 fn test_get_all_verbs() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let proto_id = storage.create_entity(json!({"name": "Proto"}), None).unwrap();
-    let instance_id = storage.create_entity(json!({"name": "Instance"}), Some(proto_id)).unwrap();
+    let proto_id = storage
+        .create_entity(json!({"name": "Proto"}), None)
+        .unwrap();
+    let instance_id = storage
+        .create_entity(json!({"name": "Instance"}), Some(proto_id))
+        .unwrap();
 
-    storage.add_verb(proto_id, "proto_only", &SExpr::number(1).erase_type()).unwrap();
-    storage.add_verb(proto_id, "overridden", &SExpr::number(2).erase_type()).unwrap();
-    storage.add_verb(instance_id, "overridden", &SExpr::number(3).erase_type()).unwrap();
-    storage.add_verb(instance_id, "instance_only", &SExpr::number(4).erase_type()).unwrap();
+    storage
+        .add_verb(proto_id, "proto_only", &SExpr::number(1).erase_type())
+        .unwrap();
+    storage
+        .add_verb(proto_id, "overridden", &SExpr::number(2).erase_type())
+        .unwrap();
+    storage
+        .add_verb(instance_id, "overridden", &SExpr::number(3).erase_type())
+        .unwrap();
+    storage
+        .add_verb(instance_id, "instance_only", &SExpr::number(4).erase_type())
+        .unwrap();
 
     let verbs = storage.get_verbs(instance_id).unwrap();
     assert_eq!(verbs.len(), 3);
@@ -183,11 +244,17 @@ fn test_get_all_verbs() {
 fn test_update_verb() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    storage.add_verb(id, "verb", &SExpr::number(1).erase_type()).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test"}), None)
+        .unwrap();
+    storage
+        .add_verb(id, "verb", &SExpr::number(1).erase_type())
+        .unwrap();
 
     let verb = storage.get_verb(id, "verb").unwrap().unwrap();
-    storage.update_verb(verb.id, &SExpr::number(2).erase_type()).unwrap();
+    storage
+        .update_verb(verb.id, &SExpr::number(2).erase_type())
+        .unwrap();
 
     let updated = storage.get_verb(id, "verb").unwrap().unwrap();
     assert_eq!(updated.code, SExpr::number(2).erase_type());
@@ -197,8 +264,12 @@ fn test_update_verb() {
 fn test_delete_verb() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    storage.add_verb(id, "verb", &SExpr::number(1).erase_type()).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test"}), None)
+        .unwrap();
+    storage
+        .add_verb(id, "verb", &SExpr::number(1).erase_type())
+        .unwrap();
 
     let verb = storage.get_verb(id, "verb").unwrap().unwrap();
     storage.delete_verb(verb.id).unwrap();
@@ -211,8 +282,12 @@ fn test_delete_verb() {
 fn test_set_prototype() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let proto_id = storage.create_entity(json!({"inherited": true}), None).unwrap();
-    let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
+    let proto_id = storage
+        .create_entity(json!({"inherited": true}), None)
+        .unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test"}), None)
+        .unwrap();
 
     // Initially no prototype
     let entity = storage.get_entity(id).unwrap().unwrap();
@@ -224,16 +299,25 @@ fn test_set_prototype() {
 
     let entity = storage.get_entity(id).unwrap().unwrap();
     assert_eq!(entity.prototype_id, Some(proto_id));
-    assert_eq!(entity.get_prop("inherited").and_then(|v| v.as_bool()), Some(true));
+    assert_eq!(
+        entity.get_prop("inherited").and_then(|v| v.as_bool()),
+        Some(true)
+    );
 }
 
 #[test]
 fn test_delete_entity_cascades_verbs() {
     let storage = WorldStorage::in_memory().unwrap();
 
-    let id = storage.create_entity(json!({"name": "Test"}), None).unwrap();
-    storage.add_verb(id, "verb1", &SExpr::number(1).erase_type()).unwrap();
-    storage.add_verb(id, "verb2", &SExpr::number(2).erase_type()).unwrap();
+    let id = storage
+        .create_entity(json!({"name": "Test"}), None)
+        .unwrap();
+    storage
+        .add_verb(id, "verb1", &SExpr::number(1).erase_type())
+        .unwrap();
+    storage
+        .add_verb(id, "verb2", &SExpr::number(2).erase_type())
+        .unwrap();
 
     storage.delete_entity(id).unwrap();
 

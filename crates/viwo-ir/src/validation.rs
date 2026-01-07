@@ -88,25 +88,37 @@ mod tests {
 
     #[test]
     fn test_validate_opcode_call() {
-        let expr = SExpr::call("std.let", vec![
-            SExpr::string("x").erase_type(),
-            SExpr::number(10).erase_type(),
-        ]);
+        let expr = SExpr::call(
+            "std.let",
+            vec![
+                SExpr::string("x").erase_type(),
+                SExpr::number(10).erase_type(),
+            ],
+        );
         assert!(validate(&expr).is_ok());
     }
 
     #[test]
     fn test_validate_nested() {
-        let expr = SExpr::call("std.seq", vec![
-            SExpr::call("std.let", vec![
-                SExpr::string("x").erase_type(),
-                SExpr::number(10).erase_type(),
-            ]),
-            SExpr::call("math.add", vec![
-                SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
-                SExpr::number(5).erase_type(),
-            ]),
-        ]);
+        let expr = SExpr::call(
+            "std.seq",
+            vec![
+                SExpr::call(
+                    "std.let",
+                    vec![
+                        SExpr::string("x").erase_type(),
+                        SExpr::number(10).erase_type(),
+                    ],
+                ),
+                SExpr::call(
+                    "math.add",
+                    vec![
+                        SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
+                        SExpr::number(5).erase_type(),
+                    ],
+                ),
+            ],
+        );
         assert!(validate(&expr).is_ok());
     }
 }

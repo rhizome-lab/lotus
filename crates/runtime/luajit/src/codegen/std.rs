@@ -1,8 +1,6 @@
 //! std.* opcode compilation.
 
-use super::{
-    compile_value, is_statement_opcode, sexpr_to_lua_table, to_lua_name, CompileError,
-};
+use super::{CompileError, compile_value, is_statement_opcode, sexpr_to_lua_table, to_lua_name};
 use viwo_ir::SExpr;
 
 /// Compile std.* opcodes. Returns None if opcode doesn't match.
@@ -90,9 +88,9 @@ pub fn compile_std(
                     got: args.len(),
                 });
             }
-            let var_name = args[0]
-                .as_str()
-                .ok_or_else(|| CompileError::InvalidArgument("for variable must be string".into()))?;
+            let var_name = args[0].as_str().ok_or_else(|| {
+                CompileError::InvalidArgument("for variable must be string".into())
+            })?;
             let iter = compile_value(&args[1], false)?;
             let body = compile_value(&args[2], false)?;
             // Include ::continue_label:: for std.continue support (goto)
@@ -112,9 +110,9 @@ pub fn compile_std(
                     got: args.len(),
                 });
             }
-            let var_name = args[0]
-                .as_str()
-                .ok_or_else(|| CompileError::InvalidArgument("let variable must be string".into()))?;
+            let var_name = args[0].as_str().ok_or_else(|| {
+                CompileError::InvalidArgument("let variable must be string".into())
+            })?;
             let value = compile_value(&args[1], false)?;
             format!("local {} = {}", to_lua_name(var_name), value)
         }
@@ -127,9 +125,9 @@ pub fn compile_std(
                     got: args.len(),
                 });
             }
-            let var_name = args[0]
-                .as_str()
-                .ok_or_else(|| CompileError::InvalidArgument("set variable must be string".into()))?;
+            let var_name = args[0].as_str().ok_or_else(|| {
+                CompileError::InvalidArgument("set variable must be string".into())
+            })?;
             let value = compile_value(&args[1], false)?;
             format!("{} = {}", to_lua_name(var_name), value)
         }
@@ -219,10 +217,8 @@ pub fn compile_std(
                 });
             }
             let func = compile_value(&args[0], false)?;
-            let call_args: Result<Vec<_>, _> = args[1..]
-                .iter()
-                .map(|a| compile_value(a, false))
-                .collect();
+            let call_args: Result<Vec<_>, _> =
+                args[1..].iter().map(|a| compile_value(a, false)).collect();
             format!("{}({})({})", prefix, func, call_args?.join(", "))
         }
 
@@ -234,9 +230,9 @@ pub fn compile_std(
                     got: args.len(),
                 });
             }
-            let params = args[0]
-                .as_list()
-                .ok_or_else(|| CompileError::InvalidArgument("lambda params must be list".into()))?;
+            let params = args[0].as_list().ok_or_else(|| {
+                CompileError::InvalidArgument("lambda params must be list".into())
+            })?;
             let param_names: Result<Vec<_>, _> = params
                 .iter()
                 .map(|p| {
@@ -345,16 +341,17 @@ pub fn compile_std(
 
         "std.log" => {
             // Log to stdout (like console.log in JS)
-            let values: Result<Vec<_>, _> =
-                args.iter().map(|a| compile_value(a, false)).collect();
+            let values: Result<Vec<_>, _> = args.iter().map(|a| compile_value(a, false)).collect();
             format!("print({})", values?.join(", "))
         }
 
         "std.warn" => {
             // Log to stderr (like console.warn in JS)
-            let values: Result<Vec<_>, _> =
-                args.iter().map(|a| compile_value(a, false)).collect();
-            format!("io.stderr:write({} .. \"\\n\")", values?.join(" .. \" \" .. "))
+            let values: Result<Vec<_>, _> = args.iter().map(|a| compile_value(a, false)).collect();
+            format!(
+                "io.stderr:write({} .. \"\\n\")",
+                values?.join(" .. \" \" .. ")
+            )
         }
 
         "std.try" => {
@@ -398,7 +395,13 @@ mod tests {
 
     #[test]
     fn test_let() {
-        let expr = SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10).erase_type()]);
+        let expr = SExpr::call(
+            "std.let",
+            vec![
+                SExpr::string("x").erase_type(),
+                SExpr::number(10).erase_type(),
+            ],
+        );
         assert_eq!(compile(&expr).unwrap(), "local x = 10");
     }
 
@@ -413,7 +416,13 @@ mod tests {
         let expr = SExpr::call(
             "std.seq",
             vec![
-                SExpr::call("std.let", vec![SExpr::string("x").erase_type(), SExpr::number(10).erase_type()]),
+                SExpr::call(
+                    "std.let",
+                    vec![
+                        SExpr::string("x").erase_type(),
+                        SExpr::number(10).erase_type(),
+                    ],
+                ),
                 SExpr::call("std.var", vec![SExpr::string("x").erase_type()]),
             ],
         );
@@ -426,7 +435,11 @@ mod tests {
     fn test_if() {
         let expr = SExpr::call(
             "std.if",
-            vec![SExpr::bool(true).erase_type(), SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+            vec![
+                SExpr::bool(true).erase_type(),
+                SExpr::number(1).erase_type(),
+                SExpr::number(2).erase_type(),
+            ],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("if true then"));
@@ -440,7 +453,10 @@ mod tests {
     fn test_while() {
         let expr = SExpr::call(
             "std.while",
-            vec![SExpr::bool(true).erase_type(), SExpr::call("std.break", vec![])],
+            vec![
+                SExpr::bool(true).erase_type(),
+                SExpr::call("std.break", vec![]),
+            ],
         );
         let code = compile(&expr).unwrap();
         assert!(code.contains("while true do"));
@@ -454,7 +470,10 @@ mod tests {
             "std.for",
             vec![
                 SExpr::string("item").erase_type(),
-                SExpr::call("list.new", vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()]),
+                SExpr::call(
+                    "list.new",
+                    vec![SExpr::number(1).erase_type(), SExpr::number(2).erase_type()],
+                ),
                 SExpr::call("std.var", vec![SExpr::string("item").erase_type()]),
             ],
         );
@@ -468,7 +487,11 @@ mod tests {
         let expr = SExpr::call(
             "std.lambda",
             vec![
-                SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::string("b").erase_type()]).erase_type(),
+                SExpr::list(vec![
+                    SExpr::string("a").erase_type(),
+                    SExpr::string("b").erase_type(),
+                ])
+                .erase_type(),
                 SExpr::call(
                     "+",
                     vec![
@@ -485,10 +508,22 @@ mod tests {
 
     #[test]
     fn test_keyword_escaping() {
-        let expr = SExpr::call("std.let", vec![SExpr::string("end").erase_type(), SExpr::number(1).erase_type()]);
+        let expr = SExpr::call(
+            "std.let",
+            vec![
+                SExpr::string("end").erase_type(),
+                SExpr::number(1).erase_type(),
+            ],
+        );
         assert_eq!(compile(&expr).unwrap(), "local _end = 1");
 
-        let expr = SExpr::call("std.let", vec![SExpr::string("local").erase_type(), SExpr::number(2).erase_type()]);
+        let expr = SExpr::call(
+            "std.let",
+            vec![
+                SExpr::string("local").erase_type(),
+                SExpr::number(2).erase_type(),
+            ],
+        );
         assert_eq!(compile(&expr).unwrap(), "local _local = 2");
     }
 

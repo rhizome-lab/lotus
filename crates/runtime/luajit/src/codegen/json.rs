@@ -1,6 +1,6 @@
 //! json.* opcode compilation.
 
-use super::{compile_value, CompileError};
+use super::{CompileError, compile_value};
 use viwo_ir::SExpr;
 
 /// Compile json.* opcodes. Returns None if opcode doesn't match.
@@ -51,7 +51,13 @@ mod tests {
             "json.stringify",
             vec![SExpr::call(
                 "obj.new",
-                vec![SExpr::list(vec![SExpr::string("a").erase_type(), SExpr::number(1).erase_type()]).erase_type()],
+                vec![
+                    SExpr::list(vec![
+                        SExpr::string("a").erase_type(),
+                        SExpr::number(1).erase_type(),
+                    ])
+                    .erase_type(),
+                ],
             )],
         );
         let code = compile(&expr).unwrap();

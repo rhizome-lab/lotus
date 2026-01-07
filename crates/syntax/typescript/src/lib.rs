@@ -3,11 +3,11 @@
 //! Uses tree-sitter for parsing TypeScript, then transforms
 //! the CST into Viwo S-expressions.
 
-mod transpiler;
 pub mod entity_definition;
+mod transpiler;
 
-pub use transpiler::{transpile, TranspileError};
-pub use entity_definition::{parse_entity_definition, EntityDefinition};
+pub use entity_definition::{EntityDefinition, parse_entity_definition};
+pub use transpiler::{TranspileError, transpile};
 
 #[cfg(test)]
 mod tests;

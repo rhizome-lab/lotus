@@ -76,7 +76,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Serve { host, port, db, plugins } => {
+        Commands::Serve {
+            host,
+            port,
+            db,
+            plugins,
+        } => {
             info!("Starting Viwo server");
 
             if let Some(ref plugin_dir) = plugins {
