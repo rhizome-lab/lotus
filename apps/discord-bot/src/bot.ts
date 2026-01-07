@@ -6,6 +6,7 @@ import {
   GatewayIntentBits,
   type TextChannel,
 } from "discord.js";
+import { discordAdapter, parseGameMessage } from "@bloom/shared/adapters";
 import { CONFIG } from "./config";
 import { db } from "./instances";
 import { sessionManager } from "./session";
@@ -173,81 +174,23 @@ class DiscordBot {
     }
   }
 
-  private async handleCoreMessage(entityId: number, data: any) {
+  private async handleCoreMessage(entityId: number, data: unknown) {
     // Find all active sessions for this entity
     const sessions = db.getSessionsForEntity(entityId);
+
+    // Parse into typed GameMessage
+    const msg = parseGameMessage(data);
 
     await Promise.all(
       sessions.map((session) => async () => {
         try {
           const channel = await this.client.channels.fetch(session.channel_id);
           if (channel && channel.isTextBased()) {
-            // Format message based on type
-            if (data.type === "message") {
-              // Simple text message
-              await (channel as TextChannel).send(data.text);
-            } else if (data.type === "room") {
-              // Room info as embed
-              const embed = new EmbedBuilder()
-                .setColor(0x2ecc71)
-                .setTitle(data.name || "Unknown Room")
-                .setDescription(data.description || "");
-
-              // Add exits
-              const exits = data.exits?.map((exit: any) => exit.name).filter(Boolean) || [];
-              if (exits.length > 0) {
-                embed.addFields({
-                  name: "🚪 Exits",
-                  value: exits.join(", "),
-                  inline: true,
-                });
-              }
-
-              // Add contents
-              const contents = data.contents?.map((item: any) => item.name).filter(Boolean) || [];
-              if (contents.length > 0) {
-                embed.addFields({
-                  name: "📦 Contents",
-                  value: contents.join(", "),
-                  inline: true,
-                });
-              }
-
-              await (channel as TextChannel).send({ embeds: [embed] });
-            } else if (data.type === "inventory") {
-              // Inventory as embed
-              const items = data.items?.map((item: any) => item.name).filter(Boolean) || [];
-              const embed = new EmbedBuilder()
-                .setColor(0xe67e22)
-                .setTitle("🎒 Inventory")
-                .setDescription(items.length > 0 ? items.join("\n") : "*Empty*");
-
-              await (channel as TextChannel).send({ embeds: [embed] });
-            } else if (data.type === "item") {
-              // Item inspection as embed
-              const embed = new EmbedBuilder()
-                .setColor(0x9b59b6)
-                .setTitle(data.name || "Unknown Item")
-                .setDescription(data.description || "");
-
-              if (data.contents && data.contents.length > 0) {
-                const contents = data.contents.map((item: any) => item.name).filter(Boolean);
-                embed.addFields({
-                  name: "Contains",
-                  value: contents.join(", "),
-                  inline: false,
-                });
-              }
-
-              await (channel as TextChannel).send({ embeds: [embed] });
-            } else if (data.type === "error") {
-              // Error message as embed
-              const embed = new EmbedBuilder()
-                .setColor(0xe74c3c)
-                .setTitle("Error")
-                .setDescription(data.text || "An error occurred");
-
-              await (channel as TextChannel).send({ embeds: [embed] });
+            if (msg) {
+              // Use adapter to format the message
+              const output = discordAdapter.format(msg);
+              // Type assertion needed: discord.js uses exactOptionalPropertyTypes differently
+              await (channel as TextChannel).send(output as Parameters<TextChannel["send"]>[0]);
             } else {
               // Unknown type - show as JSON code block
               const content = `\`\`\`json\n${JSON.stringify(data, undefined, 2)}\n\`\`\``;

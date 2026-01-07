@@ -12,7 +12,8 @@
   "dependencies": {
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
-    "@bloom/client": "workspace:*"
+    "@bloom/client": "workspace:*",
+    "@bloom/shared": "workspace:*"
   },
   "devDependencies": {
     "@typescript/native-preview": "latest",

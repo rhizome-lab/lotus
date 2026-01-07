@@ -5,6 +5,9 @@
   "exports": {
     "./constants/adjectives": "./src/constants/adjectives.ts",
     "./jsonrpc": "./src/jsonrpc.ts",
+    "./messages": "./src/messages.ts",
+    "./adapters": "./src/adapters/index.ts",
+    "./adapters/discord": "./src/adapters/discord.ts",
     "./index.css": "./src/index.css"
   },
   "scripts": {
