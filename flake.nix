@@ -37,6 +37,9 @@
               clang
               # SQLite (for rusqlite)
               sqlite
+              # OpenSSL (for reqwest/net plugin)
+              openssl
+              pkg-config
             ];
             LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}:$LD_LIBRARY_PATH";
           };
@@ -60,6 +63,9 @@
               mold
               clang
               sqlite
+              # OpenSSL (for reqwest/net plugin)
+              openssl
+              pkg-config
               # Python for diffusers server
               python313
               uv
