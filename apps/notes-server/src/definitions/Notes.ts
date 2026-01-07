@@ -1,14 +1,6 @@
-// Entity definitions for Notes app
-// These are parsed by bloom-syntax-typescript, not executed as TypeScript
-
-import { EntityBase } from "./EntityBase";
-
-interface NoteRevision {
-  id: string;
-  title: string;
-  content: string;
-  modified: number;
-}
+// oxlint-disable-next-line no-unassigned-import
+import "@viwo/core/generated_types";
+import { EntityBase } from "@viwo/core/seeds/definitions/EntityBase";
 
 interface Note {
   id: string;
@@ -19,7 +11,6 @@ interface Note {
   tags: string[];
   aliases: string[];
   links: string[]; // Outgoing wikilinks (titles), extracted by client via mdast
-  revisions?: NoteRevision[]; // Revision history (most recent first)
 }
 
 interface NotesUserProps {
@@ -58,18 +49,6 @@ interface BacklinksList {
   type: "backlinks";
   noteId: string;
   backlinks: Array<{ id: string; title: string; context: string }>;
-}
-
-interface RevisionsList {
-  type: "revisions_list";
-  noteId: string;
-  revisions: NoteRevision[];
-}
-
-interface RevisionRestored {
-  type: "revision_restored";
-  note: Note;
-  revisionId: string;
 }
 
 /**
@@ -208,7 +187,6 @@ export class NotesUser extends NotesBase {
 
   /**
    * Update an existing note.
-   * Saves previous version to revision history.
    * @param links - Outgoing wikilink titles, extracted by client via mdast
    */
   update_note(noteId: string, content: string, title?: string, links?: string[]) {
@@ -226,27 +204,6 @@ export class NotesUser extends NotesBase {
     const note = obj.get(notesMap, noteId) as Note;
     const now = time.to_timestamp(time.now());
 
-    // Save current version to revision history (if content or title changed)
-    const contentChanged = note.content !== content;
-    const titleChanged = title !== undefined && title !== null && note.title !== title;
-
-    let revisions = note.revisions ?? [];
-    if (contentChanged || titleChanged) {
-      // Create revision from current state
-      const revision: NoteRevision = {
-        content: note.content,
-        id: str.concat(String(note.modified), "_rev"),
-        modified: note.modified,
-        title: note.title,
-      };
-      // Add to front of revisions list (most recent first)
-      revisions = [revision, ...revisions] as NoteRevision[];
-      // Keep max 50 revisions
-      if (list.length(revisions) > 50) {
-        revisions = list.slice(revisions, 0, 50) as NoteRevision[];
-      }
-    }
-
     const updatedNote: Note = {
       aliases: note.aliases,
       content: content,
@@ -254,7 +211,6 @@ export class NotesUser extends NotesBase {
       id: note.id,
       links: links ?? note.links ?? [],
       modified: now,
-      revisions: revisions,
       tags: note.tags,
       title: title ?? note.title,
     };
@@ -336,104 +292,6 @@ export class NotesUser extends NotesBase {
       backlinks: backlinks,
       noteId: noteId,
       type: "backlinks",
-    };
-
-    return result;
-  }
-
-  /**
-   * Get revision history for a note.
-   */
-  get_revisions(noteId: string) {
-    if (!noteId) {
-      std.throw_("Usage: get_revisions <noteId>");
-    }
-
-    const user = std.caller() as NotesUserProps;
-    const notesMap = user.notes ?? {};
-
-    if (!obj.has(notesMap, noteId)) {
-      std.throw_(str.concat("Note not found: ", noteId));
-    }
-
-    const note = obj.get(notesMap, noteId) as Note;
-    const revisions = note.revisions ?? [];
-
-    const result: RevisionsList = {
-      noteId: noteId,
-      revisions: revisions,
-      type: "revisions_list",
-    };
-
-    return result;
-  }
-
-  /**
-   * Restore a note to a previous revision.
-   * The current version is saved to revision history before restoring.
-   */
-  restore_revision(noteId: string, revisionId: string) {
-    if (!noteId || !revisionId) {
-      std.throw_("Usage: restore_revision <noteId> <revisionId>");
-    }
-
-    const user = std.caller() as NotesUserProps;
-    const notesMap = user.notes ?? {};
-
-    if (!obj.has(notesMap, noteId)) {
-      std.throw_(str.concat("Note not found: ", noteId));
-    }
-
-    const note = obj.get(notesMap, noteId) as Note;
-    const revisions = note.revisions ?? [];
-
-    // Find the revision
-    const revision = list.find(revisions, (rev: NoteRevision) => rev.id === revisionId) as NoteRevision | null;
-
-    if (!revision) {
-      std.throw_(str.concat("Revision not found: ", revisionId));
-    }
-
-    const now = time.to_timestamp(time.now());
-
-    // Save current state as a new revision
-    const currentRevision: NoteRevision = {
-      content: note.content,
-      id: str.concat(String(note.modified), "_rev"),
-      modified: note.modified,
-      title: note.title,
-    };
-
-    // Add current to revisions (keep the restored one in history too)
-    let newRevisions = [currentRevision, ...revisions] as NoteRevision[];
-    if (list.length(newRevisions) > 50) {
-      newRevisions = list.slice(newRevisions, 0, 50) as NoteRevision[];
-    }
-
-    // Restore the note to the revision state
-    const restoredNote: Note = {
-      aliases: note.aliases,
-      content: revision.content,
-      created: note.created,
-      id: note.id,
-      links: note.links ?? [],
-      modified: now,
-      revisions: newRevisions,
-      tags: note.tags,
-      title: revision.title,
-    };
-
-    obj.set(notesMap, noteId, restoredNote);
-
-    const controlCap = get_capability("entity.control", { target_id: std.caller().id });
-    if (controlCap) {
-      controlCap.update(std.caller(), { notes: notesMap });
-    }
-
-    const result: RevisionRestored = {
-      note: restoredNote,
-      revisionId: revisionId,
-      type: "revision_restored",
     };
 
     return result;
