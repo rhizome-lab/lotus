@@ -33,7 +33,9 @@ pub fn compile_std(
                         code.push_str(&result);
                     }
                 }
-                code.push('\n');
+                // Add semicolon to prevent Lua parsing ambiguity when a statement
+                // ends with ) and the next starts with ( - Lua may parse as function call
+                code.push_str(";\n");
             }
             code
         }

@@ -73,9 +73,10 @@ pub fn compile_str(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Stri
             }
             let str_arg = compile_value(&args[0], false)?;
             let sep = compile_value(&args[1], false)?;
-            // Lua doesn't have built-in split, need helper function
+            // Lua split that preserves empty strings (like JavaScript)
+            // "/home/user".split("/") => ["", "home", "user"]
             format!(
-                "{}(function(s, sep) local t = {{}}; for m in string.gmatch(s, \"([^\"..sep..\"]+)\") do t[#t+1] = m end; return setmetatable(t, __array_mt) end)({}, {})",
+                "{}(function(s, sep) local t = {{}}; local pos = 1; local sep_len = #sep; if sep_len == 0 then for i = 1, #s do t[#t+1] = string.sub(s, i, i) end; return setmetatable(t, __array_mt) end; while true do local found = string.find(s, sep, pos, true); if found then t[#t+1] = string.sub(s, pos, found - 1); pos = found + sep_len else t[#t+1] = string.sub(s, pos); break end end; return setmetatable(t, __array_mt) end)({}, {})",
                 prefix, str_arg, sep
             )
         }

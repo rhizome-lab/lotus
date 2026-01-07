@@ -70,10 +70,10 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 
 1. ~~**Server**: Full verb discovery via System.get_available_verbs~~ ✅ (execute handler now searches player, room, contents, inventory)
 2. ~~**Notes App**: Integration tests for notes-specific verbs, backlinks, search~~ ✅ (4 tests passing: basic ops, verb ops, backlinks, search)
-3. ~~**FileBrowser App**: Integration tests for navigation, file reading, bookmarks~~ (1/4 tests passing: bookmark ops)
+3. ~~**FileBrowser App**: Integration tests for navigation, file reading, bookmarks~~ ✅ (3/4 tests passing - 4th needs fs plugin)
 4. ~~**Transpiler**: Make dictionary/object access safer~~ ✅ (obj.get and list.get now support optional default value argument)
 5. ~~**viwo-ir**: Extract remaining opcode definitions from TypeScript to schema~~ ✅ (all stdlib opcodes: std, math, list, obj, str, bool, json, game)
-6. **Codegen**: Fix `str.split` to preserve empty strings between separators
+6. ~~**Codegen**: Fix `str.split` to preserve empty strings between separators~~ ✅
 
 ---
 
@@ -117,16 +117,17 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
   - [x] Bootstrap: load fs plugin → seed world → start WebSocket server ✅
   - [x] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`) ✅
   - [x] Implement fs plugin ABI with native Lua C API ✅
-  - [x] Test: bookmarks (1/4 tests passing - bookmark ops work) ✅
-  - [ ] Test: navigation, metadata (remaining tests need str.split fix)
+  - [x] Test: bookmarks, navigation, metadata (3/4 tests passing - needs fs plugin for 4th) ✅
 
 **Integration Test Notes:**
 - Core runtime tests pass (18 tests: object_creation + adversarial)
 - Notes-server integration tests pass (4 tests: basic ops, verbs, backlinks, search)
+- Filebrowser-server tests pass (3/4 - 4th needs fs plugin built)
 - Fixed: `bool.guard` semantics, `obj.new` supports flat pairs format
 - Fixed: `entity()` opcode returns flattened props (matches TypeScript behavior)
 - Fixed: `std.if` generates IIFE when used as expression (Lua if is statement)
-- Known issue: `str.split` doesn't preserve empty strings (breaks path manipulation)
+- Fixed: `str.split` preserves empty strings (like JavaScript)
+- Fixed: `std.seq` adds semicolons to prevent Lua parsing ambiguity
 
 ## 1. Deep Simulation (Sandbox)
 
