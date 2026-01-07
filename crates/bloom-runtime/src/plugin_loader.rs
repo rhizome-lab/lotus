@@ -37,10 +37,11 @@ impl PluginRegistry {
                 func: crate::plugin_registry::PluginLuaFunction,
             ) -> c_int;
 
-            // Call plugin_init with the registration callback
+            // Call bloom_{name}_plugin_init with the registration callback
+            let init_symbol = format!("bloom_{}_plugin_init", name);
             let init_fn: Symbol<extern "C" fn(RegisterFunction) -> c_int> = lib
-                .get(b"plugin_init")
-                .map_err(|e| format!("Plugin {} missing plugin_init: {}", name, e))?;
+                .get(init_symbol.as_bytes())
+                .map_err(|e| format!("Plugin {} missing {}: {}", name, init_symbol, e))?;
 
             let result = init_fn(crate::plugin_registry::register_plugin_function);
             if result != 0 {
