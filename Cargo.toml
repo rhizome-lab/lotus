@@ -17,6 +17,7 @@ members = [
     "crates/plugins/ai",
     "crates/plugins/vector",
     "crates/plugins/memory",
+    "crates/plugins/diffusers",
     "crates/apps/notes-server",
     "crates/apps/filebrowser-server",
     "xtask",
@@ -43,7 +44,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Database
-rusqlite = { version = "0.32", features = ["bundled"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
 
 # Lua runtime
 mlua = { version = "0.10", features = ["luajit52", "vendored", "serialize"] }

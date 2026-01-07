@@ -1,0 +1,70 @@
+# Diffusers plugin opcodes
+# Stable Diffusion image generation using burn-models.
+
+[[opcode]]
+name = "diffusers.load"
+category = "diffusers"
+description = "Loads a Stable Diffusion model into memory"
+label = "Load Model"
+return_type_ts = "boolean"
+return_type_runtime = "Bool"
+
+[[opcode.params]]
+name = "name"
+type_ts = "string"
+type_runtime = "String"
+description = "Unique name for this model instance"
+
+[[opcode.params]]
+name = "model_type"
+type_ts = "'sd1x' | 'sdxl'"
+type_runtime = "String"
+description = "Model architecture (sd1x for SD 1.x, sdxl for SDXL)"
+
+[[opcode.params]]
+name = "weights_path"
+type_ts = "string"
+type_runtime = "String"
+description = "Path to model weights (safetensors file or directory)"
+
+[[opcode]]
+name = "diffusers.unload"
+category = "diffusers"
+description = "Unloads a model from memory"
+label = "Unload Model"
+return_type_ts = "boolean"
+return_type_runtime = "Bool"
+
+[[opcode.params]]
+name = "name"
+type_ts = "string"
+type_runtime = "String"
+description = "Name of model to unload"
+
+[[opcode]]
+name = "diffusers.generate"
+category = "diffusers"
+description = "Generates an image from a text prompt"
+label = "Generate Image"
+return_type_ts = "Uint8Array"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "model_name"
+type_ts = "string"
+type_runtime = "String"
+description = "Name of loaded model to use"
+
+[[opcode.params]]
+name = "config"
+type_ts = "{ prompt: string, negative_prompt?: string, width?: number, height?: number, steps?: number, guidance_scale?: number, seed?: number, output_path?: string }"
+type_runtime = "Object"
+description = "Generation configuration"
+
+[[opcode]]
+name = "diffusers.list"
+category = "diffusers"
+description = "Lists all loaded models"
+label = "List Models"
+return_type_ts = "string[]"
+return_type_runtime = "Array"
