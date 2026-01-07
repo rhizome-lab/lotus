@@ -64,7 +64,7 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 - [x] **viwo-ir**: Prevent invalid SExpr construction at compile time (e.g., `SExpr::<Num>::bool(true)`) ✅
 - [x] **viwo-ir**: Add `cast_type()` and `erase_type()` for type conversion ✅
 - [x] **viwo-ir**: Rust keyword escaping in generated code (else → r#else) ✅
-- [ ] **viwo-ir**: Extract remaining opcode definitions from TypeScript to schema
+- [x] **viwo-ir**: Extract remaining opcode definitions from TypeScript to schema ✅
 
 ## Next Up
 
@@ -72,10 +72,7 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 2. ~~**Notes App**: Integration tests for notes-specific verbs, backlinks, search~~ ✅ (3 tests: verb ops, backlinks, search)
 3. ~~**FileBrowser App**: Integration tests for navigation, file reading, bookmarks~~ ✅ (3 tests: bookmarks, navigation, metadata)
 4. ~~**Transpiler**: Make dictionary/object access safer~~ ✅ (obj.get and list.get now support optional default value argument)
-5. **viwo-ir**: Extract remaining opcode definitions from TypeScript to schema
-   - ~100+ opcodes in codegen need schema definitions
-   - Libraries: std, math, list, obj, str, bool, json, fs, net, sqlite, ai, memory, vector, procgen, game
-   - Each needs: name, category, description, params, return types (TS + runtime)
+5. ~~**viwo-ir**: Extract remaining opcode definitions from TypeScript to schema~~ ✅ (all stdlib opcodes: std, math, list, obj, str, bool, json, game)
 
 ---
 
