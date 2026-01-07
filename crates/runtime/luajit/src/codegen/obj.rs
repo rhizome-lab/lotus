@@ -16,8 +16,18 @@ pub fn compile_obj(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Stri
             }
             let obj = compile_value(&args[0], false)?;
             let key = compile_value(&args[1], false)?;
-            // Wrap obj in parens for inline table literals: ({...})["key"]
-            format!("{}({})[{}]", prefix, obj, key)
+            // Support optional third argument as default value
+            if args.len() >= 3 {
+                let default = compile_value(&args[2], false)?;
+                // Use Lua's `or` to provide default when key is missing (nil)
+                format!(
+                    "{}(({})[{}] ~= nil and ({})[{}] or {})",
+                    prefix, obj, key, obj, key, default
+                )
+            } else {
+                // Wrap obj in parens for inline table literals: ({...})["key"]
+                format!("{}({})[{}]", prefix, obj, key)
+            }
         }
 
         "obj.set" => {
@@ -248,6 +258,23 @@ mod tests {
             ],
         );
         assert_eq!(compile(&expr).unwrap(), "return (o)[\"key\"]");
+    }
+
+    #[test]
+    fn test_get_with_default() {
+        let expr = SExpr::call(
+            "obj.get",
+            vec![
+                SExpr::call("std.var", vec![SExpr::string("o").erase_type()]),
+                SExpr::string("key").erase_type(),
+                SExpr::string("default").erase_type(),
+            ],
+        );
+        // Should use nil check with default value
+        assert_eq!(
+            compile(&expr).unwrap(),
+            "return ((o)[\"key\"] ~= nil and (o)[\"key\"] or \"default\")"
+        );
     }
 
     #[test]

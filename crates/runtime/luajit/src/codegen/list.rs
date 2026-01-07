@@ -47,8 +47,19 @@ pub fn compile_list(
             }
             let list = compile_value(&args[0], false)?;
             let index = compile_value(&args[1], false)?;
-            // Lua is 1-indexed, so add 1 to the index
-            format!("{}{}[{} + 1]", prefix, list, index)
+            // Support optional third argument as default value
+            if args.len() >= 3 {
+                let default = compile_value(&args[2], false)?;
+                // Lua is 1-indexed, so add 1 to the index
+                // Use `~= nil and ... or default` pattern for safe default
+                format!(
+                    "{}({}[{} + 1] ~= nil and {}[{} + 1] or {})",
+                    prefix, list, index, list, index, default
+                )
+            } else {
+                // Lua is 1-indexed, so add 1 to the index
+                format!("{}{}[{} + 1]", prefix, list, index)
+            }
         }
 
         "list.set" => {
@@ -404,6 +415,22 @@ mod tests {
         );
         // Lua is 1-indexed, so we add 1
         assert!(compile(&expr).unwrap().contains("[0 + 1]"));
+    }
+
+    #[test]
+    fn test_get_with_default() {
+        let expr = SExpr::call(
+            "list.get",
+            vec![
+                SExpr::call("std.var", vec![SExpr::string("arr").erase_type()]),
+                SExpr::number(5).erase_type(),
+                SExpr::string("missing").erase_type(),
+            ],
+        );
+        // Should use nil check with default value
+        let code = compile(&expr).unwrap();
+        assert!(code.contains("[5 + 1] ~= nil"));
+        assert!(code.contains("\"missing\""));
     }
 
     #[test]
