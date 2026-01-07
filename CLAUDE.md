@@ -10,6 +10,18 @@ ALWAYS NOTE THINGS DOWN. When you discover something important, write it immedia
 - Future work → TODO.md
 - Conventions → this file
 - Areas for improvement → TODO.md (self-evaluate constantly)
+- Key insights → this file, immediately
+
+**Triggers to document immediately:**
+- User corrects you → write down what you learned before fixing
+- Trial-and-error (2+ failed attempts) → document what actually works
+- Framework/library quirk discovered → add to relevant docs/ file
+- "I'll remember this" thought → you won't, write it down now
+- "Aha" moment about design → add to this file NOW
+
+**Don't say these phrases, instead edit first:**
+- "Fair point" / "Good point" / "You're right" → edit TODO.md/CLAUDE.md BEFORE responding
+- "Should have" / "I forgot to" → you're admitting failure, edit docs to prevent recurrence
 
 ## Negative Constraints
 
@@ -17,6 +29,31 @@ Do not:
 - Announce actions with "I will now..." - just do them
 - Write preamble or summary in generated content
 - Leave work uncommitted
+- Create special cases - design to avoid them; if stuck, ask user rather than special-casing
+- Create "legacy" APIs - one API, one way. If signature changes, update all callers. No `foo_legacy()` or `foo_v2()`
+- Do half measures - when adding a trait/abstraction, migrate ALL callers immediately. No "we can consolidate later"
+- Return tuples from functions - use structs with named fields. Tuples obscure meaning. Only use tuples when names would be ceremony (e.g., coordinates)
+- Replace content when editing lists - when adding to TODO.md or similar, extend existing content, don't replace sections
+- Mark as done prematurely - if work is incomplete, note what remains in TODO.md
+
+## Design Principles
+
+**Unify, don't multiply.** Fewer concepts = less mental load for humans and LLMs.
+- One interface that handles multiple cases > separate interfaces per case
+- Extend existing abstractions > create parallel ones
+
+**Simplicity over cleverness.**
+- If proposing a new dependency, ask: can stdlib/existing code do this?
+- HashMap > inventory crate. Functions > traits (until you need the trait).
+- "Going in circles" = signal to simplify, not add complexity.
+
+**Explicit over implicit.**
+- Convenience = zero-config. Hiding information = pretending everything is okay.
+- Log when skipping something - user should know why.
+
+**When stuck (2+ failed attempts):**
+- Step back and reconsider the problem itself, not just try more solutions.
+- Ask: "Am I solving the right problem?"
 
 ## Working Style
 
@@ -26,6 +63,10 @@ Agentic by default - continue through tasks unless:
 - Genuinely blocked and need clarification
 - Decision has significant irreversible consequences
 - User explicitly asked to be consulted
+
+When you say "do X first" or "then we can Y" - add it to TODO.md immediately. Don't just say it, track it.
+
+Bail out early if stuck in a loop rather than burning tokens.
 
 Fresh mode (active): Consider wrapping up when:
 - Major feature complete
@@ -40,6 +81,16 @@ Self-evaluate constantly: note friction points and areas for improvement in TODO
 ## Commits
 
 Commit after each logical unit of work. Each commit = one logical change.
+
+## Session Handoffs
+
+Before ending a session:
+1. Commit current work
+2. Move completed tasks to TODO.md "Completed" section
+3. Update TODO.md "Next Up" with 3-5 concrete tasks
+4. Note any open questions or blockers
+
+Goal: next session completes ALL "Next Up" items.
 
 ## Architecture
 
