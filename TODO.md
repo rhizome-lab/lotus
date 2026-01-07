@@ -15,7 +15,6 @@
 
 - [ ] **Web Editor**: Re-add visual script editor (needs Rust→WASM bindings for transpile/decompile)
 - [ ] **Hybrid ECS**: Optional structured components for hot data (Position, Health) alongside flexible props
-- [ ] **Smart Context Caching**: Optimize LLM context by caching static lore/bio data
 
 ### Transpiler & Codegen
 
