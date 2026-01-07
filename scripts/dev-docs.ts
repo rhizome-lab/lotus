@@ -23,7 +23,7 @@ function main() {
   console.log("Starting Playground...");
 
   // Start the playground
-  const playground = spawn("bun", ["--filter", "@viwo/playground", "dev"], {
+  const playground = spawn("bun", ["--filter", "@bloom/playground", "dev"], {
     stdio: ["ignore", "pipe", "inherit"],
   });
 
@@ -47,7 +47,7 @@ function main() {
 
   function startDocs(port: string) {
     console.log("Starting Docs...");
-    const docs = spawnProcess("bun", ["--filter", "@viwo/docs", "dev"], {
+    const docs = spawnProcess("bun", ["--filter", "@bloom/docs", "dev"], {
       PLAYGROUND_PORT: port,
     });
 

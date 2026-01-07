@@ -3,7 +3,7 @@ name = "bloom-syntax-typescript"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "TypeScript to S-expression transpiler for Viwo"
+description = "TypeScript to S-expression transpiler for Bloom"
 
 [dependencies]
 bloom-ir.workspace = true

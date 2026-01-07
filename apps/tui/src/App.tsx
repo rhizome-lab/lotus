@@ -247,7 +247,7 @@ const App = () => {
           <Box borderStyle="single" borderColor="green">
             <Text bold color="green">
               {" "}
-              Viwo TUI{" "}
+              Bloom TUI{" "}
             </Text>
             <Text> | </Text>
             <Text color={clientState.isConnected ? "green" : "red"}>

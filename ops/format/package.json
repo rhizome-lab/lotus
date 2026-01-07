@@ -1,5 +1,5 @@
 {
-  "name": "@viwo/op-format",
+  "name": "@bloom/op-format",
   "scripts": {
     "check": "bun --cwd ../.. check:format"
   }

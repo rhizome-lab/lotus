@@ -96,7 +96,7 @@ function App() {
       </Show>
 
       <header class="app__header">
-        <div class="app__title">Viwo</div>
+        <div class="app__title">Bloom</div>
         <div class="app__header-controls">
           <div class={`app__status ${gameStore.state.isConnected ? "app__status--online" : ""}`}>
             {gameStore.state.isConnected ? "ONLINE" : "OFFLINE"}

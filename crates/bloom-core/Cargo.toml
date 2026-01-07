@@ -3,7 +3,7 @@ name = "bloom-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Entity system, capabilities, and storage for Viwo"
+description = "Entity system, capabilities, and storage for Bloom"
 
 [dependencies]
 bloom-ir.workspace = true

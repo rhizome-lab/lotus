@@ -1,5 +1,5 @@
 {
-  "name": "@viwo/op-unused",
+  "name": "@bloom/op-unused",
   "scripts": {
     "check": "bun --cwd ../.. check:unused"
   }

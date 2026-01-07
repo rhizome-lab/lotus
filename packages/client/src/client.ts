@@ -28,7 +28,7 @@ export type StateListener = (state: GameState) => void;
 export type MessageListener = (message: GameMessage) => void;
 
 /**
- * Client for interacting with the Viwo Core server via WebSocket and JSON-RPC.
+ * Client for interacting with the Bloom Core server via WebSocket and JSON-RPC.
  * Manages connection state, message handling, and entity synchronization.
  */
 export class BloomClient {

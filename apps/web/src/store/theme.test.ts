@@ -121,7 +121,7 @@ describe("Theme Store", () => {
   test("Import Invalid Theme", () => {
     const alertSpy = spyOn(globalThis, "alert").mockImplementation(() => {});
     themeStore.importTheme({}); // Empty object
-    expect(alertSpy).toHaveBeenCalledWith("Invalid theme format. Must be a valid Viwo Theme.");
+    expect(alertSpy).toHaveBeenCalledWith("Invalid theme format. Must be a valid Bloom Theme.");
     alertSpy.mockRestore();
   });
 

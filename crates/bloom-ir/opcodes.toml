@@ -1,4 +1,4 @@
-# Opcode Schema for ViwoScript
+# Opcode Schema for BloomScript
 #
 # This schema defines opcodes with dual-type system:
 # - type_ts: TypeScript compile-time type (can include generics, mapped types, etc.)

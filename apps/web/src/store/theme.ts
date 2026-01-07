@@ -69,7 +69,7 @@ const defaultTheme: Theme = {
   id: "default",
   isBuiltin: true,
   manifest: {
-    author: "Viwo",
+    author: "Bloom",
     description: "The default dark theme.",
     kind: "bloom-theme",
     name: "Default Dark",
@@ -192,7 +192,7 @@ export const themeStore = {
   importTheme: (theme: any) => {
     // Validate theme structure
     if (!theme.manifest || theme.manifest.kind !== "bloom-theme" || !theme.colors) {
-      alert("Invalid theme format. Must be a valid Viwo Theme.");
+      alert("Invalid theme format. Must be a valid Bloom Theme.");
       return;
     }
 

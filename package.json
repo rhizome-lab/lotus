@@ -1,5 +1,5 @@
 {
-  "name": "viwo",
+  "name": "bloom",
   "version": "0.0.0",
   "devDependencies": {
     "@tsconfig/strictest": "^2.0.8",
@@ -24,7 +24,7 @@
     "lint": "oxlint",
     "format": "oxfmt",
     "dev:docs": "bun scripts/dev-docs.ts",
-    "preview:docs": "bun --filter @viwo/docs preview",
+    "preview:docs": "bun --filter @bloom/docs preview",
     "check:test": "bun test --only-failures",
     "check:lint": "bun lint",
     "check:format": "bun format --check",

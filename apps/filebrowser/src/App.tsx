@@ -327,7 +327,7 @@ function App() {
   return (
     <div class="fb">
       <header class="fb__header">
-        <div class="fb__title">Viwo File Browser</div>
+        <div class="fb__title">Bloom File Browser</div>
         <div class={`fb__status ${browserStore.state.connected ? "fb__status--online" : ""}`}>
           {browserStore.state.connected ? "ONLINE" : "OFFLINE"}
         </div>

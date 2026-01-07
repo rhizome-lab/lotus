@@ -3,7 +3,7 @@ name = "bloom-transport-websocket-jsonrpc"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WebSocket JSON-RPC transport for Viwo"
+description = "WebSocket JSON-RPC transport for Bloom"
 
 [dependencies]
 bloom-core.workspace = true

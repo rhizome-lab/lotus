@@ -1,5 +1,5 @@
 {
-  "name": "@viwo/op-types",
+  "name": "@bloom/op-types",
   "scripts": {
     "check": "bun --cwd ../.. check:types"
   }

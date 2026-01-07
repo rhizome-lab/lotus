@@ -3,7 +3,7 @@ name = "bloom-runtime-luajit"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LuaJIT runtime for Viwo"
+description = "LuaJIT runtime for Bloom"
 
 [dependencies]
 bloom-ir.workspace = true

@@ -3,7 +3,7 @@ name = "bloom-ir"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "S-expression IR types and validation for Viwo"
+description = "S-expression IR types and validation for Bloom"
 
 [dependencies]
 serde.workspace = true

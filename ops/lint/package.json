@@ -1,5 +1,5 @@
 {
-  "name": "@viwo/op-lint",
+  "name": "@bloom/op-lint",
   "scripts": {
     "check": "bun --cwd ../.. check:lint"
   }
