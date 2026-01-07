@@ -1,0 +1,65 @@
+# AI plugin opcodes
+# LLM and embedding operations using Vercel AI SDK.
+
+[[opcode]]
+name = "ai.generateText"
+category = "ai"
+description = "Generates text using an LLM"
+label = "Generate Text"
+return_type_ts = "string"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "prompt"
+type_ts = "string"
+type_runtime = "String"
+description = "Prompt for the model"
+
+[[opcode.params]]
+name = "options"
+type_ts = "{ model?: string, temperature?: number, maxTokens?: number }"
+type_runtime = "Object"
+description = "Generation options"
+optional = true
+
+[[opcode]]
+name = "ai.embed"
+category = "ai"
+description = "Generates an embedding vector for text"
+label = "Embed Text"
+return_type_ts = "number[]"
+return_type_runtime = "Array"
+
+[[opcode.params]]
+name = "text"
+type_ts = "string"
+type_runtime = "String"
+description = "Text to embed"
+
+[[opcode.params]]
+name = "model"
+type_ts = "string"
+type_runtime = "String"
+description = "Embedding model to use"
+optional = true
+
+[[opcode]]
+name = "ai.chat"
+category = "ai"
+description = "Conducts a multi-turn chat conversation"
+label = "Chat"
+return_type_ts = "string"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "messages"
+type_ts = "{ role: 'user' | 'assistant' | 'system', content: string }[]"
+type_runtime = "Array"
+description = "Chat message history"
+
+[[opcode.params]]
+name = "options"
+type_ts = "{ model?: string, temperature?: number, maxTokens?: number }"
+type_runtime = "Object"
+description = "Chat options"
+optional = true

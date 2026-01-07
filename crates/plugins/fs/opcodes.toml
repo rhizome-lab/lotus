@@ -1,0 +1,148 @@
+# Filesystem plugin opcodes
+# These opcodes provide sandboxed filesystem access with capability-based security.
+
+[[opcode]]
+name = "fs.read"
+category = "fs"
+description = "Reads the contents of a file"
+label = "Read File"
+return_type_ts = "string"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"
+
+[[opcode]]
+name = "fs.write"
+category = "fs"
+description = "Writes content to a file"
+label = "Write File"
+return_type_ts = "void"
+return_type_runtime = "Null"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"
+
+[[opcode.params]]
+name = "content"
+type_ts = "string"
+type_runtime = "String"
+description = "Content to write"
+
+[[opcode]]
+name = "fs.list"
+category = "fs"
+description = "Lists files and directories in a path"
+label = "List Directory"
+return_type_ts = "FileInfo[]"
+return_type_runtime = "Array"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"
+
+[[opcode]]
+name = "fs.stat"
+category = "fs"
+description = "Gets file metadata (size, type, permissions)"
+label = "File Stats"
+return_type_ts = "FileStat"
+return_type_runtime = "Object"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"
+
+[[opcode]]
+name = "fs.exists"
+category = "fs"
+description = "Checks if a file or directory exists"
+label = "File Exists"
+return_type_ts = "boolean"
+return_type_runtime = "Bool"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"
+
+[[opcode]]
+name = "fs.mkdir"
+category = "fs"
+description = "Creates a directory (and parent directories if needed)"
+label = "Make Directory"
+return_type_ts = "void"
+return_type_runtime = "Null"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"
+
+[[opcode]]
+name = "fs.remove"
+category = "fs"
+description = "Removes a file or directory"
+label = "Remove"
+return_type_ts = "void"
+return_type_runtime = "Null"
+
+[[opcode.params]]
+name = "capability"
+type_ts = "Capability"
+type_runtime = "Object"
+description = "Filesystem capability with path parameter"
+
+[[opcode.params]]
+name = "path"
+type_ts = "string"
+type_runtime = "String"
+description = "Relative path within the sandboxed directory"

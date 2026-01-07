@@ -1,0 +1,44 @@
+# Memory plugin opcodes
+# RAG-based long-term memory combining ai, sqlite, and vector plugins.
+
+[[opcode]]
+name = "memory.add"
+category = "memory"
+description = "Adds a memory with automatic embedding generation"
+label = "Add Memory"
+return_type_ts = "string"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "content"
+type_ts = "string"
+type_runtime = "String"
+description = "Memory content to store"
+
+[[opcode.params]]
+name = "metadata"
+type_ts = "Record<string, unknown>"
+type_runtime = "Object"
+description = "Optional metadata (tags, timestamp, etc.)"
+optional = true
+
+[[opcode]]
+name = "memory.search"
+category = "memory"
+description = "Searches memories using semantic similarity"
+label = "Search Memories"
+return_type_ts = "{ id: string, content: string, distance: number, metadata?: Record<string, unknown> }[]"
+return_type_runtime = "Array"
+
+[[opcode.params]]
+name = "query"
+type_ts = "string"
+type_runtime = "String"
+description = "Search query (will be embedded)"
+
+[[opcode.params]]
+name = "limit"
+type_ts = "number"
+type_runtime = "Number"
+description = "Maximum number of results"
+optional = true

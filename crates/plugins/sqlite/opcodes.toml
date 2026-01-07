@@ -1,0 +1,44 @@
+# SQLite plugin opcodes
+# Database operations for custom SQLite queries.
+
+[[opcode]]
+name = "sqlite.query"
+category = "sqlite"
+description = "Executes a SELECT query and returns results"
+label = "Query"
+return_type_ts = "Record<string, unknown>[]"
+return_type_runtime = "Array"
+
+[[opcode.params]]
+name = "sql"
+type_ts = "string"
+type_runtime = "String"
+description = "SQL SELECT query"
+
+[[opcode.params]]
+name = "params"
+type_ts = "unknown[]"
+type_runtime = "Array"
+description = "Query parameters (for parameterized queries)"
+optional = true
+
+[[opcode]]
+name = "sqlite.execute"
+category = "sqlite"
+description = "Executes an INSERT/UPDATE/DELETE statement"
+label = "Execute"
+return_type_ts = "{ changes: number, lastInsertRowid: number }"
+return_type_runtime = "Object"
+
+[[opcode.params]]
+name = "sql"
+type_ts = "string"
+type_runtime = "String"
+description = "SQL statement"
+
+[[opcode.params]]
+name = "params"
+type_ts = "unknown[]"
+type_runtime = "Array"
+description = "Statement parameters"
+optional = true

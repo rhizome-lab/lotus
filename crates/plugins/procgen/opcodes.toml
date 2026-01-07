@@ -1,0 +1,91 @@
+# Procedural generation plugin opcodes
+# Seeded random number generation and noise functions.
+
+[[opcode]]
+name = "procgen.seed"
+category = "procgen"
+description = "Sets the random seed for reproducible generation"
+label = "Set Seed"
+return_type_ts = "void"
+return_type_runtime = "Null"
+
+[[opcode.params]]
+name = "seed"
+type_ts = "number"
+type_runtime = "Number"
+description = "Seed value"
+
+[[opcode]]
+name = "procgen.noise"
+category = "procgen"
+description = "Generates simplex noise value for given coordinates"
+label = "Simplex Noise"
+return_type_ts = "number"
+return_type_runtime = "Number"
+
+[[opcode.params]]
+name = "x"
+type_ts = "number"
+type_runtime = "Number"
+description = "X coordinate"
+
+[[opcode.params]]
+name = "y"
+type_ts = "number"
+type_runtime = "Number"
+description = "Y coordinate"
+
+[[opcode.params]]
+name = "z"
+type_ts = "number"
+type_runtime = "Number"
+description = "Z coordinate (optional)"
+optional = true
+
+[[opcode]]
+name = "procgen.random"
+category = "procgen"
+description = "Generates a random number between 0 and 1"
+label = "Random"
+return_type_ts = "number"
+return_type_runtime = "Number"
+
+[[opcode]]
+name = "procgen.randomRange"
+category = "procgen"
+description = "Generates a random number in a range"
+label = "Random Range"
+return_type_ts = "number"
+return_type_runtime = "Number"
+
+[[opcode.params]]
+name = "min"
+type_ts = "number"
+type_runtime = "Number"
+description = "Minimum value (inclusive)"
+
+[[opcode.params]]
+name = "max"
+type_ts = "number"
+type_runtime = "Number"
+description = "Maximum value (exclusive)"
+
+[[opcode]]
+name = "procgen.between"
+category = "procgen"
+description = "Generates a random integer between min and max"
+label = "Random Between"
+return_type_ts = "number"
+return_type_runtime = "Number"
+
+[[opcode.params]]
+name = "min"
+type_ts = "number"
+type_runtime = "Number"
+description = "Minimum value (inclusive)"
+
+[[opcode.params]]
+name = "max"
+type_ts = "number"
+type_runtime = "Number"
+description = "Maximum value (inclusive)"

@@ -1,0 +1,50 @@
+# Network plugin opcodes
+# HTTP client for making web requests.
+
+[[opcode]]
+name = "net.get"
+category = "net"
+description = "Performs an HTTP GET request"
+label = "HTTP GET"
+return_type_ts = "string"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "url"
+type_ts = "string"
+type_runtime = "String"
+description = "URL to request"
+
+[[opcode.params]]
+name = "headers"
+type_ts = "Record<string, string>"
+type_runtime = "Object"
+description = "Optional HTTP headers"
+optional = true
+
+[[opcode]]
+name = "net.post"
+category = "net"
+description = "Performs an HTTP POST request"
+label = "HTTP POST"
+return_type_ts = "string"
+return_type_runtime = "String"
+
+[[opcode.params]]
+name = "url"
+type_ts = "string"
+type_runtime = "String"
+description = "URL to request"
+
+[[opcode.params]]
+name = "body"
+type_ts = "string"
+type_runtime = "String"
+description = "Request body"
+
+[[opcode.params]]
+name = "headers"
+type_ts = "Record<string, string>"
+type_runtime = "Object"
+description = "Optional HTTP headers"
+optional = true

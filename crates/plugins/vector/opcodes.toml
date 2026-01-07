@@ -1,0 +1,63 @@
+# Vector plugin opcodes
+# Vector database operations using sqlite-vec.
+
+[[opcode]]
+name = "vector.insert"
+category = "vector"
+description = "Inserts a vector with associated ID"
+label = "Insert Vector"
+return_type_ts = "void"
+return_type_runtime = "Null"
+
+[[opcode.params]]
+name = "id"
+type_ts = "string"
+type_runtime = "String"
+description = "Unique identifier for the vector"
+
+[[opcode.params]]
+name = "vector"
+type_ts = "number[]"
+type_runtime = "Array"
+description = "Embedding vector"
+
+[[opcode.params]]
+name = "metadata"
+type_ts = "Record<string, unknown>"
+type_runtime = "Object"
+description = "Optional metadata to store with the vector"
+optional = true
+
+[[opcode]]
+name = "vector.search"
+category = "vector"
+description = "Searches for similar vectors using cosine similarity"
+label = "Search Vectors"
+return_type_ts = "{ id: string, distance: number, metadata?: Record<string, unknown> }[]"
+return_type_runtime = "Array"
+
+[[opcode.params]]
+name = "vector"
+type_ts = "number[]"
+type_runtime = "Array"
+description = "Query vector"
+
+[[opcode.params]]
+name = "limit"
+type_ts = "number"
+type_runtime = "Number"
+description = "Maximum number of results"
+
+[[opcode]]
+name = "vector.delete"
+category = "vector"
+description = "Deletes a vector by ID"
+label = "Delete Vector"
+return_type_ts = "boolean"
+return_type_runtime = "Bool"
+
+[[opcode.params]]
+name = "id"
+type_ts = "string"
+type_runtime = "String"
+description = "ID of vector to delete"
