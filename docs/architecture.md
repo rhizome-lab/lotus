@@ -7,21 +7,21 @@ Comprehensive architecture documentation. For quick reference, see `CLAUDE.md`.
 Bloom uses a "Sandwich Architecture" with three layers:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  TOP: Host Language (TypeScript)                            │
-│  - Developer experience layer                               │
-│  - Transpiled to S-expressions, never executed directly     │
-├─────────────────────────────────────────────────────────────┤
-│  MIDDLE: Universal Bytecode (S-expressions / JSON AST)      │
-│  - Stable ABI, language-agnostic                           │
-│  - Serializable (can pause/resume scripts)                 │
-│  - Secure (only valid opcodes, no arbitrary code)          │
-├─────────────────────────────────────────────────────────────┤
-│  BOTTOM: Kernel (VM + Opcodes)                              │
-│  - Interpreter: walks JSON tree                            │
-│  - Compiler: generates JS function for speed               │
-│  - Opcodes are the only way to affect world state          │
-└─────────────────────────────────────────────────────────────┘
++-------------------------------------------------------------+
+|  TOP: Host Language (TypeScript)                            |
+|  - Developer experience layer                               |
+|  - Transpiled to S-expressions, never executed directly     |
++-------------------------------------------------------------+
+|  MIDDLE: Universal Bytecode (S-expressions / JSON AST)      |
+|  - Stable ABI, language-agnostic                            |
+|  - Serializable (can pause/resume scripts)                  |
+|  - Secure (only valid opcodes, no arbitrary code)           |
++-------------------------------------------------------------+
+|  BOTTOM: Kernel (Rust + LuaJIT)                             |
+|  - Codegen: compiles S-expressions to Lua                   |
+|  - LuaJIT: executes Lua for high performance                |
+|  - Opcodes are the only way to affect world state           |
++-------------------------------------------------------------+
 ```
 
 See `docs/execution_model.md` for detailed rationale.
@@ -29,33 +29,35 @@ See `docs/execution_model.md` for detailed rationale.
 ## Scripting Pipeline
 
 ```
-TypeScript → transpiler.ts → S-expressions → compiler.ts → JavaScript function
-                                ↑                              ↓
-                         decompiler.ts                    interpreter.ts
-                              ↓                           (fallback)
-                         Source code
+TypeScript -> transpiler -> S-expressions -> codegen -> Lua -> LuaJIT
+                                 ^
+                            decompiler (TODO: needs WASM bindings)
+                                 |
+                            Source code
 ```
 
-### Key Files
+### Key Rust Crates
 
-| File | Lines | Purpose |
-|------|-------|---------|
-| `transpiler.ts` | ~1000 | TS AST → S-expressions (uses TypeScript compiler API) |
-| `compiler.ts` | ~700 | S-expressions → JavaScript function via `new Function()` |
-| `interpreter.ts` | ~400 | Stack machine evaluator (SOA pattern), handles async |
-| `optimizer.ts` | ~170 | Partial evaluation of pure expressions |
-| `decompiler.ts` | ~360 | S-expressions → TypeScript source |
+| Crate | Purpose |
+|-------|---------|
+| `bloom-ir` | S-expression types, validation, type-safe builders |
+| `bloom-syntax-typescript` | TypeScript -> S-expressions (tree-sitter based) |
+| `bloom-runtime-luajit` | S-expressions -> Lua codegen + mlua execution |
+| `bloom-core` | Entity system, capabilities, SQLite storage |
+| `bloom-runtime` | Integrated runtime combining core + LuaJIT |
+| `bloom-cli` | CLI binary (`bloom`) |
 
 ### Standard Libraries
 
-All in `packages/scripting/src/lib/`:
-- `std.ts`: Control flow, variables, functions, I/O
-- `math.ts`: Arithmetic, trigonometry, logarithms
-- `list.ts`: Array operations
-- `object.ts`: Object CRUD and transformations
-- `string.ts`: String manipulation
-- `boolean.ts`: Logic and comparisons
-- `time.ts`: Date/time operations
+Codegen modules in `crates/runtime/luajit/src/codegen/`:
+- `std.rs`: Control flow, variables, functions, I/O
+- `math.rs`: Arithmetic, trigonometry, logarithms
+- `list.rs`: Array operations
+- `obj.rs`: Object CRUD and transformations
+- `str.rs`: String manipulation
+- `bool.rs`: Logic and comparisons
+- `json.rs`: JSON parsing and stringification
+- `game.rs`: Entity operations, verb calling, scheduling
 
 ### Lazy vs Strict Opcodes
 
@@ -108,17 +110,17 @@ CREATE TABLE scheduled_tasks (
 
 ### Prototype Chain Resolution
 
-```typescript
+```rust
 // Recursive CTE walks prototype chain from instance to root
-// Properties merge root→leaf (child overrides parent)
-const entity = getEntity(42);  // Returns flattened props
+// Properties merge root->leaf (child overrides parent)
+let entity = repo.get_entity(42)?;  // Returns flattened props
 ```
 
 ### Verb Resolution
 
-```typescript
+```rust
 // Searches prototype chain, returns closest match
-const verb = getVerb(entityId, "look");  // May be inherited
+let verb = repo.get_verb(entity_id, "look")?;  // May be inherited
 ```
 
 ## Capability System
@@ -127,10 +129,10 @@ Capabilities are authorization tokens with parameters:
 
 ```typescript
 // Create capability that can modify entity 42
-createCapability(playerId, "entity.control", { target_id: 42 });
+mint("entity.control", { target_id: 42 });
 
 // Create wildcard capability
-createCapability(adminId, "entity.control", { "*": true });
+mint("entity.control", { "*": true });
 
 // In verb code:
 const cap = get_capability("entity.control", { target_id: entity.id });
@@ -148,58 +150,40 @@ if (cap) {
 
 ## Plugin System
 
-### Registration Pattern
+Plugins provide native Lua C API functions that can be called from BloomScript.
 
-```typescript
-export class MyPlugin implements Plugin {
-  name = "my-plugin";
-  version = "1.0.0";
+### Plugin ABI
 
-  onLoad(ctx: PluginContext) {
-    // Register opcodes
-    ctx.core.registerLibrary(MyLib);
-
-    // Register commands
-    ctx.registerCommand("mycommand", this.handleCommand.bind(this));
-
-    // Register RPC methods
-    ctx.registerRpcMethod("my_method", this.handleRpc.bind(this));
-  }
+```rust
+pub trait Plugin: Send + Sync {
+    fn name(&self) -> &'static str;
+    fn version(&self) -> &'static str;
+    fn register_to_lua(&self, lua: &Lua) -> Result<()>;
 }
 ```
 
-### Opcode Definition
+### Available Plugins
 
-```typescript
-export const myOpcode = defineFullOpcode<[arg1: string], string>(
-  "my.opcode",
-  {
-    handler: async ([arg1], ctx) => {
-      return `Result: ${arg1}`;
-    },
-    metadata: {
-      category: "Custom",
-      label: "My Opcode",
-      description: "Does something",
-      parameters: [{ name: "arg1", type: "string" }],
-      returnType: "string",
-      slots: [{ name: "Argument", type: "string" }],
-    },
-  },
-);
-```
+| Plugin | Functions |
+|--------|-----------|
+| `fs` | read, write, list, stat, exists, mkdir, remove |
+| `net` | get, post |
+| `sqlite` | query, execute |
+| `procgen` | seed, noise, random, randomRange, between |
+| `vector` | insert, search, delete |
+| `ai` | generateText, embed, chat |
+| `memory` | store, recall, search (orchestrates sqlite+ai+vector) |
+| `diffusers` | generate (Stable Diffusion image generation) |
 
 ### Plugin Dependencies
 
 ```
-ai ────────────────────────────→ (none)
-vector ────────────────────────→ (none)
-memory ────────────────────────→ ai, vector
-procgen ───────────────────────→ (none)
-fs, net, sqlite, diffusers ────→ (none)
+ai -----------------------> (none)
+vector ------------------> (none)
+memory ------------------> ai, vector
+procgen, fs, net, sqlite -> (none)
+diffusers ---------------> (none, uses burn-models)
 ```
-
-Load order: vector, ai → memory → others
 
 ## WebSocket Protocol
 
@@ -224,7 +208,7 @@ Load order: vector, ai → memory → others
 }
 ```
 
-**Notification (server→client):**
+**Notification (server->client):**
 ```json
 {
   "jsonrpc": "2.0",
@@ -238,10 +222,10 @@ Load order: vector, ai → memory → others
 - `login { entityId }`: Switch session to entity
 - `execute [verb, ...args]`: Run verb on player
 - `get_entities { ids }`: Batch fetch entities
-- `get_verb { entityId, name }`: Get verb source (decompiled)
+- `get_verb { entityId, name }`: Get verb source
 - `update_verb { entityId, name, source }`: Update verb code
 - `get_opcodes`: Get opcode metadata for editor
-- `plugin_rpc { method, params }`: Delegate to plugin
+- `schedule { entityId, verb, args, delay }`: Schedule task
 
 ## Scheduler
 
@@ -255,38 +239,31 @@ schedule("delayed_verb", [arg1, arg2], 5000);  // Run in 5 seconds
 scheduler.process();  // Executes all due tasks
 ```
 
-Tasks stored in `scheduled_tasks` table, executed via `evaluate()` with script context.
+Tasks stored in `scheduled_tasks` table, executed via verb invocation.
 
 ## App Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    apps/server                          │
-│  Boots core + plugins, serves WebSocket on :8080        │
-├─────────────────────────────────────────────────────────┤
-│                      @bloom/core                         │
-│  Entity system, verbs, capabilities, scheduler          │
-├─────────────────────────────────────────────────────────┤
-│                    @bloom/scripting                      │
-│  Transpiler, compiler, interpreter, standard library    │
-└─────────────────────────────────────────────────────────┘
-           ↑ WebSocket (JSON-RPC)
-┌──────────┼──────────────────────────────────────────────┐
-│          │           Client Apps                        │
-│  ┌───────┴───────┐  ┌─────────┐  ┌─────────┐          │
-│  │   apps/web    │  │apps/tui │  │apps/cli │          │
-│  │  SolidJS UI   │  │ Ink UI  │  │  REPL   │          │
-│  └───────────────┘  └─────────┘  └─────────┘          │
-│  ┌───────────────┐                                     │
-│  │apps/discord-bot│ Links Discord channels ↔ rooms    │
-│  └───────────────┘                                     │
-└─────────────────────────────────────────────────────────┘
-
-Standalone (no server connection):
-┌─────────────────┐  ┌──────────────┐
-│ apps/playground │  │ apps/imagegen│
-│ Script sandbox  │  │ Image editor │
-└─────────────────┘  └──────────────┘
++-----------------------------------------------------------+
+|                    Rust Servers                           |
+|  bloom-notes-server     - Notes app backend (port 8081)   |
+|  bloom-filebrowser-server - File browser (port 8080)      |
++-----------------------------------------------------------+
+|                    @bloom/runtime                         |
+|  Entity system, verbs, capabilities, LuaJIT execution     |
++-----------------------------------------------------------+
+           ^ WebSocket (JSON-RPC)
++----------+------------------------------------------------+
+|          |           TypeScript Frontends                 |
+|  +-------+-------+  +---------+  +-------------+         |
+|  |   apps/web   |  |apps/tui |  |apps/discord |         |
+|  |  SolidJS UI  |  | Ink UI  |  |    Bot      |         |
+|  +---------------+  +---------+  +-------------+         |
+|  +---------------+  +----------------+                   |
+|  |  apps/notes  |  | apps/filebrowser|                   |
+|  |  Wiki client |  | File browser UI |                   |
+|  +---------------+  +----------------+                   |
++-----------------------------------------------------------+
 ```
 
 ## Key Design Decisions
@@ -295,6 +272,6 @@ Standalone (no server connection):
 2. **Prototype-based inheritance**: Flexible, no schema migrations needed
 3. **Capability-based security**: Fine-grained, auditable, transferable
 4. **Lazy evaluation for control flow**: Efficient branching without special-casing
-5. **Copy-on-Write scoping**: Efficient scope forking for loops
+5. **LuaJIT execution**: High performance, embeddable, portable
 6. **JSON-RPC over WebSocket**: Standard protocol, easy to implement clients
-7. **Plugin system with opcode registration**: Extensible without modifying core
+7. **Native Lua C API plugins**: Full access to Lua state, high performance
