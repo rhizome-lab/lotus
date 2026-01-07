@@ -8,6 +8,7 @@
     "knip": "^5.71.0",
     "oxfmt": "^0.16.0",
     "oxlint": "^1.31.0",
+    "oxlint-tsgolint": "^0.10.1",
     "typescript": "^6.0.0-dev.20251203"
   },
   "overrides": {
@@ -21,7 +22,7 @@
     "dev:tui": "bun run --cwd apps/tui dev",
     "dev:filebrowser": "bun run --cwd apps/filebrowser dev",
     "dev:notes": "bun run --cwd apps/notes dev",
-    "lint": "oxlint",
+    "lint": "oxlint --type-aware --tsconfig tsconfig.json",
     "format": "oxfmt",
     "dev:docs": "bun scripts/dev-docs.ts",
     "build:docs": "bun run --cwd docs build",

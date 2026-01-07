@@ -137,7 +137,7 @@ class DiscordBot {
         );
         const socket = socketManager.getSocket();
         socket.execute("sudo", [entityId, "look", []]);
-      } catch (error) {
+      } catch {
         message.reply("Failed to get room info.");
       }
     } else if (command === "inventory" || command === "inv" || command === "i") {
@@ -150,7 +150,7 @@ class DiscordBot {
         );
         const socket = socketManager.getSocket();
         socket.execute("sudo", [entityId, "inventory", []]);
-      } catch (error) {
+      } catch {
         message.reply("Failed to get inventory.");
       }
     } else if (command === "inspect") {
@@ -167,7 +167,7 @@ class DiscordBot {
         );
         const socket = socketManager.getSocket();
         socket.execute("sudo", [entityId, "look", [args.join(" ")]]);
-      } catch (error) {
+      } catch {
         message.reply("Failed to inspect item.");
       }
     }
@@ -185,7 +185,7 @@ class DiscordBot {
             // Format message based on type
             if (data.type === "message") {
               // Simple text message
-              (channel as TextChannel).send(data.text);
+              await (channel as TextChannel).send(data.text);
             } else if (data.type === "room") {
               // Room info as embed
               const embed = new EmbedBuilder()
@@ -213,7 +213,7 @@ class DiscordBot {
                 });
               }
 
-              (channel as TextChannel).send({ embeds: [embed] });
+              await (channel as TextChannel).send({ embeds: [embed] });
             } else if (data.type === "inventory") {
               // Inventory as embed
               const items = data.items?.map((item: any) => item.name).filter(Boolean) || [];
@@ -222,7 +222,7 @@ class DiscordBot {
                 .setTitle("🎒 Inventory")
                 .setDescription(items.length > 0 ? items.join("\n") : "*Empty*");
 
-              (channel as TextChannel).send({ embeds: [embed] });
+              await (channel as TextChannel).send({ embeds: [embed] });
             } else if (data.type === "item") {
               // Item inspection as embed
               const embed = new EmbedBuilder()
@@ -239,7 +239,7 @@ class DiscordBot {
                 });
               }
 
-              (channel as TextChannel).send({ embeds: [embed] });
+              await (channel as TextChannel).send({ embeds: [embed] });
             } else if (data.type === "error") {
               // Error message as embed
               const embed = new EmbedBuilder()
@@ -247,11 +247,11 @@ class DiscordBot {
                 .setTitle("Error")
                 .setDescription(data.text || "An error occurred");
 
-              (channel as TextChannel).send({ embeds: [embed] });
+              await (channel as TextChannel).send({ embeds: [embed] });
             } else {
               // Unknown type - show as JSON code block
               const content = `\`\`\`json\n${JSON.stringify(data, undefined, 2)}\n\`\`\``;
-              (channel as TextChannel).send(content);
+              await (channel as TextChannel).send(content);
             }
           }
         } catch (error) {

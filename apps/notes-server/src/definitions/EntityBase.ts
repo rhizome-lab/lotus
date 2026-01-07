@@ -20,7 +20,7 @@ export class EntityBase {
     return found;
   }
 
-  on_enter(mover: any, authCap: any) {
+  on_enter(mover: any, _authCap: any) {
     const cap = get_capability("entity.control", { target_id: this.id });
     if (!cap) {
       send("message", "The room refuses you.");
@@ -31,7 +31,7 @@ export class EntityBase {
     cap.update(this, { contents: contents });
   }
 
-  on_leave(mover: any, authCap: any) {
+  on_leave(mover: any, _authCap: any) {
     const cap = get_capability("entity.control", { target_id: this.id });
     if (!cap) {
       send("message", "The room refuses you.");

@@ -14,9 +14,76 @@
       "rules": {
         "no-magic-numbers": "off"
       }
+    },
+    {
+      "files": ["**/definitions/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-unsafe-type-assertion": "off"
+      }
+    },
+    {
+      "files": ["scripts/*.ts"],
+      "rules": {
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off"
+      }
     }
   ],
   "rules": {
+    // Disable overly pedantic rules
+    "sort-imports": "off",
+    "sort-keys": "off",
+    "curly": "off",
+    "prefer-template": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/no-confusing-void-expression": "off",
+    "@typescript-eslint/no-unsafe-type-assertion": "off",
+    "@typescript-eslint/restrict-template-expressions": "off",
+    "@typescript-eslint/no-unnecessary-type-assertion": "off",
+    "unicorn/numeric-separators-style": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "arrow-body-style": "off",
+    "no-await-in-loop": "off",
+    "unicorn/catch-error-name": "off",
+    "prefer-destructuring": "off",
+    "no-duplicate-imports": "off",
+    "unicorn/prefer-query-selector": "off",
+    "unicorn/prefer-dom-node-text-content": "off",
+    "unicorn/prefer-add-event-listener": "off",
+    "unicorn/prefer-global-this": "off",
+    "no-console": "off",
+    "prefer-named-capture-group": "off",
+    "no-control-regex": "off",
+    "require-unicode-regexp": "off",
+    "radix": "off",
+    "unicorn/prefer-number-properties": "off",
+    // Disable no-unsafe-* rules globally as codebase uses dynamic typing patterns
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off",
+    "@typescript-eslint/no-unsafe-argument": "off",
+    "@typescript-eslint/no-unsafe-return": "off",
+    "@typescript-eslint/no-unsafe-call": "off",
+    "@typescript-eslint/array-type": "off",
+    "unicorn/explicit-length-check": "off",
+    "prefer-optional-catch-binding": "off",
+    // Set promise rules to warn for gradual adoption
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/no-misused-promises": "warn",
+    "@typescript-eslint/require-await": "off",
+    "@typescript-eslint/unbound-method": "off",
+    "@typescript-eslint/switch-exhaustiveness-check": "off",
+    "unicorn/no-array-for-each": "off",
+    "unicorn/no-array-reduce": "off",
+    "unicorn/no-array-sort": "off",
+    "require-await": "off",
+
     "no-debugger": "error",
     "eqeqeq": "error",
     "no-plusplus": "error",

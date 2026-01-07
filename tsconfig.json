@@ -1,0 +1,22 @@
+{
+  "extends": "@tsconfig/strictest/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "references": [
+    { "path": "apps/web" },
+    { "path": "apps/tui" },
+    { "path": "apps/filebrowser" },
+    { "path": "apps/notes" },
+    { "path": "apps/discord-bot" },
+    { "path": "packages/shared" },
+    { "path": "packages/client" }
+  ],
+  "include": [],
+  "exclude": ["node_modules", "dist", "docs"]
+}

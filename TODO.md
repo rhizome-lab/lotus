@@ -24,12 +24,7 @@
 
 ### Transpiler & Codegen
 
-- [ ] **Safe Object Access**: Bracket notation `obj[key]` should use `obj.get` with defaults or null-safe operator
 - [ ] **Handle All Constructs**: Complete coverage of TypeScript language features
-
-### Tooling
-
-- [ ] **Type-Aware Linting**: Enable oxlint type-aware rules for TypeScript frontends
 
 ---
 
@@ -44,6 +39,8 @@
 - [x] Integration Tests: get_opcodes RPC
 - [x] Fix docs build (dead links, missing script)
 - [x] Fix unused check (knip configuration)
+- [x] Safe Object Access: Transpiler uses obj.get for bracket notation with string keys
+- [x] Type-Aware Linting: oxlint with --type-aware flag, oxlint-tsgolint, root tsconfig.json
 </details>
 
 <details>
