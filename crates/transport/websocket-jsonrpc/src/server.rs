@@ -323,9 +323,66 @@ async fn handle_message(
                 .ok_or("Invalid command: expected string")?;
             let args: Vec<serde_json::Value> = cmd_params[1..].to_vec();
 
-            // For now, call the verb directly on the player entity
-            // TODO: Implement verb discovery via System.get_available_verbs
-            match runtime.execute_verb(player_id, command, args, Some(player_id)) {
+            // Verb discovery: collect verbs from player, room, room contents, inventory
+            let (target_entity_id, verb_name) = {
+                let storage = runtime.storage().lock().unwrap();
+
+                // Helper to get entity IDs from a contents array
+                let get_contents = |entity_id: i64| -> Vec<i64> {
+                    storage
+                        .get_entity(entity_id)
+                        .ok()
+                        .flatten()
+                        .and_then(|e| e.props.get("contents"))
+                        .and_then(|c| c.as_array())
+                        .map(|arr| arr.iter().filter_map(|v| v.as_i64()).collect())
+                        .unwrap_or_default()
+                };
+
+                // Get player entity
+                let player = storage
+                    .get_entity(player_id)
+                    .map_err(|e| format!("Failed to get player: {}", e))?
+                    .ok_or("Player not found")?;
+
+                // Get player's location (room)
+                let room_id = player.props.get("location").and_then(|l| l.as_i64());
+
+                // Collect all entities to search for verbs
+                let mut search_entities = vec![player_id];
+
+                // Add room if player has a location
+                if let Some(rid) = room_id {
+                    search_entities.push(rid);
+
+                    // Add room contents
+                    for content_id in get_contents(rid) {
+                        if content_id != player_id {
+                            search_entities.push(content_id);
+                        }
+                    }
+                }
+
+                // Add player inventory
+                for content_id in get_contents(player_id) {
+                    search_entities.push(content_id);
+                }
+
+                // Search for the verb across all entities
+                let mut found: Option<(i64, String)> = None;
+                for entity_id in search_entities {
+                    if let Ok(verbs) = storage.get_verbs(entity_id) {
+                        if let Some(verb) = verbs.iter().find(|v| v.name == command) {
+                            found = Some((entity_id, verb.name.clone()));
+                            break;
+                        }
+                    }
+                }
+
+                found.ok_or_else(|| format!("Verb '{}' not found", command))?
+            };
+
+            match runtime.execute_verb(target_entity_id, &verb_name, args, Some(player_id)) {
                 Ok(result) => Ok(serde_json::json!({ "status": "ok", "result": result })),
                 Err(err) => Err(format!("Verb execution failed: {}", err).into()),
             }

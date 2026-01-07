@@ -123,6 +123,37 @@ return {{ result = __result, this = __this }}
         })?;
         lua.globals().set("__viwo_entity", entity_fn)?;
 
+        // verbs opcode - get all verbs defined on an entity
+        let storage_clone = storage.clone();
+        let verbs_fn = lua.create_function(move |lua_ctx, entity: mlua::Value| {
+            // Convert entity to get ID
+            let entity_json: serde_json::Value = lua_ctx.from_value(entity)?;
+            let entity_id = entity_json["id"]
+                .as_i64()
+                .ok_or_else(|| mlua::Error::external("verbs: entity missing id"))?
+                as EntityId;
+
+            let storage = storage_clone.lock().unwrap();
+            let verbs = storage
+                .get_verbs(entity_id)
+                .map_err(mlua::Error::external)?;
+
+            // Return verbs as array of objects with name, id
+            let verb_list: Vec<serde_json::Value> = verbs
+                .iter()
+                .map(|v| {
+                    serde_json::json!({
+                        "id": v.id,
+                        "name": v.name,
+                        "entity_id": v.entity_id,
+                    })
+                })
+                .collect();
+
+            lua_ctx.to_value(&verb_list)
+        })?;
+        lua.globals().set("__viwo_verbs", verbs_fn)?;
+
         // capability opcode - get capability by ID
         let storage_clone = storage.clone();
         let capability_fn = lua.create_function(move |lua_ctx, cap_id: mlua::Value| {

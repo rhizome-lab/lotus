@@ -25,6 +25,19 @@ pub fn compile_game(
             format!("{}__viwo_entity({})", prefix, id)
         }
 
+        // Get all verbs defined on an entity
+        "verbs" => {
+            if args.is_empty() {
+                return Err(CompileError::InvalidArgCount {
+                    opcode: op.to_string(),
+                    expected: 1,
+                    got: 0,
+                });
+            }
+            let entity = compile_value(&args[0], false)?;
+            format!("{}__viwo_verbs({})", prefix, entity)
+        }
+
         // Get capability by ID
         "capability" => {
             if args.is_empty() {
@@ -171,6 +184,17 @@ mod tests {
     fn test_entity() {
         let expr = SExpr::call("entity", vec![SExpr::number(42).erase_type()]);
         assert_eq!(compile(&expr).unwrap(), "return __viwo_entity(42)");
+    }
+
+    #[test]
+    fn test_verbs() {
+        let expr = SExpr::call(
+            "verbs",
+            vec![SExpr::call("entity", vec![SExpr::number(1).erase_type()])],
+        );
+        let code = compile(&expr).unwrap();
+        assert!(code.contains("__viwo_verbs"));
+        assert!(code.contains("__viwo_entity(1)"));
     }
 
     #[test]
