@@ -37,122 +37,46 @@ See `docs/session-modes.md` to switch modes.
 
 Self-evaluate constantly: note friction points and areas for improvement in TODO.md.
 
-## Current Focus: Rust Port
-
-Working autonomously to port Viwo to a Rust-based runtime with LuaJIT execution.
-
-See [`docs/design/rust-port.md`](docs/design/rust-port.md) for architecture decisions.
-
-**Autonomous mode**: Always maintain a todo list with next items. Only stop when:
-- Stuck on a design issue requiring user input
-- Port is complete
-
-Write tests for all new code (`cargo test`). Each crate should have tests.
-
-Crate structure in `crates/`:
-- `viwo-ir` - S-expression types and validation
-- `viwo-core` - Entity system, capabilities, SQLite storage
-- `viwo-plugin-abi` - Stable ABI for dynamic plugins
-- `viwo-server` - WebSocket server, plugin loader
-- `viwo-cli` - CLI binary
-- `syntax/typescript` - TS → S-expr transpiler
-- `runtime/luajit` - S-expr → Lua codegen + mlua runtime
-
-Rust commands:
-```bash
-cargo check              # Type check
-cargo build              # Build all crates
-cargo test               # Run tests
-cargo xtask <task>       # Build automation
-```
-
 ## Commits
 
 Commit after each logical unit of work. Each commit = one logical change.
-
-## Before Finishing
-
-Run checks before wrapping up a session:
-
-```bash
-bun check:readmes      # Verify READMEs and docs exist
-bun check:types        # Type check all packages
-bun test               # Run tests
-```
-
-When adding new apps/packages, remember to add:
-- `apps/<name>/README.md`
-- `docs/apps/<name>.md`
-
-## Code Style
-
-- Avoid one-letter names: `i` → `idx`, `e` → `event`, `a, b` → `left, right`
-- Use `??` not `||` for fallbacks
-- Use `+= 1` not `++`
-- Avoid `any` - it's infectious like `NaN` for types
-- Prefer `ts-expect-error` over `ts-ignore` (but avoid both)
-- For `apps/web` and `apps/playground`: use BEM in `packages/shared/src/index.css`, not inline CSS
-- Write tests with `bun test --coverage`
-
-## Build & Development Commands
-
-```bash
-# Install dependencies
-bun install
-
-# Development
-bun run dev:server     # Start core server (port 8080)
-bun run dev:web        # Start web client (port 5173)
-bun run dev:docs       # Start docs dev server
-
-# Testing
-bun test                           # Run all tests
-bun --filter @viwo/core test       # Run tests for a specific package
-bun test path/to/file.test.ts      # Run a single test file
-
-# Code quality
-bun lint                # Run oxlint
-bun format              # Run oxfmt
-bun run check:types     # Type check all packages (uses tsgo)
-bun run check:unused    # Check for unused exports (knip)
-
-# Database
-bun run db:wipe         # Delete world.sqlite
-```
 
 ## Architecture
 
 Viwo is a multiplayer scriptable virtual world engine. See `docs/architecture.md` for deep-dive.
 
+### Rust Crates (Primary Codebase)
+
+Crate structure in `crates/`:
+- `viwo-ir` - S-expression types and validation
+- `viwo-core` - Entity system, capabilities, SQLite storage
+- `viwo-runtime` - Script execution context with LuaJIT
+- `viwo-plugin-abi` - Stable ABI for dynamic plugins
+- `viwo-cli` - CLI binary (server)
+- `syntax/typescript` - TS → S-expr transpiler
+- `runtime/luajit` - S-expr → Lua codegen + mlua runtime
+- `apps/notes-server` - Notes app server
+- `apps/filebrowser-server` - File browser app server
+- `plugins/*` - Plugin implementations (ai, fs, net, procgen, sqlite, vector, memory, diffusers)
+
 ### Execution Model ("Sandwich Architecture")
 ```
-TypeScript Code → [transpiler] → S-expressions (JSON AST) → [compiler] → JavaScript
+TypeScript Code → [transpiler] → S-expressions (JSON AST) → [compiler] → Lua → LuaJIT
 ```
 - **Top**: Developer writes TypeScript (transpiled, never executed directly)
 - **Middle**: S-expressions as stable ABI (serializable, language-agnostic, secure)
-- **Bottom**: Kernel executes via opcodes (only way to affect world state)
+- **Bottom**: Kernel executes via opcodes in LuaJIT (only way to affect world state)
 
-### Core Packages
-- **packages/scripting**: ViwoScript language (transpiler, compiler, interpreter, decompiler, optimizer)
-- **packages/core**: Game engine (entities, verbs, capabilities, scheduler, WebSocket server)
-- **packages/shared**: JSON-RPC types
-- **packages/client**: WebSocket client library
+### TypeScript (UI Clients)
 
-### Apps
-- **apps/server**: Boots core + plugins (the server all clients connect to)
+Remaining TypeScript code:
 - **apps/web**: SolidJS game client
+- **apps/filebrowser**: File browser UI client
+- **apps/notes**: Notes UI client
 - **apps/tui**: Terminal UI with code editor
 - **apps/discord-bot**: Discord integration (channel↔room linking)
-- **apps/playground**: Standalone scripting sandbox
-- **apps/imagegen**: Image generation editor
-
-### Plugins
-Register via `ctx.core.registerLibrary()` in `onLoad()`. Expose opcodes via `defineFullOpcode()`.
-- **ai**: LLM text/image/embeddings (Vercel AI SDK)
-- **memory**: RAG with vector search (depends on ai, vector)
-- **vector**: sqlite-vec wrapper
-- **procgen**: Seeded random, simplex noise
-- **fs/net/sqlite**: Capability-gated I/O
+- **packages/shared**: JSON-RPC types
+- **packages/client**: WebSocket client library
 
 ### Key Patterns
 - **Entities**: Prototype-based inheritance, schema-free props (JSON), stored in SQLite
@@ -171,16 +95,37 @@ Register via `ctx.core.registerLibrary()` in `onLoad()`. Expose opcodes via `def
 
 Opcodes prefixed by library: `std.*`, `math.*`, `str.*`, `list.*`, `obj.*`, `time.*`, `bool.*`.
 
-Each stdlib file exports type-safe constructor functions that generate the S-expression AST. Use these in tests and TypeScript code:
-```typescript
-import * as StdLib from "../lib/std";
-import * as ListLib from "../lib/list";
+## Build & Development Commands
 
-// Type-safe: StdLib.set("x", 10) generates ["std.set", "x", 10]
-evaluate(StdLib.set("myVar", 42), ctx);
-evaluate(ListLib.listNew(1, 2, 3), ctx);
+```bash
+# Rust (primary)
+cargo check              # Type check
+cargo build              # Build all crates
+cargo test               # Run tests
+cargo xtask <task>       # Build automation
+
+# TypeScript (UI clients)
+bun install              # Install dependencies
+bun run dev:web          # Start web client (port 5173)
+bun run dev:tui          # Start terminal UI
+bun lint                 # Run oxlint
+bun format               # Run oxfmt
+bun run check:types      # Type check all packages (uses tsgo)
 ```
+
+## Code Style
+
+### Rust
+- Use `cargo fmt` and `cargo clippy`
+- Write tests for all new code
+
+### TypeScript
+- Avoid one-letter names: `i` → `idx`, `e` → `event`, `a, b` → `left, right`
+- Use `??` not `||` for fallbacks
+- Use `+= 1` not `++`
+- Avoid `any` - it's infectious like `NaN` for types
+- For `apps/web`: use BEM in `packages/shared/src/index.css`, not inline CSS
 
 ## Type Checking
 
-Uses `tsgo` (TypeScript native preview). Run `bun run check:types` or per-package `bun --filter @viwo/core check:types`.
+Uses `tsgo` (TypeScript native preview). Run `bun run check:types`.

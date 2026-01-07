@@ -1,7 +1,6 @@
 // oxlint-disable-next-line no-unassigned-import
 import "@viwo/shared/index.css";
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
-import Builder from "./components/Builder";
 import Compass from "./components/Compass";
 import CustomExits from "./components/CustomExits";
 import GameLog from "./components/GameLog";
@@ -15,7 +14,6 @@ import { keybindsStore } from "./store/keybinds";
 import { themeStore } from "./store/theme";
 
 function App() {
-  const [showBuilder, setShowBuilder] = createSignal(false);
   const [showSettings, setShowSettings] = createSignal(false);
   const [showThemeEditor, setShowThemeEditor] = createSignal(false);
 
@@ -106,12 +104,6 @@ function App() {
           <button class="app__builder-btn" onClick={() => setShowThemeEditor(true)}>
             Theme
           </button>
-          <button
-            class={`app__builder-btn ${showBuilder() ? "app__builder-btn--active" : ""}`}
-            onClick={() => setShowBuilder(!showBuilder())}
-          >
-            Builder
-          </button>
           <button onClick={() => setShowSettings(true)} class="app__settings-btn" title="Settings">
             ⚙️
           </button>
@@ -125,12 +117,9 @@ function App() {
         <CustomExits />
       </div>
 
-      {/* Room Area: Main View + Builder Overlay */}
+      {/* Room Area */}
       <div class="app__room">
         <RoomPanel />
-        <Show when={showBuilder()}>
-          <Builder />
-        </Show>
       </div>
 
       {/* Inventory Area */}

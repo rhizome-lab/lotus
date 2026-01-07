@@ -173,6 +173,7 @@ Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
 
 ## Architecture & Core
 
+- [ ] **Web Editor**: Re-add visual script editor for apps/web (removed during TS→Rust port; needs Rust→WASM bindings for transpile/decompile)
 - [ ] **Hybrid ECS Implementation**: Implement optional structured components for hot data (Position, Health) alongside flexible props.
 - [ ] **Smart Context Caching**: Optimize LLM context usage by caching static lore/bio data.
 - [ ] **TUI**: Update TUI to match Web frontend layout.

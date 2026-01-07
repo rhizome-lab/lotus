@@ -14,7 +14,6 @@
   "dependencies": {
     "@viwo/client": "workspace:*",
     "@viwo/shared": "workspace:*",
-    "@viwo/web-editor": "workspace:*",
     "solid-js": "^1.8.15"
   },
   "devDependencies": {

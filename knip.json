@@ -9,20 +9,6 @@
       "entry": ["{src/index.ts,src/index.tsx,index.html}"],
       "project": ["src/**/*.{ts,tsx}"]
     },
-    "plugins/*": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts"]
-    },
-    "packages/core": {
-      "entry": [
-        "src/index.ts",
-        "src/seeds/definitions/*.ts",
-        "src/benchmark_compiler.ts",
-        "src/plugin_types.ts",
-        "src/verb_loader.ts"
-      ],
-      "project": ["src/**/*.ts"]
-    },
     "packages/shared": {
       "entry": ["src/index.css", "src/jsonrpc.ts", "src/constants/adjectives.ts"],
       "project": ["src/**/*.ts"]
