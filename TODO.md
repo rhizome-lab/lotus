@@ -4,7 +4,6 @@
 
 ### Frontends & Clients
 
-- [ ] **Rich Embeds**: Map game state to platform-specific UI (Discord Embeds, Slack Blocks)
 - [ ] **Async Play**: Design mechanics suitable for slow, correspondence-style gameplay
 
 ### Knowledge & Productivity
@@ -17,7 +16,6 @@
 - [ ] **Web Editor**: Re-add visual script editor (needs Rust→WASM bindings for transpile/decompile)
 - [ ] **Hybrid ECS**: Optional structured components for hot data (Position, Health) alongside flexible props
 - [ ] **Smart Context Caching**: Optimize LLM context by caching static lore/bio data
-- [ ] **Atomic Transactions**: Multi-entity moves (item from room A to room B atomically)
 - [ ] **Capability Verbs**: Add capability-based permissions for verb execution
 
 ### Transpiler & Codegen
@@ -41,6 +39,8 @@
 - [x] Type-Aware Linting: oxlint with --type-aware flag, oxlint-tsgolint, root tsconfig.json
 - [x] Wiki Transclusion: ![[Note]] syntax embeds note content with recursion/cycle detection
 - [x] Transpiler: Classic for-loops `for (init; cond; update)` and switch statements
+- [x] Rich Embeds: Message adapter system for Discord/Slack with formal GameMessage types
+- [x] Atomic Transactions: SQLite transactions with nested savepoint support for verb execution
 </details>
 
 <details>

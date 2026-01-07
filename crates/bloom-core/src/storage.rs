@@ -15,18 +15,26 @@ pub enum StorageError {
 
     #[error("invalid JSON: {0}")]
     InvalidJson(#[from] serde_json::Error),
+
+    #[error("transaction error: {0}")]
+    Transaction(String),
 }
 
 /// World storage backed by SQLite.
 pub struct WorldStorage {
     conn: Connection,
+    /// Transaction depth for nested savepoints.
+    transaction_depth: usize,
 }
 
 impl WorldStorage {
     /// Open or create a world database.
     pub fn open(path: &str) -> Result<Self, StorageError> {
         let conn = Connection::open(path)?;
-        let storage = Self { conn };
+        let storage = Self {
+            conn,
+            transaction_depth: 0,
+        };
         storage.init_schema()?;
         Ok(storage)
     }
@@ -34,9 +42,99 @@ impl WorldStorage {
     /// Open an in-memory database.
     pub fn in_memory() -> Result<Self, StorageError> {
         let conn = Connection::open_in_memory()?;
-        let storage = Self { conn };
+        let storage = Self {
+            conn,
+            transaction_depth: 0,
+        };
         storage.init_schema()?;
         Ok(storage)
+    }
+
+    // =========================================================================
+    // Transaction Management
+    // =========================================================================
+
+    /// Begin a transaction. Uses SAVEPOINT for nested transactions.
+    ///
+    /// Returns the transaction depth (0 for outer transaction).
+    pub fn begin_transaction(&mut self) -> Result<usize, StorageError> {
+        let depth = self.transaction_depth;
+        if depth == 0 {
+            self.conn.execute("BEGIN IMMEDIATE", [])?;
+        } else {
+            self.conn.execute(&format!("SAVEPOINT sp_{}", depth), [])?;
+        }
+        self.transaction_depth += 1;
+        Ok(depth)
+    }
+
+    /// Commit the current transaction.
+    ///
+    /// For nested transactions, releases the savepoint.
+    pub fn commit(&mut self) -> Result<(), StorageError> {
+        if self.transaction_depth == 0 {
+            return Err(StorageError::Transaction(
+                "no active transaction".to_string(),
+            ));
+        }
+        self.transaction_depth -= 1;
+        if self.transaction_depth == 0 {
+            self.conn.execute("COMMIT", [])?;
+        } else {
+            self.conn.execute(
+                &format!("RELEASE SAVEPOINT sp_{}", self.transaction_depth),
+                [],
+            )?;
+        }
+        Ok(())
+    }
+
+    /// Rollback the current transaction.
+    ///
+    /// For nested transactions, rolls back to the savepoint.
+    pub fn rollback(&mut self) -> Result<(), StorageError> {
+        if self.transaction_depth == 0 {
+            return Err(StorageError::Transaction(
+                "no active transaction".to_string(),
+            ));
+        }
+        self.transaction_depth -= 1;
+        if self.transaction_depth == 0 {
+            self.conn.execute("ROLLBACK", [])?;
+        } else {
+            self.conn.execute(
+                &format!("ROLLBACK TO SAVEPOINT sp_{}", self.transaction_depth),
+                [],
+            )?;
+        }
+        Ok(())
+    }
+
+    /// Execute a function within a transaction.
+    ///
+    /// Automatically commits on success, rolls back on error.
+    /// Supports nested transactions via savepoints.
+    pub fn transaction<F, R>(&mut self, f: F) -> Result<R, StorageError>
+    where
+        F: FnOnce(&mut Self) -> Result<R, StorageError>,
+    {
+        self.begin_transaction()?;
+        match f(self) {
+            Ok(result) => {
+                self.commit()?;
+                Ok(result)
+            }
+            Err(e) => {
+                // Try to rollback, but don't mask the original error
+                let _ = self.rollback();
+                Err(e)
+            }
+        }
+    }
+
+    /// Check if currently in a transaction.
+    pub fn in_transaction(&self) -> bool {
+        self.transaction_depth > 0
     }
 
     /// Initialize the database schema.

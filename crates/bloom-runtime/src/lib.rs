@@ -103,7 +103,41 @@ impl BloomRuntime {
     }
 
     /// Execute a verb on an entity.
+    ///
+    /// All mutations within the verb execution are wrapped in a transaction.
+    /// If execution fails, all changes are rolled back atomically.
     pub fn execute_verb(
+        &self,
+        entity_id: EntityId,
+        verb_name: &str,
+        args: Vec<serde_json::Value>,
+        caller_id: Option<EntityId>,
+    ) -> Result<serde_json::Value, ExecutionError> {
+        // Start transaction before any operations
+        {
+            let mut storage = self.storage.lock().unwrap();
+            storage.begin_transaction()?;
+        }
+
+        // Execute verb with automatic commit/rollback
+        let result = self.execute_verb_inner(entity_id, verb_name, args, caller_id);
+
+        // Commit or rollback based on result
+        {
+            let mut storage = self.storage.lock().unwrap();
+            if result.is_ok() {
+                storage.commit()?;
+            } else {
+                // Ignore rollback errors - the original error is more important
+                let _ = storage.rollback();
+            }
+        }
+
+        result
+    }
+
+    /// Internal verb execution (without transaction handling).
+    fn execute_verb_inner(
         &self,
         entity_id: EntityId,
         verb_name: &str,
