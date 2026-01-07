@@ -2,222 +2,127 @@
 
 ## Next Up
 
-### Rust Port - Scripting Layer ✅ COMPLETE
+### Frontends & Clients
 
-Goal: Mirror `packages/scripting/src/compiler.ts` semantics exactly.
+- [ ] **TUI**: Update TUI to match Web frontend layout
+- [ ] **Discord Bot**: Full feature parity with Web client
+- [ ] **Rich Embeds**: Map game state to platform-specific UI (Discord Embeds, Slack Blocks)
+- [ ] **Async Play**: Design mechanics suitable for slow, correspondence-style gameplay
 
-- [x] **Codegen**: Split codegen.rs into per-library modules (math, list, str, obj, std, bool)
-- [x] **Tests**: Port tests from TypeScript (285 tests passing total)
-- [x] **Transpiler**: Support `while_statement`, `for_in_statement`, `break_statement`, `continue_statement`
-- [x] **Transpiler**: Support `parenthesized_expression` as call target (e.g. `((x) => x + 1)(5)`)
-- [x] **Transpiler**: Support `assignment_expression` for `i = i + 1` in loops
-- [x] **Codegen**: Implement `std.apply` for calling lambdas
-- [x] **Codegen**: No IIFEs needed - lambda calls use `std.apply` which compiles to `(func)(args)`
-- [x] **Stdlib Math**: All ops (`+`, `-`, `*`, `/`, `%`, `^`, `abs`, `floor`, `ceil`, `trunc`, `round`, `sqrt`, `min`, `max`, `clamp`, `sign`, `sin`, `cos`, `tan`, `asin`, `acos`, `atan`, `atan2`, `log`, `log2`, `log10`, `exp`)
-- [x] **Stdlib List**: All ops (`new`, `len`, `empty`, `get`, `set`, `push`, `pop`, `unshift`, `shift`, `map`, `filter`, `reduce`, `find`, `concat`, `slice`, `includes`, `indexOf`, `reverse`, `sort`, `join`)
-- [x] **Stdlib String**: All ops (`len`, `concat`, `lower`, `upper`, `split`, `sub`, `trim`, `indexOf`, `includes`, `replace`, `slice`, `join`, `startsWith`, `endsWith`, `repeat`)
-- [x] **Stdlib Object**: All ops (`new`, `get`, `set`, `keys`, `values`, `entries`, `has`, `delete`, `del`, `merge`, `map`, `filter`, `reduce`, `flatMap`)
-- [x] **Stdlib List**: `splice`, `flatMap`
-- [x] **Stdlib Std**: `typeof`
-- [x] **Stdlib JSON**: `stringify`, `parse` (via cjson serde bindings)
-- [x] **Transpiler**: `nullish` (??) coalescing operator
-- [x] **Codegen**: `bool.guard` - like && but only null/undefined are falsy (not false)
-- [x] **Codegen**: `std.continue` with goto label support in loops
-- [x] **Codegen**: Type coercion (`std.string`, `std.number`, `std.boolean`)
-- [x] **Codegen**: Error handling (`std.throw`, `std.try`)
-- [x] **Codegen**: Logging (`std.log`, `std.warn`)
+### Testing
 
-### Rust Port - Game Engine (IN PROGRESS) 🚀
+- [ ] **Integration Tests**: End-to-end tests via `packages/client` (boot server → connect → exercise login/move/verb flow → assert state)
 
-**Core Infrastructure: (MAJOR PROGRESS - 90% complete)**
-- [x] **bloom-core**: Port entity repository (create, read, update, delete with SQLite) ✅
-- [x] **bloom-core**: Port verb resolution via prototype chain ✅
-- [x] **bloom-core**: Port capability enforcement and validation ✅
-- [x] **bloom-core**: Port scheduler system with task queue ✅
-- [x] **bloom-runtime**: Create integrated runtime combining storage + LuaJIT ✅
-- [x] **bloom-runtime**: Implement context opcodes (`std.arg`, `std.args`, `std.this`, `std.caller`) ✅
-- [x] **bloom-runtime**: Fix entity flattening to match TypeScript behavior ✅
-- [x] **bloom-runtime**: Implement kernel capability operations (get, has, give) ✅
-- [x] **bloom-runtime**: Port game opcodes (`entity`, `update`, `create`, `call`, `schedule`) ✅
-- [x] **bloom-runtime**: Implement entity mutation tracking (obj.set auto-persists) ✅
-- [x] **bloom-runtime**: Convert to sync Mutex for simpler Lua integration ✅
-- [x] **bloom-runtime**: Port kernel capability opcodes (`mint`, `delegate`) ✅
-- [x] **bloom-core**: Port seed system (load entities/verbs from TypeScript DSL) ✅
-  - [x] **bloom-syntax-typescript**: Entity definition parser (tree-sitter based) ✅
-  - [x] **bloom-core**: SeedSystem for loading TypeScript entity classes ✅
-  - [x] **Tests**: Entity parsing (properties, methods, verbs) ✅
+### Knowledge & Productivity
 
-**Tests Ported: (20/20+ tests, 95% complete, 331 passing)**
-- [x] **Tests**: Port basic gameloop tests (state_persistence, verb_inheritance) ✅
-- [x] **Tests**: Port capability tests (get_capability, transfer) ✅
-- [x] **Tests**: Port capability delegation tests (mint, delegate with restrictions) ✅
-- [x] **Tests**: Port scheduler integration tests (3 tests) ✅
-- [x] **Tests**: Port complex workflow tests (conditionals, loops, lambdas, lists) ✅
-- [x] **Tests**: Port verb calling tests (call opcode, entity mutations) ✅
-- [x] **Tests**: Port multi-entity interaction tests ✅
-- [x] **Tests**: Port remaining edge cases and error handling tests (edge_cases.rs) ✅
+- [ ] **Wiki Features**: Revision history and transclusion support
+- [ ] **Custom Views**: Support for defining custom DB views/indexes for performance
+- [ ] **Cloud Sync**: Plugins to sync DB to cloud storage (S3, R2, Google Drive, Dropbox, etc.)
+- [ ] **Graph Queries**: Standard library for traversing entity relationships (deferred - no fixed schema yet)
 
-**Type-Safe IR & Code Generation: (COMPLETE ✅)**
-- [x] **bloom-ir**: Implement opaque inner enum SExpr design with phantom types ✅
-- [x] **bloom-ir**: TOML schema format with dual-type system (TS generics + Rust runtime types) ✅
-- [x] **bloom-ir**: Schema-based code generator for type-safe Rust builders ✅
-- [x] **bloom-ir**: Prevent invalid SExpr construction at compile time (e.g., `SExpr::<Num>::bool(true)`) ✅
-- [x] **bloom-ir**: Add `cast_type()` and `erase_type()` for type conversion ✅
-- [x] **bloom-ir**: Rust keyword escaping in generated code (else → r#else) ✅
-- [x] **bloom-ir**: Extract remaining opcode definitions from TypeScript to schema ✅
+### Architecture
 
-## Next Up
+- [ ] **Web Editor**: Re-add visual script editor (needs Rust→WASM bindings for transpile/decompile)
+- [ ] **Hybrid ECS**: Optional structured components for hot data (Position, Health) alongside flexible props
+- [ ] **Smart Context Caching**: Optimize LLM context by caching static lore/bio data
+- [ ] **Atomic Transactions**: Multi-entity moves (item from room A to room B atomically)
+- [ ] **Capability Verbs**: Add capability-based permissions for verb execution
 
-1. ~~**Server**: Full verb discovery via System.get_available_verbs~~ ✅ (execute handler now searches player, room, contents, inventory)
-2. ~~**Notes App**: Integration tests for notes-specific verbs, backlinks, search~~ ✅ (4 tests passing: basic ops, verb ops, backlinks, search)
-3. ~~**FileBrowser App**: Integration tests for navigation, file reading, bookmarks~~ ✅ (3/4 tests passing - 4th needs fs plugin)
-4. ~~**Transpiler**: Make dictionary/object access safer~~ ✅ (obj.get and list.get now support optional default value argument)
-5. ~~**bloom-ir**: Extract remaining opcode definitions from TypeScript to schema~~ ✅ (all stdlib opcodes: std, math, list, obj, str, bool, json, game)
-6. ~~**Codegen**: Fix `str.split` to preserve empty strings between separators~~ ✅
+### Transpiler & Codegen
+
+- [ ] **Safe Object Access**: Bracket notation `obj[key]` should use `obj.get` with defaults or null-safe operator
+- [ ] **Handle All Constructs**: Complete coverage of TypeScript language features
+
+### Tooling
+
+- [ ] **Type-Aware Linting**: Enable oxlint type-aware rules for TypeScript frontends
 
 ---
 
-**Plugin System: (7/7 complete ✅)**
-- [x] **Plugins**: Implement plugin opcode registry in bloom-runtime-luajit ✅
-- [x] **Plugins**: Complete plugin loader (dynamic loading with libloading) ✅
-- [x] **Plugins**: Refactor to native Lua C API (removed JSON serialization, full capabilities) ✅
-- [x] **Plugins**: Port `fs` plugin with native Lua C API (7 functions: read, write, list, stat, exists, mkdir, remove) ✅
-- [x] **Plugins**: Add runtime integration tests for fs plugin ✅
-- [x] **Plugins**: Refactor `net` plugin to native Lua C API (2 functions: get, post) ✅
-- [x] **Plugins**: Refactor `sqlite` plugin to native Lua C API (2 functions: query, execute) ✅
-- [x] **Plugins**: Refactor `procgen` plugin to native Lua C API (5 functions: seed, noise, random, randomRange, between) ✅
-- [x] **Plugins**: Refactor `vector` plugin to native Lua C API (3 functions: insert, search, delete) ✅
-- [x] **Plugins**: Refactor `ai` plugin to native Lua C API (3 functions: generateText, embed, chat) ✅
-- [x] **Plugins**: Refactor `memory` plugin to native Lua C API (orchestrates sqlite+ai+vector) ✅
-- [x] **Plugins**: Generic plugin registration via `register_all_to_lua()` (no special-casing) ✅
-- [x] **Plugins**: Port `diffusers` plugin (image generation with burn-models SD 1.x, wgpu backend) ✅
+## Completed
 
-**Server & Transport:**
-- [x] **bloom-core**: Port scheduler system (periodic task execution from database queue) ✅
-- [x] **bloom-transport-websocket-jsonrpc**: Integrate runtime with verb execution ✅
-- [x] **Testing**: WebSocket integration tests (notes-server: 5 tests passing) ✅
-- [x] **Server**: Compare Rust handlers against TypeScript reference implementation ✅
-- [x] **Server**: Add entity CRUD handlers (get_entities, update_entity, delete_entity) ✅
-- [x] **Server**: Add verb CRUD handlers (get_verb, get_verbs, add_verb, update_verb, delete_verb) ✅
-- [x] **Server**: Session-based login handler (associate session with player entity) ✅
-- [x] **Server**: Execute handler (verb discovery + command execution) ✅
-- [x] **Server**: Broadcast system for multi-client updates ✅
-- [x] **Server**: Hook scheduler into server tick loop ✅
-- [x] **Server**: Schedule handler for client-initiated task scheduling ✅
+<details>
+<summary>Rust Port - Scripting Layer ✅</summary>
 
-**Rust Server Applications:**
-- [x] **notes-server**: Port notes server to Rust ✅
-  - [x] Create `crates/apps/notes-server` with main.rs ✅
-  - [x] Bootstrap: load plugins → seed world → start WebSocket server ✅
-  - [x] Reuse existing TypeScript entity definitions (`apps/notes-server/src/definitions/Notes.ts`) ✅
-  - [x] Integration tests: WebSocket, JSON-RPC, entity CRUD ✅
-  - [x] Test: Notes-specific verbs, backlinks, search (4 tests passing) ✅
-- [x] **filebrowser-server**: Port file browser server to Rust ✅
-  - [x] Create `crates/apps/filebrowser-server` with main.rs ✅
-  - [x] Bootstrap: load fs plugin → seed world → start WebSocket server ✅
-  - [x] Reuse existing TypeScript entity definitions (`apps/filebrowser-server/src/definitions/FileBrowser.ts`) ✅
-  - [x] Implement fs plugin ABI with native Lua C API ✅
-  - [x] Test: bookmarks, navigation, metadata (3/4 tests passing - needs fs plugin for 4th) ✅
+- [x] Codegen split into per-library modules (math, list, str, obj, std, bool)
+- [x] Tests ported from TypeScript (285 tests)
+- [x] Transpiler: while, for-in, break, continue, parenthesized expressions, assignment expressions
+- [x] Codegen: std.apply, IIFEs, all stdlib ops
+- [x] Nullish coalescing, bool.guard, std.continue with goto labels
+- [x] Type coercion, error handling, logging
+</details>
 
-**Integration Test Notes:**
-- Core runtime tests pass (18 tests: object_creation + adversarial)
-- Notes-server integration tests pass (4 tests: basic ops, verbs, backlinks, search)
-- Filebrowser-server tests pass (3/4 - 4th needs fs plugin built)
-- Fixed: `bool.guard` semantics, `obj.new` supports flat pairs format
-- Fixed: `entity()` opcode returns flattened props (matches TypeScript behavior)
-- Fixed: `std.if` generates IIFE when used as expression (Lua if is statement)
-- Fixed: `str.split` preserves empty strings (like JavaScript)
-- Fixed: `std.seq` adds semicolons to prevent Lua parsing ambiguity
-- Fixed: `std.if` avoids IIFE when branches contain break/continue/return
+<details>
+<summary>Rust Port - Game Engine ✅</summary>
 
-## 1. Deep Simulation (Sandbox)
+- [x] bloom-core: Entity repo, verb resolution, capabilities, scheduler, seed system
+- [x] bloom-runtime: Context opcodes, game opcodes, mutation tracking, kernel ops
+- [x] bloom-ir: Type-safe S-expression builders with phantom types
+- [x] All game engine tests ported (331 passing)
+</details>
 
-- [x] **Combat System**: Standardized libraries for turn-based combat math and state.
-- [x] **Quest Engine**: State machine implementation for tracking multi-stage narrative arcs.
-- [x] **World Gen**: Procedural generation tools for creating vast maps.
+<details>
+<summary>Plugin System ✅</summary>
 
-## 2. AI-Native Roleplay (SillyTavern)
+- [x] Native Lua C API for all plugins (fs, net, sqlite, procgen, vector, ai, memory, diffusers)
+- [x] Dynamic plugin loading via libloading
+- [x] Generic plugin registration
+</details>
 
-- [x] **Memory Systems**: Integrate `sqlite-vec` for RAG-based long-term memory.
-- [x] **Streaming**: Implement `streamText` support in `plugins/ai` for real-time typing effects.
-- [x] **Dynamic State Context**: Implement system for mutable personality traits and ephemeral emotions that feed into LLM context.
-- [x] **Director AI**: Meta-AI agent for pacing and environment control.
-- [x] **Chat Tree**: SillyTavern-style chat tree for roleplay (implemented in `seed.ts`).
+<details>
+<summary>Server & Transport ✅</summary>
 
-## 3. Ubiquitous Access (Chatbot)
+- [x] WebSocket JSON-RPC server
+- [x] All handlers: login, execute, entity CRUD, verb CRUD, schedule
+- [x] Broadcast system, scheduler integration
+- [x] notes-server and filebrowser-server apps
+</details>
 
-- [ ] **Rich Embeds**: Map game state to platform-specific UI (Discord Embeds, Slack Blocks).
-- [ ] **Async Play**: Design mechanics suitable for slow, correspondence-style gameplay.
-- [ ] **Discord Bot**: Flesh out full feature parity with Web client.
-- [ ] **Integration Tests**: Add end-to-end `bun:test` harness for core: boot server, seed minimal world, connect via `packages/client`, exercise login/move/verb flow, assert DB state/events/capability enforcement.
-- [x] **File Browser App**: Sandboxed file browser paradigm.
-  - `apps/filebrowser-server/`: Server with FileBrowserUser entity, CRUD + bookmarks + tags
-  - `apps/filebrowser/`: SolidJS client with toolbar, preview, bookmarks panel
-  - Run: `bun dev:filebrowser-server` (port 8080) + `bun dev:filebrowser` (port 3003)
+<details>
+<summary>Deep Simulation ✅</summary>
 
-## Testing & Hardening
+- [x] Combat system, quest engine, world gen
+</details>
 
-- [x] **Object Creation Flows**: Add regression tests around create/dig/set verbs covering prototype assignment, room contents updates, and capability-gated creation failures. ✅ (6 tests in object_creation.rs)
-- [x] **Adversarial Actors**: Red-team scenarios for capability abuse (missing caps, spoofed locations, recursive containment, excessive gas) with assertions that operations are rejected and state remains consistent. ✅ (13 tests in adversarial.rs)
+<details>
+<summary>AI-Native Roleplay ✅</summary>
 
-## 4. Knowledge & Productivity (Notion)
+- [x] Memory systems (sqlite-vec), streaming, dynamic state context
+- [x] Director AI, chat tree
+</details>
 
-- [x] **Vector Plugin**: Core integration with `sqlite-vec` for semantic search.
-- [ ] **Graph Queries**: Standard library functions for traversing entity relationships (backlinks, children, parents). (Status: Deferred, awaiting further design. We do not want to have a single fixed schema.)
-- [x] **Wiki Notes App**: Obsidian-style notes with wikilinks and backlinks.
-  - `apps/notes-server/`: Server with NotesUser entity, CRUD verbs, backlinks via stored links array
-  - `apps/notes/`: SolidJS client with remark-gfm + remark-wiki-link + rehype pipeline
-  - Run: `bun dev:notes-server` (port 8081) + `bun dev:notes` (port 3004)
-- [ ] **Wiki Features (Extended)**: Revision history and transclusion support.
-- [ ] **Custom Views**: Support for defining custom DB views/indexes for performance.
-- [ ] **Cloud Sync**: Plugins to sync whole DB (e.g. notes) to cloud storage (S3-compatible, Backblaze B2, Cloudflare R2, Google Drive, Dropbox, OneDrive etc.)
+<details>
+<summary>Testing & Hardening ✅</summary>
 
-## Architecture & Core
+- [x] Object creation flows (6 tests)
+- [x] Adversarial actors (13 tests)
+- [x] Notes-server integration (4 tests)
+- [x] Filebrowser-server integration (3 tests)
+</details>
 
-- [ ] **Web Editor**: Re-add visual script editor for apps/web (removed during TS→Rust port; needs Rust→WASM bindings for transpile/decompile)
-- [ ] **Hybrid ECS Implementation**: Implement optional structured components for hot data (Position, Health) alongside flexible props.
-- [ ] **Smart Context Caching**: Optimize LLM context usage by caching static lore/bio data.
-- [ ] **TUI**: Update TUI to match Web frontend layout.
+<details>
+<summary>Bug Fixes ✅</summary>
 
-## Maintenance & Fixes
+- [x] bool.guard semantics
+- [x] obj.new flat pairs format
+- [x] entity() returns flattened props
+- [x] std.if IIFE for expressions
+- [x] str.split preserves empty strings
+- [x] std.seq semicolons for Lua parsing
+- [x] std.if avoids IIFE with break/continue/return
+- [x] Transpiler: temp var counter, optional chaining, std.set throws
+- [x] Optimizer: onWarning callback
+- [x] Kernel: delegate validates subset restrictions
+</details>
 
-- [ ] **Interpreter**: Refactor `OpcodeHandler` to avoid recursion when calling lambdas. _Status: Postponed_.
-- [ ] **Security**: Ensure kernel restrictions are actually restrictive (subset) in `packages/core/src/runtime/lib/kernel.ts`.
-- [ ] **Auth**: Implement proper authentication checks in `packages/core/src/index.ts`.
-- [ ] **Core**: Solve transactional updates for multiple entities with capabilities in `packages/core/src/runtime/lib/core.ts`.
-- [ ] **Core**: Atomic multi-entity moves (e.g. moving item from room A to room B atomically).
-- [ ] **Core**: Add capability-based permissions for verbs
-- [ ] **Core**: Re-add verb checking if it makes sense (removed `ops/verbs` and `check:verbs` script due to failures)
-- [ ] **Scripting**: Add async support to compiler
-- [ ] **Seed**: Make sure mailbox uses capability based permissions. (And add it back, I guess, and add _new_ tests in `mailbox.test.ts` to verify that functionality works)
-- [ ] **Seed**: Add object literal support to `extractLiteral` in `packages/core/src/seeds/loader.ts` (currently only supports strings, numbers, booleans, null, and arrays)
-- [ ] **Transpiler**: Handle all compiler constructs
-- [x] **Transpiler**: Support ES6 shorthand property syntax - FIXED: now handles ShorthandPropertyAssignment
-- [x] **Transpiler**: Support native array methods (`.push()`, `.reverse()`, `.map()`, etc.) - FIXED: maps to list.* opcodes
-- [x] **Transpiler**: Support native string methods (`.split()`, `.trim()`, `.toLowerCase()`, etc.) - FIXED: maps to str.* opcodes
-- [x] **Transpiler**: Fix for-in loop transpilation - FIXED: now correctly uses `obj.keys()` for `for...in` and direct iteration for `for...of`
-- [ ] **Transpiler**: Make dictionary/object access safer (bracket notation `obj[key]` throws if key missing - should use `obj.get` with defaults or add null-safe operator support)
-- [ ] **Compiler**: Consider tracking usages of `__ctx__` and removing it from the parameter list if it is unused
-- [ ] **Scripting**: Either document wildcard capability support (see `packages/core/src/runtime/lib/kernel.ts`), or remove it
-- [ ] **Lint**: Enable type-aware linting: https://oxc.rs/docs/guide/usage/linter/type-aware.html
-- [ ] **Codegen**: Autogenerate `packages/core/src/plugin_types.ts` without introducing dependency on `@bloom/plugin-ai`
-- [ ] **Codegen**: Add all other plugins to `packages/core/src/plugin_types.ts` (net, fs, procgen)
-- [ ] **AI**: Better syntax for custom OpenAI-compatible endpoints for `getProvider`
-- [ ] **Plugins**: Consider making calls like `this.context.getPlugin("memory")` type-safe
-- [ ] **AI**: Make `modelSpec`s configurable in `plugins/ai/src/index.ts`
-- [ ] **AI**: Remove dependency on Zod since all schemas should be defined at runtime
-- [ ] **Libraries**: Library with opcodes to construct JSON Schemas. Also export regular functions for other plugins to construct JSON Schemas at compile-time
-- [ ] **AI**: Return images and audio in a usable format in `plugins/ai/src/lib.ts`
-- [ ] **AI**: Add support for specifying image size in `plugins/ai/src/lib.ts`
-- [ ] **AI**: Add support for streaming text in `plugins/ai/src/lib.ts`
+---
 
-## Issues Found During Architecture Review
+## Apps
 
-- [x] **Transpiler**: Temp variable generation uses `Math.random()` suffix - theoretically can collide (use counter instead) - FIXED: uses counter now
-- [x] **Transpiler**: Optional chaining `obj?.method()` may lose `this` context - FIXED: buildChain() fuses prop+call into callMethod
-- [x] **Interpreter**: `std.set` silently does nothing if variable not found in scope chain - should throw or create at top level - FIXED: throws ScriptError
-- [x] **Optimizer**: Catches all errors silently with `console.error` - FIXED: now supports onWarning callback
-- [x] **Stdlib**: Several opcode labels are wrong (e.g., `listEmpty` labeled "Index Of", `listGet` labeled "Insert Item") - FIXED: corrected 10 labels
-- [ ] **Core**: Copy-on-Write pattern only helps scope forking, doesn't protect against external mutation of vars object
-- [ ] **Core**: Verb compilation cache uses `JSON.stringify(code)` as key - inefficient for large verbs
-- [x] **Kernel**: `delegate` opcode allows privilege ESCALATION - FIXED: now validates subset restrictions
+| App | Server | Client | Status |
+|-----|--------|--------|--------|
+| Notes | `cargo run -p bloom-notes-server` (8081) | `bun dev:notes` (3004) | ✅ |
+| FileBrowser | `cargo run -p bloom-filebrowser-server` (8080) | `bun dev:filebrowser` (3003) | ✅ |
+| Web | - | `bun dev:web` (5173) | ✅ |
+| TUI | - | `bun dev:tui` | Needs update |
+| Discord | - | `bun dev:discord-bot` | Needs features |
