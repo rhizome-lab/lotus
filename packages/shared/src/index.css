@@ -3137,6 +3137,44 @@ body {
   cursor: default;
 }
 
+/* Transclusion (embedded notes) */
+.transclusion {
+  border-left: 3px solid var(--accent-color);
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background: var(--bg-element);
+  border-radius: 0 4px 4px 0;
+}
+
+.transclusion::before {
+  content: attr(data-note-title);
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.transclusion--missing {
+  border-left-color: var(--error-color);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.transclusion--cycle {
+  border-left-color: oklch(80% 0.15 60); /* Warning yellow */
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Nested transclusions */
+.transclusion .transclusion {
+  margin: 0.5rem 0;
+  opacity: 0.9;
+}
+
 /* Backlinks Panel */
 .backlinks-panel__title {
   margin: 0;

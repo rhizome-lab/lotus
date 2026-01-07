@@ -1,6 +1,6 @@
 import { Show, createSignal, createEffect } from "solid-js";
 import { notesStore } from "../store/notes";
-import { renderMarkdown } from "../lib/wikilinks";
+import { renderMarkdownWithTransclusion, type ContentResolver } from "../lib/wikilinks";
 
 export function NoteEditor() {
   const { state, updateNote, deleteNote, setEditMode, getNote } = notesStore;
@@ -73,10 +73,24 @@ export function NoteEditor() {
     return null;
   }
 
+  // Resolve note content for transclusion
+  const resolveContent: ContentResolver = (linkTarget: string) => {
+    const lower = linkTarget.toLowerCase();
+    for (const note of state.notes) {
+      if (note.title.toLowerCase() === lower) {
+        return { content: note.content, title: note.title };
+      }
+      if (note.aliases.some((a) => a.toLowerCase() === lower)) {
+        return { content: note.content, title: note.title };
+      }
+    }
+    return null;
+  };
+
   function renderContent(): string {
     const note = state.currentNote;
     if (!note) return "";
-    return renderMarkdown(note.content, resolveLink);
+    return renderMarkdownWithTransclusion(note.content, resolveLink, resolveContent);
   }
 
   return (
@@ -135,7 +149,7 @@ export function NoteEditor() {
               class="note-editor__textarea"
               value={content()}
               onInput={(e) => setContent(e.currentTarget.value)}
-              placeholder="Write your note here... Use [[wikilinks]] to link to other notes."
+              placeholder="Write your note here... Use [[wikilinks]] to link, ![[note]] to embed."
             />
           </Show>
 

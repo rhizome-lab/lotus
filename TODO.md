@@ -8,8 +8,6 @@
 - [ ] **Async Play**: Design mechanics suitable for slow, correspondence-style gameplay
 
 ### Knowledge & Productivity
-
-- [ ] **Wiki Transclusion**: Support for embedding note content in other notes
 - [ ] **Custom Views**: Support for defining custom DB views/indexes for performance
 - [ ] **Cloud Sync**: Plugins to sync DB to cloud storage (S3, R2, Google Drive, Dropbox, etc.)
 - [ ] **Graph Queries**: Standard library for traversing entity relationships (deferred - no fixed schema yet)
@@ -41,6 +39,7 @@
 - [x] Fix unused check (knip configuration)
 - [x] Safe Object Access: Transpiler uses obj.get for bracket notation with string keys
 - [x] Type-Aware Linting: oxlint with --type-aware flag, oxlint-tsgolint, root tsconfig.json
+- [x] Wiki Transclusion: ![[Note]] syntax embeds note content with recursion/cycle detection
 </details>
 
 <details>

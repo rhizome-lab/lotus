@@ -1,6 +1,6 @@
 import { BloomClient } from "@bloom/client";
 import { createStore } from "solid-js/store";
-import { extractWikilinks } from "../lib/wikilinks";
+import { extractAllLinks } from "../lib/wikilinks";
 
 export interface Note {
   id: string;
@@ -97,7 +97,7 @@ async function createNote(title: string, content = ""): Promise<Note | null> {
   setState("loading", true);
   setState("error", null);
   try {
-    const links = extractWikilinks(content);
+    const links = extractAllLinks(content);
     const result = (await client.execute("create_note", [title, content, links])) as NoteCreated;
     if (result && result.type === "note_created") {
       await listNotes();
@@ -143,7 +143,7 @@ async function updateNote(
   setState("loading", true);
   setState("error", null);
   try {
-    const links = extractWikilinks(content);
+    const links = extractAllLinks(content);
     const result = (await client.execute("update_note", [
       noteId,
       content,
