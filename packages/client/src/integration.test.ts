@@ -38,7 +38,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-describe("BloomClient Integration", () => {
+// Skip integration tests in CI - they require spawning external processes
+const isCI = process.env["CI"] === "true" || process.env["CI"] === "1";
+
+describe.skipIf(isCI)("BloomClient Integration", () => {
   let serverProcess: Subprocess | null = null;
   let client: BloomClient | null = null;
   let testDir: string;
