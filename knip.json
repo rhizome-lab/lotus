@@ -10,7 +10,7 @@
       "project": ["src/**/*.{ts,tsx}"]
     },
     "packages/shared": {
-      "entry": ["src/index.css", "src/jsonrpc.ts", "src/constants/adjectives.ts"],
+      "entry": ["src/index.css"],
       "project": ["src/**/*.ts"]
     }
   },

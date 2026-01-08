@@ -27,7 +27,7 @@ const TRANSCLUSION_REGEX = /!\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
  * Extract transclusions from markdown content.
  * Returns array of unique transclusion targets.
  */
-export function extractTransclusions(content: string): string[] {
+function extractTransclusions(content: string): string[] {
   const transclusions: string[] = [];
   const seen = new Set<string>();
 
@@ -52,7 +52,7 @@ export function extractTransclusions(content: string): string[] {
  * Extract wikilinks from markdown content.
  * Returns array of unique link targets (excludes transclusions).
  */
-export function extractWikilinks(content: string): string[] {
+function extractWikilinks(content: string): string[] {
   const links: string[] = [];
   const seen = new Set<string>();
 
@@ -168,7 +168,7 @@ function processTransclusions(
  * Render markdown with wikilinks to HTML.
  * @param resolver - Function to resolve a link target to a note ID (null if missing)
  */
-export function renderMarkdown(
+function renderMarkdown(
   content: string,
   resolver: (target: string) => string | null,
 ): string {
