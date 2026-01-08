@@ -294,22 +294,30 @@ export class DiscordAdapter implements MessageAdapter<DiscordOutput> {
 
   format(msg: GameMessage): DiscordOutput {
     switch (msg.type) {
-      case "room":
+      case "room": {
         return this.formatRoom(msg);
-      case "inventory":
+      }
+      case "inventory": {
         return this.formatInventory(msg);
-      case "item":
+      }
+      case "item": {
         return this.formatItem(msg);
-      case "status":
+      }
+      case "status": {
         return this.formatStatus(msg);
-      case "text":
+      }
+      case "text": {
         return this.formatText(msg);
-      case "error":
+      }
+      case "error": {
         return this.formatError(msg);
-      case "action":
+      }
+      case "action": {
         return this.formatAction(msg);
-      case "dialogue":
+      }
+      case "dialogue": {
         return this.formatDialogue(msg);
+      }
     }
   }
 

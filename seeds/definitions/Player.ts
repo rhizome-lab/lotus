@@ -191,9 +191,7 @@ export class Player extends EntityBase {
 
     // Need control to update player state
     let controlCap = get_capability("entity.control", { target_id: player.id });
-    if (!controlCap) {
-      controlCap = get_capability("entity.control", { "*": true });
-    }
+    controlCap ??= get_capability("entity.control", { "*": true });
 
     if (!controlCap) {
       send("message", "Permission denied: Cannot modify player quest state.");
@@ -226,7 +224,7 @@ export class Player extends EntityBase {
     questState.tasks[rootId] = { status: "active" };
     quests[String(questId)] = questState;
     controlCap.update(player, { quests });
-    send("message", `Quest Started: ${structure.description || questEnt["name"]}`);
+    send("message", `Quest Started: ${structure.description ?? questEnt["name"]}`);
 
     call(player, "quest_update", questId, rootId, "active");
   }
@@ -238,9 +236,7 @@ export class Player extends EntityBase {
     const player = std.caller();
 
     let controlCap = get_capability("entity.control", { target_id: player.id });
-    if (!controlCap) {
-      controlCap = get_capability("entity.control", { "*": true });
-    }
+    controlCap ??= get_capability("entity.control", { "*": true });
 
     if (!controlCap) {
       return;
@@ -252,7 +248,7 @@ export class Player extends EntityBase {
       return;
     }
 
-    const currentTaskState = qState.tasks[taskId] || {};
+    const currentTaskState = qState.tasks[taskId] ?? {};
 
     if (currentTaskState.status === status) {
       return;
@@ -332,7 +328,7 @@ export class Player extends EntityBase {
           qState.status = "completed";
           qState.completed_at = time.to_timestamp(time.now());
           controlCap.update(player, { quests });
-          send("message", `Quest Completed: ${structure.description || questEnt["name"]}!`);
+          send("message", `Quest Completed: ${structure.description ?? questEnt["name"]}!`);
         }
       }
     }
@@ -363,7 +359,7 @@ export class Player extends EntityBase {
       while (list.len(stack) > 0) {
         const item = list.pop(stack);
         const node = call(questEnt, "get_node", item.id) as any;
-        const taskState = qState.tasks[item.id] || { status: "locked" };
+        const taskState = qState.tasks[item.id] ?? { status: "locked" };
 
         list.push(tasks, {
           depth: item.depth,

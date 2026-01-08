@@ -113,7 +113,7 @@ export class HotelManager extends EntityBase {
     if (room) {
       controlCap.update(room, {
         hotel_entity_type: "room",
-        last_occupied: time.now(), // timestamp
+        last_occupied: time.now(), // Timestamp
         managed_by: this.id,
       });
     }
@@ -290,8 +290,8 @@ export class HotelRoomPrototype implements Entity {
   on_enter() {
     const managerId = this.managed_by;
     if (managerId) {
-      // const manager = entity(managerId);
-      // call(manager, "room_occupied", this.id); // Valid future enhancement
+      // Const manager = entity(managerId);
+      // Call(manager, "room_occupied", this.id); // Valid future enhancement
     }
   }
 
@@ -299,7 +299,7 @@ export class HotelRoomPrototype implements Entity {
     const managerId = this.managed_by;
     if (managerId) {
       // Uncomment when room_vacated is implemented
-      // call(manager, "room_vacated", this.id);
+      // Call(manager, "room_vacated", this.id);
     }
   }
 }

@@ -159,15 +159,18 @@ export function parseGameMessage(data: unknown): GameMessage | null {
     case "text":
     case "error":
     case "action":
-    case "dialogue":
+    case "dialogue": {
       return data as GameMessage;
-    case "message":
+    }
+    case "message": {
       // Legacy format: convert to TextMessage
       return {
         type: "text",
         text: (data as { text?: string }).text ?? "",
       };
-    default:
+    }
+    default: {
       return null;
+    }
   }
 }

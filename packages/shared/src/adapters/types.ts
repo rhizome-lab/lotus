@@ -40,17 +40,17 @@ export const MessageColors = {
 
 /** Emoji/icon mapping for consistent visual language */
 export const MessageIcons = {
-  exits: "\u{1F6AA}", // door
-  contents: "\u{1F4E6}", // package
-  inventory: "\u{1F392}", // backpack
-  health: "\u{2764}\u{FE0F}", // red heart
-  mana: "\u{1F535}", // blue circle
-  level: "\u{2B50}", // star
-  locked: "\u{1F512}", // locked
-  unlocked: "\u{1F513}", // unlocked
-  speaker: "\u{1F4AC}", // speech bubble
-  attack: "\u{2694}\u{FE0F}", // crossed swords
-  error: "\u{26A0}\u{FE0F}", // warning
+  exits: "\u{1F6AA}", // Door
+  contents: "\u{1F4E6}", // Package
+  inventory: "\u{1F392}", // Backpack
+  health: "\u{2764}\u{FE0F}", // Red heart
+  mana: "\u{1F535}", // Blue circle
+  level: "\u{2B50}", // Star
+  locked: "\u{1F512}", // Locked
+  unlocked: "\u{1F513}", // Unlocked
+  speaker: "\u{1F4AC}", // Speech bubble
+  attack: "\u{2694}\u{FE0F}", // Crossed swords
+  error: "\u{26A0}\u{FE0F}", // Warning
 } as const;
 
 /**

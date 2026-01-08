@@ -70,7 +70,7 @@ export class SocketManager extends EventEmitter {
     this.socket.on("message", (data) => {
       if (data.method === "forward") {
         // Forwarded message from Core
-        // params: { target: entityId, type: string, payload: any }
+        // Params: { target: entityId, type: string, payload: any }
         const { target, type, payload } = data.params;
         this.emit("message", target, { type, ...payload });
       } else {

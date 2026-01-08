@@ -7,7 +7,7 @@ globalThis.alert = mock(() => {});
 const mockStorage = new Map<string, string>();
 const localStorageMock = {
   clear: mock(() => mockStorage.clear()),
-  getItem: mock((key: string) => mockStorage.get(key) || null),
+  getItem: mock((key: string) => mockStorage.get(key) ?? null),
   key: mock(() => null),
   length: 0,
   removeItem: mock((key: string) => mockStorage.delete(key)),

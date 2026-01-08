@@ -65,7 +65,7 @@ function main() {
     // If docs exit, we exit
     docs.on("exit", (code) => {
       playground.kill();
-      process.exit(code || 0);
+      process.exit(code ?? 0);
     });
   }
 }

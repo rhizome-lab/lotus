@@ -18,7 +18,7 @@ export default function GameLog() {
   // Auto-scroll to bottom
   createEffect(() => {
     // oxlint-disable-next-line no-unused-expressions
-    gameStore.state.messages.length; // dependency
+    gameStore.state.messages.length; // Dependency
     if (containerRef) {
       containerRef.scrollTop = containerRef.scrollHeight;
     }
@@ -30,7 +30,7 @@ export default function GameLog() {
         {(msg) => {
           switch (msg.type) {
             case "error": {
-              // fallthrough to message view, which handles error type styling
+              // Fallthrough to message view, which handles error type styling
               return <MessageView text={msg.text} type={msg.type} />;
             }
             case "message": {

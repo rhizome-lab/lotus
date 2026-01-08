@@ -249,9 +249,7 @@ export class CombatManager extends EntityBase {
     const newHp = hp - finalDamage;
 
     let targetCap = get_capability("entity.control", { target_id: target.id });
-    if (!targetCap) {
-      targetCap = get_capability("entity.control", { "*": true });
-    }
+    targetCap ??= get_capability("entity.control", { "*": true });
 
     if (targetCap) {
       targetCap.update(target, { hp: newHp });
@@ -335,9 +333,7 @@ export class CombatManager extends EntityBase {
 
     let canAct = true;
     let controlCap = get_capability("entity.control", { target_id: target.id });
-    if (!controlCap) {
-      controlCap = get_capability("entity.control", { "*": true });
-    }
+    controlCap ??= get_capability("entity.control", { "*": true });
 
     if (!controlCap) {
       return true;
@@ -504,7 +500,7 @@ export class Book extends EntityBase {
     const results = list.filter(
       chapters,
       (chapter) =>
-        str.includes(str.lower(chapter.title), query) ||
+        str.includes(str.lower(chapter.title), query) ??
         str.includes(str.lower(chapter.content), query),
     );
     call(

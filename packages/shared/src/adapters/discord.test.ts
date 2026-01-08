@@ -45,7 +45,7 @@ describe("DiscordAdapter", () => {
 
       const output = discordAdapter.formatRoom(msg);
       const exitField = output.embeds![0].fields![0];
-      expect(exitField.value).toContain("\u{1F512}"); // lock emoji
+      expect(exitField.value).toContain("\u{1F512}"); // Lock emoji
     });
   });
 

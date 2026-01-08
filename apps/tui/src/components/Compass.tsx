@@ -53,7 +53,7 @@ export default function Compass({ room, entities }: CompassProps) {
     }
 
     const exit = getExit(dir);
-    const label = DIR_LABELS[dir] || dir;
+    const label = DIR_LABELS[dir] ?? dir;
     const destName = exit ? ((exit["destination_name"] ?? exit["name"]) as string) : "";
 
     return (

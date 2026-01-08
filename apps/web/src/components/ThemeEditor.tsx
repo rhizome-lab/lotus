@@ -19,7 +19,7 @@ export const ThemeEditor: Component<Props> = (props) => {
       "download",
       `${theme.manifest.name.replaceAll(/\s+/g, "_").toLowerCase()}.json`,
     );
-    document.body.append(downloadAnchorNode); // required for firefox
+    document.body.append(downloadAnchorNode); // Required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   };

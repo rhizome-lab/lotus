@@ -160,7 +160,7 @@ const [state, setState] = createStore<ThemeState>(loadInitialState());
 
 export const themeStore = {
   get activeTheme() {
-    return state.themes.find((theme) => theme.id === state.activeThemeId) || defaultTheme;
+    return state.themes.find((theme) => theme.id === state.activeThemeId) ?? defaultTheme;
   },
 
   createTheme: (name: string) => {

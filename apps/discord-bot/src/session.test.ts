@@ -55,7 +55,7 @@ describe("Session Manager", () => {
     mockPlayerSocket.on.mockImplementation(
       (event: string, _handler: (...args: any[]) => unknown) => {
         if (event === "message") {
-          // no-op
+          // No-op
         }
       },
     );

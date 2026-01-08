@@ -200,7 +200,7 @@ const App = () => {
     // Use local opcodes if available
     if (clientState.opcodes) {
       const lines = code.split("\n");
-      const line = lines[position.lineNumber - 1] || "";
+      const line = lines[position.lineNumber - 1] ?? "";
       const textBeforeCursor = line.slice(0, position.column - 1);
 
       // Find the word being typed.
@@ -210,7 +210,7 @@ const App = () => {
         const [prefix] = match;
         // Filter opcodes
         // We cast opcodes to any[] because we don't have the type imported,
-        // but we know it has an 'opcode' field.
+        // But we know it has an 'opcode' field.
         const matches = clientState.opcodes.filter((op: any) => op.opcode.startsWith(prefix));
         if (matches.length > 0) {
           // Return the suffix of the first match
@@ -249,7 +249,7 @@ const App = () => {
     }
     return room["contents"]
       .map((id: number) => clientState.entities.get(id))
-      .filter((entity) => !!entity);
+      .filter((entity) => Boolean(entity));
   };
 
   // Handle item inspection

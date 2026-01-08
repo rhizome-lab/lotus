@@ -9,7 +9,7 @@ interface DigPanelProps {
 }
 
 export default function DigPanel(props: DigPanelProps) {
-  const [direction, setDirection] = createSignal(props.initialDirection || "");
+  const [direction, setDirection] = createSignal(props.initialDirection ?? "");
   const [mode, setMode] = createSignal<"new" | "existing">("new");
   const [roomName, setRoomName] = createSignal("");
   const [targetRoom, setTargetRoom] = createSignal("");

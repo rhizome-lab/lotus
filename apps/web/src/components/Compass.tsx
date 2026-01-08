@@ -42,14 +42,14 @@ export default function Compass() {
             }}
             classList={{
               compass__cell: true,
-              "compass__cell--active": !!exit(),
+              "compass__cell--active": Boolean(exit()),
             }}
           >
             <div class="compass__cell-label">{props.label}</div>
             <div
               classList={{
                 "compass__cell-dest": true,
-                "compass__cell-dest--active": !!exit(),
+                "compass__cell-dest--active": Boolean(exit()),
               }}
             >
               {exit() ? ((exit()?.["destination_name"] ?? exit()?.["name"]) as string) : "+"}

@@ -88,8 +88,8 @@ export class BloomClient {
 
     this.socket.onerror = (err) => {
       console.error("WebSocket error:", err);
-      // onerror is usually followed by onclose, so we don't need to reconnect here explicitly
-      // unless onclose isn't called, but standard WS behavior says it should be.
+      // Onerror is usually followed by onclose, so we don't need to reconnect here explicitly
+      // Unless onclose isn't called, but standard WS behavior says it should be.
     };
 
     this.socket.onmessage = (event) => {
@@ -355,7 +355,7 @@ export class BloomClient {
         const { params } = notification as StreamChunkNotification;
         // Append to the last message
         // We need to be careful not to mutate the state directly in a way that SolidJS doesn't pick up,
-        // but here we are replacing the messages array.
+        // But here we are replacing the messages array.
         // However, we want to modify the *last* message.
         const messages = [...this.state.messages];
         if (messages.length > 0) {

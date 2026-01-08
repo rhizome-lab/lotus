@@ -107,7 +107,7 @@ function main() {
     }
 
     // Don't fail - just report
-    // process.exit(1);
+    // Process.exit(1);
   } else {
     console.log("\n✅ All opcodes have test coverage!");
   }

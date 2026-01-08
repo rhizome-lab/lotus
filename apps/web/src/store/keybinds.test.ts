@@ -9,7 +9,7 @@ const localStorageMock = (() => {
     clear: mock(() => {
       store = {};
     }),
-    getItem: mock((key: string) => store[key] || null),
+    getItem: mock((key: string) => store[key] ?? null),
     removeItem: mock((key: string) => {
       delete store[key];
     }),
@@ -28,7 +28,7 @@ if (!globalThis.localStorage) {
 }
 
 // Import after mock
-// import { keybindsStore } from "./keybinds";
+// Import { keybindsStore } from "./keybinds";
 
 let keybindsStore: any;
 

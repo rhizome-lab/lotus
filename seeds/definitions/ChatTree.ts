@@ -29,9 +29,7 @@ export class ChatTree extends EntityBase {
     if (!this.messages) {
       this.messages = {};
     }
-    if (this.next_message_id === undefined) {
-      this.next_message_id = 1;
-    }
+    this.next_message_id ??= 1;
     if (!this.branches) {
       this.branches = { main: null! };
     }

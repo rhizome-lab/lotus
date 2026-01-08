@@ -77,7 +77,7 @@ const Editor: React.FC<EditorProps> = ({
       });
     } else if (key.return) {
       setLines((prev) => {
-        const currentLine = prev[cursor.row] || "";
+        const currentLine = prev[cursor.row] ?? "";
         const before = currentLine.slice(0, cursor.col);
         const after = currentLine.slice(cursor.col);
         const newLines = [...prev];
@@ -89,7 +89,7 @@ const Editor: React.FC<EditorProps> = ({
       if (cursor.col > 0) {
         // Simple backspace within line
         setLines((prev) => {
-          const line = prev[cursor.row] || "";
+          const line = prev[cursor.row] ?? "";
           const newLine = line.slice(0, cursor.col - 1) + line.slice(cursor.col);
           const newLines = [...prev];
           newLines[cursor.row] = newLine;
@@ -99,14 +99,14 @@ const Editor: React.FC<EditorProps> = ({
       } else if (cursor.row > 0) {
         // Merge with previous line
         setLines((prev) => {
-          const currentLine = prev[cursor.row] || "";
-          const prevLine = prev[cursor.row - 1] || "";
+          const currentLine = prev[cursor.row] ?? "";
+          const prevLine = prev[cursor.row - 1] ?? "";
           const newLines = [...prev];
           newLines.splice(cursor.row - 1, 2, prevLine + currentLine);
           return newLines;
         });
         setCursor((prev) => ({
-          col: (lines[prev.row - 1] || "").length,
+          col: (lines[prev.row - 1] ?? "").length,
           row: prev.row - 1,
         }));
       }
@@ -123,7 +123,7 @@ const Editor: React.FC<EditorProps> = ({
         .then((completion) => {
           if (completion) {
             setLines((prev) => {
-              const line = prev[cursor.row] || "";
+              const line = prev[cursor.row] ?? "";
               const newLine = line.slice(0, cursor.col) + completion + line.slice(cursor.col);
               const newLines = [...prev];
               newLines[cursor.row] = newLine;
@@ -149,7 +149,7 @@ const Editor: React.FC<EditorProps> = ({
         .then((completion) => {
           if (completion) {
             setLines((prev) => {
-              const line = prev[cursor.row] || "";
+              const line = prev[cursor.row] ?? "";
               const newLine = line.slice(0, cursor.col) + completion + line.slice(cursor.col);
               const newLines = [...prev];
               newLines[cursor.row] = newLine;
@@ -161,7 +161,7 @@ const Editor: React.FC<EditorProps> = ({
     } else {
       // Regular typing
       setLines((prev) => {
-        const line = prev[cursor.row] || "";
+        const line = prev[cursor.row] ?? "";
         const newLine = line.slice(0, cursor.col) + input + line.slice(cursor.col);
         const newLines = [...prev];
         newLines[cursor.row] = newLine;
@@ -205,7 +205,7 @@ const Editor: React.FC<EditorProps> = ({
                 <Text>
                   {line.slice(0, cursor.col)}
                   <Text inverse color="cyan">
-                    {line[cursor.col] || " "}
+                    {line[cursor.col] ?? " "}
                   </Text>
                   {line.slice(cursor.col + 1)}
                 </Text>

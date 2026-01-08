@@ -46,7 +46,7 @@ export default function RoomPanel() {
     }
     return (roomValue["contents"] as number[])
       .map((id) => gameStore.state.entities.get(id))
-      .filter((entity) => !!entity);
+      .filter((entity) => Boolean(entity));
   };
 
   const exits = () => {
@@ -56,7 +56,7 @@ export default function RoomPanel() {
     }
     return (roomValue["exits"] as number[])
       .map((id) => gameStore.state.entities.get(id))
-      .filter((entity) => !!entity);
+      .filter((entity) => Boolean(entity));
   };
 
   return (
