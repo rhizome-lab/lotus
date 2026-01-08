@@ -143,7 +143,9 @@ const App = () => {
       if (command === "inspect" && args.length >= 1) {
         const itemName = args[0]!.toLowerCase();
         // Search in room contents and inventory
-        const allItems = [...getRoomContents(), ...inventory].filter((i): i is Entity => i !== undefined);
+        const allItems = [...getRoomContents(), ...inventory].filter(
+          (i): i is Entity => i !== undefined,
+        );
         const item = allItems.find((i) => (i["name"] as string)?.toLowerCase() === itemName);
         if (item) {
           handleInspect(item);
