@@ -1,6 +1,6 @@
 # ProcGen Plugin
 
-The ProcGen plugin (`@bloom/plugin-procgen`) provides procedural generation capabilities for the Bloom engine, allowing for the creation of noise-based terrains, random events, and seeded content.
+The ProcGen plugin (`@lotus/plugin-procgen`) provides procedural generation capabilities for the Lotus engine, allowing for the creation of noise-based terrains, random events, and seeded content.
 
 ## Opcodes
 

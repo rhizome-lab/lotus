@@ -1,16 +1,16 @@
 [package]
-name = "bloom-transport-websocket-jsonrpc"
+name = "lotus-transport-websocket-jsonrpc"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "WebSocket JSON-RPC transport for Bloom"
+description = "WebSocket JSON-RPC transport for Lotus"
 
 [dependencies]
-bloom-core.workspace = true
-bloom-ir.workspace = true
-bloom-plugin-abi.workspace = true
-bloom-runtime = { path = "../../bloom-runtime" }
-bloom-runtime-luajit.workspace = true
+lotus-core.workspace = true
+lotus-ir.workspace = true
+lotus-plugin-abi.workspace = true
+lotus-runtime = { path = "../../lotus-runtime" }
+lotus-runtime-luajit.workspace = true
 tokio.workspace = true
 tokio-tungstenite.workspace = true
 futures-util.workspace = true

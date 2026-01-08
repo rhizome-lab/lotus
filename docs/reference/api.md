@@ -1,8 +1,8 @@
-# Bloom API Specification
+# Lotus API Specification
 
-Bloom uses **JSON-RPC 2.0** over WebSockets for communication between the Core Server and Clients (Web, TUI, CLI).
+Lotus uses **JSON-RPC 2.0** over WebSockets for communication between the Core Server and Clients (Web, TUI, CLI).
 
-> **Note**: The `@bloom/client` package provides a type-safe TypeScript SDK that implements this protocol. It is recommended to use this SDK for building new frontends.
+> **Note**: The `@lotus/client` package provides a type-safe TypeScript SDK that implements this protocol. It is recommended to use this SDK for building new frontends.
 
 ## Protocol Basics
 

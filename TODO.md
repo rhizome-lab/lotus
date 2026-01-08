@@ -1,4 +1,4 @@
-# Bloom Roadmap & TODOs
+# Lotus Roadmap & TODOs
 
 ## Next Up
 
@@ -62,9 +62,9 @@
 <details>
 <summary>Rust Port - Game Engine ✅</summary>
 
-- [x] bloom-core: Entity repo, verb resolution, capabilities, scheduler, seed system
-- [x] bloom-runtime: Context opcodes, game opcodes, mutation tracking, kernel ops
-- [x] bloom-ir: Type-safe S-expression builders with phantom types
+- [x] lotus-core: Entity repo, verb resolution, capabilities, scheduler, seed system
+- [x] lotus-runtime: Context opcodes, game opcodes, mutation tracking, kernel ops
+- [x] lotus-ir: Type-safe S-expression builders with phantom types
 - [x] All game engine tests ported (331 passing)
 </details>
 
@@ -128,8 +128,8 @@
 
 | App | Server | Client | Status |
 |-----|--------|--------|--------|
-| Notes | `cargo run -p bloom-notes-server` (8081) | `bun dev:notes` (3004) | ✅ |
-| FileBrowser | `cargo run -p bloom-filebrowser-server` (8080) | `bun dev:filebrowser` (3003) | ✅ |
+| Notes | `cargo run -p notes-server` (8081) | `bun dev:notes` (3004) | ✅ |
+| FileBrowser | `cargo run -p filebrowser-server` (8080) | `bun dev:filebrowser` (3003) | ✅ |
 | Web | - | `bun dev:web` (5173) | ✅ |
 | TUI | - | `bun dev:tui` | ✅ |
 | Discord | - | `bun dev:discord-bot` | ✅ |

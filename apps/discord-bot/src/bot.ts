@@ -6,7 +6,7 @@ import {
   GatewayIntentBits,
   type TextChannel,
 } from "discord.js";
-import { discordAdapter, parseGameMessage } from "@bloom/shared/adapters";
+import { discordAdapter, parseGameMessage } from "@lotus/shared/adapters";
 import { CONFIG } from "./config";
 import { db } from "./instances";
 import { sessionManager } from "./session";
@@ -113,7 +113,7 @@ class DiscordBot {
     } else if (command === "help") {
       const embed = new EmbedBuilder()
         .setColor(0x5865f2)
-        .setTitle("Bloom Bot Commands")
+        .setTitle("Lotus Bot Commands")
         .setDescription("Available commands:")
         .addFields(
           { name: "!link <room_id>", value: "Link this channel to a room", inline: true },

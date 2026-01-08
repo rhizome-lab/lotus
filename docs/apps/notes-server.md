@@ -4,7 +4,7 @@ The Notes Server (`apps/notes-server`) provides a wiki-style notes backend with 
 
 ## Overview
 
-The server uses the Bloom entity system to store notes:
+The server uses the Lotus entity system to store notes:
 
 1. **NotesBase**: Base prototype with ID generation
 2. **NotesUser**: User prototype with all note verbs

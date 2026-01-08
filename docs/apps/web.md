@@ -1,10 +1,10 @@
 # Web Client
 
-The main web frontend for Bloom. A modern, responsive web application that allows users to play Bloom directly in their browser.
+The main web frontend for Lotus. A modern, responsive web application that allows users to play Lotus directly in their browser.
 
 ## Overview
 
-The Web Client provides a rich graphical interface for the game world, chat, and other features. It connects to the Bloom Server using the `@bloom/client` SDK and renders the game state using a TUI-like interface built with web technologies.
+The Web Client provides a rich graphical interface for the game world, chat, and other features. It connects to the Lotus Server using the `@lotus/client` SDK and renders the game state using a TUI-like interface built with web technologies.
 
 ## Architecture
 

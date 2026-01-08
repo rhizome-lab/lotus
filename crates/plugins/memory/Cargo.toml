@@ -1,5 +1,5 @@
 [package]
-name = "bloom-plugin-memory"
+name = "lotus-plugin-memory"
 version = "0.1.0"
 edition = "2021"
 

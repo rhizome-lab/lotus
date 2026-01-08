@@ -1,10 +1,10 @@
 # Text User Interface (TUI)
 
-The Bloom TUI is a terminal-based interface for interacting with the Bloom world. It provides a lightweight, keyboard-centric way to connect to the server.
+The Lotus TUI is a terminal-based interface for interacting with the Lotus world. It provides a lightweight, keyboard-centric way to connect to the server.
 
 ## Overview
 
-The TUI is built using [Ink](https://github.com/vadimdemedes/ink), which allows building command-line apps using React. It connects to the Bloom server via WebSocket, similar to the web frontend.
+The TUI is built using [Ink](https://github.com/vadimdemedes/ink), which allows building command-line apps using React. It connects to the Lotus server via WebSocket, similar to the web frontend.
 
 ## Features
 
@@ -21,7 +21,7 @@ The TUI is built using [Ink](https://github.com/vadimdemedes/ink), which allows 
 
 ### Installation
 
-The TUI is part of the Bloom monorepo. Ensure you have installed dependencies at the root:
+The TUI is part of the Lotus monorepo. Ensure you have installed dependencies at the root:
 
 ```bash
 bun install

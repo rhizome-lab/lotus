@@ -1,6 +1,6 @@
 # File System Plugin
 
-The `@bloom/plugin-fs` package provides file system capabilities to BloomScript, enabling safe, sandboxed file operations.
+The `@lotus/plugin-fs` package provides file system capabilities to LotusScript, enabling safe, sandboxed file operations.
 
 ## Capabilities
 

@@ -15,8 +15,8 @@ use serde_json::json;
 use tokio::time::timeout;
 use tokio_tungstenite::tungstenite::Message;
 
-use bloom_runtime::BloomRuntime;
-use bloom_transport_websocket_jsonrpc::{Server, ServerConfig};
+use lotus_runtime::LotusRuntime;
+use lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
 
 /// Helper to send a JSON-RPC request and get the response
 async fn send_request(
@@ -74,7 +74,7 @@ async fn test_server_basic_operations() -> Result<(), Box<dyn std::error::Error>
     std::fs::write(sandbox_path.join("subdir/nested.txt"), "Nested file")?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Load fs plugin
     let plugin_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -82,7 +82,7 @@ async fn test_server_basic_operations() -> Result<(), Box<dyn std::error::Error>
         .and_then(|p| p.parent())
         .and_then(|p| p.parent())
         .unwrap()
-        .join("target/debug/libbloom_plugin_fs.so");
+        .join("target/debug/liblotus_plugin_fs.so");
     runtime.load_plugin(plugin_path.to_str().unwrap(), "fs")?;
 
     // Create test entities manually (bypassing seed system to avoid EntityBase dependency)
@@ -175,7 +175,7 @@ async fn test_server_basic_operations() -> Result<(), Box<dyn std::error::Error>
 /// Test file browser bookmark verbs
 #[tokio::test]
 async fn test_bookmark_operations() -> Result<(), Box<dyn std::error::Error>> {
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-fb-bookmarks");
@@ -186,7 +186,7 @@ async fn test_bookmark_operations() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create file browser user entity with bookmark verbs
     let user_id = {
@@ -557,7 +557,7 @@ async fn test_bookmark_operations() -> Result<(), Box<dyn std::error::Error>> {
 /// Test file browser navigation verbs (simulated without fs plugin)
 #[tokio::test]
 async fn test_navigation_simulated() -> Result<(), Box<dyn std::error::Error>> {
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-fb-nav");
@@ -568,7 +568,7 @@ async fn test_navigation_simulated() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create file browser user entity with simulated navigation verbs
     let user_id = {
@@ -933,7 +933,7 @@ async fn test_navigation_simulated() -> Result<(), Box<dyn std::error::Error>> {
 /// Test file metadata operations (tags, annotations)
 #[tokio::test]
 async fn test_file_metadata() -> Result<(), Box<dyn std::error::Error>> {
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-fb-metadata");
@@ -944,7 +944,7 @@ async fn test_file_metadata() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create file browser user entity with metadata verbs
     let user_id = {

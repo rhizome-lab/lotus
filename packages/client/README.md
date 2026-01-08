@@ -1,10 +1,10 @@
 # Client Package
 
-Client-side SDK for connecting to Bloom.
+Client-side SDK for connecting to Lotus.
 
 ## Overview
 
-This package provides the necessary libraries and utilities for building custom clients that interact with the Bloom server. It handles the low-level details of the connection protocol.
+This package provides the necessary libraries and utilities for building custom clients that interact with the Lotus server. It handles the low-level details of the connection protocol.
 
 ## Contents
 
@@ -15,5 +15,5 @@ This package provides the necessary libraries and utilities for building custom 
 Import the `Client` class to establish a connection:
 
 ```typescript
-import { Client } from "@bloom/client";
+import { Client } from "@lotus/client";
 ```

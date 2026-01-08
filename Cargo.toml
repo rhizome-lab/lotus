@@ -1,12 +1,12 @@
 [workspace]
 resolver = "2"
-default-members = ["crates/bloom-cli"]
+default-members = ["crates/lotus-cli"]
 members = [
-    "crates/bloom-ir",
-    "crates/bloom-core",
-    "crates/bloom-runtime",
-    "crates/bloom-plugin-abi",
-    "crates/bloom-cli",
+    "crates/lotus-ir",
+    "crates/lotus-core",
+    "crates/lotus-runtime",
+    "crates/lotus-plugin-abi",
+    "crates/lotus-cli",
     "crates/syntax/typescript",
     "crates/runtime/luajit",
     "crates/transport/websocket-jsonrpc",
@@ -28,7 +28,7 @@ members = [
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/anthropics/bloom"
+repository = "https://github.com/rhizome-lab/lotus"
 
 [workspace.dependencies]
 # Core
@@ -63,13 +63,13 @@ abi_stable = "0.11"
 libloading = "0.8"
 
 # Workspace crates
-bloom-ir = { path = "crates/bloom-ir" }
-bloom-core = { path = "crates/bloom-core" }
-bloom-runtime = { path = "crates/bloom-runtime" }
-bloom-plugin-abi = { path = "crates/bloom-plugin-abi" }
-bloom-transport-websocket-jsonrpc = { path = "crates/transport/websocket-jsonrpc" }
-bloom-syntax-typescript = { path = "crates/syntax/typescript" }
-bloom-runtime-luajit = { path = "crates/runtime/luajit" }
+lotus-ir = { path = "crates/lotus-ir" }
+lotus-core = { path = "crates/lotus-core" }
+lotus-runtime = { path = "crates/lotus-runtime" }
+lotus-plugin-abi = { path = "crates/lotus-plugin-abi" }
+lotus-transport-websocket-jsonrpc = { path = "crates/transport/websocket-jsonrpc" }
+lotus-syntax-typescript = { path = "crates/syntax/typescript" }
+lotus-runtime-luajit = { path = "crates/runtime/luajit" }
 
 # Minimize debug build size
 [profile.dev]

@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/filebrowser",
+  "name": "@lotus/filebrowser",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -11,8 +11,8 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@bloom/client": "workspace:*",
-    "@bloom/shared": "workspace:*",
+    "@lotus/client": "workspace:*",
+    "@lotus/shared": "workspace:*",
     "solid-js": "^1.8.15"
   },
   "devDependencies": {

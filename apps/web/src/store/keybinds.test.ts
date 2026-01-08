@@ -35,7 +35,7 @@ let keybindsStore: any;
 describe("Keybinds Store", () => {
   beforeEach(async () => {
     if (globalThis.localStorage) {
-      globalThis.localStorage.removeItem("bloom_keybinds");
+      globalThis.localStorage.removeItem("lotus_keybinds");
     }
     // Reset the store state by reloading the module or using a reset method if available.
     const module = await import("./keybinds");
@@ -62,7 +62,7 @@ describe("Keybinds Store", () => {
   test("loadBindings with existing data", () => {
     // Assuming `spyOn` is available globally or imported, e.g., from Jest or a similar test utility.
     // If using Bun's `mock`, it would be `const getItemSpy = mock(globalThis.localStorage, "getItem").mockReturnValue(...)`
-    globalThis.localStorage.setItem("bloom_keybinds", JSON.stringify({ north: "up" }));
+    globalThis.localStorage.setItem("lotus_keybinds", JSON.stringify({ north: "up" }));
 
     const bindings = loadBindings();
     expect(bindings.north).toBe("up");

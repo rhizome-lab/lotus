@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/op-format",
+  "name": "@lotus/op-format",
   "scripts": {
     "check": "bun --cwd ../.. check:format"
   }

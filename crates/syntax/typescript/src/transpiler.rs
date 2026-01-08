@@ -1,6 +1,6 @@
 //! Tree-sitter based TypeScript transpiler.
 
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 use thiserror::Error;
 use tree_sitter::{Node, Parser, Tree};
 

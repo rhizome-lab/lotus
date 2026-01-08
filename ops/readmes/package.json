@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/op-readmes",
+  "name": "@lotus/op-readmes",
   "scripts": {
     "check": "bun --cwd ../.. check:readmes"
   }

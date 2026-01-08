@@ -1,12 +1,12 @@
 [package]
-name = "bloom-syntax-typescript"
+name = "lotus-syntax-typescript"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "TypeScript to S-expression transpiler for Bloom"
+description = "TypeScript to S-expression transpiler for Lotus"
 
 [dependencies]
-bloom-ir.workspace = true
+lotus-ir.workspace = true
 tree-sitter.workspace = true
 tree-sitter-typescript.workspace = true
 thiserror.workspace = true

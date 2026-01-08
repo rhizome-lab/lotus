@@ -1,12 +1,12 @@
 [package]
-name = "bloom-runtime-luajit"
+name = "lotus-runtime-luajit"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "LuaJIT runtime for Bloom"
+description = "LuaJIT runtime for Lotus"
 
 [dependencies]
-bloom-ir.workspace = true
+lotus-ir.workspace = true
 mlua.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true

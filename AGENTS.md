@@ -11,7 +11,7 @@
 - Install deps: `bun install`.
 - Run dev servers: `bun run dev:server` (core), `bun run dev:web`, `bun run dev:tui`, `bun run dev:cli`, `bun run dev:discord`. Run in separate terminals as needed.
 - Lint/format: `bun lint` (oxlint) and `bun format` (oxfmt). Check-only: `bun format --check`.
-- Type checks: `bun --filter '*' check:types` or scoped `bun --filter '@bloom/op-*' check`.
+- Type checks: `bun --filter '*' check:types` or scoped `bun --filter '@lotus/op-*' check`.
 - Tests: `bun test` (use `bun test --only-failures` via `bun run check:test` for quick iteration).
 - Docs: `bun run build:docs` to build docs and playground, `bun run dev:docs` for VitePress dev, `bun run preview:docs` to preview.
 - Database reset (destructive): `bun run db:wipe` in `packages/core`.

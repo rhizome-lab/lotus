@@ -29,7 +29,7 @@ bun dev:filebrowser         # port 3003
 ```
 src/
 ├── App.tsx                 # Main layout
-├── store/browser.ts        # BloomClient + SolidJS store
+├── store/browser.ts        # LotusClient + SolidJS store
 └── components/
     ├── Toolbar.tsx         # Navigation and actions
     ├── FileList.tsx        # Directory listing

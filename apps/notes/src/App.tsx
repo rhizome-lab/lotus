@@ -26,7 +26,7 @@ export default function App() {
   return (
     <div class="notes">
       <header class="notes__header">
-        <h1 class="notes__title">Bloom Notes</h1>
+        <h1 class="notes__title">Lotus Notes</h1>
         <Show
           when={state.connected}
           fallback={<span class="notes__status notes__status--disconnected">Connecting...</span>}

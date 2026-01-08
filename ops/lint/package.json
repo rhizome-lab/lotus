@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/op-lint",
+  "name": "@lotus/op-lint",
   "scripts": {
     "check": "bun --cwd ../.. check:lint"
   }

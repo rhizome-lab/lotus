@@ -25,7 +25,7 @@ export interface ThemeColors {
 }
 
 interface ThemeManifestV1 {
-  kind: "bloom-theme";
+  kind: "lotus-theme";
   version: "1.0.0";
   name: string;
   author: string;
@@ -69,9 +69,9 @@ const defaultTheme: Theme = {
   id: "default",
   isBuiltin: true,
   manifest: {
-    author: "Bloom",
+    author: "Lotus",
     description: "The default dark theme.",
-    kind: "bloom-theme",
+    kind: "lotus-theme",
     name: "Default Dark",
     version: "1.0.0",
   },
@@ -83,12 +83,10 @@ interface ThemeState {
   allowCustomCss: boolean;
 }
 
-// Migration Logic
 export const loadInitialState = (): ThemeState => {
-  const savedThemes = localStorage.getItem("bloom_themes");
-  const savedActiveId = localStorage.getItem("bloom_active_theme_id");
-  const savedCustomCssPref = localStorage.getItem("bloom_allow_custom_css");
-  const oldSavedTheme = localStorage.getItem("bloom_theme");
+  const savedThemes = localStorage.getItem("lotus_themes");
+  const savedActiveId = localStorage.getItem("lotus_active_theme_id");
+  const savedCustomCssPref = localStorage.getItem("lotus_allow_custom_css");
 
   let themes: Theme[] = [defaultTheme];
   let activeThemeId = "default";
@@ -96,7 +94,6 @@ export const loadInitialState = (): ThemeState => {
   if (savedThemes) {
     try {
       const parsed = JSON.parse(savedThemes);
-      // Basic validation/migration for existing array
       if (Array.isArray(parsed)) {
         themes = parsed.map((theme: any) => {
           // If missing kind/version, patch it
@@ -105,7 +102,7 @@ export const loadInitialState = (): ThemeState => {
               ...theme,
               manifest: {
                 ...theme.manifest,
-                kind: "bloom-theme",
+                kind: "lotus-theme",
                 version: "1.0.0",
               },
             };
@@ -122,26 +119,6 @@ export const loadInitialState = (): ThemeState => {
       }
     } catch (error) {
       console.error("Failed to parse saved themes", error);
-    }
-  } else if (oldSavedTheme) {
-    // Migrate old single theme
-    try {
-      const oldColors = JSON.parse(oldSavedTheme);
-      const migratedTheme: Theme = {
-        colors: oldColors,
-        id: "migrated_custom",
-        manifest: {
-          author: "User",
-          description: "Migrated from previous version.",
-          kind: "bloom-theme",
-          name: "My Custom Theme",
-          version: "1.0.0",
-        },
-      };
-      themes.push(migratedTheme);
-      activeThemeId = "migrated_custom";
-    } catch (error) {
-      console.error("Failed to migrate old theme", error);
     }
   }
 
@@ -169,7 +146,7 @@ export const themeStore = {
       id: crypto.randomUUID(),
       manifest: {
         author: "User",
-        kind: "bloom-theme",
+        kind: "lotus-theme",
         name,
         version: "1.0.0",
       }, // Clone current colors
@@ -191,8 +168,8 @@ export const themeStore = {
 
   importTheme: (theme: any) => {
     // Validate theme structure
-    if (!theme.manifest || theme.manifest.kind !== "bloom-theme" || !theme.colors) {
-      alert("Invalid theme format. Must be a valid Bloom Theme.");
+    if (!theme.manifest || theme.manifest.kind !== "lotus-theme" || !theme.colors) {
+      alert("Invalid theme format. Must be a valid Lotus Theme.");
       return;
     }
 
@@ -258,9 +235,9 @@ export const themeStore = {
 
 // Auto-save
 createEffect(() => {
-  localStorage.setItem("bloom_themes", JSON.stringify(state.themes));
-  localStorage.setItem("bloom_active_theme_id", state.activeThemeId);
-  localStorage.setItem("bloom_allow_custom_css", JSON.stringify(state.allowCustomCss));
+  localStorage.setItem("lotus_themes", JSON.stringify(state.themes));
+  localStorage.setItem("lotus_active_theme_id", state.activeThemeId);
+  localStorage.setItem("lotus_allow_custom_css", JSON.stringify(state.allowCustomCss));
 });
 
 // Apply theme to document root

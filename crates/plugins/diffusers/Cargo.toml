@@ -1,8 +1,8 @@
 [package]
-name = "bloom-plugin-diffusers"
+name = "lotus-plugin-diffusers"
 version = "0.1.0"
 edition = "2021"
-description = "Diffusers plugin for Bloom - Stable Diffusion image generation using burn-models"
+description = "Diffusers plugin for Lotus - Stable Diffusion image generation using burn-models"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

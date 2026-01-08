@@ -1,6 +1,6 @@
 # AI Plugin
 
-The AI Plugin integrates Large Language Models (LLMs) and image generation capabilities into the Bloom engine. It allows for dynamic content generation, NPC interactions, and AI-assisted coding.
+The AI Plugin integrates Large Language Models (LLMs) and image generation capabilities into the Lotus engine. It allows for dynamic content generation, NPC interactions, and AI-assisted coding.
 
 ## Configuration
 
@@ -70,7 +70,7 @@ Generates an image using DALL-E 3.
 
 ### `ai_completion`
 
-Provides code completion suggestions for the BloomScript editor.
+Provides code completion suggestions for the LotusScript editor.
 
 - **Parameters**:
   - `code`: The current code in the editor.

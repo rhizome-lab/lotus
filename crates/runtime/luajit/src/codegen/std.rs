@@ -4,7 +4,7 @@ use super::{
     CompileError, compile_value, contains_loop_control_flow, is_statement_opcode,
     sexpr_to_lua_table, to_lua_name,
 };
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 
 /// Compile std.* opcodes. Returns None if opcode doesn't match.
 pub fn compile_std(
@@ -419,7 +419,7 @@ pub fn compile_std(
 #[cfg(test)]
 mod tests {
     use super::super::compile;
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     #[test]
     fn test_let() {

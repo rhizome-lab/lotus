@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
-import { BloomClient } from "@bloom/client";
+import { LotusClient } from "@lotus/client";
 
 // Mock config
 mock.module("./config", () => ({
@@ -18,26 +18,26 @@ describe("GameSocket", () => {
   let onMessageSpy: any;
 
   beforeEach(() => {
-    // Spy on BloomClient prototype methods
-    connectSpy = spyOn(BloomClient.prototype, "connect").mockImplementation(
+    // Spy on LotusClient prototype methods
+    connectSpy = spyOn(LotusClient.prototype, "connect").mockImplementation(
       function connectSpy(this: any) {
         // Capture the instance.
       },
     );
-    executeSpy = spyOn(BloomClient.prototype, "execute").mockResolvedValue(null);
-    sendRequestSpy = spyOn(BloomClient.prototype, "sendRequest").mockResolvedValue(null);
-    disconnectSpy = spyOn(BloomClient.prototype, "disconnect").mockImplementation(() => {});
+    executeSpy = spyOn(LotusClient.prototype, "execute").mockResolvedValue(null);
+    sendRequestSpy = spyOn(LotusClient.prototype, "sendRequest").mockResolvedValue(null);
+    disconnectSpy = spyOn(LotusClient.prototype, "disconnect").mockImplementation(() => {});
 
     // We need to capture the subscribe listener to simulate state changes
     // We need to capture the subscribe listener to simulate state changes
-    spyOn(BloomClient.prototype, "subscribe").mockImplementation((listener: any) => {
+    spyOn(LotusClient.prototype, "subscribe").mockImplementation((listener: any) => {
       // Immediately call with connected state for testing happy path
       listener({ isConnected: true });
       return () => true;
     });
 
     // Use `mock.fn` behavior to capture calls.
-    onMessageSpy = spyOn(BloomClient.prototype, "onMessage").mockImplementation(
+    onMessageSpy = spyOn(LotusClient.prototype, "onMessage").mockImplementation(
       (_listener: any) => () => true,
     );
   });

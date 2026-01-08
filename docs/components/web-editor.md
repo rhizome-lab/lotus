@@ -1,6 +1,6 @@
 # Web Editor
 
-The Web Editor package (`@bloom/web-editor`) provides React/SolidJS components for editing BloomScript code. It wraps the Monaco Editor and provides custom language support.
+The Web Editor package (`@lotus/web-editor`) provides React/SolidJS components for editing LotusScript code. It wraps the Monaco Editor and provides custom language support.
 
 ## Components
 
@@ -8,7 +8,7 @@ The Web Editor package (`@bloom/web-editor`) provides React/SolidJS components f
 
 The main component for editing scripts. It handles:
 
-- Syntax highlighting for BloomScript.
+- Syntax highlighting for LotusScript.
 - Autocompletion.
 - Error reporting.
 
@@ -19,7 +19,7 @@ A lower-level wrapper around the Monaco Editor instance.
 ## Usage
 
 ```tsx
-import { ScriptEditor } from "@bloom/web-editor";
+import { ScriptEditor } from "@lotus/web-editor";
 
 function MyEditor() {
   return (

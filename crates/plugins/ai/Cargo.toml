@@ -1,5 +1,5 @@
 [package]
-name = "bloom-plugin-ai"
+name = "lotus-plugin-ai"
 version = "0.1.0"
 edition = "2021"
 

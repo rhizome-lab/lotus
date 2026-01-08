@@ -1,10 +1,10 @@
 # Discord Bot
 
-Discord integration for Bloom.
+Discord integration for Lotus.
 
 ## Overview
 
-This bot bridges the Bloom world with a Discord server. It allows users to interact with the game world, chat with other players, and perform actions directly from a Discord channel.
+This bot bridges the Lotus world with a Discord server. It allows users to interact with the game world, chat with other players, and perform actions directly from a Discord channel.
 
 ## Contents
 

@@ -98,7 +98,7 @@ describe("Theme Store", () => {
   test("Import Theme", () => {
     const validTheme = {
       colors: { "--bg-app": "green" },
-      manifest: { kind: "bloom-theme", name: "Imported", version: "1.0.0" },
+      manifest: { kind: "lotus-theme", name: "Imported", version: "1.0.0" },
     };
     themeStore.importTheme(validTheme);
 
@@ -121,7 +121,7 @@ describe("Theme Store", () => {
   test("Import Invalid Theme", () => {
     const alertSpy = spyOn(globalThis, "alert").mockImplementation(() => {});
     themeStore.importTheme({}); // Empty object
-    expect(alertSpy).toHaveBeenCalledWith("Invalid theme format. Must be a valid Bloom Theme.");
+    expect(alertSpy).toHaveBeenCalledWith("Invalid theme format. Must be a valid Lotus Theme.");
     alertSpy.mockRestore();
   });
 
@@ -129,7 +129,7 @@ describe("Theme Store", () => {
     const warnSpy = spyOn(console, "warn").mockImplementation(() => {});
     const theme = {
       colors: {},
-      manifest: { kind: "bloom-theme", name: "Old", version: "0.9.0" },
+      manifest: { kind: "lotus-theme", name: "Old", version: "0.9.0" },
     };
     themeStore.importTheme(theme);
     expect(warnSpy).toHaveBeenCalled();
@@ -145,22 +145,11 @@ describe("Theme Store", () => {
   describe("Theme Migration", () => {
     beforeEach(() => {
       if (globalThis.localStorage) {
-        globalThis.localStorage.removeItem("bloom_theme");
-        globalThis.localStorage.removeItem("bloom_themes");
-        globalThis.localStorage.removeItem("bloom_active_theme_id");
-        globalThis.localStorage.removeItem("bloom_allow_custom_css");
+        globalThis.localStorage.removeItem("lotus_themes");
+        globalThis.localStorage.removeItem("lotus_active_theme_id");
+        globalThis.localStorage.removeItem("lotus_allow_custom_css");
       }
       themeStore.reset();
-    });
-
-    test("Migrate from old single theme", () => {
-      globalThis.localStorage.setItem("bloom_theme", JSON.stringify({ "--bg-app": "red" }));
-
-      const state = loadInitialState();
-
-      expect(state.themes.length).toBe(2); // Default + Migrated
-      expect(state.activeThemeId).toBe("migrated_custom");
-      expect(state.themes[1]!.colors["--bg-app"]).toBe("red");
     });
 
     test("Migrate from array with missing manifest", () => {
@@ -171,14 +160,14 @@ describe("Theme Store", () => {
           manifest: { name: "Old Theme" }, // Missing kind/version
         },
       ]);
-      globalThis.localStorage.setItem("bloom_themes", oldThemes);
+      globalThis.localStorage.setItem("lotus_themes", oldThemes);
 
       const state = loadInitialState();
 
       expect(state.themes.length).toBe(2); // Default + Old
       const migrated = state.themes.find((theme) => theme.id === "t1");
       expect(migrated).toBeDefined();
-      expect(migrated!.manifest.kind).toBe("bloom-theme");
+      expect(migrated!.manifest.kind).toBe("lotus-theme");
       expect(migrated!.manifest.version).toBe("1.0.0");
     });
   });

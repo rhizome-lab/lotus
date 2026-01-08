@@ -1,6 +1,6 @@
 # Programmable Workflows
 
-Bloom is not just a game engine; it is a programmable object server. This means you can attach scripts to objects to automate tasks, creating "bots" or "agents" that live within the world.
+Lotus is not just a game engine; it is a programmable object server. This means you can attach scripts to objects to automate tasks, creating "bots" or "agents" that live within the world.
 
 ## Concepts
 

@@ -1,6 +1,6 @@
 # Type Generation
 
-BloomScript uses a custom type generation system to provide TypeScript definitions for all available opcodes. This ensures that developers (and AI agents) have full type safety when writing scripts.
+LotusScript uses a custom type generation system to provide TypeScript definitions for all available opcodes. This ensures that developers (and AI agents) have full type safety when writing scripts.
 
 ## Overview
 
@@ -47,7 +47,7 @@ bun generate:types
 # Commit changes (automatically generates types and formats)
 bun commit
 # OR
-bun commit -am 'bloom: update types'
+bun commit -am 'lotus: update types'
 # OR
 bun commit --amend
 ```

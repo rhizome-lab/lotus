@@ -1,11 +1,11 @@
 # Memory Plugin
 
-The Memory Plugin (`@bloom/plugin-memory`) provides long-term memory capabilities for the game, allowing entities and the system to store and retrieve semantic information.
+The Memory Plugin (`@lotus/plugin-memory`) provides long-term memory capabilities for the game, allowing entities and the system to store and retrieve semantic information.
 
 ## Dependencies
 
-- **`@bloom/plugin-ai`**: Required for generating embeddings.
-- **`@bloom/plugin-vector`**: Used for vector storage and similarity search.
+- **`@lotus/plugin-ai`**: Required for generating embeddings.
+- **`@lotus/plugin-vector`**: Used for vector storage and similarity search.
 
 ## Usage
 

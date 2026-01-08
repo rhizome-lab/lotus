@@ -9,7 +9,7 @@ import type {
   RoomIdNotification,
   StreamChunkNotification,
   UpdateNotification,
-} from "@bloom/shared/jsonrpc";
+} from "@lotus/shared/jsonrpc";
 
 export type CommandArgument = string | number | boolean | null | readonly CommandArgument[];
 
@@ -28,10 +28,10 @@ export type StateListener = (state: GameState) => void;
 export type MessageListener = (message: GameMessage) => void;
 
 /**
- * Client for interacting with the Bloom Core server via WebSocket and JSON-RPC.
+ * Client for interacting with the Lotus Core server via WebSocket and JSON-RPC.
  * Manages connection state, message handling, and entity synchronization.
  */
-export class BloomClient {
+export class LotusClient {
   private socket: WebSocket | null = null;
   private state: GameState = {
     entities: new Map(),

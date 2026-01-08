@@ -1,10 +1,10 @@
-# Bloom Architecture
+# Lotus Architecture
 
-Bloom is a modern, web-based Multi-User Dungeon (MUD) engine built with TypeScript. It uses a monorepo structure to separate the core game logic, shared definitions, and frontend applications.
+Lotus is a modern, web-based Multi-User Dungeon (MUD) engine built with TypeScript. It uses a monorepo structure to separate the core game logic, shared definitions, and frontend applications.
 
 ## Design Philosophy
 
-Bloom is inspired by ChatMUD and LambdaMOO, focusing on a semantic world state, rich object interactions, and deep AI integration.
+Lotus is inspired by ChatMUD and LambdaMOO, focusing on a semantic world state, rich object interactions, and deep AI integration.
 
 ## Tech Stack
 
@@ -27,7 +27,7 @@ graph TD
     end
 
     subgraph Core Server
-        Server[Bloom Server<br>Bun]
+        Server[Lotus Server<br>Bun]
         ScriptEngine[Script Engine<br>Interpreter]
         Repo[Repository Layer]
         Scheduler[Task Scheduler]
@@ -85,7 +85,7 @@ Everything in the game world is an **Entity**. Entities are stored in a SQLite d
 
 ### Scripting
 
-Bloom features a custom scripting language (Lisp-like S-expressions) for dynamic game logic.
+Lotus features a custom scripting language (Lisp-like S-expressions) for dynamic game logic.
 
 - **Verbs**: Scripts attached to entities that define actions (e.g., `push`, `open`).
 - **Interpreter**: A secure sandbox that executes scripts with access to game primitives.
@@ -94,7 +94,7 @@ Bloom features a custom scripting language (Lisp-like S-expressions) for dynamic
 
 ### Security
 
-Bloom uses a **Capability-Based Security** model. Permissions are handled via unforgeable tokens called Capabilities, rather than user roles. See [Security](./security.md) for details.
+Lotus uses a **Capability-Based Security** model. Permissions are handled via unforgeable tokens called Capabilities, rather than user roles. See [Security](./security.md) for details.
 
 ## AI Integration
 

@@ -1,5 +1,5 @@
-import { type GameState as ClientGameState, BloomClient } from "@bloom/client";
-import type { Entity } from "@bloom/shared/jsonrpc";
+import { type GameState as ClientGameState, LotusClient } from "@lotus/client";
+import type { Entity } from "@lotus/shared/jsonrpc";
 import { createStore } from "solid-js/store";
 
 export type { Entity };
@@ -8,7 +8,7 @@ interface WebGameState extends ClientGameState {
   inspectedItem: number | null;
 }
 
-const client = new BloomClient("ws://localhost:8080");
+const client = new LotusClient("ws://localhost:8080");
 
 const [state, setState] = createStore<WebGameState>({
   entities: new Map(),

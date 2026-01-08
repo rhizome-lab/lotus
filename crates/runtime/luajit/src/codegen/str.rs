@@ -1,7 +1,7 @@
 //! str.* opcode compilation.
 
 use super::{CompileError, compile_value};
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 
 /// Compile str.* opcodes. Returns None if opcode doesn't match.
 pub fn compile_str(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<String>, CompileError> {
@@ -232,7 +232,7 @@ pub fn compile_str(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Stri
 #[cfg(test)]
 mod tests {
     use super::super::compile;
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     #[test]
     fn test_concat() {

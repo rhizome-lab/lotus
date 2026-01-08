@@ -1,6 +1,6 @@
 # Vector Plugin
 
-The Vector Plugin (`@bloom/plugin-vector`) provides a wrapper around `sqlite-vec` to enable vector similarity search within SQLite databases.
+The Vector Plugin (`@lotus/plugin-vector`) provides a wrapper around `sqlite-vec` to enable vector similarity search within SQLite databases.
 
 ## Features
 

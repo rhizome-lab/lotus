@@ -6,7 +6,7 @@ mod codegen;
 
 pub use codegen::{CompileError, compile};
 
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 use mlua::{Lua, LuaSerdeExt, Result as LuaResult};
 use thiserror::Error;
 

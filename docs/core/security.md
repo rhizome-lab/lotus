@@ -1,10 +1,10 @@
 # Capability-Based Security
 
-Bloom uses a **Capability-Based Security** model to manage permissions and access control. Unlike Access Control Lists (ACLs) which check _who_ you are, capabilities check _what you possess_.
+Lotus uses a **Capability-Based Security** model to manage permissions and access control. Unlike Access Control Lists (ACLs) which check _who_ you are, capabilities check _what you possess_.
 
 ## Concept
 
-A **Capability** is an unforgeable token that grants authority to perform a specific action. In Bloom, capabilities are first-class objects in the scripting language, represented as opaque handles.
+A **Capability** is an unforgeable token that grants authority to perform a specific action. In Lotus, capabilities are first-class objects in the scripting language, represented as opaque handles.
 
 - **Unforgeable**: Scripts cannot create capabilities from thin air. They must be granted by the kernel or another entity.
 - **Delegatable**: A script holding a capability can pass it to another entity or create a restricted version (delegation).

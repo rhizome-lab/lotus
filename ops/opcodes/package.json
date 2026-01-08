@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/op-opcodes",
+  "name": "@lotus/op-opcodes",
   "scripts": {
     "check": "bun --cwd ../.. check:opcodes"
   }

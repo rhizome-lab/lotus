@@ -1,12 +1,12 @@
-# Bloom Vision
+# Lotus Vision
 
-Bloom is designed as a **Scriptable Object Server**. While its roots are in MUDs, its architecture—a persistent graph of objects with attached logic—is generic enough to power games, knowledge bases, and productivity tools.
+Lotus is designed as a **Scriptable Object Server**. While its roots are in MUDs, its architecture—a persistent graph of objects with attached logic—is generic enough to power games, knowledge bases, and productivity tools.
 
 Our vision is built on four converging pillars:
 
 ```mermaid
 mindmap
-  root((Bloom))
+  root((Lotus))
     Simulation
       Entity System
       Scripting
@@ -29,7 +29,7 @@ mindmap
 
 _Inspired by: ChatMUD, LambdaMOO, Corruption of Champions, Lilith's Throne, Dwarf Fortress, Paradise, Universe_
 
-Bloom supports complex, stat-heavy simulations and malleable, programmable worlds where the world state is as important as the narrative.
+Lotus supports complex, stat-heavy simulations and malleable, programmable worlds where the world state is as important as the narrative.
 
 ### How it fits
 
@@ -41,7 +41,7 @@ Bloom supports complex, stat-heavy simulations and malleable, programmable world
 
 _Inspired by: SillyTavern, Talemate, Character.AI, Façade_
 
-Bloom acts as a context engine for LLMs, providing the "grounding" that pure chatbots lack.
+Lotus acts as a context engine for LLMs, providing the "grounding" that pure chatbots lack.
 
 ### How it fits
 
@@ -70,7 +70,7 @@ The system is headless and API-first, allowing interaction from any platform.
 
 _Inspired by: Obsidian, Notion, Trello_
 
-Bloom can function as a "Second Brain" or a programmable workspace. The same primitives that define a "Room" and "Items" can define a "Kanban Board" and "Cards".
+Lotus can function as a "Second Brain" or a programmable workspace. The same primitives that define a "Room" and "Items" can define a "Kanban Board" and "Cards".
 
 ### How it fits
 
@@ -84,6 +84,6 @@ Bloom can function as a "Second Brain" or a programmable workspace. The same pri
 
 - **Vector Plugin**: Integration with `sqlite-vec` for semantic search.
 - **Graph Queries**: Standard library functions for traversing entity relationships (backlinks, children, parents).
-- **Specialized Frontends**: Because Bloom is frontend-agnostic, we can build entirely new, purpose-built clients (e.g., a dedicated Kanban Board app, a Graph Explorer, or a Calendar view) that all interact with the same shared world state.
+- **Specialized Frontends**: Because Lotus is frontend-agnostic, we can build entirely new, purpose-built clients (e.g., a dedicated Kanban Board app, a Graph Explorer, or a Calendar view) that all interact with the same shared world state.
 - **Wiki Features**: First-class support for bi-directional linking, revision history, and transclusion.
 - **Performance**: Support for custom database views and indexes to optimize specific query patterns (e.g., deep graph traversals).

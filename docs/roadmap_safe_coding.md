@@ -1,6 +1,6 @@
 # Roadmap: Maximizing Maintainability & Safe Coding
 
-**Goal:** Optimize the Bloom ecosystem for humans and AI to write code as simply and safely as possible, minimizing the potential for broken code. Prioritize Discoverability and Maintainability over refactor cost.
+**Goal:** Optimize the Lotus ecosystem for humans and AI to write code as simply and safely as possible, minimizing the potential for broken code. Prioritize Discoverability and Maintainability over refactor cost.
 
 ## Core Philosophy: "The Pit of Success"
 
@@ -27,7 +27,7 @@ These steps can be implemented immediately on top of the current engine to stric
 
 ### 0. Language Agnosticism & The SDK Layer
 
-BloomScript is designed to be language-agnostic. The strategies below distinguish between the **Kernel** (Opcodes, VM) which remains universal, and the **SDK** (Language-Specific Bindings) which provides the "Human/AI Friendly" surface area.
+LotusScript is designed to be language-agnostic. The strategies below distinguish between the **Kernel** (Opcodes, VM) which remains universal, and the **SDK** (Language-Specific Bindings) which provides the "Human/AI Friendly" surface area.
 
 - **Kernel:** Remains low-level, opcode-based, and secure. Validated by the engine.
 - **SDK:** Provides the "Typed Facade". For TypeScript, this means **Capability Classes**.
@@ -111,11 +111,11 @@ export class EntityControl {
 
 - **Goal:** Unify the mental model while supporting multiple languages.
 - **Architecture:**
-  - **Database:** Stores **Typed Objects** (Structs) with a stable Type ID (e.g., `"bloom.capability.control"`). It does _not_ store language-specific class names.
+  - **Database:** Stores **Typed Objects** (Structs) with a stable Type ID (e.g., `"lotus.capability.control"`). It does _not_ store language-specific class names.
   - **Kernel:** Passes Typed Objects to the Scripting Host.
   - **Scripting Host (SDK):** Responsible for **Hydration**. It maintains a registry mapping Type IDs to Native Classes (TS Class, Lua Table, Python Class).
 - **Refactor:** Requires `repo.ts` to support storing/retrieving the `_type` discriminator.
-- **Benefit:** A `bloom.capability.control` stored in the DB can be loaded as a `class EntityControl` in TypeScript or a `meta_table` in Lua. The data is universal; the behavior is native.
+- **Benefit:** A `lotus.capability.control` stored in the DB can be loaded as a `class EntityControl` in TypeScript or a `meta_table` in Lua. The data is universal; the behavior is native.
 
 ### 8. Formal Verification Hooks
 

@@ -27,7 +27,7 @@ src/
 ├── App.tsx                 # Main layout
 ├── index.tsx               # Entry point
 ├── store/
-│   └── browser.ts          # BloomClient + SolidJS store
+│   └── browser.ts          # LotusClient + SolidJS store
 └── components/
     ├── Toolbar.tsx         # Navigation and actions
     ├── FileList.tsx        # Directory listing

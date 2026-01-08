@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/discord-bot",
+  "name": "@lotus/discord-bot",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -12,8 +12,8 @@
   "dependencies": {
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
-    "@bloom/client": "workspace:*",
-    "@bloom/shared": "workspace:*"
+    "@lotus/client": "workspace:*",
+    "@lotus/shared": "workspace:*"
   },
   "devDependencies": {
     "@typescript/native-preview": "latest",

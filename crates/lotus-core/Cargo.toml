@@ -1,0 +1,19 @@
+[package]
+name = "lotus-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Entity system, capabilities, and storage for Lotus"
+
+[dependencies]
+lotus-ir.workspace = true
+lotus-syntax-typescript.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+rusqlite.workspace = true
+thiserror.workspace = true
+uuid = { version = "1.11", features = ["v4"] }
+tokio = { version = "1", features = ["sync"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }

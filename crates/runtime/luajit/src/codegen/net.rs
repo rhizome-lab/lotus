@@ -2,7 +2,7 @@
 
 use crate::CompileError;
 use crate::codegen::compile_value;
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 
 /// Compile net.* opcodes to Lua calls
 pub fn compile_net(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<String>, CompileError> {

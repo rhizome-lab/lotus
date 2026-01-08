@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/op-test",
+  "name": "@lotus/op-test",
   "scripts": {
     "check": "bun --cwd ../.. check:test"
   }

@@ -1,18 +1,18 @@
 /**
- * Integration tests for BloomClient connecting to real Rust servers.
+ * Integration tests for LotusClient connecting to real Rust servers.
  *
  * These tests spawn actual server processes and verify end-to-end communication.
  * Run with: bun test packages/client/src/integration.test.ts
  *
  * Note: These tests require the server to be built first. Run:
- *   cargo build -p bloom-notes-server
+ *   cargo build -p notes-server
  *
  * The tests are skipped if the server fails to start or connection fails.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { spawn, type Subprocess } from "bun";
-import { BloomClient } from "./client";
+import { LotusClient } from "./client";
 
 const TEST_PORT = 18099;
 const SERVER_URL = `ws://127.0.0.1:${TEST_PORT}`;
@@ -41,9 +41,9 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 // Skip integration tests in CI - they require spawning external processes
 const isCI = process.env["CI"] === "true" || process.env["CI"] === "1";
 
-describe.skipIf(isCI)("BloomClient Integration", () => {
+describe.skipIf(isCI)("LotusClient Integration", () => {
   let serverProcess: Subprocess | null = null;
-  let client: BloomClient | null = null;
+  let client: LotusClient | null = null;
   let testDir: string;
   let setupFailed = false;
   let skipReason = "";
@@ -52,7 +52,7 @@ describe.skipIf(isCI)("BloomClient Integration", () => {
     try {
       // Build the server first (in case it needs recompiling)
       console.log("Building notes-server...");
-      const buildResult = spawn(["cargo", "build", "-p", "bloom-notes-server"], {
+      const buildResult = spawn(["cargo", "build", "-p", "notes-server"], {
         cwd: process.cwd(),
         stdout: "inherit",
         stderr: "inherit",
@@ -66,7 +66,7 @@ describe.skipIf(isCI)("BloomClient Integration", () => {
       }
 
       // Create temp database directory
-      testDir = `/tmp/bloom-integration-test-${Date.now()}`;
+      testDir = `/tmp/lotus-integration-test-${Date.now()}`;
       await Bun.$`mkdir -p ${testDir}`;
 
       // Start the server from workspace root using the built binary directly
@@ -103,7 +103,7 @@ describe.skipIf(isCI)("BloomClient Integration", () => {
       }
 
       // Create and connect client
-      client = new BloomClient(SERVER_URL, 500);
+      client = new LotusClient(SERVER_URL, 500);
       client.connect();
 
       // Wait for connection with shorter timeout

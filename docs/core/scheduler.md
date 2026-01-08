@@ -1,6 +1,6 @@
 # Scheduler
 
-The **Scheduler** component in Bloom is responsible for managing and executing delayed tasks. It allows scripts to schedule verbs to be executed on entities at a future time.
+The **Scheduler** component in Lotus is responsible for managing and executing delayed tasks. It allows scripts to schedule verbs to be executed on entities at a future time.
 
 ## Overview
 
@@ -38,7 +38,7 @@ When a task is processed:
 1. It is retrieved from the database.
 2. It is immediately **deleted** from the database to prevent double-execution.
 3. The target entity and verb are resolved.
-4. The verb is executed using the `evaluate` function from `@bloom/scripting`.
+4. The verb is executed using the `evaluate` function from `@lotus/scripting`.
 
 ### Send Factory
 

@@ -11,7 +11,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tracing::{error, info, warn};
 
 use crate::session::{Session, SessionId};
-use bloom_runtime::BloomRuntime;
+use lotus_runtime::LotusRuntime;
 
 /// Server configuration.
 #[derive(Debug, Clone)]
@@ -34,14 +34,14 @@ impl Default for ServerConfig {
 /// The Bloom WebSocket server.
 pub struct Server {
     config: ServerConfig,
-    runtime: Arc<BloomRuntime>,
+    runtime: Arc<LotusRuntime>,
     sessions: Arc<RwLock<HashMap<SessionId, Session>>>,
     broadcast_tx: broadcast::Sender<String>,
 }
 
 impl Server {
     /// Create a new server with the given runtime and configuration.
-    pub fn new(runtime: Arc<BloomRuntime>, config: ServerConfig) -> Self {
+    pub fn new(runtime: Arc<LotusRuntime>, config: ServerConfig) -> Self {
         let (broadcast_tx, _) = broadcast::channel(256);
 
         Self {
@@ -53,7 +53,7 @@ impl Server {
     }
 
     /// Get the runtime.
-    pub fn runtime(&self) -> &Arc<BloomRuntime> {
+    pub fn runtime(&self) -> &Arc<LotusRuntime> {
         &self.runtime
     }
 
@@ -133,7 +133,7 @@ impl Server {
 async fn handle_connection(
     stream: TcpStream,
     addr: SocketAddr,
-    runtime: Arc<BloomRuntime>,
+    runtime: Arc<LotusRuntime>,
     sessions: Arc<RwLock<HashMap<SessionId, Session>>>,
     broadcast_tx: broadcast::Sender<String>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -239,7 +239,7 @@ async fn handle_message(
     text: &str,
     session_id: SessionId,
     sessions: &Arc<RwLock<HashMap<SessionId, Session>>>,
-    runtime: &Arc<BloomRuntime>,
+    runtime: &Arc<LotusRuntime>,
     tx: &mpsc::UnboundedSender<String>,
     broadcast_tx: &broadcast::Sender<String>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -592,7 +592,7 @@ async fn handle_message(
             let code = params.and_then(|p| p.get("code")).ok_or("Missing code")?;
 
             // Parse code as SExpr
-            let sexpr: bloom_ir::SExpr =
+            let sexpr: lotus_ir::SExpr =
                 serde_json::from_value(code.clone()).map_err(|e| format!("Invalid code: {}", e))?;
 
             let storage = runtime.storage().lock().unwrap();
@@ -610,7 +610,7 @@ async fn handle_message(
             let code = params.and_then(|p| p.get("code")).ok_or("Missing code")?;
 
             // Parse code as SExpr
-            let sexpr: bloom_ir::SExpr =
+            let sexpr: lotus_ir::SExpr =
                 serde_json::from_value(code.clone()).map_err(|e| format!("Invalid code: {}", e))?;
 
             let storage = runtime.storage().lock().unwrap();
@@ -635,13 +635,13 @@ async fn handle_message(
 
         "get_opcodes" => {
             // Get core library opcodes
-            let mut opcodes: Vec<String> = bloom_ir::CORE_LIBRARIES
+            let mut opcodes: Vec<String> = lotus_ir::CORE_LIBRARIES
                 .iter()
                 .map(|lib| format!("{}.*", lib))
                 .collect();
 
             // Add plugin-registered opcodes
-            let plugin_opcodes = bloom_runtime::get_registered_opcodes();
+            let plugin_opcodes = lotus_runtime::get_registered_opcodes();
             opcodes.extend(plugin_opcodes);
 
             Ok(serde_json::json!(opcodes))

@@ -1,10 +1,10 @@
 import { Box, Text, useApp, useStdout } from "ink";
-import { type GameState, BloomClient } from "@bloom/client";
+import { type GameState, LotusClient } from "@lotus/client";
 import { useEffect, useRef, useState } from "react";
 import Editor from "./components/Editor";
 import Compass from "./components/Compass";
 import Inspector from "./components/Inspector";
-import type { Entity } from "@bloom/shared/jsonrpc";
+import type { Entity } from "@lotus/shared/jsonrpc";
 import TextInput from "ink-text-input";
 
 // Types
@@ -42,7 +42,7 @@ const App = () => {
     roomId: null,
   });
 
-  const clientRef = useRef<BloomClient | null>(null);
+  const clientRef = useRef<LotusClient | null>(null);
 
   useEffect(() => {
     const onResize = () => setRows(stdout.rows || 24);
@@ -73,7 +73,7 @@ const App = () => {
   }, [clientState]);
 
   useEffect(() => {
-    const client = new BloomClient("ws://localhost:8080");
+    const client = new LotusClient("ws://localhost:8080");
     clientRef.current = client;
 
     const unsubscribeState = client.subscribe((state) => {
@@ -273,7 +273,7 @@ const App = () => {
           <Box borderStyle="single" borderColor="green">
             <Text bold color="green">
               {" "}
-              Bloom TUI{" "}
+              Lotus TUI{" "}
             </Text>
             <Text> | </Text>
             <Text color={clientState.isConnected ? "green" : "red"}>

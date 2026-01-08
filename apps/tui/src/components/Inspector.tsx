@@ -1,5 +1,5 @@
 import { Box, Text } from "ink";
-import type { Entity } from "@bloom/shared/jsonrpc";
+import type { Entity } from "@lotus/shared/jsonrpc";
 
 interface InspectorProps {
   inspectedItem: Entity | null | undefined;

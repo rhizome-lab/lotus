@@ -1,6 +1,6 @@
 # Image Generation Frontend
 
-A comprehensive image generation frontend for bloom that combines visual canvas editing with capability-based AI image generation.
+A comprehensive image generation frontend for lotus that combines visual canvas editing with capability-based AI image generation.
 
 ## Overview
 
@@ -9,7 +9,7 @@ The Image Generation app provides two complementary interfaces for working with 
 1. **Layer Mode** - InvokeAI-style canvas interface for visual editing and generation
 2. **Blocks Mode** - Visual script editor that auto-generates blocks from server capabilities
 
-The app connects to the bloom server via WebSocket and leverages the diffusers plugin for Stable Diffusion image generation.
+The app connects to the lotus server via WebSocket and leverages the diffusers plugin for Stable Diffusion image generation.
 
 ## Architecture
 
@@ -23,18 +23,18 @@ The app connects to the bloom server via WebSocket and leverages the diffusers p
 - ControlNet support for guided generation
 - Inpainting and mask editing
 - Entity integration for saving/loading images
-- BloomScript state tracking
+- LotusScript state tracking
 
 **Blocks Mode** (`src/modes/BlocksMode.tsx`):
 
-- Wraps `@bloom/web-editor` ScriptEditor
+- Wraps `@lotus/web-editor` ScriptEditor
 - Auto-generates blocks from capability metadata
-- Supports all bloom capabilities
+- Supports all lotus capabilities
 - "Visualize as Layers" button for canvas preview
 
 ### Capability-Based Generation
 
-The app uses bloom's capability system for secure, controlled access to AI features:
+The app uses lotus's capability system for secure, controlled access to AI features:
 
 ```typescript
 // Get generation capability
@@ -50,12 +50,12 @@ const result = await sendRpc("std.call_method", {
 
 ### Shared Script State
 
-Both modes share the same BloomScript state, enabling seamless transitions:
+Both modes share the same LotusScript state, enabling seamless transitions:
 
 ```typescript
 const [sharedScript, setSharedScript] = createSignal(StdLib.seq());
 
-// Layer Mode records actions as BloomScript operations
+// Layer Mode records actions as LotusScript operations
 setSharedScript(
   StdLib.seq(
     CanvasOps.layerCreate(id, name),
@@ -87,7 +87,7 @@ setSharedScript(
 
 ### Entity Integration
 
-Save generated images as bloom entities:
+Save generated images as lotus entities:
 
 ```typescript
 // Save image with metadata
@@ -148,12 +148,12 @@ canvas.loadImageToLayer(layerId, entityData.image_url, 0, 0);
 
 ### Environment
 
-- **Bloom server**: `ws://localhost:8080` (configurable in `bloom-connection.ts`)
+- **Lotus server**: `ws://localhost:8080` (configurable in `lotus-connection.ts`)
 - **Dev server port**: 3002 (configurable in `vite.config.ts`)
 
 ### Required Services
 
-- Bloom server with diffusers plugin
+- Lotus server with diffusers plugin
 - Python inference server for image generation (see `docs/plugins/diffusers.md`)
 
 ## Development
@@ -170,10 +170,10 @@ apps/imagegen/
 │   ├── engine/
 │   │   └── canvas/
 │   │       ├── useCanvas.ts     # Canvas engine
-│   │       ├── operations.ts    # BloomScript operations
+│   │       ├── operations.ts    # LotusScript operations
 │   │       └── scriptToLayers.ts # Script parser
 │   └── utils/
-│       ├── bloom-connection.ts   # WebSocket client
+│       ├── lotus-connection.ts   # WebSocket client
 │       ├── useGeneration.ts     # Generation queue
 │       ├── batchGeneration.ts   # Batch utilities
 │       ├── templates.ts         # Template management
@@ -187,9 +187,9 @@ apps/imagegen/
 
 - **SolidJS**: Reactive UI framework
 - **Vite**: Build tool and dev server
-- **@bloom/scripting**: BloomScript integration
-- **@bloom/web-editor**: Block editor component
-- **sharp** (server-side): Image processing via `@bloom/image-io`
+- **@lotus/scripting**: LotusScript integration
+- **@lotus/web-editor**: Block editor component
+- **sharp** (server-side): Image processing via `@lotus/image-io`
 
 ## See Also
 

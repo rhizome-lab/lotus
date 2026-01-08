@@ -1,10 +1,10 @@
 # Execution Model & Architecture
 
-This document outlines the Bloom engine's execution model, explaining the relationship between the **Kernel**, **Opcodes**, and the **Polyglot SDKs**.
+This document outlines the Lotus engine's execution model, explaining the relationship between the **Kernel**, **Opcodes**, and the **Polyglot SDKs**.
 
 ## The "Sandwich" Architecture
 
-Bloom uses a layered architecture to achieve security, determinism, and language agnosticism.
+Lotus uses a layered architecture to achieve security, determinism, and language agnosticism.
 
 1.  **Top Layer: The Host Language (SDK)**
 
@@ -45,11 +45,11 @@ Even when we use the **JIT Compiler** (`compiler.ts`), we **do not** compile use
 - **User Code:** `fs.delete("/boot")`
 - **JIT Output:** `ops.fs.delete(...)` -> **Throws Security Error**.
 
-The **Opcodes** act as the **System Calls** of our Operating System. Just as a C program must use `syscalls` to talk to the Linux Kernel, our Scripts must use `opcodes` to talk to the Bloom Engine. The JIT compiler ensures that _only_ valid opcodes are generated. Pure JS execution would require heavy sandboxing (like V8 Isolates), which is resource-intensive.
+The **Opcodes** act as the **System Calls** of our Operating System. Just as a C program must use `syscalls` to talk to the Linux Kernel, our Scripts must use `opcodes` to talk to the Lotus Engine. The JIT compiler ensures that _only_ valid opcodes are generated. Pure JS execution would require heavy sandboxing (like V8 Isolates), which is resource-intensive.
 
 ### 2. State Serialization (Pause/Resume)
 
-- **Workflow:** Bloom scripts are often "Process Managers" (Quest Sagas, complex behaviors).
+- **Workflow:** Lotus scripts are often "Process Managers" (Quest Sagas, complex behaviors).
 - **Feature:** Because the VM executes a data structure (AST), we can **serialize the entire Call Stack** to JSON at any point.
 - **Result:** Use `std.sleep(1000)`. The server saves the script state to disk and shuts down. Next week, it loads the state and resumes _exactly_ where it left off. You cannot do this with a native Promise.
 

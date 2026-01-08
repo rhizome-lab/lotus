@@ -1,6 +1,6 @@
 # Admin CLI
 
-The Admin CLI (`apps/admin-cli`) provides administrative utilities for managing the Bloom game server, primarily focusing on database management.
+The Admin CLI (`apps/admin-cli`) provides administrative utilities for managing the Lotus game server, primarily focusing on database management.
 
 ## Usage
 

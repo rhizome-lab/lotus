@@ -1,6 +1,6 @@
 # SQLite Plugin
 
-Provides capability-based access to SQLite databases for bloom entities.
+Provides capability-based access to SQLite databases for lotus entities.
 
 ## Overview
 
@@ -23,7 +23,7 @@ The plugin uses Bun's native SQLite bindings (`bun:sqlite`) for high performance
 
 ## Setup
 
-The plugin is automatically loaded by the bloom server. No additional configuration is required.
+The plugin is automatically loaded by the lotus server. No additional configuration is required.
 
 ## Capabilities
 

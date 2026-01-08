@@ -4,7 +4,7 @@ Project documentation and guides.
 
 ## Overview
 
-This directory contains the source code for the Bloom documentation site. It uses VitePress to generate a static site from Markdown files, serving as the central knowledge base for the project.
+This directory contains the source code for the Lotus documentation site. It uses VitePress to generate a static site from Markdown files, serving as the central knowledge base for the project.
 
 ## Contents
 

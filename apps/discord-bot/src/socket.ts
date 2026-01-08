@@ -1,17 +1,17 @@
-import { type CommandArgument, BloomClient } from "@bloom/client";
+import { type CommandArgument, LotusClient } from "@lotus/client";
 import { CONFIG } from "./config";
 import { EventEmitter } from "node:events";
 
 // oxlint-disable-next-line prefer-event-target
 export class GameSocket extends EventEmitter {
-  private client: BloomClient;
+  private client: LotusClient;
   private entityId: number | null = null;
   private connected = false;
 
   constructor(entityId?: number) {
     super();
     this.entityId = entityId ?? null;
-    this.client = new BloomClient(CONFIG.CORE_URL);
+    this.client = new LotusClient(CONFIG.CORE_URL);
 
     this.client.subscribe((state) => {
       if (state.isConnected && !this.connected) {

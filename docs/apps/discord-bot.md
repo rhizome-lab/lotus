@@ -1,24 +1,24 @@
 # Discord Bot
 
-The Bloom Discord Bot (`apps/discord-bot`) bridges Discord channels with Bloom rooms, allowing users to interact with the game world directly from Discord.
+The Lotus Discord Bot (`apps/discord-bot`) bridges Discord channels with Lotus rooms, allowing users to interact with the game world directly from Discord.
 
 ## Configuration
 
 The bot is configured via environment variables (loaded from `.env`):
 
 - `DISCORD_TOKEN`: The bot token provided by the Discord Developer Portal.
-- `CORE_URL`: The WebSocket URL of the Bloom Core server (default: `ws://localhost:8080`).
+- `CORE_URL`: The WebSocket URL of the Lotus Core server (default: `ws://localhost:8080`).
 - `DB_PATH`: Path to the SQLite database file used for storing mappings (default: `bot.sqlite`).
 - `BOT_ENTITY_ID`: The ID of the entity representing the bot itself in the game (default: `4`).
 
 ## Architecture
 
-The bot is built using `discord.js` and connects to the Bloom Core via a WebSocket connection. It maintains a mapping between Discord channels and game rooms, as well as between Discord users and game entities.
+The bot is built using `discord.js` and connects to the Lotus Core via a WebSocket connection. It maintains a mapping between Discord channels and game rooms, as well as between Discord users and game entities.
 
 ### Key Components
 
 - **`DiscordBot`**: Manages the Discord client, listeners, and message handling.
-- **`SessionManager` (`src/session.ts`)**: Maps Discord User IDs to Bloom Entity IDs. It ensures every Discord user has a corresponding player entity in the game.
+- **`SessionManager` (`src/session.ts`)**: Maps Discord User IDs to Lotus Entity IDs. It ensures every Discord user has a corresponding player entity in the game.
 - **`SocketManager` (`src/socket.ts`)**: Handles the WebSocket connection to the Core. It uses a single connection for the bot but facilitates "sudo" commands to execute actions on behalf of other users.
 - **`DatabaseManager` (`src/db.ts`)**: Handles persistence using `bun:sqlite`. It stores channel maps, user defaults, and active sessions.
 
@@ -42,7 +42,7 @@ sequenceDiagram
     participant User as Discord User
     participant Bot as Discord Bot
     participant Session as Session Manager
-    participant Core as Bloom Core
+    participant Core as Lotus Core
     participant Channel as Discord Channel
 
     User->>Bot: Sends Message ("look")
@@ -64,13 +64,13 @@ sequenceDiagram
 
 ## Commands
 
-- **`!link <room_id>`**: Links the current Discord channel to a specific Bloom room. Messages sent in this channel will be routed to that room.
+- **`!link <room_id>`**: Links the current Discord channel to a specific Lotus room. Messages sent in this channel will be routed to that room.
 - **`!ping`**: A simple health check command that replies with "Pong!".
 - **`!cmd`**: (Mocked) Slash command handler.
 
 ## Session Handling
 
-Sessions are "sticky". Once a Discord user is mapped to a Bloom entity, that mapping persists.
+Sessions are "sticky". Once a Discord user is mapped to a Lotus entity, that mapping persists.
 
 1.  Check active session for `(DiscordID, ChannelID)`.
 2.  Check default entity for `DiscordID`.

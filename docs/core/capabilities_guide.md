@@ -1,6 +1,6 @@
 # Capability-Based Security Guide
 
-Bloom uses a **capability-based security** model to control access to sensitive operations like file I/O, network requests, and system resources. This guide explains how capabilities work and how to use them effectively.
+Lotus uses a **capability-based security** model to control access to sensitive operations like file I/O, network requests, and system resources. This guide explains how capabilities work and how to use them effectively.
 
 ## What are Capabilities?
 
@@ -332,6 +332,6 @@ Plugins can define custom capability types. Check plugin documentation for avail
 
 ## See Also
 
-- [Security](security.md) - Overview of Bloom's security model
+- [Security](security.md) - Overview of Lotus's security model
 - [Scripting Specification](../scripting/spec.md) - Core opcodes including capability operations
 - Plugin documentation for plugin-specific capabilities

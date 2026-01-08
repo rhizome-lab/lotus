@@ -1,6 +1,6 @@
-# Bloom Rust Port
+# Lotus Rust Port
 
-Design document for porting Bloom to a Rust-based runtime with LuaJIT execution.
+Design document for porting Lotus to a Rust-based runtime with LuaJIT execution.
 
 ## Motivation
 
@@ -23,7 +23,7 @@ Design document for porting Bloom to a Rust-based runtime with LuaJIT execution.
 └─────────────────────────┬───────────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────────┐
-│                      bloom-core                              │
+│                      lotus-core                              │
 │           (entities, capabilities, SQLite storage)          │
 └─────────────────────────┬───────────────────────────────────┘
                           │
@@ -43,10 +43,10 @@ Design document for porting Bloom to a Rust-based runtime with LuaJIT execution.
 
 ```
 crates/
-├── bloom-ir/              # S-expression types, validation, spec
-├── bloom-core/            # Entity, Verb, Capability, SQLite storage
-├── bloom-plugin-abi/      # Plugin trait, OpcodeRegistry, Value types
-├── bloom-cli/             # Binary entrypoint (serve, transpile, compile, exec)
+├── lotus-ir/              # S-expression types, validation, spec
+├── lotus-core/            # Entity, Verb, Capability, SQLite storage
+├── lotus-plugin-abi/      # Plugin trait, OpcodeRegistry, Value types
+├── lotus-cli/             # Binary entrypoint (serve, transpile, compile, exec)
 │
 ├── syntax/
 │   └── typescript/       # TS → S-expr (tree-sitter-typescript)
@@ -353,4 +353,4 @@ unsafe extern "C" fn fs_read_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 ## Related Documents
 
 - [Architecture](../architecture.md) - System architecture overview
-- [BloomScript](../scripting/spec.md) - S-expression opcodes reference
+- [LotusScript](../scripting/spec.md) - S-expression opcodes reference

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Bloom web frontend is a modern, responsive single-page application built with [SolidJS](https://www.solidjs.com/). It provides a rich interface for interacting with the game world, including a command-line interface, visual room representation, inventory management, and a powerful "Builder Mode" for content creation.
+The Lotus web frontend is a modern, responsive single-page application built with [SolidJS](https://www.solidjs.com/). It provides a rich interface for interacting with the game world, including a command-line interface, visual room representation, inventory management, and a powerful "Builder Mode" for content creation.
 
 ## Layout
 

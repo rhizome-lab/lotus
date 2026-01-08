@@ -1,10 +1,10 @@
-# BloomScript Interpreter
+# LotusScript Interpreter
 
-The BloomScript interpreter is a stack-based virtual machine designed for executing BloomScript S-expressions. It uses a Structure of Arrays (SOA) layout for its execution stack to optimize for cache locality and reduce garbage collection overhead.
+The LotusScript interpreter is a stack-based virtual machine designed for executing LotusScript S-expressions. It uses a Structure of Arrays (SOA) layout for its execution stack to optimize for cache locality and reduce garbage collection overhead.
 
 ## Architecture
 
-Unlike traditional interpreters that might use recursion or an array of objects for stack frames, the BloomScript interpreter manages its execution state using parallel arrays. This "Structure of Arrays" (SOA) approach means that instead of having a single `StackFrame` object containing all data for a call, the data is split across multiple typed arrays.
+Unlike traditional interpreters that might use recursion or an array of objects for stack frames, the LotusScript interpreter manages its execution state using parallel arrays. This "Structure of Arrays" (SOA) approach means that instead of having a single `StackFrame` object containing all data for a call, the data is split across multiple typed arrays.
 
 This design allows the interpreter to:
 
@@ -55,7 +55,7 @@ The interpreter uses a **prototype chain** mechanism to handle block scoping eff
 The primary entry point for the interpreter is the `evaluate` function.
 
 ```typescript
-import { evaluate, createScriptContext } from "@bloom/scripting";
+import { evaluate, createScriptContext } from "@lotus/scripting";
 
 const script = ["seq", ["log", "Hello"], ["+", 1, 2]];
 const ctx = createScriptContext({

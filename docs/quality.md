@@ -1,6 +1,6 @@
 # Repository Quality Guide
 
-This document outlines the standards and processes for maintaining high quality in the Bloom repository.
+This document outlines the standards and processes for maintaining high quality in the Lotus repository.
 
 ## Automated Checks
 

@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/op-unused",
+  "name": "@lotus/op-unused",
   "scripts": {
     "check": "bun --cwd ../.. check:unused"
   }

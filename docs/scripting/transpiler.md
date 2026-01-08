@@ -1,11 +1,11 @@
-# BloomScript Transpiler
+# LotusScript Transpiler
 
-The Transpiler is a tool that converts TypeScript code into BloomScript's internal JSON S-expression format. This allows developers to write scripts in a familiar, type-safe language (TypeScript) and execute them within the Bloom runtime.
+The Transpiler is a tool that converts TypeScript code into LotusScript's internal JSON S-expression format. This allows developers to write scripts in a familiar, type-safe language (TypeScript) and execute them within the Lotus runtime.
 
 ## Usage
 
 ```typescript
-import { transpile } from "@bloom/scripting";
+import { transpile } from "@lotus/scripting";
 
 const code = `
   let x = 10;
@@ -25,7 +25,7 @@ console.log(JSON.stringify(script, null, 2));
 
 ## Features
 
-The transpiler supports a subset of TypeScript that maps to BloomScript opcodes:
+The transpiler supports a subset of TypeScript that maps to LotusScript opcodes:
 
 ### Variables
 
@@ -86,7 +86,7 @@ The transpiler supports a subset of TypeScript that maps to BloomScript opcodes:
 
 ## Opcode Resolution Heuristic
 
-BloomScript uses opcodes (e.g., `log`, `if`) that look like function calls in TypeScript. To distinguish between a call to a local variable (which requires `apply`) and a direct opcode call, the transpiler uses the following heuristic:
+LotusScript uses opcodes (e.g., `log`, `if`) that look like function calls in TypeScript. To distinguish between a call to a local variable (which requires `apply`) and a direct opcode call, the transpiler uses the following heuristic:
 
 1.  **Scope Tracking**: The transpiler tracks all locally defined variables (via `let`, `function`, parameters).
 2.  **Resolution**:
@@ -114,7 +114,7 @@ The transpiler is heavily used in the seeding process to allow writing verbs in 
 
 1.  **Define Verbs**: Verbs are defined as exported functions in `packages/core/src/seeds/verbs.ts`.
 2.  **Extract Body**: The `extractVerb` helper reads the function body from the source file.
-3.  **Transpile**: The body string is passed to `transpile()` to generate the BloomScript AST.
+3.  **Transpile**: The body string is passed to `transpile()` to generate the LotusScript AST.
 
 ```typescript
 // In seeds/verbs.ts
@@ -125,7 +125,7 @@ export function look() {
 // @endverb
 
 // In seed.ts
-import { transpile } from "@bloom/scripting";
+import { transpile } from "@lotus/scripting";
 import { extractVerb } from "./verb_loader";
 
 addVerb(id, "look", transpile(extractVerb(verbsPath, "look")));

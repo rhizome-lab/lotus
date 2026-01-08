@@ -94,16 +94,16 @@ Goal: next session completes ALL "Next Up" items.
 
 ## Architecture
 
-Bloom is a multiplayer scriptable virtual world engine. See `docs/architecture.md` for deep-dive.
+Lotus is a multiplayer scriptable virtual world engine. See `docs/architecture.md` for deep-dive.
 
 ### Rust Crates (Primary Codebase)
 
 Crate structure in `crates/`:
-- `bloom-ir` - S-expression types and validation
-- `bloom-core` - Entity system, capabilities, SQLite storage
-- `bloom-runtime` - Script execution context with LuaJIT
-- `bloom-plugin-abi` - Stable ABI for dynamic plugins
-- `bloom-cli` - CLI binary (server)
+- `lotus-ir` - S-expression types and validation
+- `lotus-core` - Entity system, capabilities, SQLite storage
+- `lotus-runtime` - Script execution context with LuaJIT
+- `lotus-plugin-abi` - Stable ABI for dynamic plugins
+- `lotus-cli` - CLI binary (server)
 - `syntax/typescript` - TS → S-expr transpiler
 - `runtime/luajit` - S-expr → Lua codegen + mlua runtime
 - `apps/notes-server` - Notes app server
@@ -135,7 +135,7 @@ Remaining TypeScript code:
 - **Capabilities**: Authorization tokens with params (e.g., `entity.control { target_id: 42 }`)
 - **Lazy Opcodes**: Control flow opcodes receive raw AST, evaluate conditionally
 
-## BloomScript
+## Reed (Scripting Language)
 
 ```json
 ["std.seq",

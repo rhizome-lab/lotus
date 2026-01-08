@@ -28,7 +28,7 @@ src/
 ├── App.tsx                 # Main layout (header + 3-column grid)
 ├── index.tsx               # Entry point
 ├── store/
-│   └── notes.ts            # BloomClient + SolidJS store
+│   └── notes.ts            # LotusClient + SolidJS store
 ├── components/
 │   ├── NoteList.tsx        # Sidebar with search and note list
 │   ├── NoteEditor.tsx      # Edit/preview modes

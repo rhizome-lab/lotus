@@ -10,9 +10,9 @@
 //! PORT=8080 FS_ROOT=./sandbox cargo run --bin filebrowser-server
 //! ```
 
-use bloom_core::seed::{SeedSystem, seed_basic_world};
-use bloom_runtime::BloomRuntime;
-use bloom_transport_websocket_jsonrpc::Server;
+use lotus_core::seed::{SeedSystem, seed_basic_world};
+use lotus_runtime::LotusRuntime;
+use lotus_transport_websocket_jsonrpc::Server;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -34,10 +34,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Filesystem sandbox root: {}", fs_root);
 
     // Create runtime (opens database connections)
-    let runtime = Arc::new(BloomRuntime::open("filebrowser.db")?);
+    let runtime = Arc::new(LotusRuntime::open("filebrowser.db")?);
 
     // Load the fs plugin
-    runtime.load_plugin("target/debug/libbloom_plugin_fs.so", "fs")?;
+    runtime.load_plugin("target/debug/liblotus_plugin_fs.so", "fs")?;
     tracing::info!("Loaded fs plugin");
 
     // Get path to TypeScript entity definitions
@@ -97,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Start WebSocket server
-    let config = bloom_transport_websocket_jsonrpc::ServerConfig {
+    let config = lotus_transport_websocket_jsonrpc::ServerConfig {
         host: "127.0.0.1".to_string(),
         port,
         db_path: "filebrowser.db".to_string(),

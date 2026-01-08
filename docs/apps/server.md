@@ -1,6 +1,6 @@
 # Server
 
-The Server (`apps/server`) is the main entry point for the Bloom game engine. It initializes the core systems, loads plugins, and starts the WebSocket server.
+The Server (`apps/server`) is the main entry point for the Lotus game engine. It initializes the core systems, loads plugins, and starts the WebSocket server.
 
 ## Overview
 

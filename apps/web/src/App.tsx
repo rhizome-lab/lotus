@@ -1,5 +1,5 @@
 // oxlint-disable-next-line no-unassigned-import
-import "@bloom/shared/index.css";
+import "@lotus/shared/index.css";
 import { Show, createSignal, onCleanup, onMount } from "solid-js";
 import Compass from "./components/Compass";
 import CustomExits from "./components/CustomExits";
@@ -96,7 +96,7 @@ function App() {
       </Show>
 
       <header class="app__header">
-        <div class="app__title">Bloom</div>
+        <div class="app__title">Lotus</div>
         <div class="app__header-controls">
           <div class={`app__status ${gameStore.state.isConnected ? "app__status--online" : ""}`}>
             {gameStore.state.isConnected ? "ONLINE" : "OFFLINE"}

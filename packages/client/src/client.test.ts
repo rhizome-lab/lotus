@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import { BloomClient } from "./client";
+import { LotusClient } from "./client";
 
 // Mock WebSocket
 class MockWebSocket {
@@ -19,12 +19,12 @@ class MockWebSocket {
 
 globalThis.WebSocket = MockWebSocket as any;
 
-describe("BloomClient", () => {
-  let client: BloomClient;
+describe("LotusClient", () => {
+  let client: LotusClient;
   let ws: MockWebSocket;
 
   beforeEach(() => {
-    client = new BloomClient();
+    client = new LotusClient();
     client.connect();
     ws = (client as any).socket;
   });

@@ -15,7 +15,7 @@ This document lists key files and directories to help navigation.
 
 ## Client SDK (`packages/client`)
 
-- **`src/client.ts`**: The main `BloomClient` class. Handles connection, state, and JSON-RPC.
+- **`src/client.ts`**: The main `LotusClient` class. Handles connection, state, and JSON-RPC.
 - **`src/index.ts`**: Exports.
 
 ## Shared Library (`packages/shared`)

@@ -1,6 +1,6 @@
 # Network Plugin
 
-The `@bloom/plugin-net` package provides network capabilities to BloomScript, enabling HTTP requests with capability-based security.
+The `@lotus/plugin-net` package provides network capabilities to LotusScript, enabling HTTP requests with capability-based security.
 
 ## Capabilities
 
@@ -110,7 +110,7 @@ Sending data to an API:
       ["obj.new", ["domain", "api.example.com"], ["methods", ["list.new", "POST"]]]
     ]
   ],
-  ["let", "payload", ["obj.new", ["title", "New Item"], ["description", "Created via BloomScript"]]],
+  ["let", "payload", ["obj.new", ["title", "New Item"], ["description", "Created via LotusScript"]]],
   [
     "let",
     "options",

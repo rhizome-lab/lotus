@@ -2,7 +2,7 @@
 
 use crate::CompileError;
 use crate::codegen::compile_value;
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 
 /// Compile ai.* opcodes to Lua calls
 pub fn compile_ai(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<String>, CompileError> {

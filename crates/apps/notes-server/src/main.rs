@@ -10,9 +10,9 @@
 //! PORT=8081 cargo run --bin notes-server
 //! ```
 
-use bloom_core::seed::{SeedSystem, seed_basic_world};
-use bloom_runtime::BloomRuntime;
-use bloom_transport_websocket_jsonrpc::Server;
+use lotus_core::seed::{SeedSystem, seed_basic_world};
+use lotus_runtime::LotusRuntime;
+use lotus_transport_websocket_jsonrpc::Server;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Starting Bloom Notes Server...");
 
     // Create runtime (opens database connections)
-    let runtime = Arc::new(BloomRuntime::open("notes.db")?);
+    let runtime = Arc::new(LotusRuntime::open("notes.db")?);
 
     // Get path to TypeScript entity definitions
     // Relative to workspace root: apps/notes-server/src/definitions/
@@ -70,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Start WebSocket server
-    let config = bloom_transport_websocket_jsonrpc::ServerConfig {
+    let config = lotus_transport_websocket_jsonrpc::ServerConfig {
         host: "127.0.0.1".to_string(),
         port,
         db_path: "notes.db".to_string(),

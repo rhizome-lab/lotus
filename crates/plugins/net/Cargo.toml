@@ -1,5 +1,5 @@
 [package]
-name = "bloom-plugin-net"
+name = "lotus-plugin-net"
 version = "0.1.0"
 edition = "2021"
 

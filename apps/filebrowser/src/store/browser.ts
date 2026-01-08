@@ -1,4 +1,4 @@
-import { BloomClient } from "@bloom/client";
+import { LotusClient } from "@lotus/client";
 import { createStore } from "solid-js/store";
 
 export interface FileEntry {
@@ -52,7 +52,7 @@ interface BrowserState {
   tags: string[];
 }
 
-const client = new BloomClient("ws://localhost:8080");
+const client = new LotusClient("ws://localhost:8080");
 
 const [state, setState] = createStore<BrowserState>({
   bookmarks: {},

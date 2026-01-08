@@ -1,10 +1,10 @@
 # Seeding and Verbs
 
-The seeding process in Bloom is responsible for populating the world with initial entities, items, and verbs. This document explains how seeds are structured and how verbs are defined and loaded.
+The seeding process in Lotus is responsible for populating the world with initial entities, items, and verbs. This document explains how seeds are structured and how verbs are defined and loaded.
 
 ## Overview
 
-Seeds are TypeScript functions that use the repository API to create entities and assign capabilities. To ensure type safety and maintainability, verb logic is defined in a dedicated TypeScript file and then transpiled into BloomScript at runtime.
+Seeds are TypeScript functions that use the repository API to create entities and assign capabilities. To ensure type safety and maintainability, verb logic is defined in a dedicated TypeScript file and then transpiled into LotusScript at runtime.
 
 ## Verb Definitions
 
@@ -22,7 +22,7 @@ export function my_verb_name() {
 ```
 
 - **`// @verb <name>`**: Marks the start of the verb definition. The name must match the function name.
-- **Function Body**: The code inside the function is what gets transpiled. It can use global BloomScript functions like `call`, `arg`, `caller`, `entity`, etc.
+- **Function Body**: The code inside the function is what gets transpiled. It can use global LotusScript functions like `call`, `arg`, `caller`, `entity`, etc.
 - **`// @endverb`**: Marks the end of the verb definition.
 
 This approach allows you to write verb logic with full TypeScript support, including type checking (via `types.d.ts`) and IDE autocompletion.
@@ -41,11 +41,11 @@ const verbBody = extractVerb(verbsPath, "my_verb_name");
 
 ## Transpilation in Seeds
 
-In the seed files (e.g., `seed.ts`, `seeds/items.ts`, `seeds/hotel.ts`), we use the `transpile` function from `@bloom/scripting` to convert the extracted verb body into BloomScript opcodes.
+In the seed files (e.g., `seed.ts`, `seeds/items.ts`, `seeds/hotel.ts`), we use the `transpile` function from `@lotus/scripting` to convert the extracted verb body into LotusScript opcodes.
 
 ```typescript
 import { createEntity, addVerb } from "../repo";
-import { transpile } from "@bloom/scripting";
+import { transpile } from "@lotus/scripting";
 import { extractVerb } from "../verb_loader";
 
 // ... inside a seed function ...
@@ -70,6 +70,6 @@ addVerb(roomId, "enter", transpile(finalCode));
 
 ## Benefits
 
-1.  **Type Safety**: Verbs are written in TypeScript and checked against the BloomScript API definitions.
+1.  **Type Safety**: Verbs are written in TypeScript and checked against the LotusScript API definitions.
 2.  **Maintainability**: Verb logic is centralized in `verbs.ts` rather than being scattered as string literals or manual AST construction in seed files.
 3.  **Readability**: Writing standard TypeScript functions is more natural than constructing JSON arrays for opcodes.

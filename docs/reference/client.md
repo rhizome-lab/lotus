@@ -1,11 +1,11 @@
 # Client SDK
 
-The Client SDK (`@bloom/client`) provides a type-safe interface for connecting to the Bloom Core server via WebSockets. It handles the JSON-RPC protocol, state management, and event subscriptions.
+The Client SDK (`@lotus/client`) provides a type-safe interface for connecting to the Lotus Core server via WebSockets. It handles the JSON-RPC protocol, state management, and event subscriptions.
 
 ## Installation
 
 ```bash
-bun add @bloom/client
+bun add @lotus/client
 ```
 
 ## Usage
@@ -13,9 +13,9 @@ bun add @bloom/client
 ### Connecting to the Server
 
 ```typescript
-import { BloomClient, GameState } from "@bloom/client";
+import { LotusClient, GameState } from "@lotus/client";
 
-const client = new BloomClient("ws://localhost:8080");
+const client = new LotusClient("ws://localhost:8080");
 
 // Subscribe to state changes
 client.subscribe((state: GameState) => {
@@ -42,7 +42,7 @@ client.execute("go", ["north"]);
 To receive game messages (e.g., descriptions, chat):
 
 ```typescript
-import { GameMessage } from "@bloom/client";
+import { GameMessage } from "@lotus/client";
 
 client.onMessage((msg: GameMessage) => {
   console.log(`[${msg.type}] ${msg.text}`);
@@ -51,7 +51,7 @@ client.onMessage((msg: GameMessage) => {
 
 ## API Reference
 
-### `BloomClient`
+### `LotusClient`
 
 #### `constructor(url: string)`
 

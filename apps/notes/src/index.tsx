@@ -1,6 +1,6 @@
 /* @refresh reload */
 // oxlint-disable-next-line no-unassigned-import
-import "@bloom/shared/index.css";
+import "@lotus/shared/index.css";
 import App from "./App";
 import { render } from "solid-js/web";
 

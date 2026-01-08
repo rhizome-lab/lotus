@@ -4,7 +4,7 @@ Common utilities and types. Contains code shared across both backend (core/serve
 
 ## Overview
 
-The Shared package ensures consistency across the entire Bloom ecosystem by providing a single source of truth for critical types and utility functions. This prevents discrepancies between the client and server.
+The Shared package ensures consistency across the entire Lotus ecosystem by providing a single source of truth for critical types and utility functions. This prevents discrepancies between the client and server.
 
 ## Contents
 

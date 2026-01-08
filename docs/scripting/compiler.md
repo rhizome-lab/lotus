@@ -1,11 +1,11 @@
-# BloomScript Compiler
+# LotusScript Compiler
 
-The Compiler is a tool designed to transform the internal JSON representation of BloomScript into executable JavaScript functions. This significantly improves performance by removing the overhead of AST traversal at runtime.
+The Compiler is a tool designed to transform the internal JSON representation of LotusScript into executable JavaScript functions. This significantly improves performance by removing the overhead of AST traversal at runtime.
 
 ## Usage
 
 ```typescript
-import { compile, createScriptContext } from "@bloom/scripting";
+import { compile, createScriptContext } from "@lotus/scripting";
 
 const script = ["seq", ["let", "x", 1], ["var", "x"]];
 const compiledFn = compile(script);
@@ -17,7 +17,7 @@ console.log(result); // Output: 1
 
 ## Compilation Strategy
 
-The compiler generates a synchronous JavaScript function that takes a `ScriptContext` as an argument. It maps BloomScript opcodes directly to JavaScript constructs where possible.
+The compiler generates a synchronous JavaScript function that takes a `ScriptContext` as an argument. It maps LotusScript opcodes directly to JavaScript constructs where possible.
 
 ### Control Flow
 

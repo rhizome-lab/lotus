@@ -1,11 +1,11 @@
-# BloomScript Decompiler
+# LotusScript Decompiler
 
-The Decompiler is a tool designed to convert the internal JSON representation of BloomScript into a human-readable, TypeScript-like syntax. This facilitates debugging, editing, and interaction with LLMs.
+The Decompiler is a tool designed to convert the internal JSON representation of LotusScript into a human-readable, TypeScript-like syntax. This facilitates debugging, editing, and interaction with LLMs.
 
 ## Usage
 
 ```typescript
-import { decompile } from "@bloom/scripting";
+import { decompile } from "@lotus/scripting";
 
 const script = ["seq", ["let", "x", 1], ["var", "x"]];
 const code = decompile(script);

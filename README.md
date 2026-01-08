@@ -1,14 +1,14 @@
-# Bloom
+# Lotus
 
-**Bloom** is a persistent, multiplayer, scriptable virtual world engine. It combines the interactive storytelling of MUDs/MOOs with modern web technologies and AI integration.
+**Lotus** is a persistent, multiplayer, scriptable virtual world engine. It combines the interactive storytelling of MUDs/MOOs with modern web technologies and AI integration.
 
 ## Overview
 
-Bloom allows players to explore a persistent world, interact with objects and NPCs, and extend the world through a built-in scripting language. The engine is designed to be modular, supporting multiple frontends (Web, TUI, Discord) connected to a Rust-powered server.
+Lotus allows players to explore a persistent world, interact with objects and NPCs, and extend the world through a built-in scripting language. The engine is designed to be modular, supporting multiple frontends (Web, TUI, Discord) connected to a Rust-powered server.
 
 ## Key Features
 
-- **Scriptable World**: Everything in the world (rooms, items, NPCs) can be scripted using **BloomScript**, an S-expression language using JSON syntax.
+- **Scriptable World**: Everything in the world (rooms, items, NPCs) can be scripted using **Reed**, an S-expression language using JSON syntax.
 - **Persistent State**: The world state is persisted in a SQLite database.
 - **Multiplayer**: Real-time interaction with other players via WebSockets.
 - **AI Integration**: Built-in plugins for AI-driven NPCs and content generation.
@@ -24,10 +24,10 @@ The project is organized as a monorepo with Rust backend and TypeScript frontend
 
 ### Rust Backend (`crates/`)
 
-- **`bloom-ir`**: S-expression types and validation (the IR format)
-- **`bloom-core`**: Entity system, capabilities, SQLite storage
-- **`bloom-runtime`**: LuaJIT integration for script execution
-- **`bloom-cli`**: CLI binary (`bloom`)
+- **`lotus-ir`**: S-expression types and validation (the IR format)
+- **`lotus-core`**: Entity system, capabilities, SQLite storage
+- **`lotus-runtime`**: LuaJIT integration for script execution
+- **`lotus-cli`**: CLI binary (`lotus`)
 - **`syntax/typescript`**: TypeScript → S-expression transpiler
 - **`runtime/luajit`**: S-expression → Lua codegen
 - **`transport/websocket-jsonrpc`**: WebSocket server with JSON-RPC
@@ -54,8 +54,8 @@ The project is organized as a monorepo with Rust backend and TypeScript frontend
 
 ```bash
 # Clone the repository
-git clone https://github.com/rhizome-lab/bloom.git
-cd bloom
+git clone https://github.com/rhizome-lab/lotus.git
+cd lotus
 
 # Install TypeScript dependencies
 bun install
@@ -68,7 +68,7 @@ cargo build --release
 
 ```bash
 # Start the notes server (Rust)
-cargo run -p bloom-notes-server
+cargo run -p notes-server
 
 # In a separate terminal, start the web client
 bun run dev:notes
@@ -78,7 +78,7 @@ Access the notes app at `http://localhost:3004`.
 
 ## Scripting
 
-Bloom uses **BloomScript**, an S-expression language that uses JSON as its syntax. Scripts are transpiled from TypeScript to S-expressions, then compiled to Lua for execution.
+Lotus uses **Reed**, an S-expression language that uses JSON as its syntax. Scripts are transpiled from TypeScript to S-expressions, then compiled to Lua for execution.
 
 Example script (Greeting) represented in JSON:
 

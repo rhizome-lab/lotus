@@ -1,7 +1,7 @@
 //! Procgen library compilation (procedural generation).
 
 use crate::codegen::{CompileError, compile_value};
-use bloom_ir::SExpr;
+use lotus_ir::SExpr;
 
 pub fn compile_procgen(
     op: &str,
@@ -79,7 +79,7 @@ pub fn compile_procgen(
 mod tests {
     use super::*;
     use crate::compile;
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     #[test]
     fn test_procgen_seed() {

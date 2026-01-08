@@ -1,8 +1,8 @@
 [package]
-name = "bloom-plugin-cloud"
+name = "lotus-plugin-cloud"
 version = "0.1.0"
 edition = "2024"
-description = "Cloud storage plugin for Bloom using OpenDAL"
+description = "Cloud storage plugin for Lotus using OpenDAL"
 
 [lib]
 crate-type = ["cdylib"]

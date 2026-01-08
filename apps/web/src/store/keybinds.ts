@@ -24,7 +24,7 @@ const DEFAULT_BINDINGS: Record<ActionType, string> = {
   west: "a",
 };
 
-const STORAGE_KEY = "bloom_keybinds";
+const STORAGE_KEY = "lotus_keybinds";
 
 export const loadBindings = (): Record<ActionType, string> => {
   try {

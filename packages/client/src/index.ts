@@ -1,2 +1,2 @@
 export * from "./client";
-export type { Entity } from "@bloom/shared/jsonrpc";
+export type { Entity } from "@lotus/shared/jsonrpc";

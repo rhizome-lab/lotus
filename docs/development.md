@@ -1,20 +1,20 @@
 # Development Guide
 
-Welcome to the Bloom development guide! This document will help you get set up and contributing to the project.
+Welcome to the Lotus development guide! This document will help you get set up and contributing to the project.
 
 ## Getting Started
 
 ### Prerequisites
 
-- **[Bun](https://bun.sh/)**: Bloom is built on the Bun runtime. Ensure you have the latest version installed.
+- **[Bun](https://bun.sh/)**: Lotus is built on the Bun runtime. Ensure you have the latest version installed.
 
 ### Installation
 
 1.  Clone the repository:
 
     ```bash
-    git clone https://github.com/rhizome-lab/bloom.git
-    cd bloom
+    git clone https://github.com/rhizome-lab/lotus.git
+    cd lotus
     ```
 
 2.  Install dependencies:
@@ -24,7 +24,7 @@ Welcome to the Bloom development guide! This document will help you get set up a
 
 ### Project Structure
 
-Bloom is a monorepo managed by Bun workspaces.
+Lotus is a monorepo managed by Bun workspaces.
 
 - **`apps/`**: Deployable applications.
   - `server`: The core game server.
@@ -33,7 +33,7 @@ Bloom is a monorepo managed by Bun workspaces.
   - `discord-bot`: The Discord integration.
 - **`packages/`**: Shared libraries.
   - `core`: The game engine logic.
-  - `scripting`: The BloomScript compiler and interpreter.
+  - `scripting`: The LotusScript compiler and interpreter.
   - `client`: The TypeScript SDK.
   - `shared`: Shared types and utilities.
 - **`plugins/`**: Optional game features.
@@ -51,7 +51,7 @@ bun test
 To run tests for a specific package:
 
 ```bash
-bun test --filter @bloom/core
+bun test --filter @lotus/core
 ```
 
 ## Building the Documentation
@@ -85,8 +85,8 @@ bun run build:docs
 
 This command performs the following steps:
 
-1. Builds the `@bloom/docs` package (VitePress site).
-2. Builds the `@bloom/playground` package.
+1. Builds the `@lotus/docs` package (VitePress site).
+2. Builds the `@lotus/playground` package.
 3. Copies the playground build output to `docs/.vitepress/dist/playground`.
 
 ### Previewing the Build

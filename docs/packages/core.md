@@ -1,10 +1,10 @@
 # Core Package
 
-The core engine of Bloom. Contains the fundamental logic for the game world, including the object model, database persistence layer, and runtime environment.
+The core engine of Lotus. Contains the fundamental logic for the game world, including the object model, database persistence layer, and runtime environment.
 
 ## Overview
 
-This package is the heart of the Bloom server. It manages the lifecycle of game entities, handles player commands, and executes game logic. It is designed to be modular and extensible.
+This package is the heart of the Lotus server. It manages the lifecycle of game entities, handles player commands, and executes game logic. It is designed to be modular and extensible.
 
 ## Key Components
 

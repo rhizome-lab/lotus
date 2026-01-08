@@ -14,8 +14,8 @@ use serde_json::json;
 use tokio::time::timeout;
 use tokio_tungstenite::tungstenite::Message;
 
-use bloom_runtime::BloomRuntime;
-use bloom_transport_websocket_jsonrpc::{Server, ServerConfig};
+use lotus_runtime::LotusRuntime;
+use lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
 
 /// Helper to send a JSON-RPC request and get the response
 async fn send_request(
@@ -67,7 +67,7 @@ async fn test_notes_server_basic_operations() -> Result<(), Box<dyn std::error::
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create test entities manually (without using seed system to avoid TypeScript parsing issues)
     let (base_entity_id, test_entity_id) = {
@@ -199,7 +199,7 @@ async fn test_notes_server_basic_operations() -> Result<(), Box<dyn std::error::
 /// Test notes-specific verbs: create, list, get, update, delete
 #[tokio::test]
 async fn test_notes_verb_operations() -> Result<(), Box<dyn std::error::Error>> {
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-notes-verbs");
@@ -210,7 +210,7 @@ async fn test_notes_verb_operations() -> Result<(), Box<dyn std::error::Error>> 
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create notes user entity with verbs
     let user_id = {
@@ -694,7 +694,7 @@ async fn test_notes_verb_operations() -> Result<(), Box<dyn std::error::Error>> 
 /// Test backlinks functionality
 #[tokio::test]
 async fn test_notes_backlinks() -> Result<(), Box<dyn std::error::Error>> {
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-notes-backlinks");
@@ -705,7 +705,7 @@ async fn test_notes_backlinks() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create notes user entity with backlink support
     let user_id = {
@@ -1208,7 +1208,7 @@ async fn test_notes_backlinks() -> Result<(), Box<dyn std::error::Error>> {
 /// Test search functionality
 #[tokio::test]
 async fn test_notes_search() -> Result<(), Box<dyn std::error::Error>> {
-    use bloom_ir::SExpr;
+    use lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-notes-search");
@@ -1219,7 +1219,7 @@ async fn test_notes_search() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(&test_dir)?;
 
     // Create runtime
-    let runtime = Arc::new(BloomRuntime::open(db_path.to_str().unwrap())?);
+    let runtime = Arc::new(LotusRuntime::open(db_path.to_str().unwrap())?);
 
     // Create notes user entity with search verb
     let user_id = {

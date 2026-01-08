@@ -4,7 +4,7 @@ The File Browser Server (`apps/filebrowser-server`) provides a sandboxed file br
 
 ## Overview
 
-The server uses the Bloom entity system with filesystem capabilities:
+The server uses the Lotus entity system with filesystem capabilities:
 
 1. **FileBrowserBase**: Base prototype with path resolution and core verbs
 2. **FileBrowserUser**: User prototype with bookmarks and tags

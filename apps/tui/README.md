@@ -1,6 +1,6 @@
 # TUI (Terminal User Interface)
 
-A rich terminal-based interface for Bloom.
+A rich terminal-based interface for Lotus.
 
 ## Overview
 

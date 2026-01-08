@@ -1,6 +1,6 @@
 # Diffusers Plugin
 
-The Diffusers Plugin provides Stable Diffusion image generation capabilities for bloom through a capability-based access control system. It enables text-to-image generation using various Stable Diffusion models via a Python inference server.
+The Diffusers Plugin provides Stable Diffusion image generation capabilities for lotus through a capability-based access control system. It enables text-to-image generation using various Stable Diffusion models via a Python inference server.
 
 ## Architecture
 

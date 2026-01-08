@@ -1,5 +1,5 @@
 {
-  "name": "@bloom/client",
+  "name": "@lotus/client",
   "version": "0.0.0",
   "main": "src/index.ts",
   "exports": {
@@ -12,7 +12,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@bloom/shared": "workspace:*"
+    "@lotus/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

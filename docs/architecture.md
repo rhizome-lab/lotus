@@ -1,10 +1,10 @@
-# Bloom Architecture Deep-Dive
+# Lotus Architecture Deep-Dive
 
 Comprehensive architecture documentation. For quick reference, see `CLAUDE.md`.
 
 ## Execution Model
 
-Bloom uses a "Sandwich Architecture" with three layers:
+Lotus uses a "Sandwich Architecture" with three layers:
 
 ```
 +-------------------------------------------------------------+
@@ -40,12 +40,12 @@ TypeScript -> transpiler -> S-expressions -> codegen -> Lua -> LuaJIT
 
 | Crate | Purpose |
 |-------|---------|
-| `bloom-ir` | S-expression types, validation, type-safe builders |
-| `bloom-syntax-typescript` | TypeScript -> S-expressions (tree-sitter based) |
-| `bloom-runtime-luajit` | S-expressions -> Lua codegen + mlua execution |
-| `bloom-core` | Entity system, capabilities, SQLite storage |
-| `bloom-runtime` | Integrated runtime combining core + LuaJIT |
-| `bloom-cli` | CLI binary (`bloom`) |
+| `lotus-ir` | S-expression types, validation, type-safe builders |
+| `lotus-syntax-typescript` | TypeScript -> S-expressions (tree-sitter based) |
+| `lotus-runtime-luajit` | S-expressions -> Lua codegen + mlua execution |
+| `lotus-core` | Entity system, capabilities, SQLite storage |
+| `lotus-runtime` | Integrated runtime combining core + LuaJIT |
+| `lotus-cli` | CLI binary (`lotus`) |
 
 ### Standard Libraries
 
@@ -150,7 +150,7 @@ if (cap) {
 
 ## Plugin System
 
-Plugins provide native Lua C API functions that can be called from BloomScript.
+Plugins provide native Lua C API functions that can be called from LotusScript.
 
 ### Plugin ABI
 
@@ -246,10 +246,10 @@ Tasks stored in `scheduled_tasks` table, executed via verb invocation.
 ```
 +-----------------------------------------------------------+
 |                    Rust Servers                           |
-|  bloom-notes-server     - Notes app backend (port 8081)   |
-|  bloom-filebrowser-server - File browser (port 8080)      |
+|  lotus-notes-server     - Notes app backend (port 8081)   |
+|  lotus-filebrowser-server - File browser (port 8080)      |
 +-----------------------------------------------------------+
-|                    @bloom/runtime                         |
+|                    @lotus/runtime                         |
 |  Entity system, verbs, capabilities, LuaJIT execution     |
 +-----------------------------------------------------------+
            ^ WebSocket (JSON-RPC)

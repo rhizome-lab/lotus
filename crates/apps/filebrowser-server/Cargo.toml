@@ -1,5 +1,5 @@
 [package]
-name = "bloom-filebrowser-server"
+name = "lotus-filebrowser-server"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,9 +10,9 @@ name = "filebrowser-server"
 path = "src/main.rs"
 
 [dependencies]
-bloom-core.workspace = true
-bloom-runtime = { path = "../../bloom-runtime" }
-bloom-transport-websocket-jsonrpc = { path = "../../transport/websocket-jsonrpc" }
+lotus-core.workspace = true
+lotus-runtime = { path = "../../lotus-runtime" }
+lotus-transport-websocket-jsonrpc = { path = "../../transport/websocket-jsonrpc" }
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
@@ -21,4 +21,4 @@ serde_json.workspace = true
 [dev-dependencies]
 tokio-tungstenite.workspace = true
 futures-util.workspace = true
-bloom-ir.workspace = true
+lotus-ir.workspace = true
