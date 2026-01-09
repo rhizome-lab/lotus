@@ -4,9 +4,9 @@ use std::io::Read;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use lotus_runtime_luajit::compile;
-use lotus_syntax_typescript::transpile;
-use lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
+use rhizome_lotus_runtime_luajit::compile;
+use rhizome_lotus_syntax_typescript::transpile;
+use rhizome_lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 

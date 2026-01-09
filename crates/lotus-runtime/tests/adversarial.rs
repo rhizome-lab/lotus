@@ -3,9 +3,9 @@
 //! Red-team scenarios for capability abuse, resource exhaustion,
 //! and security boundary violations.
 
-use lotus_core::WorldStorage;
-use lotus_ir::SExpr;
-use lotus_runtime::{KernelOps, LotusRuntime};
+use rhizome_lotus_core::WorldStorage;
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_runtime::{KernelOps, LotusRuntime};
 use serde_json::json;
 
 /// Helper to setup a world with player and target

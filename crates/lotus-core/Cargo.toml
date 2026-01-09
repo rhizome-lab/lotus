@@ -1,13 +1,13 @@
 [package]
-name = "lotus-core"
+name = "rhizome-lotus-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Entity system, capabilities, and storage for Lotus"
 
 [dependencies]
-lotus-ir.workspace = true
-lotus-syntax-typescript.workspace = true
+rhizome-lotus-ir.workspace = true
+rhizome-lotus-syntax-typescript.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 rusqlite.workspace = true

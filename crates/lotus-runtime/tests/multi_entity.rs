@@ -1,8 +1,8 @@
 //! Multi-entity interaction tests.
 
-use lotus_core::WorldStorage;
-use lotus_ir::SExpr;
-use lotus_runtime::LotusRuntime;
+use rhizome_lotus_core::WorldStorage;
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_runtime::LotusRuntime;
 use serde_json::json;
 
 #[test]

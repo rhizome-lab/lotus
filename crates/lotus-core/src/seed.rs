@@ -5,7 +5,7 @@
 //! format provides LSP support and type checking during authoring.
 
 use crate::WorldStorage;
-use lotus_syntax_typescript::{EntityDefinition as TsEntityDef, parse_entity_definition};
+use rhizome_lotus_syntax_typescript::{EntityDefinition as TsEntityDef, parse_entity_definition};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::fs;

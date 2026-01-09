@@ -3,7 +3,7 @@
 //! These functions are injected into the Lua runtime to provide
 //! access to the capability system from scripts.
 
-use lotus_core::{Capability, EntityId, WorldStorage};
+use rhizome_lotus_core::{Capability, EntityId, WorldStorage};
 use std::sync::{Arc, Mutex};
 
 /// Kernel functions available to scripts.
@@ -87,7 +87,7 @@ impl KernelOps {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use lotus_core::WorldStorage;
+    use rhizome_lotus_core::WorldStorage;
     use serde_json::json;
 
     #[test]

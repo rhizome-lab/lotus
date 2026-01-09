@@ -1,5 +1,5 @@
 [package]
-name = "lotus-plugin-cloud"
+name = "rhizome-lotus-plugin-cloud"
 version = "0.1.0"
 edition = "2024"
 description = "Cloud storage plugin for Lotus using OpenDAL"

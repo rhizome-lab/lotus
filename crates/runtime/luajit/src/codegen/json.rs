@@ -1,7 +1,7 @@
 //! json.* opcode compilation.
 
 use super::{CompileError, compile_value};
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 
 /// Compile json.* opcodes. Returns None if opcode doesn't match.
 pub fn compile_json(
@@ -43,7 +43,7 @@ pub fn compile_json(
 #[cfg(test)]
 mod tests {
     use super::super::compile;
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     #[test]
     fn test_stringify() {

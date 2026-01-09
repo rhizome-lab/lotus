@@ -49,7 +49,7 @@ enum SExprInner {
 /// to create S-expressions:
 ///
 /// ```
-/// use lotus_ir::SExpr;
+/// use rhizome_lotus_ir::SExpr;
 ///
 /// let s = SExpr::string("hello");  // Type: SExpr<Str>
 /// let n = SExpr::number(42);       // Type: SExpr<Num>

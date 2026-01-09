@@ -3,7 +3,7 @@
 //! Usage:
 //!   cargo run --bin generate-builders > src/builders.rs
 
-use lotus_ir::{codegen, schema::OpcodeSchema};
+use rhizome_lotus_ir::{codegen, schema::OpcodeSchema};
 
 fn main() {
     let schema = OpcodeSchema::load_default().expect("Failed to load schema");

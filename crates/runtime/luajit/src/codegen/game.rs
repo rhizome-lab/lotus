@@ -3,7 +3,7 @@
 //! These opcodes interact with the game world state (entities, verbs, etc).
 
 use super::{CompileError, compile_value};
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 
 /// Compile game world opcodes. Returns None if opcode doesn't match.
 pub fn compile_game(
@@ -180,7 +180,7 @@ pub fn compile_game(
 #[cfg(test)]
 mod tests {
     use super::super::compile;
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
     use std::collections::HashMap;
 
     #[test]

@@ -1,12 +1,12 @@
 [package]
-name = "lotus-syntax-typescript"
+name = "rhizome-lotus-syntax-typescript"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "TypeScript to S-expression transpiler for Lotus"
 
 [dependencies]
-lotus-ir.workspace = true
+rhizome-lotus-ir.workspace = true
 tree-sitter.workspace = true
 tree-sitter-typescript.workspace = true
 thiserror.workspace = true

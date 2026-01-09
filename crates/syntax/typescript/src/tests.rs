@@ -1,7 +1,7 @@
 //! Tests for TypeScript transpiler.
 
 use super::*;
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 
 fn assert_transpile(source: &str, expected: SExpr) {
     let result = transpile(source).expect("transpile failed");

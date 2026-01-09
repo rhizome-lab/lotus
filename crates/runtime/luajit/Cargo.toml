@@ -1,12 +1,12 @@
 [package]
-name = "lotus-runtime-luajit"
+name = "rhizome-lotus-runtime-luajit"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "LuaJIT runtime for Lotus"
 
 [dependencies]
-lotus-ir.workspace = true
+rhizome-lotus-ir.workspace = true
 mlua.workspace = true
 thiserror.workspace = true
 serde_json.workspace = true

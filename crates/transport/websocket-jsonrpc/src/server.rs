@@ -11,7 +11,7 @@ use tokio_tungstenite::tungstenite::Message;
 use tracing::{error, info, warn};
 
 use crate::session::{Session, SessionId};
-use lotus_runtime::LotusRuntime;
+use rhizome_lotus_runtime::LotusRuntime;
 
 /// Server configuration.
 #[derive(Debug, Clone)]

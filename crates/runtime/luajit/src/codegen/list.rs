@@ -1,7 +1,7 @@
 //! list.* opcode compilation.
 
 use super::{CompileError, compile_value};
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 
 /// Compile list.* opcodes. Returns None if opcode doesn't match.
 pub fn compile_list(
@@ -371,7 +371,7 @@ pub fn compile_list(
 #[cfg(test)]
 mod tests {
     use super::super::compile;
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     #[test]
     fn test_new() {

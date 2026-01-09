@@ -1,7 +1,7 @@
 //! Tests for WorldStorage.
 
 use super::*;
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 use serde_json::json;
 
 #[test]

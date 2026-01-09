@@ -2,7 +2,7 @@
 //!
 //! These opcodes are exposed to scripts to interact with the game world.
 
-use lotus_core::{Entity, EntityId, WorldStorage};
+use rhizome_lotus_core::{Entity, EntityId, WorldStorage};
 use std::sync::{Arc, Mutex};
 
 /// Update opcode - persist entity changes.

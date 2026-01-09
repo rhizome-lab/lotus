@@ -1,6 +1,6 @@
 //! Integrated runtime for Bloom combining storage and script execution.
 
-use lotus_core::{EntityId, WorldStorage};
+use rhizome_lotus_core::{EntityId, WorldStorage};
 use std::sync::{Arc, Mutex};
 use tokio::sync::Mutex as TokioMutex;
 

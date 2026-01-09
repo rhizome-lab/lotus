@@ -1,5 +1,5 @@
 [package]
-name = "lotus-filebrowser-server"
+name = "rhizome-lotus-filebrowser-server"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -10,9 +10,9 @@ name = "filebrowser-server"
 path = "src/main.rs"
 
 [dependencies]
-lotus-core.workspace = true
-lotus-runtime = { path = "../../lotus-runtime" }
-lotus-transport-websocket-jsonrpc = { path = "../../transport/websocket-jsonrpc" }
+rhizome-lotus-core.workspace = true
+rhizome-lotus-runtime = { path = "../../lotus-runtime" }
+rhizome-lotus-transport-websocket-jsonrpc = { path = "../../transport/websocket-jsonrpc" }
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
@@ -21,4 +21,4 @@ serde_json.workspace = true
 [dev-dependencies]
 tokio-tungstenite.workspace = true
 futures-util.workspace = true
-lotus-ir.workspace = true
+rhizome-lotus-ir.workspace = true

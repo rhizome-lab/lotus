@@ -1,8 +1,8 @@
 //! Tests for procgen plugin integration with the runtime.
 
-use lotus_core::WorldStorage;
-use lotus_ir::SExpr;
-use lotus_runtime::LotusRuntime;
+use rhizome_lotus_core::WorldStorage;
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_runtime::LotusRuntime;
 use serde_json::json;
 
 /// Helper to get the plugin path for a given plugin name

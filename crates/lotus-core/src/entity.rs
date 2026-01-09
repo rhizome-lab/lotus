@@ -1,6 +1,6 @@
 //! Entity types and prototype chain.
 
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 use serde::{Deserialize, Serialize};
 
 /// Entity ID.

@@ -4,7 +4,7 @@
 //! This file contains general compile tests and execution tests.
 
 use crate::codegen::compile;
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 
 // ============================================================================
 // General compile tests

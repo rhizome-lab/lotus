@@ -15,8 +15,8 @@ use serde_json::json;
 use tokio::time::timeout;
 use tokio_tungstenite::tungstenite::Message;
 
-use lotus_runtime::LotusRuntime;
-use lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
+use rhizome_lotus_runtime::LotusRuntime;
+use rhizome_lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
 
 /// Helper to send a JSON-RPC request and get the response
 async fn send_request(
@@ -175,7 +175,7 @@ async fn test_server_basic_operations() -> Result<(), Box<dyn std::error::Error>
 /// Test file browser bookmark verbs
 #[tokio::test]
 async fn test_bookmark_operations() -> Result<(), Box<dyn std::error::Error>> {
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-fb-bookmarks");
@@ -557,7 +557,7 @@ async fn test_bookmark_operations() -> Result<(), Box<dyn std::error::Error>> {
 /// Test file browser navigation verbs (simulated without fs plugin)
 #[tokio::test]
 async fn test_navigation_simulated() -> Result<(), Box<dyn std::error::Error>> {
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-fb-nav");
@@ -933,7 +933,7 @@ async fn test_navigation_simulated() -> Result<(), Box<dyn std::error::Error>> {
 /// Test file metadata operations (tags, annotations)
 #[tokio::test]
 async fn test_file_metadata() -> Result<(), Box<dyn std::error::Error>> {
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-fb-metadata");

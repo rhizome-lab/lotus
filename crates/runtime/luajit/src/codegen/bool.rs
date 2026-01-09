@@ -1,7 +1,7 @@
 //! bool.* opcode compilation.
 
 use super::{CompileError, compile_infix_op, compile_value};
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 
 /// Compile bool.* opcodes. Returns None if opcode doesn't match.
 pub fn compile_bool(
@@ -81,7 +81,7 @@ pub fn compile_bool(
 #[cfg(test)]
 mod tests {
     use super::super::compile;
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     #[test]
     fn test_eq() {

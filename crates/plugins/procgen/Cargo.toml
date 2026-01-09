@@ -1,5 +1,5 @@
 [package]
-name = "lotus-plugin-procgen"
+name = "rhizome-lotus-plugin-procgen"
 version = "0.1.0"
 edition = "2021"
 

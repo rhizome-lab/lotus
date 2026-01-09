@@ -1,5 +1,5 @@
 [package]
-name = "lotus-plugin-memory"
+name = "rhizome-lotus-plugin-memory"
 version = "0.1.0"
 edition = "2021"
 

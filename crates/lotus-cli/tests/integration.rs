@@ -1,9 +1,9 @@
 //! Integration tests for the full TypeScript → S-expr → Lua pipeline.
 //! Ported from packages/scripting/src/*.test.ts
 
-use lotus_ir::SExpr;
-use lotus_runtime_luajit::execute;
-use lotus_syntax_typescript::transpile;
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_runtime_luajit::execute;
+use rhizome_lotus_syntax_typescript::transpile;
 
 // =============================================================================
 // Test Helpers

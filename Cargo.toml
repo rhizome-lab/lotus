@@ -63,13 +63,13 @@ abi_stable = "0.11"
 libloading = "0.8"
 
 # Workspace crates
-lotus-ir = { path = "crates/lotus-ir" }
-lotus-core = { path = "crates/lotus-core" }
-lotus-runtime = { path = "crates/lotus-runtime" }
-lotus-plugin-abi = { path = "crates/lotus-plugin-abi" }
-lotus-transport-websocket-jsonrpc = { path = "crates/transport/websocket-jsonrpc" }
-lotus-syntax-typescript = { path = "crates/syntax/typescript" }
-lotus-runtime-luajit = { path = "crates/runtime/luajit" }
+rhizome-lotus-ir = { path = "crates/lotus-ir" }
+rhizome-lotus-core = { path = "crates/lotus-core" }
+rhizome-lotus-runtime = { path = "crates/lotus-runtime" }
+rhizome-lotus-plugin-abi = { path = "crates/lotus-plugin-abi" }
+rhizome-lotus-transport-websocket-jsonrpc = { path = "crates/transport/websocket-jsonrpc" }
+rhizome-lotus-syntax-typescript = { path = "crates/syntax/typescript" }
+rhizome-lotus-runtime-luajit = { path = "crates/runtime/luajit" }
 
 # Minimize debug build size
 [profile.dev]

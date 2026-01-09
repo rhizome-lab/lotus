@@ -14,8 +14,8 @@ use serde_json::json;
 use tokio::time::timeout;
 use tokio_tungstenite::tungstenite::Message;
 
-use lotus_runtime::LotusRuntime;
-use lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
+use rhizome_lotus_runtime::LotusRuntime;
+use rhizome_lotus_transport_websocket_jsonrpc::{Server, ServerConfig};
 
 /// Helper to send a JSON-RPC request and get the response
 async fn send_request(
@@ -199,7 +199,7 @@ async fn test_notes_server_basic_operations() -> Result<(), Box<dyn std::error::
 /// Test notes-specific verbs: create, list, get, update, delete
 #[tokio::test]
 async fn test_notes_verb_operations() -> Result<(), Box<dyn std::error::Error>> {
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-notes-verbs");
@@ -694,7 +694,7 @@ async fn test_notes_verb_operations() -> Result<(), Box<dyn std::error::Error>> 
 /// Test backlinks functionality
 #[tokio::test]
 async fn test_notes_backlinks() -> Result<(), Box<dyn std::error::Error>> {
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-notes-backlinks");
@@ -1208,7 +1208,7 @@ async fn test_notes_backlinks() -> Result<(), Box<dyn std::error::Error>> {
 /// Test search functionality
 #[tokio::test]
 async fn test_notes_search() -> Result<(), Box<dyn std::error::Error>> {
-    use lotus_ir::SExpr;
+    use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
     let test_dir = std::env::temp_dir().join("bloom-test-notes-search");

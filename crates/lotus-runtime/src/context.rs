@@ -1,8 +1,8 @@
 //! Execution context for running scripts with access to storage.
 
-use lotus_core::{Entity, EntityId, Scheduler, WorldStorage};
-use lotus_ir::SExpr;
-use lotus_runtime_luajit::Runtime as LuaRuntime;
+use rhizome_lotus_core::{Entity, EntityId, Scheduler, WorldStorage};
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_runtime_luajit::Runtime as LuaRuntime;
 use mlua::LuaSerdeExt;
 use std::sync::{Arc, Mutex};
 

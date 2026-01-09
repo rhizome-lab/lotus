@@ -1,7 +1,7 @@
 //! Test that generated builders work correctly.
 
-use lotus_ir::SExpr;
-use lotus_ir::builders::*;
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_ir::builders::*;
 
 #[test]
 fn test_math_builders() {

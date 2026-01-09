@@ -1,7 +1,7 @@
 //! Test that the update opcode persists entity changes correctly.
 
-use lotus_ir::SExpr;
-use lotus_runtime::LotusRuntime;
+use rhizome_lotus_ir::SExpr;
+use rhizome_lotus_runtime::LotusRuntime;
 use std::sync::Arc;
 
 #[test]

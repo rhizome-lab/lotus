@@ -1,5 +1,5 @@
 [package]
-name = "lotus-plugin-vector"
+name = "rhizome-lotus-plugin-vector"
 version = "0.1.0"
 edition = "2021"
 

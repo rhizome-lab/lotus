@@ -10,9 +10,9 @@
 //! PORT=8081 cargo run --bin notes-server
 //! ```
 
-use lotus_core::seed::{SeedSystem, seed_basic_world};
-use lotus_runtime::LotusRuntime;
-use lotus_transport_websocket_jsonrpc::Server;
+use rhizome_lotus_core::seed::{SeedSystem, seed_basic_world};
+use rhizome_lotus_runtime::LotusRuntime;
+use rhizome_lotus_transport_websocket_jsonrpc::Server;
 use std::path::PathBuf;
 use std::sync::Arc;
 

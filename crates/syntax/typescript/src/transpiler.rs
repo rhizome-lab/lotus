@@ -1,6 +1,6 @@
 //! Tree-sitter based TypeScript transpiler.
 
-use lotus_ir::SExpr;
+use rhizome_lotus_ir::SExpr;
 use thiserror::Error;
 use tree_sitter::{Node, Parser, Tree};
 
