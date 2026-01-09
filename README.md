@@ -45,10 +45,14 @@ The project is organized as a monorepo with Rust backend and TypeScript frontend
 
 ## Getting Started
 
-### Prerequisites
+> **Note**: Pre-built binaries are not yet available. For now, you'll need to build from source.
 
-- [Rust](https://rustup.rs/) (latest stable)
-- [Bun](https://bun.sh/) (v1.0.0 or later)
+### Prerequisites (Development)
+
+- [Rust](https://rustup.rs/) (latest stable) — builds the server and game engine
+- [Bun](https://bun.sh/) (v1.0.0+) — builds the web/TUI/Discord clients
+
+Scripts are written in TypeScript and compile down to Lua internally — you don't need to know Lua.
 
 ### Installation
 

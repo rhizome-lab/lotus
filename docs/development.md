@@ -2,11 +2,16 @@
 
 Welcome to the Lotus development guide! This document will help you get set up and contributing to the project.
 
+> **Note**: Pre-built binaries are not yet available. These prerequisites are for building from source.
+
 ## Getting Started
 
 ### Prerequisites
 
-- **[Bun](https://bun.sh/)**: Lotus is built on the Bun runtime. Ensure you have the latest version installed.
+- **[Rust](https://rustup.rs/)** (latest stable) — builds the server and game engine
+- **[Bun](https://bun.sh/)** (v1.0.0+) — builds the web/TUI/Discord clients
+
+Scripts are written in TypeScript and compile down to Lua internally — you don't need to know Lua.
 
 ### Installation
 
@@ -17,41 +22,53 @@ Welcome to the Lotus development guide! This document will help you get set up a
     cd lotus
     ```
 
-2.  Install dependencies:
+2.  Install TypeScript dependencies:
     ```bash
     bun install
     ```
 
+3.  Build Rust backend:
+    ```bash
+    cargo build --release
+    ```
+
 ### Project Structure
 
-Lotus is a monorepo managed by Bun workspaces.
+Lotus is a monorepo with Rust backend (`crates/`) and TypeScript frontends (`apps/`, `packages/`).
 
-- **`apps/`**: Deployable applications.
-  - `server`: The core game server.
-  - `web`: The web frontend.
-  - `cli`: The terminal client.
-  - `discord-bot`: The Discord integration.
-- **`packages/`**: Shared libraries.
-  - `core`: The game engine logic.
-  - `scripting`: The Reed compiler and interpreter.
-  - `client`: The TypeScript SDK.
-  - `shared`: Shared types and utilities.
-- **`plugins/`**: Optional game features.
-  - `ai`: LLM integration.
-  - `memory`: Vector memory system.
+#### Rust Crates (`crates/`)
+
+- `lotus-ir`: S-expression types and validation
+- `lotus-core`: Entity system, capabilities, SQLite storage
+- `lotus-runtime`: Script execution with LuaJIT
+- `lotus-cli`: CLI binary
+- `syntax/typescript`: TypeScript → S-expression transpiler
+- `runtime/luajit`: S-expression → Lua codegen
+- `transport/websocket-jsonrpc`: WebSocket server
+- `plugins/*`: Native plugins (ai, fs, net, sqlite, procgen, vector, memory)
+- `apps/notes-server`: Notes app server
+- `apps/filebrowser-server`: File browser app server
+
+#### TypeScript (`apps/`, `packages/`)
+
+- **`apps/`**: Frontend applications
+  - `web`: Main web frontend (SolidJS)
+  - `tui`: Terminal user interface
+  - `discord-bot`: Discord integration
+  - `notes`: Wiki-style notes client
+  - `filebrowser`: File browser client
+- **`packages/`**: Shared libraries
+  - `client`: WebSocket client SDK
+  - `shared`: Shared types (JSON-RPC protocol)
 
 ### Running Tests
 
-To run tests across the entire workspace:
-
 ```bash
+# Rust tests
+cargo test --workspace
+
+# TypeScript tests
 bun test
-```
-
-To run tests for a specific package:
-
-```bash
-bun test --filter @lotus/core
 ```
 
 ## Building the Documentation
