@@ -33,7 +33,7 @@ Lotus is a monorepo managed by Bun workspaces.
   - `discord-bot`: The Discord integration.
 - **`packages/`**: Shared libraries.
   - `core`: The game engine logic.
-  - `scripting`: The LotusScript compiler and interpreter.
+  - `scripting`: The Reed compiler and interpreter.
   - `client`: The TypeScript SDK.
   - `shared`: Shared types and utilities.
 - **`plugins/`**: Optional game features.

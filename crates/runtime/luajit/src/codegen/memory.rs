@@ -26,7 +26,7 @@ pub fn compile_memory(
             let content = compile_value(&args[5], false)?;
             let metadata = compile_value(&args[6], false)?;
             format!(
-                "{}__bloom_memory_add({}, {}, {}, {}, {}, {}, {})",
+                "{}__lotus_memory_add({}, {}, {}, {}, {}, {}, {})",
                 prefix, db_cap, ai_cap, db_path, provider, model, content, metadata
             )
         }
@@ -45,7 +45,7 @@ pub fn compile_memory(
             let query = compile_value(&args[5], false)?;
             let options = compile_value(&args[6], false)?;
             format!(
-                "{}__bloom_memory_search({}, {}, {}, {}, {}, {}, {})",
+                "{}__lotus_memory_search({}, {}, {}, {}, {}, {}, {})",
                 prefix, db_cap, ai_cap, db_path, provider, model, query, options
             )
         }

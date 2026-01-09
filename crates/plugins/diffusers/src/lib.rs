@@ -1,4 +1,4 @@
-//! Diffusers plugin for Bloom.
+//! Diffusers plugin for Lotus.
 //!
 //! Provides Stable Diffusion image generation using burn-models.
 //!
@@ -347,7 +347,7 @@ type RegisterFunction = unsafe extern "C" fn(name: *const c_char, func: *const c
 
 /// Plugin initialization
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_diffusers_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_diffusers_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = [
             "diffusers.load",
@@ -374,7 +374,7 @@ pub unsafe extern "C" fn bloom_diffusers_plugin_init(register_fn: RegisterFuncti
 
 /// Plugin cleanup
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_diffusers_plugin_cleanup() -> c_int {
+pub unsafe extern "C" fn lotus_diffusers_plugin_cleanup() -> c_int {
     // Clear the model registry
     REGISTRY.with_borrow_mut(|reg| {
         reg.models.clear();

@@ -20,7 +20,7 @@ pub fn compile_ai(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             let prompt = compile_value(&args[3], false)?;
             let options = compile_value(&args[4], false)?;
             format!(
-                "{}__bloom_ai_generate_text({}, {}, {}, {}, {})",
+                "{}__lotus_ai_generate_text({}, {}, {}, {}, {})",
                 prefix, cap, provider, model, prompt, options
             )
         }
@@ -36,7 +36,7 @@ pub fn compile_ai(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             let model = compile_value(&args[2], false)?;
             let text = compile_value(&args[3], false)?;
             format!(
-                "{}__bloom_ai_embed({}, {}, {}, {})",
+                "{}__lotus_ai_embed({}, {}, {}, {})",
                 prefix, cap, provider, model, text
             )
         }
@@ -53,7 +53,7 @@ pub fn compile_ai(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             let messages = compile_value(&args[3], false)?;
             let options = compile_value(&args[4], false)?;
             format!(
-                "{}__bloom_ai_chat({}, {}, {}, {}, {})",
+                "{}__lotus_ai_chat({}, {}, {}, {}, {})",
                 prefix, cap, provider, model, messages, options
             )
         }

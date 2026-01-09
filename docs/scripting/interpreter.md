@@ -1,10 +1,10 @@
-# LotusScript Interpreter
+# Reed Interpreter
 
-The LotusScript interpreter is a stack-based virtual machine designed for executing LotusScript S-expressions. It uses a Structure of Arrays (SOA) layout for its execution stack to optimize for cache locality and reduce garbage collection overhead.
+The Reed interpreter is a stack-based virtual machine designed for executing Reed S-expressions. It uses a Structure of Arrays (SOA) layout for its execution stack to optimize for cache locality and reduce garbage collection overhead.
 
 ## Architecture
 
-Unlike traditional interpreters that might use recursion or an array of objects for stack frames, the LotusScript interpreter manages its execution state using parallel arrays. This "Structure of Arrays" (SOA) approach means that instead of having a single `StackFrame` object containing all data for a call, the data is split across multiple typed arrays.
+Unlike traditional interpreters that might use recursion or an array of objects for stack frames, the Reed interpreter manages its execution state using parallel arrays. This "Structure of Arrays" (SOA) approach means that instead of having a single `StackFrame` object containing all data for a call, the data is split across multiple typed arrays.
 
 This design allows the interpreter to:
 

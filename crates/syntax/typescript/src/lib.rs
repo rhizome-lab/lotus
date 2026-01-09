@@ -1,7 +1,7 @@
 //! TypeScript to S-expression transpiler.
 //!
 //! Uses tree-sitter for parsing TypeScript, then transforms
-//! the CST into Bloom S-expressions.
+//! the CST into Lotus S-expressions.
 
 pub mod entity_definition;
 mod transpiler;

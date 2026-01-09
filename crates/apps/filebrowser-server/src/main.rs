@@ -1,6 +1,6 @@
-//! Bloom File Browser Server
+//! Lotus File Browser Server
 //!
-//! Sandboxed file browser with filesystem access, built on the Bloom engine.
+//! Sandboxed file browser with filesystem access, built on the Lotus engine.
 //!
 //! ## Usage
 //!
@@ -30,7 +30,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Get filesystem sandbox root from environment or use default
     let fs_root = std::env::var("FS_ROOT").unwrap_or_else(|_| "./sandbox".to_string());
 
-    tracing::info!("Starting Bloom File Browser Server...");
+    tracing::info!("Starting Lotus File Browser Server...");
     tracing::info!("Filesystem sandbox root: {}", fs_root);
 
     // Create runtime (opens database connections)
@@ -97,7 +97,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Start WebSocket server
-    let config = lotus_transport_websocket_jsonrpc::ServerConfig {
+    let config = rhizome_lotus_transport_websocket_jsonrpc::ServerConfig {
         host: "127.0.0.1".to_string(),
         port,
         db_path: "filebrowser.db".to_string(),

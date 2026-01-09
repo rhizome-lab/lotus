@@ -1,4 +1,4 @@
-//! Filesystem plugin for Bloom with capability-based security.
+//! Filesystem plugin for Lotus with capability-based security.
 //!
 //! This plugin provides file system access through Lua functions that validate capabilities.
 
@@ -17,7 +17,7 @@ type RegisterFunction =
 
 /// Plugin initialization - register all fs functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_fs_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_fs_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = [
             "fs.read",
@@ -54,7 +54,7 @@ pub unsafe extern "C" fn bloom_fs_plugin_init(register_fn: RegisterFunction) -> 
 
 /// Plugin cleanup (optional)
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_fs_plugin_cleanup() {
+pub unsafe extern "C" fn lotus_fs_plugin_cleanup() {
     // No cleanup needed
 }
 
@@ -174,8 +174,8 @@ unsafe extern "C" fn fs_read_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.read: path contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -235,8 +235,8 @@ unsafe extern "C" fn fs_write_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.write: content contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -275,8 +275,8 @@ unsafe extern "C" fn fs_list_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.list: path contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -356,8 +356,8 @@ unsafe extern "C" fn fs_stat_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.stat: path contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -425,8 +425,8 @@ unsafe extern "C" fn fs_exists_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.exists: path contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -468,8 +468,8 @@ unsafe extern "C" fn fs_mkdir_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.mkdir: path contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -508,8 +508,8 @@ unsafe extern "C" fn fs_remove_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "fs.remove: path contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 

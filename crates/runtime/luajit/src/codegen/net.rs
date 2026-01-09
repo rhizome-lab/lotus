@@ -17,7 +17,7 @@ pub fn compile_net(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Stri
             let cap = compile_value(&args[0], false)?;
             let url = compile_value(&args[1], false)?;
             let headers = compile_value(&args[2], false)?;
-            format!("{}__bloom_net_get({}, {}, {})", prefix, cap, url, headers)
+            format!("{}__lotus_net_get({}, {}, {})", prefix, cap, url, headers)
         }
         "net.post" => {
             if args.len() != 4 {
@@ -31,7 +31,7 @@ pub fn compile_net(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Stri
             let headers = compile_value(&args[2], false)?;
             let body = compile_value(&args[3], false)?;
             format!(
-                "{}__bloom_net_post({}, {}, {}, {})",
+                "{}__lotus_net_post({}, {}, {}, {})",
                 prefix, cap, url, headers, body
             )
         }

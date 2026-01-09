@@ -150,7 +150,7 @@ if (cap) {
 
 ## Plugin System
 
-Plugins provide native Lua C API functions that can be called from LotusScript.
+Plugins provide native Lua C API functions that can be called from Reed.
 
 ### Plugin ABI
 

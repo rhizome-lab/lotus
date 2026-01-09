@@ -20,7 +20,7 @@ features:
   - title: Multiplayer
     details: Real-time interaction with other users in a persistent world.
   - title: Scriptable
-    details: Custom scripting language (LotusScript) for dynamic content and object behaviors.
+    details: Custom scripting language (Reed) for dynamic content and object behaviors.
   - title: Multi-frontend
     details: Access the world via Web, Discord, or Terminal (TUI).
   - title: Capability Security

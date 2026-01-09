@@ -1,6 +1,6 @@
-# LotusScript Compiler
+# Reed Compiler
 
-The Compiler is a tool designed to transform the internal JSON representation of LotusScript into executable JavaScript functions. This significantly improves performance by removing the overhead of AST traversal at runtime.
+The Compiler is a tool designed to transform the internal JSON representation of Reed into executable JavaScript functions. This significantly improves performance by removing the overhead of AST traversal at runtime.
 
 ## Usage
 
@@ -17,7 +17,7 @@ console.log(result); // Output: 1
 
 ## Compilation Strategy
 
-The compiler generates a synchronous JavaScript function that takes a `ScriptContext` as an argument. It maps LotusScript opcodes directly to JavaScript constructs where possible.
+The compiler generates a synchronous JavaScript function that takes a `ScriptContext` as an argument. It maps Reed opcodes directly to JavaScript constructs where possible.
 
 ### Control Flow
 

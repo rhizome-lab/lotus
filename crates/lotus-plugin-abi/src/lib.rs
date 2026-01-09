@@ -1,4 +1,4 @@
-//! Stable ABI for Bloom plugins.
+//! Stable ABI for Lotus plugins.
 //!
 //! Plugins are dynamic libraries that register opcodes with the runtime.
 

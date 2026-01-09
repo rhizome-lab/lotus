@@ -23,7 +23,7 @@ pub fn compile_sqlite(
             let query = compile_value(&args[2], false)?;
             let params = compile_value(&args[3], false)?;
             format!(
-                "{}__bloom_sqlite_query({}, {}, {}, {})",
+                "{}__lotus_sqlite_query({}, {}, {}, {})",
                 prefix, cap, db_path, query, params
             )
         }
@@ -39,7 +39,7 @@ pub fn compile_sqlite(
             let query = compile_value(&args[2], false)?;
             let params = compile_value(&args[3], false)?;
             format!(
-                "{}__bloom_sqlite_execute({}, {}, {}, {})",
+                "{}__lotus_sqlite_execute({}, {}, {}, {})",
                 prefix, cap, db_path, query, params
             )
         }

@@ -1,4 +1,4 @@
-//! LuaJIT runtime for Bloom.
+//! LuaJIT runtime for Lotus.
 //!
 //! Compiles S-expressions to Lua and executes via LuaJIT.
 
@@ -88,7 +88,7 @@ impl Runtime {
     pub fn new() -> LuaResult<Self> {
         let lua = Lua::new();
         setup_json_interop(&lua)?;
-        // TODO: load bloom stdlib (optional/explicit)
+        // TODO: load lotus stdlib (optional/explicit)
         Ok(Self { lua })
     }
 

@@ -1,4 +1,4 @@
-//! S-expression IR types and validation for Bloom.
+//! S-expression IR types and validation for Lotus.
 //!
 //! This crate defines the intermediate representation used between
 //! syntax frontends (TypeScript, etc.) and execution targets (LuaJIT, JS).

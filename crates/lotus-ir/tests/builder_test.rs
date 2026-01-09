@@ -1,7 +1,7 @@
 //! Test that generated builders work correctly.
 
-use rhizome_lotus_ir::SExpr;
-use rhizome_lotus_ir::builders::*;
+use rhizome_rhizome_lotus_ir::SExpr;
+use rhizome_rhizome_lotus_ir::builders::*;
 
 #[test]
 fn test_math_builders() {
@@ -86,10 +86,10 @@ fn test_builder_type_safety() {
     // This test verifies that the builders have correct type signatures
     // by using them in a type-constrained context
 
-    let _num_expr: SExpr<lotus_ir::Num> = math_sub(SExpr::number(10), SExpr::number(2));
+    let _num_expr: SExpr<rhizome_lotus_ir::Num> = math_sub(SExpr::number(10), SExpr::number(2));
 
     // str_length returns a number (length)
-    let _len_expr: SExpr<lotus_ir::Num> = str_length(SExpr::string("test"));
+    let _len_expr: SExpr<rhizome_lotus_ir::Num> = str_length(SExpr::string("test"));
 
-    let _bool_expr: SExpr<lotus_ir::Bool> = bool_not(SExpr::bool(true));
+    let _bool_expr: SExpr<rhizome_lotus_ir::Bool> = bool_not(SExpr::bool(true));
 }

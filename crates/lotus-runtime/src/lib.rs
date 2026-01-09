@@ -1,4 +1,4 @@
-//! Integrated runtime for Bloom combining storage and script execution.
+//! Integrated runtime for Lotus combining storage and script execution.
 
 use rhizome_lotus_core::{EntityId, WorldStorage};
 use std::sync::{Arc, Mutex};
@@ -15,7 +15,7 @@ pub use context::ExecutionContext;
 pub use kernel::KernelOps;
 pub use plugin_registry::{get_registered_opcodes, init_registry};
 
-/// The main Bloom runtime.
+/// The main Lotus runtime.
 pub struct LotusRuntime {
     storage: Arc<Mutex<WorldStorage>>,
     scheduler_storage: Arc<TokioMutex<WorldStorage>>,

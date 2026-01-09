@@ -60,7 +60,7 @@ async fn send_request(
 #[tokio::test]
 async fn test_server_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-filebrowser");
+    let test_dir = std::env::temp_dir().join("lotus-test-filebrowser");
     let db_path = test_dir.join("test.db");
     let sandbox_path = test_dir.join("sandbox");
 
@@ -178,7 +178,7 @@ async fn test_bookmark_operations() -> Result<(), Box<dyn std::error::Error>> {
     use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-fb-bookmarks");
+    let test_dir = std::env::temp_dir().join("lotus-test-fb-bookmarks");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs
@@ -560,7 +560,7 @@ async fn test_navigation_simulated() -> Result<(), Box<dyn std::error::Error>> {
     use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-fb-nav");
+    let test_dir = std::env::temp_dir().join("lotus-test-fb-nav");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs
@@ -936,7 +936,7 @@ async fn test_file_metadata() -> Result<(), Box<dyn std::error::Error>> {
     use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-fb-metadata");
+    let test_dir = std::env::temp_dir().join("lotus-test-fb-metadata");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs

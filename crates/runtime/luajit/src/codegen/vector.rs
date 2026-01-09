@@ -24,7 +24,7 @@ pub fn compile_vector(
             let embedding = compile_value(&args[3], false)?;
             let metadata = compile_value(&args[4], false)?;
             format!(
-                "{}__bloom_vector_insert({}, {}, {}, {}, {})",
+                "{}__lotus_vector_insert({}, {}, {}, {}, {})",
                 prefix, cap, db_path, key, embedding, metadata
             )
         }
@@ -40,7 +40,7 @@ pub fn compile_vector(
             let query_embedding = compile_value(&args[2], false)?;
             let limit = compile_value(&args[3], false)?;
             format!(
-                "{}__bloom_vector_search({}, {}, {}, {})",
+                "{}__lotus_vector_search({}, {}, {}, {})",
                 prefix, cap, db_path, query_embedding, limit
             )
         }
@@ -55,7 +55,7 @@ pub fn compile_vector(
             let db_path = compile_value(&args[1], false)?;
             let key = compile_value(&args[2], false)?;
             format!(
-                "{}__bloom_vector_delete({}, {}, {})",
+                "{}__lotus_vector_delete({}, {}, {})",
                 prefix, cap, db_path, key
             )
         }

@@ -1,4 +1,4 @@
-//! Bloom CLI entry point.
+//! Lotus CLI entry point.
 
 use std::io::Read;
 use std::sync::Arc;
@@ -11,8 +11,8 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 
 #[derive(Parser)]
-#[command(name = "bloom")]
-#[command(about = "Bloom runtime CLI")]
+#[command(name = "lotus")]
+#[command(about = "Lotus runtime CLI")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -71,7 +71,7 @@ enum Commands {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing
     tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from_default_env().add_directive("bloom=info".parse()?))
+        .with_env_filter(EnvFilter::from_default_env().add_directive("lotus=info".parse()?))
         .init();
 
     let cli = Cli::parse();
@@ -83,7 +83,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             db,
             plugins,
         } => {
-            info!("Starting Bloom server");
+            info!("Starting Lotus server");
 
             if let Some(ref plugin_dir) = plugins {
                 info!("Plugin directory: {}", plugin_dir);

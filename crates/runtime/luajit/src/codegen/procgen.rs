@@ -18,7 +18,7 @@ pub fn compile_procgen(
                 });
             }
             let seed = compile_value(&args[0], false)?;
-            format!("{}__bloom_procgen_seed({})", prefix, seed)
+            format!("{}__lotus_procgen_seed({})", prefix, seed)
         }
 
         "procgen.noise" => {
@@ -31,22 +31,22 @@ pub fn compile_procgen(
             }
             let x = compile_value(&args[0], false)?;
             let y = compile_value(&args[1], false)?;
-            format!("{}__bloom_procgen_noise({}, {})", prefix, x, y)
+            format!("{}__lotus_procgen_noise({}, {})", prefix, x, y)
         }
 
         "procgen.random" => {
             if args.is_empty() {
                 // random() - no args
-                format!("{}__bloom_procgen_random()", prefix)
+                format!("{}__lotus_procgen_random()", prefix)
             } else if args.len() == 1 {
                 // random(max) - use random_range(0, max)
                 let max = compile_value(&args[0], false)?;
-                format!("{}__bloom_procgen_random_range(0, {})", prefix, max)
+                format!("{}__lotus_procgen_random_range(0, {})", prefix, max)
             } else if args.len() == 2 {
                 // random(min, max)
                 let min = compile_value(&args[0], false)?;
                 let max = compile_value(&args[1], false)?;
-                format!("{}__bloom_procgen_random_range({}, {})", prefix, min, max)
+                format!("{}__lotus_procgen_random_range({}, {})", prefix, min, max)
             } else {
                 return Err(CompileError::InvalidArgCount {
                     opcode: op.to_string(),
@@ -66,7 +66,7 @@ pub fn compile_procgen(
             }
             let min = compile_value(&args[0], false)?;
             let max = compile_value(&args[1], false)?;
-            format!("{}__bloom_procgen_between({}, {})", prefix, min, max)
+            format!("{}__lotus_procgen_between({}, {})", prefix, min, max)
         }
 
         _ => return Ok(None),
@@ -85,7 +85,7 @@ mod tests {
     fn test_procgen_seed() {
         let expr = SExpr::call("procgen.seed", vec![SExpr::number(42).erase_type()]);
         let lua = compile(&expr).unwrap();
-        assert_eq!(lua, "return __bloom_procgen_seed(42)");
+        assert_eq!(lua, "return __lotus_procgen_seed(42)");
     }
 
     #[test]
@@ -98,14 +98,14 @@ mod tests {
             ],
         );
         let lua = compile(&expr).unwrap();
-        assert_eq!(lua, "return __bloom_procgen_noise(1, 2)");
+        assert_eq!(lua, "return __lotus_procgen_noise(1, 2)");
     }
 
     #[test]
     fn test_procgen_random() {
         let expr = SExpr::call("procgen.random", vec![]);
         let lua = compile(&expr).unwrap();
-        assert_eq!(lua, "return __bloom_procgen_random()");
+        assert_eq!(lua, "return __lotus_procgen_random()");
     }
 
     #[test]
@@ -118,7 +118,7 @@ mod tests {
             ],
         );
         let lua = compile(&expr).unwrap();
-        assert_eq!(lua, "return __bloom_procgen_random_range(0, 10)");
+        assert_eq!(lua, "return __lotus_procgen_random_range(0, 10)");
     }
 
     #[test]
@@ -131,6 +131,6 @@ mod tests {
             ],
         );
         let lua = compile(&expr).unwrap();
-        assert_eq!(lua, "return __bloom_procgen_between(1, 10)");
+        assert_eq!(lua, "return __lotus_procgen_between(1, 10)");
     }
 }

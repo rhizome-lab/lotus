@@ -1,4 +1,4 @@
-//! Dynamic plugin loading system for Bloom.
+//! Dynamic plugin loading system for Lotus.
 
 use libloading::{Library, Symbol};
 use std::os::raw::c_int;
@@ -37,8 +37,8 @@ impl PluginRegistry {
                 func: crate::plugin_registry::PluginLuaFunction,
             ) -> c_int;
 
-            // Call bloom_{name}_plugin_init with the registration callback
-            let init_symbol = format!("bloom_{}_plugin_init", name);
+            // Call lotus_{name}_plugin_init with the registration callback
+            let init_symbol = format!("lotus_{}_plugin_init", name);
             let init_fn: Symbol<extern "C" fn(RegisterFunction) -> c_int> = lib
                 .get(init_symbol.as_bytes())
                 .map_err(|e| format!("Plugin {} missing {}: {}", name, init_symbol, e))?;
@@ -122,7 +122,7 @@ mod tests {
     fn test_plugin_loading() {
         // Build the procgen plugin first
         let status = std::process::Command::new("cargo")
-            .args(&["build", "--package", "bloom-plugin-procgen"])
+            .args(&["build", "--package", "lotus-plugin-procgen"])
             .status()
             .expect("Failed to build procgen plugin");
 

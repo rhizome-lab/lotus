@@ -1,4 +1,4 @@
-//! Cloud storage plugin for Bloom using OpenDAL.
+//! Cloud storage plugin for Lotus using OpenDAL.
 //!
 //! Provides a unified API for cloud storage backends:
 //! S3, GCS, Azure Blob, Dropbox, Google Drive, OneDrive, WebDAV, and local filesystem.
@@ -18,7 +18,7 @@ type RegisterFunction =
 
 /// Plugin initialization - register all cloud functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_cloud_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_cloud_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = [
             "cloud.read",
@@ -53,7 +53,7 @@ pub unsafe extern "C" fn bloom_cloud_plugin_init(register_fn: RegisterFunction) 
 
 /// Plugin cleanup
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_cloud_plugin_cleanup() {
+pub unsafe extern "C" fn lotus_cloud_plugin_cleanup() {
     // No cleanup needed
 }
 
@@ -448,7 +448,7 @@ unsafe extern "C" fn cloud_read_lua(l: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(l, &format!("Invalid path: {}", e)),
     };
 
-    lua_getglobal(l, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    lua_getglobal(l, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(l, -1);
     lua_pop(l, 1);
 
@@ -506,7 +506,7 @@ unsafe extern "C" fn cloud_write_lua(l: *mut mlua::ffi::lua_State) -> c_int {
     }
     let content = std::slice::from_raw_parts(content_ptr as *const u8, len);
 
-    lua_getglobal(l, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    lua_getglobal(l, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(l, -1);
     lua_pop(l, 1);
 
@@ -543,7 +543,7 @@ unsafe extern "C" fn cloud_list_lua(l: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(l, &format!("Invalid path: {}", e)),
     };
 
-    lua_getglobal(l, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    lua_getglobal(l, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(l, -1);
     lua_pop(l, 1);
 
@@ -617,7 +617,7 @@ unsafe extern "C" fn cloud_delete_lua(l: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(l, &format!("Invalid path: {}", e)),
     };
 
-    lua_getglobal(l, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    lua_getglobal(l, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(l, -1);
     lua_pop(l, 1);
 
@@ -654,7 +654,7 @@ unsafe extern "C" fn cloud_stat_lua(l: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(l, &format!("Invalid path: {}", e)),
     };
 
-    lua_getglobal(l, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    lua_getglobal(l, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(l, -1);
     lua_pop(l, 1);
 
@@ -728,7 +728,7 @@ unsafe extern "C" fn cloud_exists_lua(l: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(l, &format!("Invalid path: {}", e)),
     };
 
-    lua_getglobal(l, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    lua_getglobal(l, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(l, -1);
     lua_pop(l, 1);
 

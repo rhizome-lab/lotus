@@ -1,6 +1,6 @@
 # Network Plugin
 
-The `@lotus/plugin-net` package provides network capabilities to LotusScript, enabling HTTP requests with capability-based security.
+The `@lotus/plugin-net` package provides network capabilities to Reed, enabling HTTP requests with capability-based security.
 
 ## Capabilities
 
@@ -110,7 +110,7 @@ Sending data to an API:
       ["obj.new", ["domain", "api.example.com"], ["methods", ["list.new", "POST"]]]
     ]
   ],
-  ["let", "payload", ["obj.new", ["title", "New Item"], ["description", "Created via LotusScript"]]],
+  ["let", "payload", ["obj.new", ["title", "New Item"], ["description", "Created via Reed"]]],
   [
     "let",
     "options",

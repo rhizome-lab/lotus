@@ -74,7 +74,7 @@ fn test_fs_write_and_read() {
                 )],
             ),
             SExpr::str(file_path_str).erase_type(),
-            SExpr::str("Hello, Bloom!").erase_type(),
+            SExpr::str("Hello, Lotus!").erase_type(),
         ],
     );
 
@@ -94,7 +94,7 @@ fn test_fs_write_and_read() {
     assert!(file_path.exists());
     assert_eq!(
         std::fs::read_to_string(&file_path).unwrap(),
-        "Hello, Bloom!"
+        "Hello, Lotus!"
     );
 
     // Now create a read capability and read the file
@@ -136,7 +136,7 @@ fn test_fs_write_and_read() {
         .execute_verb(entity_id, "read_file", vec![], None)
         .unwrap();
 
-    assert_eq!(result.as_str().unwrap(), "Hello, Bloom!");
+    assert_eq!(result.as_str().unwrap(), "Hello, Lotus!");
 }
 
 #[test]

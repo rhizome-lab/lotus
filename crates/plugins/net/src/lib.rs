@@ -1,4 +1,4 @@
-//! Network plugin for Bloom with capability-based security.
+//! Network plugin for Lotus with capability-based security.
 
 use std::collections::HashMap;
 use std::ffi::CString;
@@ -14,7 +14,7 @@ type RegisterFunction =
 
 /// Plugin initialization - register all net functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_net_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_net_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = ["net.get", "net.post"];
         let funcs: [PluginLuaFunction; 2] = [net_get_lua, net_post_lua];
@@ -35,7 +35,7 @@ pub unsafe extern "C" fn bloom_net_plugin_init(register_fn: RegisterFunction) ->
 
 /// Plugin cleanup (optional)
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_net_plugin_cleanup() {
+pub unsafe extern "C" fn lotus_net_plugin_cleanup() {
     // No cleanup needed
 }
 
@@ -200,8 +200,8 @@ unsafe extern "C" fn net_get_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         None => HashMap::new(),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -276,8 +276,8 @@ unsafe extern "C" fn net_post_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "net.post: body contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 

@@ -33,8 +33,8 @@ function getSidebarItems(dir: string) {
 
 export default withMermaid(
   defineConfig({
-    base: "/bloom/",
-    description: "Documentation for the Bloom project",
+    base: "/lotus/",
+    description: "Documentation for the Lotus project",
     themeConfig: {
       nav: [
         { link: "/", text: "Home" },
@@ -90,13 +90,13 @@ export default withMermaid(
         },
       ],
 
-      socialLinks: [{ icon: "github", link: "https://github.com/rhizome-lab/bloom" }],
+      socialLinks: [{ icon: "github", link: "https://github.com/rhizome-lab/lotus" }],
     },
-    title: "Bloom",
+    title: "Lotus",
     vite: {
       server: {
         proxy: {
-          "/bloom/playground": {
+          "/lotus/playground": {
             changeOrigin: true,
             target: `http://localhost:${process.env.PLAYGROUND_PORT ?? 3001}`,
           },

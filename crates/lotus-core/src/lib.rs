@@ -1,4 +1,4 @@
-//! Entity system, capabilities, and storage for Bloom.
+//! Entity system, capabilities, and storage for Lotus.
 
 pub mod capability;
 pub mod entity;

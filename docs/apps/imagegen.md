@@ -23,7 +23,7 @@ The app connects to the lotus server via WebSocket and leverages the diffusers p
 - ControlNet support for guided generation
 - Inpainting and mask editing
 - Entity integration for saving/loading images
-- LotusScript state tracking
+- Reed state tracking
 
 **Blocks Mode** (`src/modes/BlocksMode.tsx`):
 
@@ -50,12 +50,12 @@ const result = await sendRpc("std.call_method", {
 
 ### Shared Script State
 
-Both modes share the same LotusScript state, enabling seamless transitions:
+Both modes share the same Reed state, enabling seamless transitions:
 
 ```typescript
 const [sharedScript, setSharedScript] = createSignal(StdLib.seq());
 
-// Layer Mode records actions as LotusScript operations
+// Layer Mode records actions as Reed operations
 setSharedScript(
   StdLib.seq(
     CanvasOps.layerCreate(id, name),
@@ -170,7 +170,7 @@ apps/imagegen/
 │   ├── engine/
 │   │   └── canvas/
 │   │       ├── useCanvas.ts     # Canvas engine
-│   │       ├── operations.ts    # LotusScript operations
+│   │       ├── operations.ts    # Reed operations
 │   │       └── scriptToLayers.ts # Script parser
 │   └── utils/
 │       ├── lotus-connection.ts   # WebSocket client
@@ -187,7 +187,7 @@ apps/imagegen/
 
 - **SolidJS**: Reactive UI framework
 - **Vite**: Build tool and dev server
-- **@lotus/scripting**: LotusScript integration
+- **@lotus/scripting**: Reed integration
 - **@lotus/web-editor**: Block editor component
 - **sharp** (server-side): Image processing via `@lotus/image-io`
 

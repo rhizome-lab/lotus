@@ -1,6 +1,6 @@
-# LotusScript Decompiler
+# Reed Decompiler
 
-The Decompiler is a tool designed to convert the internal JSON representation of LotusScript into a human-readable, TypeScript-like syntax. This facilitates debugging, editing, and interaction with LLMs.
+The Decompiler is a tool designed to convert the internal JSON representation of Reed into a human-readable, TypeScript-like syntax. This facilitates debugging, editing, and interaction with LLMs.
 
 ## Usage
 

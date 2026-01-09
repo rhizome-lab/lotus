@@ -16,7 +16,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
-            format!("{}__bloom_fs_read({}, {})", prefix, cap, path)
+            format!("{}__lotus_fs_read({}, {})", prefix, cap, path)
         }
         "fs.write" => {
             if args.len() != 3 {
@@ -28,7 +28,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
             let content = compile_value(&args[2], false)?;
-            format!("{}__bloom_fs_write({}, {}, {})", prefix, cap, path, content)
+            format!("{}__lotus_fs_write({}, {}, {})", prefix, cap, path, content)
         }
         "fs.list" => {
             if args.len() != 2 {
@@ -39,7 +39,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
-            format!("{}__bloom_fs_list({}, {})", prefix, cap, path)
+            format!("{}__lotus_fs_list({}, {})", prefix, cap, path)
         }
         "fs.stat" => {
             if args.len() != 2 {
@@ -50,7 +50,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
-            format!("{}__bloom_fs_stat({}, {})", prefix, cap, path)
+            format!("{}__lotus_fs_stat({}, {})", prefix, cap, path)
         }
         "fs.exists" => {
             if args.len() != 2 {
@@ -61,7 +61,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
-            format!("{}__bloom_fs_exists({}, {})", prefix, cap, path)
+            format!("{}__lotus_fs_exists({}, {})", prefix, cap, path)
         }
         "fs.mkdir" => {
             if args.len() != 2 {
@@ -72,7 +72,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
-            format!("{}__bloom_fs_mkdir({}, {})", prefix, cap, path)
+            format!("{}__lotus_fs_mkdir({}, {})", prefix, cap, path)
         }
         "fs.remove" => {
             if args.len() != 2 {
@@ -83,7 +83,7 @@ pub fn compile_fs(op: &str, args: &[SExpr], prefix: &str) -> Result<Option<Strin
             }
             let cap = compile_value(&args[0], false)?;
             let path = compile_value(&args[1], false)?;
-            format!("{}__bloom_fs_remove({}, {})", prefix, cap, path)
+            format!("{}__lotus_fs_remove({}, {})", prefix, cap, path)
         }
         _ => return Ok(None), // Not an fs opcode
     };

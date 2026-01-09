@@ -1,4 +1,4 @@
-//! AI plugin for Bloom using rig for LLM operations.
+//! AI plugin for Lotus using rig for LLM operations.
 
 use rig::completion::Prompt;
 use rig::providers::{anthropic, cohere, openai, perplexity};
@@ -390,8 +390,8 @@ unsafe extern "C" fn ai_generate_text_lua(L: *mut mlua::ffi::lua_State) -> c_int
         Err(e) => return lua_push_error(L, &format!("Invalid options: {}", e)),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -470,8 +470,8 @@ unsafe extern "C" fn ai_embed_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "ai.embed: text contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -553,8 +553,8 @@ unsafe extern "C" fn ai_chat_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(L, &format!("Invalid options: {}", e)),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -582,7 +582,7 @@ unsafe extern "C" fn ai_chat_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
 /// Plugin initialization - register all functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_ai_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_ai_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = ["ai.generateText", "ai.embed", "ai.chat"];
         let funcs: [PluginLuaFunction; 3] = [ai_generate_text_lua, ai_embed_lua, ai_chat_lua];
@@ -602,7 +602,7 @@ pub unsafe extern "C" fn bloom_ai_plugin_init(register_fn: RegisterFunction) -> 
 
 /// Plugin cleanup - called when unloading
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_ai_plugin_cleanup() -> c_int {
+pub unsafe extern "C" fn lotus_ai_plugin_cleanup() -> c_int {
     // No state to clean up
     0 // Success
 }

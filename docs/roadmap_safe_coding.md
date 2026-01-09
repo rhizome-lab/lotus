@@ -27,7 +27,7 @@ These steps can be implemented immediately on top of the current engine to stric
 
 ### 0. Language Agnosticism & The SDK Layer
 
-LotusScript is designed to be language-agnostic. The strategies below distinguish between the **Kernel** (Opcodes, VM) which remains universal, and the **SDK** (Language-Specific Bindings) which provides the "Human/AI Friendly" surface area.
+Reed is designed to be language-agnostic. The strategies below distinguish between the **Kernel** (Opcodes, VM) which remains universal, and the **SDK** (Language-Specific Bindings) which provides the "Human/AI Friendly" surface area.
 
 - **Kernel:** Remains low-level, opcode-based, and secure. Validated by the engine.
 - **SDK:** Provides the "Typed Facade". For TypeScript, this means **Capability Classes**.

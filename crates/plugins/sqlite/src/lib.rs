@@ -1,4 +1,4 @@
-//! SQLite plugin for Bloom with capability-based security.
+//! SQLite plugin for Lotus with capability-based security.
 
 use rusqlite::{Connection, ToSql};
 use std::collections::HashMap;
@@ -428,8 +428,8 @@ unsafe extern "C" fn sqlite_query_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         None => Vec::new(),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -502,8 +502,8 @@ unsafe extern "C" fn sqlite_execute_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         None => Vec::new(),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -521,7 +521,7 @@ unsafe extern "C" fn sqlite_execute_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
 /// Plugin initialization - register all functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_sqlite_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_sqlite_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = ["sqlite.query", "sqlite.execute"];
         let funcs: [PluginLuaFunction; 2] = [sqlite_query_lua, sqlite_execute_lua];
@@ -541,7 +541,7 @@ pub unsafe extern "C" fn bloom_sqlite_plugin_init(register_fn: RegisterFunction)
 
 /// Plugin cleanup - called when unloading
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_sqlite_plugin_cleanup() -> c_int {
+pub unsafe extern "C" fn lotus_sqlite_plugin_cleanup() -> c_int {
     // Close all connections
     let mut conns = CONNECTIONS.lock().unwrap();
     *conns = None;

@@ -1,6 +1,6 @@
-//! Bloom Notes Server
+//! Lotus Notes Server
 //!
-//! Wiki-style notes with wikilinks and backlinks, built on the Bloom engine.
+//! Wiki-style notes with wikilinks and backlinks, built on the Lotus engine.
 //!
 //! ## Usage
 //!
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(|p| p.parse().ok())
         .unwrap_or(8081);
 
-    tracing::info!("Starting Bloom Notes Server...");
+    tracing::info!("Starting Lotus Notes Server...");
 
     // Create runtime (opens database connections)
     let runtime = Arc::new(LotusRuntime::open("notes.db")?);
@@ -70,7 +70,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Start WebSocket server
-    let config = lotus_transport_websocket_jsonrpc::ServerConfig {
+    let config = rhizome_lotus_transport_websocket_jsonrpc::ServerConfig {
         host: "127.0.0.1".to_string(),
         port,
         db_path: "notes.db".to_string(),

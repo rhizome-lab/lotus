@@ -136,7 +136,7 @@ return {{ result = __result, this = __this }}
             }
             lua_ctx.to_value(&serde_json::Value::Object(result))
         })?;
-        lua.globals().set("__bloom_entity", entity_fn)?;
+        lua.globals().set("__lotus_entity", entity_fn)?;
 
         // verbs opcode - get all verbs defined on an entity
         let storage_clone = storage.clone();
@@ -167,7 +167,7 @@ return {{ result = __result, this = __this }}
 
             lua_ctx.to_value(&verb_list)
         })?;
-        lua.globals().set("__bloom_verbs", verbs_fn)?;
+        lua.globals().set("__lotus_verbs", verbs_fn)?;
 
         // capability opcode - get capability by ID
         let storage_clone = storage.clone();
@@ -206,7 +206,7 @@ return {{ result = __result, this = __this }}
                 "params": cap.params,
             }))
         })?;
-        lua.globals().set("__bloom_capability", capability_fn)?;
+        lua.globals().set("__lotus_capability", capability_fn)?;
 
         // update opcode - persist entity changes
         let storage_clone = storage.clone();
@@ -218,7 +218,7 @@ return {{ result = __result, this = __this }}
                     .map_err(mlua::Error::external)?;
                 Ok(())
             })?;
-        lua.globals().set("__bloom_update", update_fn)?;
+        lua.globals().set("__lotus_update", update_fn)?;
 
         // create opcode - create new entity
         let storage_clone = storage.clone();
@@ -234,7 +234,7 @@ return {{ result = __result, this = __this }}
                 Ok(new_id)
             },
         )?;
-        lua.globals().set("__bloom_create", create_fn)?;
+        lua.globals().set("__lotus_create", create_fn)?;
 
         // call opcode - call a verb on an entity
         let storage_clone = storage.clone();
@@ -320,7 +320,7 @@ return {{ result = __result, this = __this }}
                 lua_ctx.to_value(&result)
             },
         )?;
-        lua.globals().set("__bloom_call", call_fn)?;
+        lua.globals().set("__lotus_call", call_fn)?;
 
         // schedule opcode - schedule a verb call for future execution
         let this_id = self.this.id;
@@ -343,7 +343,7 @@ return {{ result = __result, this = __this }}
                 Ok(lua_ctx.null())
             },
         )?;
-        lua.globals().set("__bloom_schedule", schedule_fn)?;
+        lua.globals().set("__lotus_schedule", schedule_fn)?;
 
         // mint opcode - create new capability with authority
         let storage_clone = storage.clone();
@@ -410,7 +410,7 @@ return {{ result = __result, this = __this }}
                 }))
             },
         )?;
-        lua.globals().set("__bloom_mint", mint_fn)?;
+        lua.globals().set("__lotus_mint", mint_fn)?;
 
         // delegate opcode - create restricted version of a capability
         let storage_clone = storage.clone();
@@ -477,13 +477,13 @@ return {{ result = __result, this = __this }}
                 "params": cap.params,
             }))
         })?;
-        lua.globals().set("__bloom_delegate", delegate_fn)?;
+        lua.globals().set("__lotus_delegate", delegate_fn)?;
 
         // Store this_id in globals for plugins to access
-        lua.globals().set("__bloom_this_id", self.this.id)?;
+        lua.globals().set("__lotus_this_id", self.this.id)?;
 
         // Register all cdylib plugin functions (fs, memory, etc.) as Lua globals
-        // Each "foo.bar" function becomes "__bloom_foo_bar" global
+        // Each "foo.bar" function becomes "__lotus_foo_bar" global
         unsafe {
             runtime.with_state(|lua_state| {
                 crate::plugin_registry::register_all_to_lua(lua_state);
@@ -517,7 +517,7 @@ return {{ result = __result, this = __this }}
                 lua_ctx.to_value(&results)
             },
         )?;
-        lua.globals().set("__bloom_sqlite_query", sqlite_query_fn)?;
+        lua.globals().set("__lotus_sqlite_query", sqlite_query_fn)?;
 
         // sqlite.execute opcode - execute SQL statement with capability
         let this_id = self.this.id;
@@ -547,7 +547,7 @@ return {{ result = __result, this = __this }}
             },
         )?;
         lua.globals()
-            .set("__bloom_sqlite_execute", sqlite_execute_fn)?;
+            .set("__lotus_sqlite_execute", sqlite_execute_fn)?;
 
         // net.get opcode - HTTP GET request with capability
         let this_id = self.this.id;
@@ -574,7 +574,7 @@ return {{ result = __result, this = __this }}
                 lua_ctx.to_value(&result)
             },
         )?;
-        lua.globals().set("__bloom_net_get", net_get_fn)?;
+        lua.globals().set("__lotus_net_get", net_get_fn)?;
 
         // net.post opcode - HTTP POST request with capability
         let this_id = self.this.id;
@@ -609,7 +609,7 @@ return {{ result = __result, this = __this }}
                     lua_ctx.to_value(&result)
                 },
             )?;
-        lua.globals().set("__bloom_net_post", net_post_fn)?;
+        lua.globals().set("__lotus_net_post", net_post_fn)?;
 
         // vector.insert opcode - insert vector embedding with capability
         let this_id = self.this.id;
@@ -647,7 +647,7 @@ return {{ result = __result, this = __this }}
             },
         )?;
         lua.globals()
-            .set("__bloom_vector_insert", vector_insert_fn)?;
+            .set("__lotus_vector_insert", vector_insert_fn)?;
 
         // vector.search opcode - search for similar vectors with capability
         let this_id = self.this.id;
@@ -682,7 +682,7 @@ return {{ result = __result, this = __this }}
             },
         )?;
         lua.globals()
-            .set("__bloom_vector_search", vector_search_fn)?;
+            .set("__lotus_vector_search", vector_search_fn)?;
 
         // vector.delete opcode - delete vector by key with capability
         let this_id = self.this.id;
@@ -697,7 +697,7 @@ return {{ result = __result, this = __this }}
             },
         )?;
         lua.globals()
-            .set("__bloom_vector_delete", vector_delete_fn)?;
+            .set("__lotus_vector_delete", vector_delete_fn)?;
 
         // ai.generate_text opcode - LLM text generation with capability
         let this_id = self.this.id;
@@ -730,7 +730,7 @@ return {{ result = __result, this = __this }}
             },
         )?;
         lua.globals()
-            .set("__bloom_ai_generate_text", ai_generate_text_fn)?;
+            .set("__lotus_ai_generate_text", ai_generate_text_fn)?;
 
         // ai.embed opcode - generate embeddings with capability
         let this_id = self.this.id;
@@ -756,7 +756,7 @@ return {{ result = __result, this = __this }}
                     lua_ctx.to_value(&result)
                 },
             )?;
-        lua.globals().set("__bloom_ai_embed", ai_embed_fn)?;
+        lua.globals().set("__lotus_ai_embed", ai_embed_fn)?;
 
         // ai.chat opcode - chat completion with message history
         let this_id = self.this.id;
@@ -793,7 +793,7 @@ return {{ result = __result, this = __this }}
                 Ok(result)
             },
         )?;
-        lua.globals().set("__bloom_ai_chat", ai_chat_fn)?;
+        lua.globals().set("__lotus_ai_chat", ai_chat_fn)?;
 
         // Register procgen plugin opcodes (if loaded)
         let plugins = self.plugins.lock().unwrap();
@@ -818,7 +818,7 @@ return {{ result = __result, this = __this }}
 
                 // Register Lua functions
                 lua.globals().set(
-                    "__bloom_procgen_seed",
+                    "__lotus_procgen_seed",
                     lua.create_function(move |_, seed: u64| {
                         seed_fn(seed);
                         Ok(())
@@ -826,24 +826,24 @@ return {{ result = __result, this = __this }}
                 )?;
 
                 lua.globals().set(
-                    "__bloom_procgen_noise",
+                    "__lotus_procgen_noise",
                     lua.create_function(move |_, (x, y): (f64, f64)| Ok(noise_fn(x, y)))?,
                 )?;
 
                 lua.globals().set(
-                    "__bloom_procgen_random",
+                    "__lotus_procgen_random",
                     lua.create_function(move |_, ()| Ok(random_fn()))?,
                 )?;
 
                 lua.globals().set(
-                    "__bloom_procgen_random_range",
+                    "__lotus_procgen_random_range",
                     lua.create_function(move |_, (min, max): (f64, f64)| {
                         Ok(random_range_fn(min, max))
                     })?,
                 )?;
 
                 lua.globals().set(
-                    "__bloom_procgen_between",
+                    "__lotus_procgen_between",
                     lua.create_function(move |_, (min, max): (i64, i64)| Ok(between_fn(min, max)))?,
                 )?;
             }

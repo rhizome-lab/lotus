@@ -59,7 +59,7 @@ async fn send_request(
 #[tokio::test]
 async fn test_notes_server_basic_operations() -> Result<(), Box<dyn std::error::Error>> {
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-notes");
+    let test_dir = std::env::temp_dir().join("lotus-test-notes");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs
@@ -202,7 +202,7 @@ async fn test_notes_verb_operations() -> Result<(), Box<dyn std::error::Error>> 
     use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-notes-verbs");
+    let test_dir = std::env::temp_dir().join("lotus-test-notes-verbs");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs
@@ -697,7 +697,7 @@ async fn test_notes_backlinks() -> Result<(), Box<dyn std::error::Error>> {
     use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-notes-backlinks");
+    let test_dir = std::env::temp_dir().join("lotus-test-notes-backlinks");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs
@@ -1211,7 +1211,7 @@ async fn test_notes_search() -> Result<(), Box<dyn std::error::Error>> {
     use rhizome_lotus_ir::SExpr;
 
     // Create temporary test directory
-    let test_dir = std::env::temp_dir().join("bloom-test-notes-search");
+    let test_dir = std::env::temp_dir().join("lotus-test-notes-search");
     let db_path = test_dir.join("test.db");
 
     // Clean up from previous runs

@@ -1,6 +1,6 @@
-# LotusScript Transpiler
+# Reed Transpiler
 
-The Transpiler is a tool that converts TypeScript code into LotusScript's internal JSON S-expression format. This allows developers to write scripts in a familiar, type-safe language (TypeScript) and execute them within the Lotus runtime.
+The Transpiler is a tool that converts TypeScript code into Reed's internal JSON S-expression format. This allows developers to write scripts in a familiar, type-safe language (TypeScript) and execute them within the Lotus runtime.
 
 ## Usage
 
@@ -25,7 +25,7 @@ console.log(JSON.stringify(script, null, 2));
 
 ## Features
 
-The transpiler supports a subset of TypeScript that maps to LotusScript opcodes:
+The transpiler supports a subset of TypeScript that maps to Reed opcodes:
 
 ### Variables
 
@@ -86,7 +86,7 @@ The transpiler supports a subset of TypeScript that maps to LotusScript opcodes:
 
 ## Opcode Resolution Heuristic
 
-LotusScript uses opcodes (e.g., `log`, `if`) that look like function calls in TypeScript. To distinguish between a call to a local variable (which requires `apply`) and a direct opcode call, the transpiler uses the following heuristic:
+Reed uses opcodes (e.g., `log`, `if`) that look like function calls in TypeScript. To distinguish between a call to a local variable (which requires `apply`) and a direct opcode call, the transpiler uses the following heuristic:
 
 1.  **Scope Tracking**: The transpiler tracks all locally defined variables (via `let`, `function`, parameters).
 2.  **Resolution**:
@@ -114,7 +114,7 @@ The transpiler is heavily used in the seeding process to allow writing verbs in 
 
 1.  **Define Verbs**: Verbs are defined as exported functions in `packages/core/src/seeds/verbs.ts`.
 2.  **Extract Body**: The `extractVerb` helper reads the function body from the source file.
-3.  **Transpile**: The body string is passed to `transpile()` to generate the LotusScript AST.
+3.  **Transpile**: The body string is passed to `transpile()` to generate the Reed AST.
 
 ```typescript
 // In seeds/verbs.ts

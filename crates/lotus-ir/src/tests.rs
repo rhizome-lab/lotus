@@ -1,4 +1,4 @@
-//! Tests for bloom-ir.
+//! Tests for lotus-ir.
 
 use crate::SExpr;
 

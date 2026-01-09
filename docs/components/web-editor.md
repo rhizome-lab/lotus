@@ -1,6 +1,6 @@
 # Web Editor
 
-The Web Editor package (`@lotus/web-editor`) provides React/SolidJS components for editing LotusScript code. It wraps the Monaco Editor and provides custom language support.
+The Web Editor package (`@lotus/web-editor`) provides React/SolidJS components for editing Reed code. It wraps the Monaco Editor and provides custom language support.
 
 ## Components
 
@@ -8,7 +8,7 @@ The Web Editor package (`@lotus/web-editor`) provides React/SolidJS components f
 
 The main component for editing scripts. It handles:
 
-- Syntax highlighting for LotusScript.
+- Syntax highlighting for Reed.
 - Autocompletion.
 - Error reporting.
 

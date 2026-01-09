@@ -65,7 +65,7 @@ pub fn get_registered_opcodes() -> Vec<String> {
 
 /// Register all plugin functions as Lua globals.
 ///
-/// Each function registered as "foo.bar" becomes the Lua global "__bloom_foo_bar".
+/// Each function registered as "foo.bar" becomes the Lua global "__lotus_foo_bar".
 ///
 /// # Safety
 /// The lua_state must be a valid Lua state pointer.
@@ -75,8 +75,8 @@ pub unsafe fn register_all_to_lua(lua_state: *mut mlua::ffi::lua_State) {
     let registry = PLUGIN_REGISTRY.lock().unwrap();
     if let Some(ref map) = *registry {
         for (name, func) in map {
-            // Convert "fs.read" -> "__bloom_fs_read"
-            let global_name = format!("__bloom_{}", name.replace('.', "_"));
+            // Convert "fs.read" -> "__lotus_fs_read"
+            let global_name = format!("__lotus_{}", name.replace('.', "_"));
 
             if let Ok(name_cstr) = CString::new(global_name) {
                 // Transmute from extern "C" to extern "C-unwind" for Lua

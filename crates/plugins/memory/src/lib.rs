@@ -1,4 +1,4 @@
-//! Memory plugin for Bloom - RAG with content storage and vector search.
+//! Memory plugin for Lotus - RAG with content storage and vector search.
 //!
 //! This plugin orchestrates:
 //! - sqlite: for content storage (memories_content table)
@@ -54,11 +54,11 @@ unsafe fn ensure_tables(
 ) -> Result<(), String> {
     use mlua::ffi::*;
 
-    // Call __bloom_sqlite_execute to create table if not exists
-    lua_getglobal(L, b"__bloom_sqlite_execute\0".as_ptr() as *const c_char);
+    // Call __lotus_sqlite_execute to create table if not exists
+    lua_getglobal(L, b"__lotus_sqlite_execute\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 1);
-        return Err("memory: __bloom_sqlite_execute global not found".to_string());
+        return Err("memory: __lotus_sqlite_execute global not found".to_string());
     }
 
     // Push args: capability, db_path, sql, params
@@ -80,7 +80,7 @@ unsafe fn ensure_tables(
     // Empty params array
     lua_createtable(L, 0, 0);
 
-    // Call __bloom_sqlite_execute(cap, path, sql, params)
+    // Call __lotus_sqlite_execute(cap, path, sql, params)
     if lua_pcall(L, 4, 1, 0) != LUA_OK {
         let mut len = 0;
         let err_ptr = lua_tolstring(L, -1, &mut len);
@@ -131,10 +131,10 @@ unsafe extern "C" fn memory_add_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     };
 
     // Step 1: Insert content into memories_content table
-    lua_getglobal(L, b"__bloom_sqlite_execute\0".as_ptr() as *const c_char);
+    lua_getglobal(L, b"__lotus_sqlite_execute\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 1);
-        return lua_push_error(L, "memory.add: __bloom_sqlite_execute global not found");
+        return lua_push_error(L, "memory.add: __lotus_sqlite_execute global not found");
     }
 
     lua_pushvalue(L, 1); // db_capability
@@ -170,7 +170,7 @@ unsafe extern "C" fn memory_add_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     }
     lua_rawseti(L, -2, 2);
 
-    // Call __bloom_sqlite_execute
+    // Call __lotus_sqlite_execute
     if lua_pcall(L, 4, 1, 0) != LUA_OK {
         return lua_error(L);
     }
@@ -179,10 +179,10 @@ unsafe extern "C" fn memory_add_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     lua_pop(L, 1);
 
     // Get the last inserted rowid
-    lua_getglobal(L, b"__bloom_sqlite_query\0".as_ptr() as *const c_char);
+    lua_getglobal(L, b"__lotus_sqlite_query\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 1);
-        return lua_push_error(L, "memory.add: __bloom_sqlite_query global not found");
+        return lua_push_error(L, "memory.add: __lotus_sqlite_query global not found");
     }
 
     lua_pushvalue(L, 1); // db_capability
@@ -202,10 +202,10 @@ unsafe extern "C" fn memory_add_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     lua_pop(L, 3); // pop id, row, results
 
     // Step 2: Generate embedding via ai.embed
-    lua_getglobal(L, b"__bloom_ai_embed\0".as_ptr() as *const c_char);
+    lua_getglobal(L, b"__lotus_ai_embed\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 1);
-        return lua_push_error(L, "memory.add: __bloom_ai_embed global not found");
+        return lua_push_error(L, "memory.add: __lotus_ai_embed global not found");
     }
 
     lua_pushvalue(L, 2); // ai_capability
@@ -220,10 +220,10 @@ unsafe extern "C" fn memory_add_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     // Embedding is now on top of stack
 
     // Step 3: Insert into vector table
-    lua_getglobal(L, b"__bloom_vector_insert\0".as_ptr() as *const c_char);
+    lua_getglobal(L, b"__lotus_vector_insert\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 2); // pop nil and embedding
-        return lua_push_error(L, "memory.add: __bloom_vector_insert global not found");
+        return lua_push_error(L, "memory.add: __lotus_vector_insert global not found");
     }
 
     lua_pushvalue(L, 1); // db_capability (vector uses same DB)
@@ -272,10 +272,10 @@ unsafe extern "C" fn memory_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     }
 
     // Step 1: Generate embedding for query
-    lua_getglobal(L, b"__bloom_ai_embed\0".as_ptr() as *const c_char);
+    lua_getglobal(L, b"__lotus_ai_embed\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 1);
-        return lua_push_error(L, "memory.search: __bloom_ai_embed global not found");
+        return lua_push_error(L, "memory.search: __lotus_ai_embed global not found");
     }
 
     lua_pushvalue(L, 2); // ai_capability
@@ -303,10 +303,10 @@ unsafe extern "C" fn memory_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     let candidate_limit = limit * 10;
 
     // Step 2: Search vectors
-    lua_getglobal(L, b"__bloom_vector_search\0".as_ptr() as *const c_char);
+    lua_getglobal(L, b"__lotus_vector_search\0".as_ptr() as *const c_char);
     if lua_isnil(L, -1) != 0 {
         lua_pop(L, 2); // pop nil and embedding
-        return lua_push_error(L, "memory.search: __bloom_vector_search global not found");
+        return lua_push_error(L, "memory.search: __lotus_vector_search global not found");
     }
 
     lua_pushvalue(L, 1); // db_capability
@@ -362,7 +362,7 @@ unsafe extern "C" fn memory_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         lua_pop(L, 1);
 
         // Fetch content from memories_content
-        lua_getglobal(L, b"__bloom_sqlite_query\0".as_ptr() as *const c_char);
+        lua_getglobal(L, b"__lotus_sqlite_query\0".as_ptr() as *const c_char);
         lua_pushvalue(L, 1); // db_capability
         lua_pushvalue(L, 3); // db_path
         let query_sql = CString::new(
@@ -459,7 +459,7 @@ unsafe extern "C" fn memory_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
 /// Plugin initialization - register all functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_memory_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_memory_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = ["memory.add", "memory.search"];
         let funcs: [PluginLuaFunction; 2] = [memory_add_lua, memory_search_lua];
@@ -479,6 +479,6 @@ pub unsafe extern "C" fn bloom_memory_plugin_init(register_fn: RegisterFunction)
 
 /// Plugin cleanup
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_memory_plugin_cleanup() -> c_int {
+pub unsafe extern "C" fn lotus_memory_plugin_cleanup() -> c_int {
     0
 }

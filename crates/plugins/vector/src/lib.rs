@@ -1,4 +1,4 @@
-//! Vector plugin for Bloom with sqlite-vec integration.
+//! Vector plugin for Lotus with sqlite-vec integration.
 
 use rusqlite::Connection;
 use std::collections::HashMap;
@@ -462,8 +462,8 @@ unsafe extern "C" fn vector_insert_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(e) => return lua_push_error(L, &format!("Invalid metadata: {}", e)),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -519,8 +519,8 @@ unsafe extern "C" fn vector_search_lua(L: *mut mlua::ffi::lua_State) -> c_int {
     // Get limit (number)
     let limit = lua_tointeger(L, 4) as usize;
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -581,8 +581,8 @@ unsafe extern "C" fn vector_delete_lua(L: *mut mlua::ffi::lua_State) -> c_int {
         Err(_) => return lua_push_error(L, "vector.delete: key contains invalid UTF-8"),
     };
 
-    // Get __bloom_this_id from globals
-    lua_getglobal(L, b"__bloom_this_id\0".as_ptr() as *const c_char);
+    // Get __lotus_this_id from globals
+    lua_getglobal(L, b"__lotus_this_id\0".as_ptr() as *const c_char);
     let this_id = lua_tointeger(L, -1);
     lua_pop(L, 1);
 
@@ -600,7 +600,7 @@ unsafe extern "C" fn vector_delete_lua(L: *mut mlua::ffi::lua_State) -> c_int {
 
 /// Plugin initialization - register all functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_vector_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_vector_plugin_init(register_fn: RegisterFunction) -> c_int {
     unsafe {
         let names = ["vector.insert", "vector.search", "vector.delete"];
         let funcs: [PluginLuaFunction; 3] =
@@ -621,7 +621,7 @@ pub unsafe extern "C" fn bloom_vector_plugin_init(register_fn: RegisterFunction)
 
 /// Plugin cleanup - called when unloading
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_vector_plugin_cleanup() -> c_int {
+pub unsafe extern "C" fn lotus_vector_plugin_cleanup() -> c_int {
     let mut conns = CONNECTIONS.lock().unwrap();
     *conns = None;
     0 // Success

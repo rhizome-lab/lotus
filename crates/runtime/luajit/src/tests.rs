@@ -1,4 +1,4 @@
-//! Tests for bloom-runtime-luajit.
+//! Tests for lotus-runtime-luajit.
 //!
 //! Compile tests are in each library module (codegen/std.rs, codegen/math.rs, etc.)
 //! This file contains general compile tests and execution tests.

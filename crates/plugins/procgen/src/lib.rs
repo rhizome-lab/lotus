@@ -1,4 +1,4 @@
-//! Procedural generation plugin for Bloom.
+//! Procedural generation plugin for Lotus.
 //!
 //! Provides seeded random number generation and 2D Simplex noise.
 
@@ -190,7 +190,7 @@ unsafe extern "C" fn procgen_between_lua(L: *mut mlua::ffi::lua_State) -> c_int 
 
 /// Plugin initialization - register all functions
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_procgen_plugin_init(register_fn: RegisterFunction) -> c_int {
+pub unsafe extern "C" fn lotus_procgen_plugin_init(register_fn: RegisterFunction) -> c_int {
     // Initialize plugin state
     init_state();
 
@@ -226,7 +226,7 @@ pub unsafe extern "C" fn bloom_procgen_plugin_init(register_fn: RegisterFunction
 
 /// Plugin cleanup - called when unloading
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn bloom_procgen_plugin_cleanup() -> c_int {
+pub unsafe extern "C" fn lotus_procgen_plugin_cleanup() -> c_int {
     clear_state();
     0 // Success
 }

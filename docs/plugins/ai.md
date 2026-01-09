@@ -70,7 +70,7 @@ Generates an image using DALL-E 3.
 
 ### `ai_completion`
 
-Provides code completion suggestions for the LotusScript editor.
+Provides code completion suggestions for the Reed editor.
 
 - **Parameters**:
   - `code`: The current code in the editor.

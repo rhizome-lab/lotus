@@ -4,11 +4,11 @@ This document outlines the key technical challenges identified in the [Vision](.
 
 ## 1. Scripting Performance
 
-**Challenge**: A custom interpreted language (LotusScript) running inside another interpreted language (JavaScript/TypeScript) could be too slow for complex simulations (e.g., pathfinding, economy, combat math).
+**Challenge**: A custom interpreted language (Reed) running inside another interpreted language (JavaScript/TypeScript) could be too slow for complex simulations (e.g., pathfinding, economy, combat math).
 
 **Mitigation**: **Just-In-Time (JIT) Compilation**.
 
-- We have implemented a `compiler` (`packages/scripting/src/compiler.ts`) that translates LotusScript AST directly into native JavaScript functions.
+- We have implemented a `compiler` (`packages/scripting/src/compiler.ts`) that translates Reed AST directly into native JavaScript functions.
 - This removes the interpretation overhead, allowing scripts to run at near-native V8 speeds.
 - Critical paths can be optimized by the V8 engine itself.
 

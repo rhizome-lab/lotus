@@ -1,6 +1,6 @@
 # Type Generation
 
-LotusScript uses a custom type generation system to provide TypeScript definitions for all available opcodes. This ensures that developers (and AI agents) have full type safety when writing scripts.
+Reed uses a custom type generation system to provide TypeScript definitions for all available opcodes. This ensures that developers (and AI agents) have full type safety when writing scripts.
 
 ## Overview
 

@@ -31,7 +31,7 @@ impl Default for ServerConfig {
     }
 }
 
-/// The Bloom WebSocket server.
+/// The Lotus WebSocket server.
 pub struct Server {
     config: ServerConfig,
     runtime: Arc<LotusRuntime>,

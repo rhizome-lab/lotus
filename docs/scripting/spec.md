@@ -74,7 +74,7 @@ The standard library provides essential control flow, variable management, and s
 
 ### Scoping
 
-LotusScript uses **lexical block scoping**. A new scope is created for:
+Reed uses **lexical block scoping**. A new scope is created for:
 
 - `seq` (Sequence)
 - `if` (Then and Else branches)
@@ -250,7 +250,7 @@ _Defined in: `packages/scripting/src/lib/time.ts`_
 
 ## Practical Examples
 
-This section demonstrates common patterns and real-world usage of LotusScript opcodes.
+This section demonstrates common patterns and real-world usage of Reed opcodes.
 
 ### Default Values with Nullish Coalescing
 

@@ -1,4 +1,4 @@
-//! WebSocket server for Bloom.
+//! WebSocket server for Lotus.
 
 pub mod plugin_loader;
 pub mod server;

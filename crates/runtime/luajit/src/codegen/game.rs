@@ -22,7 +22,7 @@ pub fn compile_game(
                 });
             }
             let id = compile_value(&args[0], false)?;
-            format!("{}__bloom_entity({})", prefix, id)
+            format!("{}__lotus_entity({})", prefix, id)
         }
 
         // Get all verbs defined on an entity
@@ -35,7 +35,7 @@ pub fn compile_game(
                 });
             }
             let entity = compile_value(&args[0], false)?;
-            format!("{}__bloom_verbs({})", prefix, entity)
+            format!("{}__lotus_verbs({})", prefix, entity)
         }
 
         // Get capability by ID
@@ -48,7 +48,7 @@ pub fn compile_game(
                 });
             }
             let id = compile_value(&args[0], false)?;
-            format!("{}__bloom_capability({})", prefix, id)
+            format!("{}__lotus_capability({})", prefix, id)
         }
 
         // Update entity properties
@@ -62,7 +62,7 @@ pub fn compile_game(
             }
             let entity_id = compile_value(&args[0], false)?;
             let updates = compile_value(&args[1], false)?;
-            format!("{}__bloom_update({}, {})", prefix, entity_id, updates)
+            format!("{}__lotus_update({}, {})", prefix, entity_id, updates)
         }
 
         // Create new entity
@@ -77,9 +77,9 @@ pub fn compile_game(
             let props = compile_value(&args[0], false)?;
             if args.len() > 1 {
                 let prototype_id = compile_value(&args[1], false)?;
-                format!("{}__bloom_create({}, {})", prefix, props, prototype_id)
+                format!("{}__lotus_create({}, {})", prefix, props, prototype_id)
             } else {
-                format!("{}__bloom_create({}, nil)", prefix, props)
+                format!("{}__lotus_create({}, nil)", prefix, props)
             }
         }
 
@@ -101,7 +101,7 @@ pub fn compile_game(
             let args_list = format!("{{ {} }}", call_args?.join(", "));
 
             format!(
-                "{}__bloom_call({}, {}, {})",
+                "{}__lotus_call({}, {}, {})",
                 prefix, target, verb, args_list
             )
         }
@@ -129,7 +129,7 @@ pub fn compile_game(
             let delay = compile_value(&args[2], false)?;
 
             format!(
-                "{}__bloom_schedule({}, {}, {})",
+                "{}__lotus_schedule({}, {}, {})",
                 prefix, verb, args_list, delay
             )
         }
@@ -148,7 +148,7 @@ pub fn compile_game(
             let params = compile_value(&args[2], false)?;
 
             format!(
-                "{}__bloom_mint({}, {}, {})",
+                "{}__lotus_mint({}, {}, {})",
                 prefix, authority, cap_type, params
             )
         }
@@ -166,7 +166,7 @@ pub fn compile_game(
             let restrictions = compile_value(&args[1], false)?;
 
             format!(
-                "{}__bloom_delegate({}, {})",
+                "{}__lotus_delegate({}, {})",
                 prefix, parent_cap, restrictions
             )
         }
@@ -186,7 +186,7 @@ mod tests {
     #[test]
     fn test_entity() {
         let expr = SExpr::call("entity", vec![SExpr::number(42).erase_type()]);
-        assert_eq!(compile(&expr).unwrap(), "return __bloom_entity(42)");
+        assert_eq!(compile(&expr).unwrap(), "return __lotus_entity(42)");
     }
 
     #[test]
@@ -196,8 +196,8 @@ mod tests {
             vec![SExpr::call("entity", vec![SExpr::number(1).erase_type()])],
         );
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_verbs"));
-        assert!(code.contains("__bloom_entity(1)"));
+        assert!(code.contains("__lotus_verbs"));
+        assert!(code.contains("__lotus_entity(1)"));
     }
 
     #[test]
@@ -213,7 +213,7 @@ mod tests {
             ],
         );
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_update"));
+        assert!(code.contains("__lotus_update"));
         assert!(code.contains("1"));
     }
 
@@ -224,7 +224,7 @@ mod tests {
 
         let expr = SExpr::call("create", vec![SExpr::object(props).erase_type()]);
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_create"));
+        assert!(code.contains("__lotus_create"));
         assert!(code.contains("nil")); // No prototype
     }
 
@@ -241,7 +241,7 @@ mod tests {
             ],
         );
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_create"));
+        assert!(code.contains("__lotus_create"));
         assert!(code.contains("10")); // Has prototype
     }
 
@@ -255,7 +255,7 @@ mod tests {
             ],
         );
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_call"));
+        assert!(code.contains("__lotus_call"));
         assert!(code.contains("helper"));
     }
 
@@ -271,7 +271,7 @@ mod tests {
             ],
         );
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_call"));
+        assert!(code.contains("__lotus_call"));
         assert!(code.contains("greet"));
         assert!(code.contains("Alice"));
         assert!(code.contains("42"));
@@ -292,7 +292,7 @@ mod tests {
             ],
         );
         let code = compile(&expr).unwrap();
-        assert!(code.contains("__bloom_schedule"));
+        assert!(code.contains("__lotus_schedule"));
         assert!(code.contains("tick"));
         assert!(code.contains("1000"));
     }

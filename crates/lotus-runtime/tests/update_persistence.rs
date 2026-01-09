@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 #[test]
 fn test_update_persists_counter() {
-    let test_dir = std::env::temp_dir().join("bloom-test-update-persist");
+    let test_dir = std::env::temp_dir().join("lotus-test-update-persist");
     let db_path = test_dir.join("test.db");
     let _ = std::fs::remove_dir_all(&test_dir);
     std::fs::create_dir_all(&test_dir).unwrap();
