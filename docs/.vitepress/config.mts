@@ -41,6 +41,7 @@ export default withMermaid(
         { link: "/playground/", target: "_blank", text: "Playground" },
         { link: "/core/architecture", text: "Architecture" },
         { link: "/scripting/spec", text: "Scripting" },
+        { link: "https://rhizome-lab.github.io/", text: "Rhizome" },
       ],
 
       search: {
