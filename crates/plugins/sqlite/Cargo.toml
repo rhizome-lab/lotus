@@ -8,7 +8,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 serde_json = "1.0"
-rusqlite = { version = "0.37", features = ["bundled"] }
+# Using system sqlite to avoid conflict with libsql's bundled sqlite
+rusqlite = { version = "0.37" }
 mlua = { version = "0.10", features = ["luajit52", "vendored", "serialize"] }
 
 [dev-dependencies]

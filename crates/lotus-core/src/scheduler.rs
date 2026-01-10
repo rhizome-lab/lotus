@@ -57,7 +57,9 @@ impl Scheduler {
     ) -> Result<i64, SchedulerError> {
         let execute_at = (current_time_ms() + delay_ms) as i64;
         let storage = self.storage.lock().await;
-        let task_id = storage.schedule_task(entity_id, verb, args, execute_at)?;
+        let task_id = storage
+            .schedule_task(entity_id, verb, args, execute_at)
+            .await?;
         Ok(task_id)
     }
 
@@ -65,14 +67,14 @@ impl Scheduler {
     async fn get_due_tasks(&self) -> Result<Vec<ScheduledTask>, SchedulerError> {
         let now = current_time_ms() as i64;
         let storage = self.storage.lock().await;
-        let tasks = storage.get_due_tasks(now)?;
+        let tasks = storage.get_due_tasks(now).await?;
         Ok(tasks)
     }
 
     /// Delete a task from the database.
     async fn delete_task(&self, task_id: i64) -> Result<(), SchedulerError> {
         let storage = self.storage.lock().await;
-        storage.delete_task(task_id)?;
+        storage.delete_task(task_id).await?;
         Ok(())
     }
 
@@ -143,7 +145,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_schedule_and_retrieve() {
-        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
+        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().await.unwrap()));
         let scheduler = Scheduler::new(Arc::clone(&storage), 100);
 
         // Create an entity
@@ -151,6 +153,7 @@ mod tests {
             let storage = storage.lock().await;
             storage
                 .create_entity(serde_json::json!({"name": "Test"}), None)
+                .await
                 .unwrap()
         };
 
@@ -173,13 +176,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_process_executes_and_deletes() {
-        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
+        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().await.unwrap()));
         let scheduler = Scheduler::new(Arc::clone(&storage), 100);
 
         let entity_id = {
             let storage = storage.lock().await;
             storage
                 .create_entity(serde_json::json!({"name": "Test"}), None)
+                .await
                 .unwrap()
         };
 
@@ -211,13 +215,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_only_executes_due_tasks() {
-        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
+        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().await.unwrap()));
         let scheduler = Scheduler::new(Arc::clone(&storage), 100);
 
         let entity_id = {
             let storage = storage.lock().await;
             storage
                 .create_entity(serde_json::json!({"name": "Test"}), None)
+                .await
                 .unwrap()
         };
 

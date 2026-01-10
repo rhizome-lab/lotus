@@ -94,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 db_path: db.clone(),
             };
 
-            let runtime = Arc::new(rhizome_lotus_runtime::LotusRuntime::open(&db)?);
+            let runtime = Arc::new(rhizome_lotus_runtime::LotusRuntime::open(&db).await?);
             let server = Server::new(runtime, config);
             server.run().await?;
         }

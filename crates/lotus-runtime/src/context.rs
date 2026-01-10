@@ -92,18 +92,20 @@ return {{ result = __result, this = __this }}
 
                 // Persist changes if any
                 if !updates.is_empty() {
-                    crate::opcodes::opcode_update(
-                        self.this.id,
-                        serde_json::Value::Object(updates),
-                        &self.storage,
-                    )
-                    .map_err(|e| {
-                        crate::ExecutionError::Runtime(
-                            rhizome_lotus_runtime_luajit::ExecutionError::Lua(
-                                mlua::Error::external(e),
-                            ),
-                        )
-                    })?;
+                    let handle = tokio::runtime::Handle::current();
+                    handle
+                        .block_on(crate::opcodes::opcode_update(
+                            self.this.id,
+                            serde_json::Value::Object(updates),
+                            &self.storage,
+                        ))
+                        .map_err(|e| {
+                            crate::ExecutionError::Runtime(
+                                rhizome_lotus_runtime_luajit::ExecutionError::Lua(
+                                    mlua::Error::external(e),
+                                ),
+                            )
+                        })?;
                 }
             }
         }
@@ -119,7 +121,12 @@ return {{ result = __result, this = __this }}
         // entity opcode - get entity by ID (returns flattened props at top level)
         let storage_clone = storage.clone();
         let entity_fn = lua.create_function(move |lua_ctx, entity_id: i64| {
-            let entity = crate::opcodes::opcode_entity(entity_id as EntityId, &storage_clone)
+            let handle = tokio::runtime::Handle::current();
+            let entity = handle
+                .block_on(crate::opcodes::opcode_entity(
+                    entity_id as EntityId,
+                    &storage_clone,
+                ))
                 .map_err(mlua::Error::external)?
                 .ok_or_else(|| mlua::Error::external(format!("entity {} not found", entity_id)))?;
             // Flatten entity: { id, prototype_id, ...props } to match TypeScript behavior
@@ -148,9 +155,10 @@ return {{ result = __result, this = __this }}
                 .ok_or_else(|| mlua::Error::external("verbs: entity missing id"))?
                 as EntityId;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = storage_clone.lock().unwrap();
-            let verbs = storage
-                .get_verbs(entity_id)
+            let verbs = handle
+                .block_on(storage.get_verbs(entity_id))
                 .map_err(mlua::Error::external)?;
 
             // Return verbs as array of objects with name, id
@@ -190,9 +198,10 @@ return {{ result = __result, this = __this }}
                 }
             };
 
+            let handle = tokio::runtime::Handle::current();
             let storage = storage_clone.lock().unwrap();
-            let cap = storage
-                .get_capability(&cap_id_str)
+            let cap = handle.block_on(storage
+                .get_capability(&cap_id_str))
                 .map_err(mlua::Error::external)?
                 .ok_or_else(|| {
                     mlua::Error::external(format!("capability not found: {}", cap_id_str))
@@ -214,7 +223,13 @@ return {{ result = __result, this = __this }}
             lua.create_function(move |_lua_ctx, (entity_id, updates): (i64, mlua::Value)| {
                 // Convert Lua value to serde_json::Value
                 let updates_json: serde_json::Value = _lua_ctx.from_value(updates)?;
-                crate::opcodes::opcode_update(entity_id as EntityId, updates_json, &storage_clone)
+                let handle = tokio::runtime::Handle::current();
+                handle
+                    .block_on(crate::opcodes::opcode_update(
+                        entity_id as EntityId,
+                        updates_json,
+                        &storage_clone,
+                    ))
                     .map_err(mlua::Error::external)?;
                 Ok(())
             })?;
@@ -225,12 +240,14 @@ return {{ result = __result, this = __this }}
         let create_fn = lua.create_function(
             move |_lua_ctx, (props, prototype_id): (mlua::Value, Option<i64>)| {
                 let props_json: serde_json::Value = _lua_ctx.from_value(props)?;
-                let new_id = crate::opcodes::opcode_create(
-                    props_json,
-                    prototype_id.map(|id| id as EntityId),
-                    &storage_clone,
-                )
-                .map_err(mlua::Error::external)?;
+                let handle = tokio::runtime::Handle::current();
+                let new_id = handle
+                    .block_on(crate::opcodes::opcode_create(
+                        props_json,
+                        prototype_id.map(|id| id as EntityId),
+                        &storage_clone,
+                    ))
+                    .map_err(mlua::Error::external)?;
                 Ok(new_id)
             },
         )?;
@@ -261,15 +278,14 @@ return {{ result = __result, this = __this }}
 
                 // Get entity and verb from storage
                 let (target_entity_full, verb) = {
+                    let handle = tokio::runtime::Handle::current();
                     let storage = storage_clone.lock().unwrap();
-                    let entity = storage
-                        .get_entity(target_id)
+                    let entity = handle.block_on(storage.get_entity(target_id))
                         .map_err(mlua::Error::external)?
                         .ok_or_else(|| {
                             mlua::Error::external(format!("call: entity {} not found", target_id))
                         })?;
-                    let verb = storage
-                        .get_verb(target_id, &verb_name)
+                    let verb = handle.block_on(storage.get_verb(target_id, &verb_name))
                         .map_err(mlua::Error::external)?
                         .ok_or_else(|| {
                             mlua::Error::external(format!(
@@ -280,8 +296,7 @@ return {{ result = __result, this = __this }}
 
                     // Check capability requirement if verb has one
                     if let Some(ref required_cap) = verb.required_capability {
-                        let caller_caps = storage
-                            .get_capabilities(caller_id)
+                        let caller_caps = handle.block_on(storage.get_capabilities(caller_id))
                             .map_err(mlua::Error::external)?;
 
                         let has_required = caller_caps.iter().any(|cap| {
@@ -357,9 +372,10 @@ return {{ result = __result, this = __this }}
                     .ok_or_else(|| mlua::Error::external("mint: authority missing id"))?;
 
                 // Validate authority
+                let handle = tokio::runtime::Handle::current();
                 let storage = storage_clone.lock().unwrap();
-                let auth_cap = storage
-                    .get_capability(auth_id)
+                let auth_cap = handle
+                    .block_on(storage.get_capability(auth_id))
                     .map_err(mlua::Error::external)?
                     .ok_or_else(|| mlua::Error::external("mint: authority capability not found"))?;
 
@@ -391,13 +407,13 @@ return {{ result = __result, this = __this }}
 
                 // Create new capability
                 let params_json: serde_json::Value = lua_ctx.from_value(params)?;
-                let new_id = storage
-                    .create_capability(this_id, &cap_type, params_json)
+                let new_id = handle
+                    .block_on(storage.create_capability(this_id, &cap_type, params_json))
                     .map_err(mlua::Error::external)?;
 
                 // Return capability object
-                let cap = storage
-                    .get_capability(&new_id)
+                let cap = handle
+                    .block_on(storage.get_capability(&new_id))
                     .map_err(mlua::Error::external)?
                     .ok_or_else(|| {
                         mlua::Error::external("mint: failed to retrieve new capability")
@@ -422,8 +438,9 @@ return {{ result = __result, this = __this }}
                 .ok_or_else(|| mlua::Error::external("delegate: parent capability missing id"))?;
 
             // Get parent capability from storage
+            let handle = tokio::runtime::Handle::current();
             let storage = storage_clone.lock().unwrap();
-            let parent = storage.get_capability(parent_id)
+            let parent = handle.block_on(storage.get_capability(parent_id))
                 .map_err(mlua::Error::external)?
                 .ok_or_else(|| mlua::Error::external("delegate: parent capability not found"))?;
 
@@ -463,11 +480,11 @@ return {{ result = __result, this = __this }}
             }
 
             // Create new capability with same type but restricted params
-            let new_id = storage.create_capability(this_id, &parent.cap_type, serde_json::Value::Object(merged_params.clone()))
+            let new_id = handle.block_on(storage.create_capability(this_id, &parent.cap_type, serde_json::Value::Object(merged_params.clone())))
                 .map_err(mlua::Error::external)?;
 
             // Return capability object
-            let cap = storage.get_capability(&new_id)
+            let cap = handle.block_on(storage.get_capability(&new_id))
                 .map_err(mlua::Error::external)?
                 .ok_or_else(|| mlua::Error::external("delegate: failed to retrieve new capability"))?;
 

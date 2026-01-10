@@ -81,7 +81,7 @@ impl SeedSystem {
     /// Create an entity from a definition and add its verbs.
     ///
     /// Returns the ID of the created entity.
-    pub fn create_entity(
+    pub async fn create_entity(
         &self,
         storage: &WorldStorage,
         definition: &TsEntityDef,
@@ -94,12 +94,14 @@ impl SeedSystem {
         // Create entity with properties
         let entity_id = storage
             .create_entity(props, prototype_id)
+            .await
             .map_err(|e| SeedError::EntityCreationError(e.to_string()))?;
 
         // Add verbs
         for (verb_name, verb_sexpr) in &definition.verbs {
             storage
                 .add_verb(entity_id, verb_name, verb_sexpr)
+                .await
                 .map_err(|e| SeedError::VerbError(e.to_string()))?;
         }
 
@@ -111,7 +113,7 @@ impl SeedSystem {
 ///
 /// This creates the foundational entities: The Void, EntityBase, System.
 /// Returns a map of entity names to IDs.
-pub fn seed_basic_world(
+pub async fn seed_basic_world(
     storage: &WorldStorage,
     seed_system: &SeedSystem,
 ) -> Result<HashMap<String, i64>, SeedError> {
@@ -126,6 +128,7 @@ pub fn seed_basic_world(
             }),
             None,
         )
+        .await
         .map_err(|e| SeedError::EntityCreationError(e.to_string()))?;
     entity_ids.insert("void".to_string(), void_id);
 
@@ -136,7 +139,9 @@ pub fn seed_basic_world(
         serde_json::to_value(void_id).unwrap(),
     );
 
-    let entity_base_id = seed_system.create_entity(storage, &entity_base_def, None)?;
+    let entity_base_id = seed_system
+        .create_entity(storage, &entity_base_def, None)
+        .await?;
     entity_ids.insert("entity_base".to_string(), entity_base_id);
 
     // Set Void prototype to EntityBase
@@ -145,6 +150,7 @@ pub fn seed_basic_world(
             void_id,
             serde_json::json!({ "prototype_id": entity_base_id }),
         )
+        .await
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     // 3. Create System Entity
@@ -154,7 +160,9 @@ pub fn seed_basic_world(
         serde_json::to_value(void_id).unwrap(),
     );
 
-    let system_id = seed_system.create_entity(storage, &system_def, None)?;
+    let system_id = seed_system
+        .create_entity(storage, &system_def, None)
+        .await?;
     entity_ids.insert("system".to_string(), system_id);
 
     // Grant System capabilities
@@ -164,14 +172,17 @@ pub fn seed_basic_world(
             "sys.mint",
             serde_json::json!({ "namespace": "*" }),
         )
+        .await
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     storage
         .create_capability(system_id, "sys.create", serde_json::json!({}))
+        .await
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     storage
         .create_capability(system_id, "sys.sudo", serde_json::json!({}))
+        .await
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     storage
@@ -180,6 +191,7 @@ pub fn seed_basic_world(
             "entity.control",
             serde_json::json!({ "*": true }),
         )
+        .await
         .map_err(|e| SeedError::StorageError(e.to_string()))?;
 
     Ok(entity_ids)

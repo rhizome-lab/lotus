@@ -45,7 +45,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # Database
-rusqlite = { version = "0.37", features = ["bundled"] }
+libsql = "0.9"
 
 # Lua runtime
 mlua = { version = "0.10", features = ["luajit52", "vendored", "serialize"] }

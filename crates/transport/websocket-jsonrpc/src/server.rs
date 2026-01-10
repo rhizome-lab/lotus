@@ -86,7 +86,10 @@ impl Server {
                         };
 
                         // Execute the verb
-                        match runtime.execute_verb(task.entity_id, &task.verb, args, None) {
+                        match runtime
+                            .execute_verb(task.entity_id, &task.verb, args, None)
+                            .await
+                        {
                             Ok(result) => {
                                 // Optionally broadcast the result
                                 if !result.is_null() {
@@ -263,10 +266,11 @@ async fn handle_message(
                 .and_then(|id| id.as_i64())
                 .ok_or("Missing entityId")?;
 
-            // Verify entity exists and get room_id (scoped to drop lock before await)
+            // Verify entity exists and get room_id
             let room_id = {
                 let storage = runtime.storage().lock().unwrap();
-                match storage.get_entity(entity_id) {
+                let handle = tokio::runtime::Handle::current();
+                match handle.block_on(storage.get_entity(entity_id)) {
                     Ok(Some(entity)) => entity
                         .props
                         .get("location")
@@ -326,21 +330,26 @@ async fn handle_message(
 
             // Verb discovery: collect verbs from player, room, room contents, inventory
             let (target_entity_id, verb_name) = {
+                let handle = tokio::runtime::Handle::current();
                 let storage = runtime.storage().lock().unwrap();
 
                 // Helper to get entity IDs from a contents array
-                let get_contents = |entity_id: i64| -> Vec<i64> {
-                    if let Ok(Some(e)) = storage.get_entity(entity_id) {
+                fn get_contents(
+                    handle: &tokio::runtime::Handle,
+                    storage: &rhizome_lotus_core::WorldStorage,
+                    entity_id: i64,
+                ) -> Vec<i64> {
+                    if let Ok(Some(e)) = handle.block_on(storage.get_entity(entity_id)) {
                         if let Some(contents) = e.props.get("contents").and_then(|c| c.as_array()) {
                             return contents.iter().filter_map(|v| v.as_i64()).collect();
                         }
                     }
                     Vec::new()
-                };
+                }
 
                 // Get player entity
-                let player = storage
-                    .get_entity(player_id)
+                let player = handle
+                    .block_on(storage.get_entity(player_id))
                     .map_err(|e| format!("Failed to get player: {}", e))?
                     .ok_or("Player not found")?;
 
@@ -355,7 +364,7 @@ async fn handle_message(
                     search_entities.push(rid);
 
                     // Add room contents
-                    for content_id in get_contents(rid) {
+                    for content_id in get_contents(&handle, &storage, rid) {
                         if content_id != player_id {
                             search_entities.push(content_id);
                         }
@@ -363,14 +372,14 @@ async fn handle_message(
                 }
 
                 // Add player inventory
-                for content_id in get_contents(player_id) {
+                for content_id in get_contents(&handle, &storage, player_id) {
                     search_entities.push(content_id);
                 }
 
                 // Search for the verb across all entities
                 let mut found: Option<(i64, String)> = None;
                 for entity_id in search_entities {
-                    if let Ok(verbs) = storage.get_verbs(entity_id) {
+                    if let Ok(verbs) = handle.block_on(storage.get_verbs(entity_id)) {
                         if let Some(verb) = verbs.iter().find(|v| v.name == command) {
                             found = Some((entity_id, verb.name.clone()));
                             break;
@@ -381,7 +390,10 @@ async fn handle_message(
                 found.ok_or_else(|| format!("Verb '{}' not found", command))?
             };
 
-            match runtime.execute_verb(target_entity_id, &verb_name, args, Some(player_id)) {
+            match runtime
+                .execute_verb(target_entity_id, &verb_name, args, Some(player_id))
+                .await
+            {
                 Ok(result) => Ok(serde_json::json!({ "status": "ok", "result": result })),
                 Err(err) => Err(format!("Verb execution failed: {}", err).into()),
             }
@@ -434,8 +446,9 @@ async fn handle_message(
                 .and_then(|id| id.as_i64())
                 .ok_or("Missing entity id")?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.get_entity(entity_id) {
+            match handle.block_on(storage.get_entity(entity_id)) {
                 Ok(Some(entity)) => Ok(serde_json::to_value(&entity)?),
                 Ok(None) => Err("Entity not found".into()),
                 Err(err) => Err(err.to_string().into()),
@@ -450,10 +463,11 @@ async fn handle_message(
 
             let entity_ids: Vec<i64> = ids.iter().filter_map(|id| id.as_i64()).collect();
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
             let mut entities = Vec::new();
             for id in entity_ids {
-                if let Ok(Some(entity)) = storage.get_entity(id) {
+                if let Ok(Some(entity)) = handle.block_on(storage.get_entity(id)) {
                     entities.push(serde_json::to_value(&entity)?);
                 }
             }
@@ -469,8 +483,9 @@ async fn handle_message(
                 .and_then(|p| p.get("prototype_id"))
                 .and_then(|id| id.as_i64());
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.create_entity(props, prototype_id) {
+            match handle.block_on(storage.create_entity(props, prototype_id)) {
                 Ok(id) => Ok(serde_json::json!({ "id": id })),
                 Err(err) => Err(err.to_string().into()),
             }
@@ -486,8 +501,9 @@ async fn handle_message(
                 .cloned()
                 .ok_or("Missing props")?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.update_entity(entity_id, props) {
+            match handle.block_on(storage.update_entity(entity_id, props)) {
                 Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
                 Err(err) => Err(err.to_string().into()),
             }
@@ -499,8 +515,9 @@ async fn handle_message(
                 .and_then(|id| id.as_i64())
                 .ok_or("Missing entity id")?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.delete_entity(entity_id) {
+            match handle.block_on(storage.delete_entity(entity_id)) {
                 Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
                 Err(err) => Err(err.to_string().into()),
             }
@@ -524,7 +541,10 @@ async fn handle_message(
                 .and_then(|p| p.get("caller_id"))
                 .and_then(|id| id.as_i64());
 
-            match runtime.execute_verb(entity_id, verb_name, args.clone(), caller_id) {
+            match runtime
+                .execute_verb(entity_id, verb_name, args.clone(), caller_id)
+                .await
+            {
                 Ok(result) => Ok(result),
                 Err(err) => Err(err.to_string().into()),
             }
@@ -540,8 +560,9 @@ async fn handle_message(
                 .and_then(|n| n.as_str())
                 .ok_or("Missing name")?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.get_verb(entity_id, name) {
+            match handle.block_on(storage.get_verb(entity_id, name)) {
                 Ok(Some(verb)) => {
                     // Return the verb code as JSON (S-expression)
                     Ok(serde_json::json!({
@@ -561,8 +582,9 @@ async fn handle_message(
                 .and_then(|id| id.as_i64())
                 .ok_or("Missing entityId")?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.get_verbs(entity_id) {
+            match handle.block_on(storage.get_verbs(entity_id)) {
                 Ok(verbs) => {
                     let verb_list: Vec<_> = verbs
                         .iter()
@@ -595,8 +617,9 @@ async fn handle_message(
             let sexpr: rhizome_lotus_ir::SExpr =
                 serde_json::from_value(code.clone()).map_err(|e| format!("Invalid code: {}", e))?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.add_verb(entity_id, name, &sexpr) {
+            match handle.block_on(storage.add_verb(entity_id, name, &sexpr)) {
                 Ok(id) => Ok(serde_json::json!({ "id": id })),
                 Err(err) => Err(err.to_string().into()),
             }
@@ -613,8 +636,9 @@ async fn handle_message(
             let sexpr: rhizome_lotus_ir::SExpr =
                 serde_json::from_value(code.clone()).map_err(|e| format!("Invalid code: {}", e))?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.update_verb(verb_id, &sexpr) {
+            match handle.block_on(storage.update_verb(verb_id, &sexpr)) {
                 Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
                 Err(err) => Err(err.to_string().into()),
             }
@@ -626,8 +650,9 @@ async fn handle_message(
                 .and_then(|id| id.as_i64())
                 .ok_or("Missing verb id")?;
 
+            let handle = tokio::runtime::Handle::current();
             let storage = runtime.storage().lock().unwrap();
-            match storage.delete_verb(verb_id) {
+            match handle.block_on(storage.delete_verb(verb_id)) {
                 Ok(()) => Ok(serde_json::json!({ "status": "ok" })),
                 Err(err) => Err(err.to_string().into()),
             }

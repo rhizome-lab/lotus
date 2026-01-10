@@ -15,6 +15,7 @@
 - [ ] **Web Editor**: Re-add visual script editor (needs Rust→WASM bindings for transpile/decompile)
 - [ ] **Hybrid ECS**: Optional structured components for hot data (Position, Health) alongside flexible props
 - [ ] **Spore Integration**: Move Lua execution to spore, lotus becomes pure world state
+- [ ] **API Simplification**: Redesign lotus-core API surface - current API grew organically and could be cleaner
 
 #### Kernel Operations for Spore Plugin
 

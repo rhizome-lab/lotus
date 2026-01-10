@@ -25,12 +25,12 @@ pub struct LotusRuntime {
 
 impl LotusRuntime {
     /// Create a new runtime from a database path.
-    pub fn open(db_path: &str) -> Result<Self, rhizome_lotus_core::StorageError> {
-        Self::open_with_interval(db_path, 100)
+    pub async fn open(db_path: &str) -> Result<Self, rhizome_lotus_core::StorageError> {
+        Self::open_with_interval(db_path, 100).await
     }
 
     /// Create a new runtime with a custom scheduler interval.
-    pub fn open_with_interval(
+    pub async fn open_with_interval(
         db_path: &str,
         interval_ms: u64,
     ) -> Result<Self, rhizome_lotus_core::StorageError> {
@@ -38,8 +38,8 @@ impl LotusRuntime {
         plugin_registry::init_registry();
 
         // Open two connections: one for sync operations, one for async scheduler
-        let storage = WorldStorage::open(db_path)?;
-        let scheduler_storage = WorldStorage::open(db_path)?;
+        let storage = WorldStorage::open(db_path).await?;
+        let scheduler_storage = WorldStorage::open(db_path).await?;
 
         let storage = Arc::new(Mutex::new(storage));
         let scheduler_storage = Arc::new(TokioMutex::new(scheduler_storage));
@@ -59,14 +59,15 @@ impl LotusRuntime {
 
     /// Create a new runtime with the given storage (legacy API).
     #[deprecated(note = "Use LotusRuntime::open() instead")]
-    pub fn new(storage: WorldStorage) -> Self {
+    pub async fn new(storage: WorldStorage) -> Self {
         // Initialize plugin registry
         plugin_registry::init_registry();
 
         // This is a workaround - we can't open a second connection without the path
         // So we just use in-memory for the scheduler storage
-        let scheduler_storage =
-            WorldStorage::in_memory().expect("Failed to create in-memory storage");
+        let scheduler_storage = WorldStorage::in_memory()
+            .await
+            .expect("Failed to create in-memory storage");
 
         let storage = Arc::new(Mutex::new(storage));
         let scheduler_storage = Arc::new(TokioMutex::new(scheduler_storage));
@@ -109,17 +110,19 @@ impl LotusRuntime {
     ///
     /// All mutations within the verb execution are wrapped in a transaction.
     /// If execution fails, all changes are rolled back atomically.
-    pub fn execute_verb(
+    pub async fn execute_verb(
         &self,
         entity_id: EntityId,
         verb_name: &str,
         args: Vec<serde_json::Value>,
         caller_id: Option<EntityId>,
     ) -> Result<serde_json::Value, ExecutionError> {
+        let handle = tokio::runtime::Handle::current();
+
         // Start transaction before any operations
         {
             let mut storage = self.storage.lock().unwrap();
-            storage.begin_transaction()?;
+            handle.block_on(storage.begin_transaction())?;
         }
 
         // Execute verb with automatic commit/rollback
@@ -129,10 +132,10 @@ impl LotusRuntime {
         {
             let mut storage = self.storage.lock().unwrap();
             if result.is_ok() {
-                storage.commit()?;
+                handle.block_on(storage.commit())?;
             } else {
                 // Ignore rollback errors - the original error is more important
-                let _ = storage.rollback();
+                let _ = handle.block_on(storage.rollback());
             }
         }
 
@@ -147,14 +150,16 @@ impl LotusRuntime {
         args: Vec<serde_json::Value>,
         caller_id: Option<EntityId>,
     ) -> Result<serde_json::Value, ExecutionError> {
+        let handle = tokio::runtime::Handle::current();
+
         // Get entity and verb from storage
         let (entity, verb) = {
             let storage = self.storage.lock().unwrap();
-            let entity = storage
-                .get_entity(entity_id)?
+            let entity = handle
+                .block_on(storage.get_entity(entity_id))?
                 .ok_or(ExecutionError::EntityNotFound(entity_id))?;
-            let verb = storage
-                .get_verb(entity_id, verb_name)?
+            let verb = handle
+                .block_on(storage.get_verb(entity_id, verb_name))?
                 .ok_or_else(|| ExecutionError::VerbNotFound(entity_id, verb_name.to_string()))?;
             (entity, verb)
         };

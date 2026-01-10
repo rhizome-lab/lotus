@@ -18,14 +18,14 @@ impl KernelOps {
 
     /// Get a capability by type and optional filter.
     /// Returns the first matching capability or null.
-    pub fn get_capability(
+    pub async fn get_capability(
         &self,
         owner_id: EntityId,
         cap_type: &str,
         filter: Option<serde_json::Value>,
     ) -> Result<Option<Capability>, rhizome_lotus_core::StorageError> {
         let storage = self.storage.lock().unwrap();
-        let caps = storage.get_capabilities(owner_id)?;
+        let caps = storage.get_capabilities(owner_id).await?;
 
         // Find matching capability
         for cap in caps {
@@ -64,23 +64,26 @@ impl KernelOps {
     }
 
     /// Check if an entity has a capability.
-    pub fn has_capability(
+    pub async fn has_capability(
         &self,
         owner_id: EntityId,
         cap_type: &str,
         filter: Option<serde_json::Value>,
     ) -> Result<bool, rhizome_lotus_core::StorageError> {
-        Ok(self.get_capability(owner_id, cap_type, filter)?.is_some())
+        Ok(self
+            .get_capability(owner_id, cap_type, filter)
+            .await?
+            .is_some())
     }
 
     /// Transfer capability ownership.
-    pub fn give_capability(
+    pub async fn give_capability(
         &self,
         cap_id: &str,
         new_owner_id: EntityId,
     ) -> Result<(), rhizome_lotus_core::StorageError> {
         let storage = self.storage.lock().unwrap();
-        storage.update_capability_owner(cap_id, new_owner_id)
+        storage.update_capability_owner(cap_id, new_owner_id).await
     }
 }
 
@@ -90,9 +93,9 @@ mod tests {
     use rhizome_lotus_core::WorldStorage;
     use serde_json::json;
 
-    #[test]
-    fn test_get_capability() {
-        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
+    #[tokio::test]
+    async fn test_get_capability() {
+        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().await.unwrap()));
         let kernel = KernelOps::new(storage.clone());
 
         // Create entity and capability
@@ -100,42 +103,51 @@ mod tests {
             let storage = storage.lock().unwrap();
             let id = storage
                 .create_entity(json!({"name": "Test"}), None)
+                .await
                 .unwrap();
             storage
                 .create_capability(id, "test.cap", json!({"level": 5}))
+                .await
                 .unwrap();
             id
         };
 
         // Get capability
-        let cap = kernel.get_capability(entity_id, "test.cap", None).unwrap();
+        let cap = kernel
+            .get_capability(entity_id, "test.cap", None)
+            .await
+            .unwrap();
         assert!(cap.is_some());
 
         // Get with matching filter
         let cap = kernel
             .get_capability(entity_id, "test.cap", Some(json!({"level": 5})))
+            .await
             .unwrap();
         assert!(cap.is_some());
 
         // Get with non-matching filter
         let cap = kernel
             .get_capability(entity_id, "test.cap", Some(json!({"level": 10})))
+            .await
             .unwrap();
         assert!(cap.is_none());
     }
 
-    #[test]
-    fn test_wildcard_capability() {
-        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
+    #[tokio::test]
+    async fn test_wildcard_capability() {
+        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().await.unwrap()));
         let kernel = KernelOps::new(storage.clone());
 
         let entity_id = {
             let storage = storage.lock().unwrap();
             let id = storage
                 .create_entity(json!({"name": "Test"}), None)
+                .await
                 .unwrap();
             storage
                 .create_capability(id, "admin", json!({"*": true}))
+                .await
                 .unwrap();
             id
         };
@@ -143,38 +155,48 @@ mod tests {
         // Wildcard should match any filter
         let cap = kernel
             .get_capability(entity_id, "admin", Some(json!({"anything": "goes"})))
+            .await
             .unwrap();
         assert!(cap.is_some());
     }
 
-    #[test]
-    fn test_give_capability() {
-        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().unwrap()));
+    #[tokio::test]
+    async fn test_give_capability() {
+        let storage = Arc::new(Mutex::new(WorldStorage::in_memory().await.unwrap()));
         let kernel = KernelOps::new(storage.clone());
 
         let (entity1_id, entity2_id, cap_id) = {
             let storage = storage.lock().unwrap();
-            let id1 = storage.create_entity(json!({"name": "E1"}), None).unwrap();
-            let id2 = storage.create_entity(json!({"name": "E2"}), None).unwrap();
+            let id1 = storage
+                .create_entity(json!({"name": "E1"}), None)
+                .await
+                .unwrap();
+            let id2 = storage
+                .create_entity(json!({"name": "E2"}), None)
+                .await
+                .unwrap();
             let cap_id = storage
                 .create_capability(id1, "test.cap", json!({}))
+                .await
                 .unwrap();
             (id1, id2, cap_id)
         };
 
         // Transfer capability
-        kernel.give_capability(&cap_id, entity2_id).unwrap();
+        kernel.give_capability(&cap_id, entity2_id).await.unwrap();
 
         // Verify it moved
         assert!(
             kernel
                 .get_capability(entity1_id, "test.cap", None)
+                .await
                 .unwrap()
                 .is_none()
         );
         assert!(
             kernel
                 .get_capability(entity2_id, "test.cap", None)
+                .await
                 .unwrap()
                 .is_some()
         );
