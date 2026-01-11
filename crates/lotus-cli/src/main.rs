@@ -38,17 +38,6 @@ enum Commands {
         plugins: Option<String>,
     },
 
-    /// Transpile TypeScript to S-expressions
-    Transpile {
-        /// Input file(s)
-        #[arg(required = true)]
-        files: Vec<String>,
-
-        /// Output directory
-        #[arg(short, long)]
-        out: Option<String>,
-    },
-
     /// Compile S-expressions to Lua
     Compile {
         /// Input S-expression file (or - for stdin)
@@ -97,30 +86,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let runtime = Arc::new(rhizome_lotus_runtime::LotusRuntime::open(&db).await?);
             let server = Server::new(runtime, config);
             server.run().await?;
-        }
-
-        Commands::Transpile { files, out } => {
-            for file in files {
-                let source = std::fs::read_to_string(&file)?;
-
-                // Use reed to parse TS and convert to S-expression
-                let program = rhizome_reed_read_ts::read(&source)?;
-                let sexpr = rhizome_reed_sexpr::to_sexpr(&program);
-                let json = serde_json::to_string_pretty(&sexpr)?;
-
-                let out_path = if let Some(ref output_dir) = out {
-                    let filename = std::path::Path::new(&file)
-                        .file_stem()
-                        .unwrap_or_default()
-                        .to_string_lossy();
-                    format!("{}/{}.json", output_dir, filename)
-                } else {
-                    file.replace(".ts", ".json").replace(".tsx", ".json")
-                };
-
-                std::fs::write(&out_path, &json)?;
-                println!("{} -> {}", file, out_path);
-            }
         }
 
         Commands::Compile { file, stdout } => {
